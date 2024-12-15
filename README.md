@@ -1,221 +1,172 @@
-**Virtual Learning Environment (VLE)**
+# Virtual Learning Environment
 
-**Description**
+This project is a **Scalable Virtual Learning Environment (VLE) Application** designed to help users create and manage courses, track progress, and interact in an online learning environment. The application is built with **Next.js** for the frontend and **Node.js** for the backend, utilizing modern web technologies to deliver a scalable, fast, and secure user experience.
 
-A feature-rich, scalable virtual learning environment application built with cutting-edge technologies to deliver an enterprise-grade Learning Management System (LMS). The platform enables seamless course management, student enrollment, secure payments, and a user-friendly learning experience.
+---
 
-This project leverages modern frontend frameworks, robust backend services, and cloud infrastructure to ensure scalability, performance, and high availability.
+## Table of Contents
 
-**Features**
-
-•	**Dynamic Frontend:** Built with Next.js, Redux Toolkit, and Tailwind CSS for a responsive and interactive user interface.
-
-•	**Scalable Backend:** Powered by Node.js and AWS services like Lambda, API Gateway, and DynamoDB.
-
-•	**Secure Authentication:** Simplified and integrated authentication with Clerk.
-
-•	**Payment Processing:** Seamless and secure payments via Stripe.
-
-•	**Cloud Infrastructure:** Hosted on Vercel and optimized for scalability with AWS CloudFront and S3.
-
-•	**Form Validation:** Reliable and user-friendly forms using React Hook Form and Zod.
-
-•	**Smooth Animations:** Powered by Framer Motion for an enhanced user experience.
-
-**Technologies Used**
-
-**Frontend**
-
-•	**Framework:** Next.js
-
-•	**State Management:** Redux Toolkit
-
-•	**Styling:** Tailwind CSS, Shadcn
-
-•	**Type Checking:** TypeScript
-
-•	**Animations:** Framer Motion
-
-•	**Form Handling:** React Hook Form, Zod
-
-•	**Payment Integration:** Stripe
-
-**Backend**
-
-•	**Framework:** Node.js, Express.js
-
-•	**Containerization:** Docker
-
-•	**Cloud Services:**
-
-•	**Compute:** AWS Lambda
-
-•	**API Gateway:** RESTful APIs
-
-•	**Database:** DynamoDB
-
-•	**File Storage:** AWS S3
-
-•	**Content Delivery:** AWS CloudFront
-
-**Authentication**
-
-•	**Provider:** Clerk
-
-**Hosting**
-
-•	**Frontend:** Vercel
-
-**Installation and Setup**
-
-**Prerequisites**
-
-•	Node.js (v16 or higher)
-
-•	Docker (for backend containerization)
-
-•	AWS account for deploying cloud resources
-
-•	Clerk and Stripe accounts for authentication and payment setup
-
-**Clone the Repository**
-
-git clone https://github.com/your-username/your-repo-name.git
-
-cd your-repo-name
-
-**Frontend Setup**
-
-1.	Navigate to the frontend directory:
-
-cd frontend
-
-2.	Install dependencies:
-
-npm install
-
-3.	Set up environment variables in a .env.local file:
-
-*NEXT*_PUBLIC_CLERK_FRONTEND_API=your-clerk-frontend-api
-
-*NEXT*_PUBLIC_STRIPE_PUBLIC_KEY=your-stripe-public-key
-
-*BACKEN*D_API_URL=https://your-backend-api-url
-
-4.	Start the development server:
-
-npm run dev
-
-**Backend Setup**
-
-1.	Navigate to the backend directory:
-
-cd backend
-
-2.	Build and start the Docker container:
-
-docker build -t vle-backend .
-
-docker run -p 5000:5000 vle-backend
-
-3.	Set up environment variables in a .env file:
-
-*AWS*_ACCESS_KEY_ID=your-aws-access-key
-
-*AWS*_SECRET_ACCESS_KEY=your-aws-secret-key
-
-*DYNAMO*DB_TABLE_NAME=your-dynamodb-table
-
-*S3*_BUCKET_NAME=your-s3-bucket-name
-
-*STRIPE*_SECRET_KEY=your-stripe-secret-key
-
-4.	Ensure that your AWS resources (DynamoDB, Lambda, API Gateway) are configured properly.
-
-**Deployment**
-
-**Frontend Deployment**
-
-1.	Deploy the frontend to Vercel:
-
-•	Push your Next.js project to a GitHub repository.
-
-•	Link your repository to Vercel and configure environment variables in the Vercel dashboard.
-
-2.	Deploy:
-
-vercel --prod
-
-**Backend Deployment**
-
-1.	Use AWS services (e.g., Lambda, API Gateway) to deploy your backend.
-
-2.	Set up CI/CD pipelines to automate the deployment process.
-
-**Usage**
-
-1.	Access the application via the deployed Vercel URL.
-
-2.	Sign in using Clerk authentication.
-
-3.	Explore the platform to:
-
-•	Create and manage courses.
-
-•	Enroll students.
-
-•	Process secure payments.
-
-•	Deliver content seamlessly.
-
-**Project Structure**
-
-root
-
-├── frontend
-
-│   ├── components
-
-│   ├── pages
-
-│   ├── styles
-
-│   ├── public
-
-│   └── utils
-
-├── backend
-
-│   ├── routes
-
-│   ├── controllers
-
-│   ├── models
-
-│   ├── services
-
-│   └── middlewares
-
-└── README.md
-
-**Contributing**
-
-1.	Fork the repository.
-
-2.	Create a new branch:
-
-git checkout -b feature/your-feature-name
-
-3.	Commit your changes and push the branch:
-
-git commit -m "Add your message here"
-
-git push origin feature/your-feature-name
-
-4.	Open a pull request.
-
-**License**
-
-This project is licensed under the MIT License. See the LICENSE file for more information.
-
-Let me know if you’d like to customize any part of this further!
+- Project Description
+- Features
+- Tech Stack
+- Frontend
+- Backend
+- Authentication
+- Hosting & Deployment
+- Running Locally
+- Environment Variables
+- License
+
+---
+
+## Project Description
+
+This VLE application is designed for educators, learners, and administrators to interact and manage their learning materials, enrollments, and progress. The app integrates modern tools to provide an intuitive, responsive, and scalable learning environment.
+
+- **Frontend:** Built using **Next.js** to leverage server-side rendering, static site generation, and API routes.
+- **Backend:** The backend leverages **Node.js** and **Express.js** running in **AWS Lambda** functions, which are triggered via **API Gateway**.
+- **Authentication:** Simplified user authentication and management are handled with **Clerk**.
+- **Payment:** Integrated with **Stripe** for handling payments, allowing users to buy and enroll in courses.
+
+This VLE application is designed to be easily scalable and maintainable, using **AWS services** (Lambda, DynamoDB, S3, CloudFront) to deliver a secure and high-performance experience.
+
+---
+
+## Features
+
+- **Course Management:** Create, update, and manage courses with multimedia content.
+- **Enrollment System:** Users can browse, enroll, and track progress in courses.
+- **Interactive UI:** Built with a responsive and intuitive design using **Tailwind CSS**, **Shadcn**, and **Framer Motion**.
+- **Secure Payment Integration:** Supports course purchases and subscriptions via **Stripe**.
+- **User Authentication:** Simplified with **Clerk** for easy sign-up, login, and user management.
+- **Responsive Design:** Optimized for mobile and desktop views.
+- **Cloud-based Storage:** Use **AWS S3** for storing and serving static content like videos and PDFs.
+- **Scalable Infrastructure:** Hosted on **Vercel** for the frontend, with **AWS Lambda** and **API Gateway** powering the backend, providing scalability and flexibility.
+
+---
+
+## Tech Stack
+
+### **Frontend**
+
+- **Next.js**: Framework for server-side rendering (SSR), static site generation (SSG), and API routes.
+- **Redux Toolkit**: Centralized state management for handling user data, course progress, etc.
+- **Tailwind CSS**: Utility-first CSS framework for creating responsive and customizable UI components.
+- **Shadcn**: UI component library for building modern, accessible components.
+- **TypeScript**: Provides static typing to enhance code quality and maintainability.
+- **Framer Motion**: Animations and interactions for a smooth, engaging user experience.
+- **React Hook Form**: Simplifies form handling, validation, and submission.
+- **Zod**: Schema validation for data integrity and user inputs.
+- **Stripe**: Integrated for handling payments and subscriptions for course purchases.
+
+### **Backend**
+
+- **Node.js**: JavaScript runtime for building scalable server-side applications.
+- **Express.js**: Lightweight framework for building RESTful APIs.
+- **Docker**: Containerization for the backend services, ensuring consistency across different environments.
+- **AWS Lambda**: Serverless computing service to run backend functions in a scalable, event-driven architecture.
+- **API Gateway**: Manages API requests and routes them to Lambda functions.
+- **DynamoDB**: Fully managed NoSQL database for storing user and course data.
+- **S3**: Simple Storage Service for storing and serving static files (videos, PDFs, images).
+- **CloudFront**: Content Delivery Network (CDN) for distributing static content globally with low latency.
+
+### **Authentication**
+
+- **Clerk**: Simplified user authentication, sign-up, and login, offering features like multi-factor authentication (MFA), social logins, and user management.
+
+### **Hosting & Deployment**
+
+- **Frontend**: Hosted on **Vercel**, taking advantage of its serverless architecture, automatic scaling, and easy integration with Next.js.
+- **Backend**: Hosted on **AWS** using **Lambda**, **API Gateway**, **S3**, and **DynamoDB** to handle backend logic, API endpoints, and storage.
+
+---
+
+## Running Locally
+
+To run the application locally, you'll need to set up both the frontend and backend. Here's a step-by-step guide:
+
+### 1. **Frontend Setup (Next.js)**
+
+- Clone the repository:
+    
+    ```bash
+    bash
+    Copy code
+    git clone <repo_url>
+    cd <project_folder>
+    
+    ```
+    
+- Install dependencies:
+    
+    ```bash
+    bash
+    Copy code
+    npm install
+    
+    ```
+    
+- Create a `.env.local` file in the root of the project and configure the necessary environment variables. Example:
+    
+    ```makefile
+    makefile
+    Copy code
+    NEXT_PUBLIC_API_URL=<your_api_url>
+    NEXT_PUBLIC_STRIPE_PUBLIC_KEY=<your_stripe_public_key>
+    CLERK_FRONTEND_API=<your_clerk_frontend_api>
+    
+    ```
+    
+- Run the frontend locally:
+    
+    ```bash
+    bash
+    Copy code
+    npm run dev
+    
+    ```
+    
+    The app should now be running on `http://localhost:3000`.
+    
+
+### 2. **Backend Setup (Node.js + AWS Lambda)**
+
+- Install backend dependencies:
+    
+    ```bash
+    bash
+    Copy code
+    cd backend
+    npm install
+    
+    ```
+    
+- Configure AWS credentials (ensure you have the correct access permissions).
+    - You can set up AWS CLI with `aws configure` to use the credentials.
+- Deploy the backend to AWS Lambda using the AWS CLI or an infrastructure-as-code tool like **Serverless Framework** or **AWS SAM**.
+- Make sure that you configure your API Gateway correctly to route API requests to the Lambda functions.
+
+---
+
+## Environment Variables
+
+You will need the following environment variables for both frontend and backend:
+
+### **Frontend** (`.env.local`)
+
+- `NEXT_PUBLIC_API_URL`: The API URL of your backend (e.g., `https://api.example.com`).
+- `NEXT_PUBLIC_STRIPE_PUBLIC_KEY`: Stripe public key for frontend payments.
+- `CLERK_FRONTEND_API`: The Clerk frontend API URL for user authentication.
+
+### **Backend** (`.env`)
+
+- `AWS_ACCESS_KEY_ID`: AWS access key ID for backend Lambda deployment.
+- `AWS_SECRET_ACCESS_KEY`: AWS secret access key for backend Lambda deployment.
+- `STRIPE_SECRET_KEY`: Stripe secret key for backend payments.
+- `CLERK_API_KEY`: Clerk API key for backend user management.
+
+---
+
+## License
+
+This project is licensed under the MIT License. See the LICENSE file for more details.
