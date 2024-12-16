@@ -4,22 +4,9 @@ This project is a **Scalable Virtual Learning Environment (VLE) Application** de
 
 ---
 
-## Table of Contents
-
-- Project Description
-- Features
-- Tech Stack
-- Frontend
-- Backend
-- Authentication
-- Hosting & Deployment
-- Running Locally
-- Environment Variables
-- License
+<img width="1728" alt="Screenshot 2024-12-16 at 4 37 24 AM" src="https://github.com/user-attachments/assets/7b664aa6-70a5-4f20-b767-7a80aa005e18" />
 
 ---
-
-<img width="1728" alt="Screenshot 2024-12-16 at 4 37 24 AM" src="https://github.com/user-attachments/assets/7b664aa6-70a5-4f20-b767-7a80aa005e18" />
 
 ## Project Description
 
