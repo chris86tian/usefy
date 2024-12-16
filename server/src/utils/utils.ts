@@ -105,7 +105,6 @@ export const mergeSections = (
   for (const newSection of newSections) {
     const section = existingSectionsMap.get(newSection.sectionId);
     if (!section) {
-      // Add new section
       existingSectionsMap.set(newSection.sectionId, newSection);
     } else {
       // Merge chapters within the existing section

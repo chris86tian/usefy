@@ -15,12 +15,13 @@ import {
   useGetCourseQuery,
   useUpdateCourseMutation,
   useGetUploadVideoUrlMutation,
+  useGetUploadImageUrlMutation,
 } from "@/state/api";
 import { useAppDispatch, useAppSelector } from "@/state/redux";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Plus } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import DroppableComponent from "./Droppable";
 import ChapterModal from "./ChapterModal";
@@ -33,9 +34,13 @@ const CourseEditor = () => {
   const { data: course, isLoading, refetch } = useGetCourseQuery(id);
   const [updateCourse] = useUpdateCourseMutation();
   const [getUploadVideoUrl] = useGetUploadVideoUrlMutation();
+  const [getUploadImageUrl] = useGetUploadImageUrlMutation();
 
   const dispatch = useAppDispatch();
   const { sections } = useAppSelector((state) => state.global.courseEditor);
+
+  const [courseImage, setCourseImage] = useState<File | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   const methods = useForm<CourseFormData>({
     resolver: zodResolver(courseSchema),
@@ -59,26 +64,53 @@ const CourseEditor = () => {
       });
       dispatch(setSections(course.sections || []));
     }
-  }, [course, methods]); // eslint-disable-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [course, methods]);
 
   const onSubmit = async (data: CourseFormData) => {
     try {
-      const updatedSections = await uploadAllVideos(
-        sections,
-        id,
-        getUploadVideoUrl
-      );
+      if (courseImage) {
+        const imageData = {
+          courseId: id,
+          fileName: courseImage.name,
+          fileType: courseImage.type
+        };
 
-      const formData = createCourseFormData(data, updatedSections);
+        const uploadData = await getUploadImageUrl(imageData).unwrap();
 
-      await updateCourse({
-        courseId: id,
-        formData,
-      }).unwrap();
+        const uploadResponse = await fetch(uploadData.uploadUrl, {
+          method: "PUT",
+          headers: {
+            "Content-Type": courseImage.type,
+          },
+          body: courseImage,
+        });
+
+        if (!uploadResponse.ok) {
+          throw new Error("Image upload failed");
+        }
+
+        setImageUrl(uploadData.imageUrl);
+      }
+
+      const updatedSections = await uploadAllVideos(sections, id, getUploadVideoUrl);
+
+      const formDataWithImage = createCourseFormData(data, updatedSections);
+
+      if (imageUrl) formDataWithImage.append("imageUrl", imageUrl);
+
+      await updateCourse({ courseId: id, formData: formDataWithImage }).unwrap();
 
       refetch();
     } catch (error) {
       console.error("Failed to update course:", error);
+    }
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setCourseImage(file);
     }
   };
 
@@ -169,6 +201,23 @@ const CourseEditor = () => {
                   placeholder="0"
                   initialValue={course?.price}
                 />
+
+                <div className="mt-4">
+                  <label className="text-sm font-medium text-customgreys-dirtyGrey">
+                    Course Image
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border file:border-gray-300 file:text-gray-700 file:bg-gray-100 hover:file:bg-gray-200"
+                  />
+                  {courseImage && (
+                    <div className="mt-2 text-sm text-gray-600">
+                      Selected image: {courseImage.name}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 

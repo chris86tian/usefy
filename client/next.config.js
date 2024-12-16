@@ -9,6 +9,7 @@ const nextConfig = {
           pathname: "/**",
         },
       ],
+      domains: ['expertize-bucket.s3.us-east-1.amazonaws.com', 'd2d2uxovkp6xho.cloudfront.net']
     },
   };
   

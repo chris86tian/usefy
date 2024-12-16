@@ -147,7 +147,7 @@ const Course = () => {
             </TabsContent>
           </Tabs>
 
-          <Card className="course__instructor-card">
+          {/* <Card className="course__instructor-card">
             <CardContent className="course__instructor-info">
               <div className="course__instructor-header">
                 <Avatar className="course__instructor-avatar">
@@ -171,7 +171,7 @@ const Course = () => {
                 </p>
               </div>
             </CardContent>
-          </Card>
+          </Card> */}
         </div>
       </div>
     </div>

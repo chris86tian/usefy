@@ -105,6 +105,10 @@ export const updateCourse = async (
       updateData.price = price * 100;
     }
 
+    if (updateData.imageUrl) {
+      course.image = updateData.imageUrl;
+    }
+
     if (updateData.sections) {
       const sectionsData =
         typeof updateData.sections === "string"
@@ -189,6 +193,43 @@ export const getUploadVideoUrl = async (
       data: { uploadUrl, videoUrl },
     });
   } catch (error) {
+    res.status(500).json({ message: "Error generating upload URL", error });
+  }
+};
+
+export const getUploadImageUrl = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { fileName, fileType } = req.body;
+
+  if (!fileName || !fileType) {
+    res.status(400).json({ message: "File name and type are required" });
+    return;
+  }
+
+  try {
+    const uniqueId = uuidv4();
+    
+    const s3Key = `images/${uniqueId}/${fileName}`;
+    
+    const s3Params = {
+      Bucket: process.env.S3_BUCKET_NAME || "",
+      Key: s3Key,
+      Expires: 60,
+      ContentType: fileType,
+    };
+
+    const uploadUrl = s3.getSignedUrl("putObject", s3Params);
+    
+    const imageUrl = `${process.env.CLOUDFRONT_DOMAIN}/images/${uniqueId}/${fileName}`;
+
+    res.json({
+      message: "Upload URL generated successfully",
+      data: { uploadUrl, imageUrl },
+    });
+  } catch (error) {
+    console.error("Error generating upload URL:", error);
     res.status(500).json({ message: "Error generating upload URL", error });
   }
 };
