@@ -19,6 +19,8 @@ This project is a **Scalable Virtual Learning Environment (VLE) Application** de
 
 ---
 
+<img width="1728" alt="Screenshot 2024-12-16 at 4 37 24 AM" src="https://github.com/user-attachments/assets/7b664aa6-70a5-4f20-b767-7a80aa005e18" />
+
 ## Project Description
 
 This VLE application is designed for educators, learners, and administrators to interact and manage their learning materials, enrollments, and progress. The app integrates modern tools to provide an intuitive, responsive, and scalable learning environment.
