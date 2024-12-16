@@ -1388,7 +1388,7 @@ input[type="color"] {
 }
 
 .app-sidebar__logo-container {
-  @apply flex justify-between items-center gap-5 pl-3 pr-1 h-10 w-full group-data-[collapsible=icon]:ml-1 group-data-[collapsible=icon]:w-10 group-data-[collapsible=icon]:px-0;
+  @apply flex justify-between items-center gap-5 px-3 h-10 w-full group-data-[collapsible=icon]:ml-1 group-data-[collapsible=icon]:w-10 group-data-[collapsible=icon]:px-0;
 }
 
 .app-sidebar__logo-wrapper {

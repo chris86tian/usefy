@@ -2,7 +2,7 @@
 
 import { SignedIn, SignedOut, UserButton, useUser } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
-import { Bell, BookOpen } from "lucide-react";
+import { BookOpen } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 
@@ -35,26 +35,38 @@ const NonDashboardNavbar = () => {
           </div>
         </div>
         <div className="nondashboard-navbar__actions">
-          <button className="nondashboard-navbar__notification-button">
+          {/* <button className="nondashboard-navbar__notification-button">
             <span className="nondashboard-navbar__notification-indicator"></span>
             <Bell className="nondashboard-navbar__notification-icon" />
-          </button>
+          </button> */}
 
           <SignedIn>
-            <UserButton
-              appearance={{
-                baseTheme: dark,
-                elements: {
-                  userButtonOuterIdentifier: "text-customgreys-dirtyGrey",
-                  userButtonBox: "scale-90 sm:scale-100",
-                },
-              }}
-              showName={true}
-              userProfileMode="navigation"
-              userProfileUrl={
-                userRole === "teacher" ? "/teacher/profile" : "/user/profile"
-              }
-            />
+            <div className="flex items-center gap-4">
+              <Link
+                href={
+                  userRole === "teacher"
+                    ? "/teacher/courses"
+                    : "/user/courses"
+                }
+                className="text-customgreys-dirtyGrey"
+              >
+                My Courses
+              </Link>
+              <UserButton
+                appearance={{
+                  baseTheme: dark,
+                  elements: {
+                    userButtonOuterIdentifier: "text-customgreys-dirtyGrey",
+                    userButtonBox: "scale-90 sm:scale-100",
+                  },
+                }}
+                showName={true}
+                userProfileMode="navigation"
+                userProfileUrl={
+                  userRole === "teacher" ? "/teacher/profile" : "/user/profile"
+                }
+              />
+            </div>
           </SignedIn>
           <SignedOut>
             <Link

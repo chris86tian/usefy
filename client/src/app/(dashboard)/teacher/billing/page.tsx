@@ -91,7 +91,8 @@ const TeacherBilling = () => {
                         {formatPrice(transaction.amount)}
                       </TableCell>
                       <TableCell className="billing__table-cell">
-                        {transaction.paymentProvider}
+                        {transaction.paymentProvider.charAt(0).toUpperCase() +
+                          transaction.paymentProvider.slice(1)}
                       </TableCell>
                     </TableRow>
                   ))
