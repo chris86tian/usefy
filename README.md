@@ -1,4 +1,4 @@
-# Virtual Learning Environment
+# Expertize - Virtual Learning Environment
 
 This project is a **Scalable Virtual Learning Environment (VLE) Application** designed to help users create and manage courses, track progress, and interact in an online learning environment. The application is built with **Next.js** for the frontend and **Node.js** for the backend, utilizing modern web technologies to deliver a scalable, fast, and secure user experience.
 
@@ -17,7 +17,7 @@ This VLE application is designed for educators, learners, and administrators to 
 - **Authentication:** Simplified user authentication and management are handled with **Clerk**.
 - **Payment:** Integrated with **Stripe** for handling payments, allowing users to buy and enroll in courses.
 
-This VLE application is designed to be easily scalable and maintainable, using **AWS services** (Lambda, DynamoDB, S3, CloudFront) to deliver a secure and high-performance experience.
+This VLE application is designed to be easily scalable and maintainable, using **AWS services** (Lambda, ECR, DynamoDB, S3, CloudFront) to deliver a secure and high-performance experience.
 
 ---
 
