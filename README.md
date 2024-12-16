@@ -90,43 +90,28 @@ To run the application locally, you'll need to set up both the frontend and back
 - Clone the repository:
     
     ```bash
-    bash
-    Copy code
-    git clone <repo_url>
-    cd <project_folder>
+    git clone https://github.com/ArslanKamchybekov/expertize
+    cd client
     
     ```
     
 - Install dependencies:
     
     ```bash
-    bash
-    Copy code
     npm install
     
     ```
     
-- Create a `.env.local` file in the root of the project and configure the necessary environment variables. Example:
-    
-    ```makefile
-    makefile
-    Copy code
-    NEXT_PUBLIC_API_URL=<your_api_url>
-    NEXT_PUBLIC_STRIPE_PUBLIC_KEY=<your_stripe_public_key>
-    CLERK_FRONTEND_API=<your_clerk_frontend_api>
-    
-    ```
+- Create a `.env.local` file in the root of the project and configure the necessary environment variables.
     
 - Run the frontend locally:
     
     ```bash
-    bash
-    Copy code
     npm run dev
     
     ```
     
-    The app should now be running on `http://localhost:3000`.
+    The app should now be running on `http://localhost:${PORT}`.
     
 
 ### 2. **Backend Setup (Node.js + AWS Lambda)**
@@ -134,8 +119,6 @@ To run the application locally, you'll need to set up both the frontend and back
 - Install backend dependencies:
     
     ```bash
-    bash
-    Copy code
     cd backend
     npm install
     
@@ -154,16 +137,21 @@ You will need the following environment variables for both frontend and backend:
 
 ### **Frontend** (`.env.local`)
 
-- `NEXT_PUBLIC_API_URL`: The API URL of your backend (e.g., `https://api.example.com`).
+- `NEXT_PUBLIC_API_BASE_URL`: The API URL of your backend (e.g., `https://api.example.com`).
 - `NEXT_PUBLIC_STRIPE_PUBLIC_KEY`: Stripe public key for frontend payments.
-- `CLERK_FRONTEND_API`: The Clerk frontend API URL for user authentication.
+- `STRIPE_SECRET_KEY`: Stripe secret key for frontend payments.
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`: The Clerk public key for user authentication.
+- `CLERK_SECRET_KEY`: The Clerk secret key for user authentication.
 
 ### **Backend** (`.env`)
 
 - `AWS_ACCESS_KEY_ID`: AWS access key ID for backend Lambda deployment.
 - `AWS_SECRET_ACCESS_KEY`: AWS secret access key for backend Lambda deployment.
+- `CLOUDFRONT_DOMAIN`: AWS Cloudfront domain.
+- `S3_BUCKET_NAME`: AWS S3 Bucket name.
 - `STRIPE_SECRET_KEY`: Stripe secret key for backend payments.
-- `CLERK_API_KEY`: Clerk API key for backend user management.
+- `CLERK_PUBLISHABLE_KEY`: The Clerk public key for user authentication.
+- `CLERK_SECRET_KEY`: The Clerk secret key for user authentication.
 
 ---
 
