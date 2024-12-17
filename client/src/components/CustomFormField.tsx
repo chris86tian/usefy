@@ -31,6 +31,7 @@ import "filepond/dist/filepond.min.css";
 import FilePondPluginImagePreview from "filepond-plugin-image-preview";
 import FilePondPluginImageExifOrientation from "filepond-plugin-image-exif-orientation";
 import "filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css";
+import { Checkbox } from "@/components/ui/checkbox";
 
 registerPlugin(FilePondPluginImageExifOrientation, FilePondPluginImagePreview);
 
@@ -46,7 +47,8 @@ interface FormFieldProps {
     | "switch"
     | "password"
     | "file"
-    | "multi-input";
+    | "multi-input"
+    | "checkbox";
   placeholder?: string;
   options?: { value: string; label: string }[];
   accept?: string;
@@ -127,6 +129,16 @@ export const CustomFormField: React.FC<FormFieldProps> = ({
             <FormLabel htmlFor={name} className={labelClassName}>
               {label}
             </FormLabel>
+          </div>
+        );
+      case "checkbox":
+        return (
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id={name}
+              checked={field.value}
+              onCheckedChange={field.onChange}
+            />
           </div>
         );
       case "file":

@@ -7,6 +7,7 @@ import { Form } from "@/components/ui/form";
 import { courseSchema } from "@/lib/schemas";
 import {
   centsToDollars,
+  cn,
   createCourseFormData,
   uploadAllVideos,
 } from "@/lib/utils";
@@ -136,14 +137,17 @@ const CourseEditor = () => {
                 <CustomFormField
                   name="courseStatus"
                   label={methods.watch("courseStatus") ? "Published" : "Draft"}
-                  type="switch"
-                  className="flex items-center space-x-2"
+                  type="checkbox"
+                  className="flex items-center space-x-2 mb-2"
                   labelClassName={`text-sm font-medium ${
-                    methods.watch("courseStatus")
-                      ? "text-green-500"
-                      : "text-yellow-500"
+                    methods.watch("courseStatus") ? "text-green-500 mt-2" : "text-yellow-500 mt-2"
                   }`}
-                  inputClassName="data-[state=checked]:bg-green-500"
+                  inputClassName={cn(
+                    "peer inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50",
+                    methods.watch("courseStatus")
+                      ? "data-[state=checked]:bg-green-700"
+                      : "data-[state=unchecked]:bg-yellow-700"
+                  )}
                 />
                 <Button
                   type="submit"
