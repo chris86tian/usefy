@@ -25,19 +25,18 @@ const PaymentPageContent = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+  
     if (!stripe || !elements) {
       toast.error("Stripe service is not available");
       return;
     }
-
+  
     const baseUrl = process.env.NEXT_PUBLIC_LOCAL_URL
       ? `${process.env.NEXT_PUBLIC_LOCAL_URL}`
       : process.env.NEXT_PUBLIC_VERCEL_URL
       ? `${process.env.NEXT_PUBLIC_VERCEL_URL}`
       : undefined;
-
-    console.log(`${baseUrl}/checkout?step=3&id=${courseId}`);
+  
     const result = await stripe.confirmPayment({
       elements,
       confirmParams: {
@@ -45,7 +44,7 @@ const PaymentPageContent = () => {
       },
       redirect: "if_required",
     });
-
+  
     if (result.paymentIntent?.status === "succeeded") {
       const transactionData: Partial<Transaction> = {
         transactionId: result.paymentIntent.id,
@@ -54,11 +53,33 @@ const PaymentPageContent = () => {
         paymentProvider: "stripe",
         amount: course?.price || 0,
       };
-
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      await createTransaction(transactionData), navigateToStep(3);
+  
+      await createTransaction(transactionData);
+  
+      try {
+        await fetch("/api/send-email", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: user?.emailAddresses[0].emailAddress,
+            name: user?.fullName,
+            courseName: course?.title,
+            transactionId: result.paymentIntent.id,
+          }),
+        });
+        toast.success("Purchase successful! Email notification sent.");
+      } catch (error) {
+        console.error("Failed to send email:", error);
+        toast.error("Purchase successful, but failed to send email.");
+      }
+  
+      navigateToStep(3);
+    } else {
+      toast.error("Payment failed. Please try again.");
     }
-  };
+  };  
 
   const handleSignOutAndNavigate = async () => {
     await signOut();

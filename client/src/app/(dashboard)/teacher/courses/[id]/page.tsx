@@ -7,7 +7,6 @@ import { Form } from "@/components/ui/form";
 import { courseSchema } from "@/lib/schemas";
 import {
   centsToDollars,
-  cn,
   createCourseFormData,
   uploadAllVideos,
 } from "@/lib/utils";
@@ -16,13 +15,12 @@ import {
   useGetCourseQuery,
   useUpdateCourseMutation,
   useGetUploadVideoUrlMutation,
-  useGetUploadImageUrlMutation,
 } from "@/state/api";
 import { useAppDispatch, useAppSelector } from "@/state/redux";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Plus } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import DroppableComponent from "./Droppable";
 import ChapterModal from "./ChapterModal";
@@ -35,13 +33,9 @@ const CourseEditor = () => {
   const { data: course, isLoading, refetch } = useGetCourseQuery(id);
   const [updateCourse] = useUpdateCourseMutation();
   const [getUploadVideoUrl] = useGetUploadVideoUrlMutation();
-  const [getUploadImageUrl] = useGetUploadImageUrlMutation();
 
   const dispatch = useAppDispatch();
   const { sections } = useAppSelector((state) => state.global.courseEditor);
-
-  const [courseImage, setCourseImage] = useState<File | null>(null);
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   const methods = useForm<CourseFormData>({
     resolver: zodResolver(courseSchema),
@@ -65,53 +59,26 @@ const CourseEditor = () => {
       });
       dispatch(setSections(course.sections || []));
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [course, methods]);
+  }, [course, methods]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const onSubmit = async (data: CourseFormData) => {
     try {
-      if (courseImage) {
-        const imageData = {
-          courseId: id,
-          fileName: courseImage.name,
-          fileType: courseImage.type
-        };
+      const updatedSections = await uploadAllVideos(
+        sections,
+        id,
+        getUploadVideoUrl
+      );
 
-        const uploadData = await getUploadImageUrl(imageData).unwrap();
+      const formData = createCourseFormData(data, updatedSections);
 
-        const uploadResponse = await fetch(uploadData.uploadUrl, {
-          method: "PUT",
-          headers: {
-            "Content-Type": courseImage.type,
-          },
-          body: courseImage,
-        });
-
-        if (!uploadResponse.ok) {
-          throw new Error("Image upload failed");
-        }
-
-        setImageUrl(uploadData.imageUrl);
-      }
-
-      const updatedSections = await uploadAllVideos(sections, id, getUploadVideoUrl);
-
-      const formDataWithImage = createCourseFormData(data, updatedSections);
-
-      if (imageUrl) formDataWithImage.append("imageUrl", imageUrl);
-
-      await updateCourse({ courseId: id, formData: formDataWithImage }).unwrap();
+      await updateCourse({
+        courseId: id,
+        formData,
+      }).unwrap();
 
       refetch();
     } catch (error) {
       console.error("Failed to update course:", error);
-    }
-  };
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setCourseImage(file);
     }
   };
 
@@ -137,17 +104,14 @@ const CourseEditor = () => {
                 <CustomFormField
                   name="courseStatus"
                   label={methods.watch("courseStatus") ? "Published" : "Draft"}
-                  type="checkbox"
-                  className="flex items-center space-x-2 mb-2"
+                  type="switch"
+                  className="flex items-center space-x-2"
                   labelClassName={`text-sm font-medium ${
-                    methods.watch("courseStatus") ? "text-green-500 mt-2" : "text-yellow-500 mt-2"
-                  }`}
-                  inputClassName={cn(
-                    "peer inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50",
                     methods.watch("courseStatus")
-                      ? "data-[state=checked]:bg-green-700"
-                      : "data-[state=unchecked]:bg-yellow-700"
-                  )}
+                      ? "text-green-500"
+                      : "text-yellow-500"
+                  }`}
+                  inputClassName="data-[state=checked]:bg-green-500"
                 />
                 <Button
                   type="submit"
@@ -205,23 +169,6 @@ const CourseEditor = () => {
                   placeholder="0"
                   initialValue={course?.price}
                 />
-
-                <div className="mt-4">
-                  <label className="text-sm font-medium text-customgreys-dirtyGrey">
-                    Course Image
-                  </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border file:border-gray-300 file:text-gray-700 file:bg-gray-100 hover:file:bg-gray-200"
-                  />
-                  {courseImage && (
-                    <div className="mt-2 text-sm text-gray-600">
-                      Selected image: {courseImage.name}
-                    </div>
-                  )}
-                </div>
               </div>
             </div>
 
