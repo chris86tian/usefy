@@ -3,6 +3,7 @@ import nodemailer from "nodemailer";
 
 export async function POST(req: Request) {
   const { email, name, courseName, transactionId } = await req.json();
+  console.log(transactionId);
 
   try {
     const transporter = nodemailer.createTransport({
@@ -18,11 +19,10 @@ export async function POST(req: Request) {
     const info = await transporter.sendMail({
       from: process.env.SMTP_USER,
       to: email,
-      subject: "Course Purchase Confirmation",
-      text: `Hi ${name},\n\nThank you for purchasing the "${courseName}" course. Your transaction ID is ${transactionId}. Enjoy learning!\n\nBest regards,\nGrowthHungry Team`,
+      subject: "Course Enrollment Confirmation",
+      text: `Hi ${name},\n\nThank you for enrolling in the "${courseName}" course. Enjoy learning!\n\nBest regards,\nGrowthHungry Team`,
       html: `<p>Hi ${name},</p>
-             <p>Thank you for purchasing the <strong>${courseName}</strong> course. Your transaction ID is <strong>${transactionId}</strong>.</p>
-             <p>Enjoy learning!</p>
+             <p>Thank you for enrolling in the <strong>${courseName}</strong> course. Enjoy learning!</p>
              <p>Best regards,<br>GrowthHungry Team</p>`,
     });
 

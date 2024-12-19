@@ -4,7 +4,12 @@ import { CustomFormField } from "@/components/CustomFormField";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-import { centsToDollars, createCourseFormData, uploadAllVideos } from "@/lib/utils";
+import {
+  centsToDollars,
+  createCourseFormData,
+  uploadAllVideos,
+  uploadThumbnail,
+} from "@/lib/utils";
 import {
   openSectionModal,
   setSections,
@@ -40,8 +45,7 @@ const CourseEditor = () => {
 
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [thumbnail, setThumbnail] = useState<File | null>(null);
-  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
+  const [image, setImage] = useState<File | null>(null);
 
   const dispatch = useAppDispatch();
   const { sections } = useAppSelector((state) => state.global.courseEditor);
@@ -69,35 +73,9 @@ const CourseEditor = () => {
         courseImage: course.image || "",
       });
       dispatch(setSections(course.sections || []));
-      setThumbnailUrl(course.image || null);
     }
   }, [course, methods]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const uploadThumbnail = async () => {
-    if (!thumbnail) return;
-
-    try {
-      const { uploadUrl, imageUrl } = await getUploadImageUrl({
-        courseId: id,
-        fileName: thumbnail.name,
-        fileType: thumbnail.type,
-      }).unwrap();
-
-      await fetch(uploadUrl, {
-        method: "PUT",
-        headers: {
-          "Content-Type": thumbnail.type,
-        },
-        body: thumbnail,
-      });
-
-      toast.success("Thumbnail uploaded successfully!");
-      setThumbnailUrl(imageUrl);
-    } catch (error) {
-      console.error("Failed to upload thumbnail:", error);
-      toast.error("An error occurred while uploading the thumbnail.");
-    }
-  };
 
   const onSubmit = async (data: CourseFormData) => {
     setIsUploading(true);
@@ -111,11 +89,12 @@ const CourseEditor = () => {
         (currentProgress) => setProgress(currentProgress)
       );
 
-      await uploadThumbnail();
+      let thumbnailUrl = course?.image;
+      if (image) {
+        thumbnailUrl = await uploadThumbnail(id, getUploadImageUrl, image);
+      }
 
-      const formData = createCourseFormData(data, updatedSections);
-      console.log(thumbnail);
-      formData.append("thumbnail", thumbnailUrl || "");
+      const formData = createCourseFormData(data, updatedSections, thumbnailUrl || "");
 
       await updateCourse({
         courseId: id,
@@ -178,6 +157,15 @@ const CourseEditor = () => {
           <div className="flex justify-between md:flex-row flex-col gap-10 mt-5 font-dm-sans">
             <div className="basis-1/2">
               <div className="space-y-4">
+                {course?.image && (
+                  <Image
+                    src={course.image}
+                    alt="Thumbnail"
+                    width={100}
+                    height={100}
+                    className="rounded-lg object-cover"
+                  />
+                )}
                 <CustomFormField
                   name="courseTitle"
                   label="Course Title"
@@ -220,25 +208,18 @@ const CourseEditor = () => {
                   initialValue={course?.price}
                 />
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-customgreys-dirtyGrey">
-                    Upload Thumbnail
-                  </label>
+                <div className="space-y-2 flex flex-between">
+                  <div className="flex flex-col">
+                    <label className="text-sm font-medium text-customgreys-dirtyGrey mb-2">
+                      Upload Thumbnail
+                    </label>
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={(e) => setThumbnail(e.target.files?.[0] || null)}
+                    onChange={(e) => setImage(e.target.files?.[0] || null)}
                     className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border file:border-gray-300 file:bg-gray-100"
-                  />
-                  {thumbnailUrl && (
-                    <Image
-                      src={thumbnailUrl}
-                      alt="Thumbnail"
-                      width={100}
-                      height={100}
-                      className="mt-2 w-32 h-32 rounded-lg object-cover"
                     />
-                  )}
+                  </div>
                 </div>
               </div>
             </div>

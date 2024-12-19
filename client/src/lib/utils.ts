@@ -290,7 +290,8 @@ export const customDataGridStyles = {
 
 export const createCourseFormData = (
   data: CourseFormData,
-  sections: Section[]
+  sections: Section[],
+  thumbnailUrl: string
 ): FormData => {
   const formData = new FormData();
   formData.append("title", data.courseTitle);
@@ -298,6 +299,7 @@ export const createCourseFormData = (
   formData.append("category", data.courseCategory);
   formData.append("price", data.coursePrice.toString());
   formData.append("status", data.courseStatus ? "Published" : "Draft");
+  formData.append("image", thumbnailUrl);
 
   const sectionsWithVideos = sections.map((section) => ({
     ...section,
@@ -397,6 +399,34 @@ async function uploadVideo(
   } catch (error) {
     console.error(`Failed to upload video for chapter ${chapter.chapterId}:`, error);
     toast.error(`Failed to upload video for chapter ${chapter.chapterId}`);
+    throw error;
+  }
+}
+
+export async function uploadThumbnail(
+  courseId: string,
+  getUploadImageUrl: any,
+  file: File
+) {
+  try {
+    const { uploadUrl, imageUrl } = await getUploadImageUrl({
+      courseId,
+      fileName: file.name,
+      fileType: file.type,
+    }).unwrap();
+
+    await fetch(uploadUrl, {
+      method: "PUT",
+      headers: { "Content-Type": file.type },
+      body: file,
+    });
+
+    toast.success("Thumbnail uploaded successfully!");
+
+    return imageUrl;
+  } catch (error) {
+    console.error("Failed to upload thumbnail:", error);
+    toast.error("Failed to upload thumbnail");
     throw error;
   }
 }

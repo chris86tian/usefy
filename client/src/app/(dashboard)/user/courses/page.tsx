@@ -58,8 +58,20 @@ const Courses = () => {
 
   if (!isLoaded || isLoading) return <Loading />;
   if (!user) return <div className="text-center">Please sign in to view your courses</div>;
-  if (isError || !courses || courses.length === 0)
-    return <div className="text-center">You are not enrolled in any courses yet</div>;
+  if (isError || !courses || courses.length === 0) {
+    return (
+      <div className="text-center space-y-4">
+        <p>You are not enrolled in any courses yet.</p>
+        <button
+          onClick={() => router.push("/search")}
+          className="px-4 py-2 bg-primary-700 text-white-100 rounded-lg hover:bg-primary-600"
+        >
+          Browse Courses
+        </button>
+      </div>
+    );
+  }
+  
 
   return (
     <div className="user-courses">

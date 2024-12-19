@@ -53,7 +53,7 @@ export const createStripePaymentIntent = async (
       currency: "usd",
       automatic_payment_methods: {
         enabled: true,
-        allow_redirects: "never"
+        allow_redirects: "never",
       },
     });
 
@@ -70,6 +70,7 @@ export const createStripePaymentIntent = async (
   }
 };
 
+
 export const createTransaction = async (
   req: Request,
   res: Response
@@ -77,10 +78,48 @@ export const createTransaction = async (
   const { userId, courseId, transactionId, amount, paymentProvider } = req.body;
 
   try {
-    // 1. get course info
+    // If the course is free, skip the transaction
+    if (amount === 0) {
+      // Automatically enroll the user for free courses
+      const course = await Course.get(courseId);
+
+      const initialProgress = new UserCourseProgress({
+        userId,
+        courseId,
+        enrollmentDate: new Date().toISOString(),
+        overallProgress: 0,
+        sections: course.sections.map((section: any) => ({
+          sectionId: section.sectionId,
+          chapters: section.chapters.map((chapter: any) => ({
+            chapterId: chapter.chapterId,
+            completed: false,
+          })),
+        })),
+        lastAccessedTimestamp: new Date().toISOString(),
+      });
+      await initialProgress.save();
+
+      // Update course enrollments
+      await Course.update(
+        { courseId },
+        {
+          $ADD: {
+            enrollments: [{ userId }],
+          },
+        }
+      );
+
+      res.json({
+        message: "Enrolled in free course successfully",
+        data: { courseProgress: initialProgress },
+      });
+      return;
+    }
+
+    // 1. Get course info
     const course = await Course.get(courseId);
 
-    // 2. create transaction record
+    // 2. Create transaction record
     const newTransaction = new Transaction({
       dateTime: new Date().toISOString(),
       userId,
@@ -91,7 +130,7 @@ export const createTransaction = async (
     });
     await newTransaction.save();
 
-    // 3. create initial course progress
+    // 3. Create initial course progress
     const initialProgress = new UserCourseProgress({
       userId,
       courseId,
@@ -108,7 +147,7 @@ export const createTransaction = async (
     });
     await initialProgress.save();
 
-    // 4. add enrollment to relevant course
+    // 4. Add enrollment to relevant course
     await Course.update(
       { courseId },
       {

@@ -12,6 +12,7 @@ import CoursePreview from "@/components/CoursePreview";
 import { CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCreateTransactionMutation } from "@/state/api";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 const PaymentPageContent = () => {
@@ -22,21 +23,59 @@ const PaymentPageContent = () => {
   const { course, courseId } = useCurrentCourse();
   const { user } = useUser();
   const { signOut } = useClerk();
+  const router = useRouter();
+
+  const handleFreeEnrollment = async () => {
+    try {
+      const transactionData: Partial<Transaction> = {
+        transactionId: "free-enrollment",
+        userId: user?.id,
+        courseId: courseId,
+        paymentProvider: undefined,
+        amount: 0,
+      };
+
+      await createTransaction(transactionData);
+
+      try {
+        await fetch("/api/send-email", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: user?.emailAddresses[0].emailAddress,
+            name: user?.fullName,
+            courseName: course?.title,
+          }),
+        });
+        toast.success("Enrolled in free course! Email notification sent.");
+      } catch (error) {
+        console.error("Failed to send email:", error);
+        toast.error("Enrolled successfully, but failed to send email.");
+      }
+
+      router.push(`/user/courses`);
+    } catch (error) {
+      console.error("Failed to enroll in free course:", error);
+      toast.error("Failed to enroll. Please try again.");
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-  
+
     if (!stripe || !elements) {
       toast.error("Stripe service is not available");
       return;
     }
-  
+
     const baseUrl = process.env.NEXT_PUBLIC_LOCAL_URL
       ? `${process.env.NEXT_PUBLIC_LOCAL_URL}`
       : process.env.NEXT_PUBLIC_VERCEL_URL
       ? `${process.env.NEXT_PUBLIC_VERCEL_URL}`
       : undefined;
-  
+
     const result = await stripe.confirmPayment({
       elements,
       confirmParams: {
@@ -44,7 +83,7 @@ const PaymentPageContent = () => {
       },
       redirect: "if_required",
     });
-  
+
     if (result.paymentIntent?.status === "succeeded") {
       const transactionData: Partial<Transaction> = {
         transactionId: result.paymentIntent.id,
@@ -53,9 +92,9 @@ const PaymentPageContent = () => {
         paymentProvider: "stripe",
         amount: course?.price || 0,
       };
-  
+
       await createTransaction(transactionData);
-  
+
       try {
         await fetch("/api/send-email", {
           method: "POST",
@@ -74,12 +113,12 @@ const PaymentPageContent = () => {
         console.error("Failed to send email:", error);
         toast.error("Purchase successful, but failed to send email.");
       }
-  
-      navigateToStep(3);
+
+      router.push(`/user/courses`);
     } else {
       toast.error("Payment failed. Please try again.");
     }
-  };  
+  };
 
   const handleSignOutAndNavigate = async () => {
     await signOut();
@@ -96,35 +135,53 @@ const PaymentPageContent = () => {
           <CoursePreview course={course} />
         </div>
 
-        {/* Pyament Form */}
-        <div className="payment__form-container">
-          <form
-            id="payment-form"
-            onSubmit={handleSubmit}
-            className="payment__form"
-          >
+        {/* Payment Form or Free Enrollment */}
+        {course?.price === 0 ? (
+          <div className="payment__form-container">
             <div className="payment__content">
-              <h1 className="payment__title">Checkout</h1>
+              <h1 className="payment__title">Enrollment</h1>
               <p className="payment__subtitle">
-                Fill out the payment details below to complete your purchase.
+                Enroll in this course for free.
               </p>
+              <Button
+                className="payment__submit"
+                onClick={handleFreeEnrollment}
+                type="button"
+              >
+                Enroll for Free
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="payment__form-container">
+            <form
+              id="payment-form"
+              onSubmit={handleSubmit}
+              className="payment__form"
+            >
+              <div className="payment__content">
+                <h1 className="payment__title">Checkout</h1>
+                <p className="payment__subtitle">
+                  Fill out the payment details below to complete your purchase.
+                </p>
 
-              <div className="payment__method">
-                <h3 className="payment__method-title">Payment Method</h3>
+                <div className="payment__method">
+                  <h3 className="payment__method-title">Payment Method</h3>
 
-                <div className="payment__card-container">
-                  <div className="payment__card-header">
-                    <CreditCard size={24} />
-                    <span>Credit/Debit Card</span>
-                  </div>
-                  <div className="payment__card-element">
-                    <PaymentElement />
+                  <div className="payment__card-container">
+                    <div className="payment__card-header">
+                      <CreditCard size={24} />
+                      <span>Credit/Debit Card</span>
+                    </div>
+                    <div className="payment__card-element">
+                      <PaymentElement />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </form>
-        </div>
+            </form>
+          </div>
+        )}
       </div>
 
       {/* Navigation Buttons */}
@@ -136,15 +193,6 @@ const PaymentPageContent = () => {
           type="button"
         >
           Switch Account
-        </Button>
-
-        <Button
-          form="payment-form"
-          type="submit"
-          className="payment__submit"
-          disabled={!stripe || !elements}
-        >
-          Pay with Credit Card
         </Button>
       </div>
     </div>
