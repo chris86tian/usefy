@@ -67,7 +67,7 @@ const SectionModal = () => {
     }
 
     toast.success(
-      `Section added/updated successfully but you need to save the course to apply the changes`
+      `Section updated successfully but you need to save the course to apply the changes`
     );
     onClose();
   };

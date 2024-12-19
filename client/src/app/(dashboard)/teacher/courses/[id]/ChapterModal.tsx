@@ -1,38 +1,29 @@
+import React, { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { v4 as uuidv4 } from "uuid";
+import { toast } from "sonner";
+import { X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { CustomFormField } from "@/components/CustomFormField";
 import CustomModal from "@/components/CustomModal";
-import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { ChapterFormData, chapterSchema } from "@/lib/schemas";
 import { addChapter, closeChapterModal, editChapter } from "@/state";
 import { useAppDispatch, useAppSelector } from "@/state/redux";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { X } from "lucide-react";
-import React, { useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import { v4 as uuidv4 } from "uuid";
 
 const ChapterModal = () => {
   const dispatch = useAppDispatch();
-  const {
-    isChapterModalOpen,
-    selectedSectionIndex,
-    selectedChapterIndex,
-    sections,
-  } = useAppSelector((state) => state.global.courseEditor);
+  const { isChapterModalOpen, selectedSectionIndex, selectedChapterIndex, sections } =
+    useAppSelector((state) => state.global.courseEditor);
 
   const chapter: Chapter | undefined =
     selectedSectionIndex !== null && selectedChapterIndex !== null
       ? sections[selectedSectionIndex].chapters[selectedChapterIndex]
       : undefined;
+
+  const [videoType, setVideoType] = useState<"file" | "link">("file");
 
   const methods = useForm<ChapterFormData>({
     resolver: zodResolver(chapterSchema),
@@ -50,6 +41,7 @@ const ChapterModal = () => {
         content: chapter.content,
         video: chapter.video || "",
       });
+      setVideoType(typeof chapter.video === 'string' && chapter.video.startsWith("http") ? "link" : "file");
     } else {
       methods.reset({
         title: "",
@@ -92,7 +84,7 @@ const ChapterModal = () => {
     }
 
     toast.success(
-      `Chapter added/updated successfully but you need to save the course to apply the changes`
+      `Chapter updated successfully but you need to save the course to apply the changes`
     );
     onClose();
   };
@@ -125,43 +117,67 @@ const ChapterModal = () => {
               placeholder="Write chapter content here"
             />
 
-            <FormField
-              control={methods.control}
-              name="video"
-              render={({ field: { onChange, value } }) => (
-                <FormItem>
-                  <FormLabel className="text-customgreys-dirtyGrey text-sm">
-                    Chapter Video
-                  </FormLabel>
-                  <FormControl>
-                    <div>
+            <div className="mb-4">
+              <FormLabel className="text-customgreys-dirtyGrey text-sm">
+                Select Video Type
+              </FormLabel>
+              <div className="flex items-center gap-4">
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="videoType"
+                    value="file"
+                    checked={videoType === "file"}
+                    onChange={() => setVideoType("file")}
+                    className="mr-2"
+                  />
+                  File Upload
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="videoType"
+                    value="link"
+                    checked={videoType === "link"}
+                    onChange={() => setVideoType("link")}
+                    className="mr-2"
+                  />
+                  YouTube/Vimeo Link
+                </label>
+              </div>
+            </div>
+
+            {videoType === "file" ? (
+              <FormField
+                control={methods.control}
+                name="video"
+                render={({ field: { onChange } }) => (
+                  <FormItem>
+                    <FormLabel className="text-customgreys-dirtyGrey text-sm">
+                      Upload Video
+                    </FormLabel>
+                    <FormControl>
                       <Input
                         type="file"
                         accept="video/*"
                         onChange={(e) => {
                           const file = e.target.files?.[0];
-                          if (file) {
-                            onChange(file);
-                          }
+                          if (file) onChange(file);
                         }}
                         className="border-none bg-customgreys-darkGrey py-2 cursor-pointer"
                       />
-                      {typeof value === "string" && value && (
-                        <div className="my-2 text-sm text-gray-600">
-                          Current video: {value.split("/").pop()}
-                        </div>
-                      )}
-                      {value instanceof File && (
-                        <div className="my-2 text-sm text-gray-600">
-                          Selected file: {value.name}
-                        </div>
-                      )}
-                    </div>
-                  </FormControl>
-                  <FormMessage className="text-red-400" />
-                </FormItem>
-              )}
-            />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ) : (
+              <CustomFormField
+                name="video"
+                label="Video Link"
+                placeholder="Paste YouTube/Vimeo link here"
+              />
+            )}
 
             <div className="chapter-modal__actions">
               <Button type="button" variant="outline" onClick={onClose}>

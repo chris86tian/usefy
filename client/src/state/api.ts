@@ -187,6 +187,15 @@ export const api = createApi({
 
     /* 
     ===============
+    NOTIFICATIONS
+    =============== 
+    */
+    getNotifications: build.query<Notification[], Partial<Notification>>({
+      query: (userId) => `notifications?userId=${userId}`,
+    }),
+
+    /* 
+    ===============
     USER COURSE PROGRESS
     =============== 
     */
@@ -261,4 +270,5 @@ export const {
   useGetUserEnrolledCoursesQuery,
   useGetUserCourseProgressQuery,
   useUpdateUserCourseProgressMutation,
+  useGetNotificationsQuery,
 } = api;

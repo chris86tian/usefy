@@ -3,6 +3,7 @@ import Course from "../models/courseModel";
 import AWS from "aws-sdk";
 import { v4 as uuidv4 } from "uuid";
 import { getAuth } from "@clerk/express";
+import UserCourseProgress from "../models/userCourseProgressModel";
 
 const s3 = new AWS.S3();
 
@@ -63,6 +64,23 @@ export const createCourse = async (
       sections: [],
       enrollments: [],
     });
+
+    const initialProgress = new UserCourseProgress({
+      userId: teacherId,
+      courseId: newCourse.courseId,
+      enrollmentDate: new Date().toISOString(),
+      overallProgress: 0,
+      sections: newCourse.sections.map((section: any) => ({
+        sectionId: section.sectionId,
+        chapters: section.chapters.map((chapter: any) => ({
+          chapterId: chapter.chapterId,
+          completed: false,
+        })),
+      })),
+      lastAccessedTimestamp: new Date().toISOString(),
+    });
+    await initialProgress.save();
+
     await newCourse.save();
 
     res.json({ message: "Course created successfully", data: newCourse });
@@ -105,8 +123,8 @@ export const updateCourse = async (
       updateData.price = price * 100;
     }
 
-    if (updateData.imageUrl) {
-      course.image = updateData.imageUrl;
+    if (updateData.thumbnail) {
+      course.image = updateData.thumbnail;
     }
 
     if (updateData.sections) {

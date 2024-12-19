@@ -4,35 +4,44 @@ import { CustomFormField } from "@/components/CustomFormField";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-import { courseSchema } from "@/lib/schemas";
+import { centsToDollars, createCourseFormData, uploadAllVideos } from "@/lib/utils";
 import {
-  centsToDollars,
-  createCourseFormData,
-  uploadAllVideos,
-} from "@/lib/utils";
-import { openSectionModal, setSections } from "@/state";
+  openSectionModal,
+  setSections,
+} from "@/state";
 import {
   useGetCourseQuery,
   useUpdateCourseMutation,
   useGetUploadVideoUrlMutation,
+  useGetUploadImageUrlMutation,
 } from "@/state/api";
 import { useAppDispatch, useAppSelector } from "@/state/redux";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Plus } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import DroppableComponent from "./Droppable";
 import ChapterModal from "./ChapterModal";
 import SectionModal from "./SectionModal";
+import { toast } from "sonner";
+import { courseSchema } from "@/lib/schemas";
+import Image from "next/image";
 
 const CourseEditor = () => {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
+
   const { data: course, isLoading, refetch } = useGetCourseQuery(id);
   const [updateCourse] = useUpdateCourseMutation();
   const [getUploadVideoUrl] = useGetUploadVideoUrlMutation();
+  const [getUploadImageUrl] = useGetUploadImageUrlMutation();
+
+  const [isUploading, setIsUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [thumbnail, setThumbnail] = useState<File | null>(null);
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
 
   const dispatch = useAppDispatch();
   const { sections } = useAppSelector((state) => state.global.courseEditor);
@@ -45,6 +54,7 @@ const CourseEditor = () => {
       courseCategory: "",
       coursePrice: "0",
       courseStatus: false,
+      courseImage: "",
     },
   });
 
@@ -56,29 +66,69 @@ const CourseEditor = () => {
         courseCategory: course.category,
         coursePrice: centsToDollars(course.price),
         courseStatus: course.status === "Published",
+        courseImage: course.image || "",
       });
       dispatch(setSections(course.sections || []));
+      setThumbnailUrl(course.image || null);
     }
   }, [course, methods]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const uploadThumbnail = async () => {
+    if (!thumbnail) return;
+
+    try {
+      const { uploadUrl, imageUrl } = await getUploadImageUrl({
+        courseId: id,
+        fileName: thumbnail.name,
+        fileType: thumbnail.type,
+      }).unwrap();
+
+      await fetch(uploadUrl, {
+        method: "PUT",
+        headers: {
+          "Content-Type": thumbnail.type,
+        },
+        body: thumbnail,
+      });
+
+      toast.success("Thumbnail uploaded successfully!");
+      setThumbnailUrl(imageUrl);
+    } catch (error) {
+      console.error("Failed to upload thumbnail:", error);
+      toast.error("An error occurred while uploading the thumbnail.");
+    }
+  };
+
   const onSubmit = async (data: CourseFormData) => {
+    setIsUploading(true);
+    setProgress(0);
+
     try {
       const updatedSections = await uploadAllVideos(
         sections,
         id,
-        getUploadVideoUrl
+        getUploadVideoUrl,
+        (currentProgress) => setProgress(currentProgress)
       );
 
+      await uploadThumbnail();
+
       const formData = createCourseFormData(data, updatedSections);
+      console.log(thumbnail);
+      formData.append("thumbnail", thumbnailUrl || "");
 
       await updateCourse({
         courseId: id,
         formData,
       }).unwrap();
 
+      toast.success("Course updated successfully!");
       refetch();
     } catch (error) {
       console.error("Failed to update course:", error);
+      toast.error("An error occurred while updating the course.");
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -169,6 +219,27 @@ const CourseEditor = () => {
                   placeholder="0"
                   initialValue={course?.price}
                 />
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-customgreys-dirtyGrey">
+                    Upload Thumbnail
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setThumbnail(e.target.files?.[0] || null)}
+                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border file:border-gray-300 file:bg-gray-100"
+                  />
+                  {thumbnailUrl && (
+                    <Image
+                      src={thumbnailUrl}
+                      alt="Thumbnail"
+                      width={100}
+                      height={100}
+                      className="mt-2 w-32 h-32 rounded-lg object-cover"
+                    />
+                  )}
+                </div>
               </div>
             </div>
 
@@ -203,6 +274,18 @@ const CourseEditor = () => {
               )}
             </div>
           </div>
+
+          {isUploading && (
+            <div className="flex flex-col items-center mt-4 space-y-2">
+              <div
+                className="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"
+                aria-label="Loading"
+              />
+              <p className="text-secondary-foreground">
+                Uploading videos... {progress}% complete
+              </p>
+            </div>
+          )}
         </form>
       </Form>
 

@@ -400,6 +400,59 @@ input[type="color"] {
   @apply w-full bg-customgreys-secondarybg flex justify-center items-center rounded-lg;
 }
 
+/* Notifications Page */
+.notifications {
+  @apply flex flex-col w-full;
+}
+
+.notifications__container {
+  @apply flex flex-col w-full;
+}
+
+.notifications__title {
+  @apply text-2xl font-bold mb-6;
+}
+
+.notifications__grid {
+  @apply grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4;
+}
+
+.notifications__table {
+  @apply text-customgreys-dirtyGrey min-h-[200px];
+}
+
+.notifications__table-header {
+  @apply bg-customgreys-darkGrey;
+}
+
+.notifications__table-header-row {
+  @apply border-none text-white-50;
+}
+
+.notifications__table-cell {
+  @apply border-none p-4;
+}
+
+.notifications__table-row {
+  @apply border-none;
+}
+
+.notifications__table-row:hover {
+  @apply bg-customgreys-primarybg;
+}
+
+.notifications__table-body {
+  @apply bg-customgreys-primarybg min-h-[200px];
+}
+
+.notifications__table-row:hover {
+  @apply bg-customgreys-primarybg;
+}
+
+.notifications__table-cell {
+  @apply text-customgreys-dirtyGrey;
+}
+  
 /* Payment Page */
 .payment {
   @apply flex flex-col w-full;

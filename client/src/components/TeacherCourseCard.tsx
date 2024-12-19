@@ -9,13 +9,14 @@ import {
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
-import { Pencil, Trash2 } from "lucide-react";
+import { Eye, Pencil, Trash2 } from "lucide-react";
 
 const TeacherCourseCard = ({
   course,
   onEdit,
   onDelete,
   isOwner,
+  onViewCourse
 }: TeacherCourseCardProps) => {
   return (
     <Card className="course-card-teacher group">
@@ -75,13 +76,22 @@ const TeacherCourseCard = ({
                   Edit
                 </Button>
               </div>
-              <div>
+              <div className="flex flex-col gap-2">
                 <Button
                   className="course-card-teacher__delete-button"
                   onClick={() => onDelete(course)}
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
                   Delete
+                </Button>
+              </div>
+              <div>
+                <Button
+                  className="course-card-teacher__delete-button"
+                  onClick={() => { onViewCourse(course) }}
+                >
+                  <Eye className="w-4 h-4 mr-2" />
+                  View
                 </Button>
               </div>
             </>

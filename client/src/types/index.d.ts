@@ -91,6 +91,7 @@ declare global {
     onEdit: (course: Course) => void;
     onDelete: (course: Course) => void;
     isOwner: boolean;
+    onViewCourse: (course: Course) => void;
   }
 
   interface Comment {
@@ -205,6 +206,7 @@ declare global {
     courseCategory: string;
     coursePrice: string;
     courseStatus: boolean;
+    courseImage: string;
   }
 }
 

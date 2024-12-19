@@ -54,6 +54,26 @@ const Courses = () => {
     }
   };
 
+  const handleGoToCourse = (course: Course) => {
+    if (
+      course.sections &&
+      course.sections.length > 0 &&
+      course.sections[0].chapters.length > 0
+    ) {
+      const firstChapter = course.sections[0].chapters[0];
+      router.push(
+        `/user/courses/${course.courseId}/chapters/${firstChapter.chapterId}`,
+        {
+          scroll: false,
+        }
+      );
+    } else {
+      router.push(`/user/courses/${course.courseId}`, {
+        scroll: false,
+      });
+    }
+  };
+
   const handleCreateCourse = async () => {
     if (!user) return;
 
@@ -95,6 +115,7 @@ const Courses = () => {
             onEdit={handleEdit}
             onDelete={handleDelete}
             isOwner={course.teacherId === user?.id}
+            onViewCourse={handleGoToCourse}
           />
         ))}
       </div>

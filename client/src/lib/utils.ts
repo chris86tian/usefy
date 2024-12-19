@@ -315,18 +315,32 @@ export const createCourseFormData = (
 export const uploadAllVideos = async (
   localSections: Section[],
   courseId: string,
-  getUploadVideoUrl: any
+  getUploadVideoUrl: any,
+  setProgress: (progress: number) => void
 ) => {
+  // Deep clone sections to avoid mutating original data
   const updatedSections = localSections.map((section) => ({
     ...section,
-    chapters: section.chapters.map((chapter) => ({
-      ...chapter,
-    })),
+    chapters: section.chapters.map((chapter) => ({ ...chapter })),
   }));
+
+  // Count the total number of videos to upload
+  const totalVideos = updatedSections.reduce(
+    (count, section) =>
+      count +
+      section.chapters.filter(
+        (chapter) => chapter.video instanceof File && chapter.video.type === "video/mp4"
+      ).length,
+    0
+  );
+
+  let uploadedCount = 0;
 
   for (let i = 0; i < updatedSections.length; i++) {
     for (let j = 0; j < updatedSections[i].chapters.length; j++) {
       const chapter = updatedSections[i].chapters[j];
+
+      // Check if the video is a File and needs to be uploaded
       if (chapter.video instanceof File && chapter.video.type === "video/mp4") {
         try {
           const updatedChapter = await uploadVideo(
@@ -335,6 +349,7 @@ export const uploadAllVideos = async (
             updatedSections[i].sectionId,
             getUploadVideoUrl
           );
+
           updatedSections[i].chapters[j] = updatedChapter;
         } catch (error) {
           console.error(
@@ -342,6 +357,10 @@ export const uploadAllVideos = async (
             error
           );
         }
+
+        // Update progress after each upload attempt
+        uploadedCount++;
+        setProgress(Math.floor((uploadedCount / totalVideos) * 100));
       }
     }
   }
@@ -368,21 +387,16 @@ async function uploadVideo(
 
     await fetch(uploadUrl, {
       method: "PUT",
-      headers: {
-        "Content-Type": file.type,
-      },
+      headers: { "Content-Type": file.type },
       body: file,
     });
-    toast.success(
-      `Video uploaded successfully for chapter ${chapter.chapterId}`
-    );
+
+    toast.success(`Video uploaded successfully for chapter ${chapter.chapterId}`);
 
     return { ...chapter, video: videoUrl };
   } catch (error) {
-    console.error(
-      `Failed to upload video for chapter ${chapter.chapterId}:`,
-      error
-    );
+    console.error(`Failed to upload video for chapter ${chapter.chapterId}:`, error);
+    toast.error(`Failed to upload video for chapter ${chapter.chapterId}`);
     throw error;
   }
 }
