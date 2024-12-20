@@ -7,6 +7,7 @@ import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import CourseCardSearch from "@/components/CourseCardSearch";
 import SelectedCourse from "./SelectedCourse";
+import { useUser } from "@clerk/nextjs";
 
 const Search = () => {
   const searchParams = useSearchParams();
@@ -14,6 +15,7 @@ const Search = () => {
   const { data: courses, isLoading, isError } = useGetCoursesQuery({});
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const router = useRouter();
+  const user = useUser();
 
   useEffect(() => {
     if (courses) {
@@ -78,6 +80,7 @@ const Search = () => {
             <SelectedCourse
               course={selectedCourse}
               handleEnrollNow={handleEnrollNow}
+              userId={user.user?.id || ""}
             />
           </motion.div>
         )}

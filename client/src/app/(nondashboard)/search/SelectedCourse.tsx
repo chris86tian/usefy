@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/lib/utils";
 import React from "react";
 
-const SelectedCourse = ({ course, handleEnrollNow }: SelectedCourseProps) => {
+const SelectedCourse = ({ course, handleEnrollNow, userId }: SelectedCourseProps) => {
   return (
     <div className="selected-course">
       <div>
@@ -28,12 +28,24 @@ const SelectedCourse = ({ course, handleEnrollNow }: SelectedCourseProps) => {
           <span className="selected-course__price">
             {formatPrice(course.price)}
           </span>
-          <Button
-            onClick={() => handleEnrollNow(course.courseId)}
-            className="bg-primary-700 hover:bg-primary-600"
-          >
-            Enroll Now
-          </Button>
+          {course.enrollments?.some(
+            (enrollment) => enrollment.userId === userId
+          ) ? (
+            <Button
+              className="bg-gray-300 text-gray-600"
+              disabled
+              onClick={() => {}}
+            >
+              Enrolled
+            </Button>
+          ) : (
+            <Button
+              className="bg-primary-700 hover:bg-primary-600"
+              onClick={() => handleEnrollNow(course.courseId)}
+            >
+              Enroll Now
+            </Button>
+          )}
         </div>
       </div>
     </div>

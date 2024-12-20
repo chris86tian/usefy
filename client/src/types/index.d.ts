@@ -165,6 +165,7 @@ declare global {
   interface SelectedCourseProps {
     course: Course;
     handleEnrollNow: (courseId: string) => void;
+    userId: string;
   }
 
   interface ToolbarProps {
