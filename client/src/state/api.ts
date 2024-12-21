@@ -79,6 +79,10 @@ export const api = createApi({
       invalidatesTags: ["Users"],
     }),
 
+    getUsers: build.query<User[], void>({
+      query: () => "users/clerk",
+    }),
+
     /* 
     ===============
     COURSES
@@ -256,6 +260,7 @@ export const api = createApi({
 });
 
 export const {
+  useGetUsersQuery,
   useUpdateUserMutation,
   useCreateCourseMutation,
   useUpdateCourseMutation,

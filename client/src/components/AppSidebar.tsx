@@ -35,14 +35,14 @@ const AppSidebar = () => {
   const navLinks = {
     student: [
       { icon: BookOpen, label: "Courses", href: "/user/courses" },
-      { icon: Briefcase, label: "Billing", href: "/user/billing" },
+      { icon: Briefcase, label: "Payments", href: "/user/billing" },
       { icon: User, label: "Profile", href: "/user/profile" },
       { icon: Settings, label: "Settings", href: "/user/settings" },
     ],
     teacher: [
       { icon: BookOpen, label: "Courses", href: "/teacher/courses" },
       { icon: Laptop, label: "Panel", href: "/teacher/panel" },
-      { icon: DollarSign, label: "Billing", href: "/teacher/billing" },
+      { icon: DollarSign, label: "Payments", href: "/teacher/billing" },
       { icon: User, label: "Profile", href: "/teacher/profile" },
       { icon: Settings, label: "Settings", href: "/teacher/settings" },
     ],
@@ -138,7 +138,7 @@ const AppSidebar = () => {
                 onClick={() => signOut()}
                 className="app-sidebar__signout"
               >
-                <LogOut className="mr-2 h-6 w-6" />
+                <LogOut className="m-2 h-6 w-6" />
                 <span>Sign out</span>
               </button>
             </SidebarMenuButton>

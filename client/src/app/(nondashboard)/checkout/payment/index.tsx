@@ -143,13 +143,23 @@ const PaymentPageContent = () => {
               <p className="payment__subtitle">
                 Enroll in this course for free.
               </p>
-              <Button
-                className="payment__submit"
-                onClick={handleFreeEnrollment}
-                type="button"
-              >
-                Enroll for Free
-              </Button>
+              {user?.id && course.enrollments?.some(enrollment => enrollment.userId === user.id) ? (
+                <Button
+                  className="payment__submit"
+                  disabled
+                  type="button"
+                >
+                  Enrolled
+                </Button>
+              ) : (
+                <Button
+                  className="payment__submit"
+                  onClick={handleFreeEnrollment}
+                  type="button"
+                >
+                  Enroll for Free
+                </Button>
+              )}
             </div>
           </div>
         ) : (

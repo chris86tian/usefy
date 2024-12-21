@@ -6,6 +6,8 @@ import {
   FileText,
   CheckCircle,
   Trophy,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -17,6 +19,7 @@ const ChaptersSidebar = () => {
   const router = useRouter();
   const { setOpen } = useSidebar();
   const [expandedSections, setExpandedSections] = useState<string[]>([]);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false); 
 
   const {
     user,
@@ -52,28 +55,47 @@ const ChaptersSidebar = () => {
     });
   };
 
+  const toggleSidebar = () => {
+    setIsSidebarCollapsed((prev) => !prev);
+  };
+
   return (
-    <div ref={sidebarRef} className="chapters-sidebar">
+    <div
+      ref={sidebarRef}
+      className={cn("chapters-sidebar", {
+        "chapters-sidebar--collapsed": isSidebarCollapsed,
+      })}
+    >
       <div className="chapters-sidebar__header">
-        <h2 className="chapters-sidebar__title">{course.title}</h2>
-        <hr className="chapters-sidebar__divider" />
+        <div className="chapters-sidebar__title-wrapper">
+          <button
+            onClick={toggleSidebar}
+            title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+          >
+            {isSidebarCollapsed ? <ChevronRight className="ml-2 mt-2" /> : <ChevronLeft className="ml-2 mt-2" />}
+          </button>
+          <h2 className="chapters-sidebar__title">{!isSidebarCollapsed ? course.title : ""}</h2>
+        </div>
+        {!isSidebarCollapsed && <hr className="chapters-sidebar__divider" />}
       </div>
-      {course.sections.map((section, index) => (
-        <Section
-          key={section.sectionId}
-          section={section}
-          index={index}
-          sectionProgress={userProgress.sections.find(
-            (s) => s.sectionId === section.sectionId
-          )}
-          chapterId={chapterId as string}
-          courseId={courseId as string}
-          expandedSections={expandedSections}
-          toggleSection={toggleSection}
-          handleChapterClick={handleChapterClick}
-          updateChapterProgress={updateChapterProgress}
-        />
-      ))}
+      {!isSidebarCollapsed &&
+        course.sections.map((section, index) => (
+          <Section
+            key={section.sectionId}
+            section={section}
+            index={index}
+            sectionProgress={userProgress.sections.find(
+              (s) => s.sectionId === section.sectionId
+            )}
+            chapterId={chapterId as string}
+            courseId={courseId as string}
+            expandedSections={expandedSections}
+            toggleSection={toggleSection}
+            handleChapterClick={handleChapterClick}
+            updateChapterProgress={updateChapterProgress}
+            isSidebarCollapsed={isSidebarCollapsed}
+          />
+        ))}
     </div>
   );
 };
@@ -88,12 +110,14 @@ const Section = ({
   toggleSection,
   handleChapterClick,
   updateChapterProgress,
+  isSidebarCollapsed,
 }: {
   section: any;
   index: number;
   sectionProgress: any;
   chapterId: string;
   courseId: string;
+  isSidebarCollapsed: boolean;
   expandedSections: string[];
   toggleSection: (sectionTitle: string) => void;
   handleChapterClick: (sectionId: string, chapterId: string) => void;
@@ -145,6 +169,7 @@ const Section = ({
             courseId={courseId}
             handleChapterClick={handleChapterClick}
             updateChapterProgress={updateChapterProgress}
+            isSidebarCollapsed={isSidebarCollapsed}
           />
         </div>
       )}
@@ -201,11 +226,13 @@ const ChaptersList = ({
   courseId,
   handleChapterClick,
   updateChapterProgress,
+  isSidebarCollapsed,
 }: {
   section: any;
   sectionProgress: any;
   chapterId: string;
   courseId: string;
+  isSidebarCollapsed: boolean;
   handleChapterClick: (sectionId: string, chapterId: string) => void;
   updateChapterProgress: (
     sectionId: string,
@@ -226,6 +253,7 @@ const ChaptersList = ({
           courseId={courseId}
           handleChapterClick={handleChapterClick}
           updateChapterProgress={updateChapterProgress}
+          isSidebarCollapsed={isSidebarCollapsed}
         />
       ))}
     </ul>
@@ -240,6 +268,7 @@ const Chapter = ({
   chapterId,
   handleChapterClick,
   updateChapterProgress,
+  isSidebarCollapsed,
 }: {
   chapter: any;
   index: number;
@@ -247,6 +276,7 @@ const Chapter = ({
   sectionProgress: any;
   chapterId: string;
   courseId: string;
+  isSidebarCollapsed: boolean;
   handleChapterClick: (sectionId: string, chapterId: string) => void;
   updateChapterProgress: (
     sectionId: string,
@@ -300,6 +330,16 @@ const Chapter = ({
       </span>
       {chapter.type === "Text" && (
         <FileText className="chapters-sidebar__text-icon" />
+      )}
+      {!isSidebarCollapsed && (
+        <>
+          <span className="chapters-sidebar__chapter-title">
+            {chapter.title}
+          </span>
+          {chapter.type === "Text" && (
+            <FileText className="chapters-sidebar__text-icon" />
+          )}
+        </>
       )}
     </li>
   );

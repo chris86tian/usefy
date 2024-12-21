@@ -7,6 +7,8 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import ReactPlayer from "react-player";
 import Loading from "@/components/Loading";
 import { useCourseProgressData } from "@/hooks/useCourseProgressData";
+import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button";
 
 const Course = () => {
   const {
@@ -24,6 +26,7 @@ const Course = () => {
   console.log("currentChapter.video:", currentChapter);
 
   const playerRef = useRef<ReactPlayer>(null);
+  const router = useRouter();
 
   const handleProgress = ({ played }: { played: number }) => {
     if (
@@ -42,6 +45,28 @@ const Course = () => {
       );
     }
   };
+
+  const handleGoToPreviousChapter = () => {
+    const previousChapterIndex = (currentSection?.chapters?.findIndex(
+      (chapter) => chapter.chapterId === currentChapter?.chapterId
+    ) ?? -1) - 1;
+    if (previousChapterIndex >= 0) {
+      if (course) {
+        router.push(`/user/courses/${course.courseId}/chapters/${currentSection?.chapters[previousChapterIndex].chapterId}`);
+      }
+    }
+  }
+
+  const handleGoToNextChapter = () => {
+    const nextChapterIndex = (currentSection?.chapters?.findIndex(
+      (chapter) => chapter.chapterId === currentChapter?.chapterId
+    ) ?? -1) + 1;
+    if (currentSection?.chapters && nextChapterIndex < currentSection.chapters.length) {
+      if (course) {
+        router.push(`/user/courses/${course.courseId}/chapters/${currentSection?.chapters[nextChapterIndex].chapterId}`);
+      }
+    }
+  }
 
   if (isLoading) return <Loading />;
   if (!user) return <div>Please sign in to view this course.</div>;
@@ -99,6 +124,34 @@ const Course = () => {
           </CardContent>
         </Card>
 
+        <div className="bg-white p-4 rounded-lg shadow-lg">
+          <Card className="w-full">
+            <CardHeader className="border-b border-gray-200 py-4">
+              <div className="flex flex-row items-center gap-4">
+                <CardTitle className="text-xl font-semibold">Chapter Overview</CardTitle>
+                <div className="flex flex-row gap-4 ml-auto">
+                  <Button
+                    className="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-600 transition-all"
+                    onClick={() => handleGoToPreviousChapter()}
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    className="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-600 transition-all"
+                    onClick={() => handleGoToNextChapter()}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="text-sm pt-4">
+              <p>{currentChapter?.content}</p>
+            </CardContent>
+          </Card>
+        </div>
+
+
         <div className="course__content">
           <Tabs defaultValue="Notes" className="course__tabs">
             <TabsList className="course__tabs-list">
@@ -119,7 +172,7 @@ const Course = () => {
                   <CardTitle>Notes Content</CardTitle>
                 </CardHeader>
                 <CardContent className="course__tab-body">
-                  {currentChapter?.content}
+                  {/* Add notes content here */}
                 </CardContent>
               </Card>
             </TabsContent>

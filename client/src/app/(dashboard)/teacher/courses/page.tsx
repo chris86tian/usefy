@@ -97,7 +97,7 @@ const Courses = () => {
         rightElement={
           <Button
             onClick={handleCreateCourse}
-            className="teacher-courses__header"
+            className="bg-gray-700 text-white hover:bg-gray-600"
           >
             Create Course
           </Button>

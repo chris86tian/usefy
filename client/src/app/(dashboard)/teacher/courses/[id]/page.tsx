@@ -23,7 +23,7 @@ import {
 import { useAppDispatch, useAppSelector } from "@/state/redux";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Plus } from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import DroppableComponent from "./Droppable";
@@ -34,7 +34,6 @@ import { courseSchema } from "@/lib/schemas";
 import Image from "next/image";
 
 const CourseEditor = () => {
-  const router = useRouter();
   const params = useParams();
   const id = params.id as string;
 
@@ -116,7 +115,9 @@ const CourseEditor = () => {
       <div className="flex items-center gap-5 mb-5">
         <button
           className="flex items-center border border-customgreys-dirtyGrey rounded-lg p-2 gap-2 cursor-pointer hover:bg-customgreys-dirtyGrey hover:text-white-100 text-customgreys-dirtyGrey"
-          onClick={() => router.push("/teacher/courses", { scroll: false })}
+          onClick={() => 
+            window.location.href = "/teacher/courses"
+          }
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to Courses</span>

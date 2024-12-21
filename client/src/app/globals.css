@@ -658,10 +658,6 @@ input[type="color"] {
   @apply flex items-center;
 }
 
-.course__chapter-count {
-  @apply mr-2 text-sm;
-}
-
 .course__nav-button {
   @apply border-none bg-primary-700;
 }
@@ -683,7 +679,7 @@ input[type="color"] {
 }
 
 .course__content {
-  @apply flex gap-4 mt-12;
+  @apply flex gap-4 mt-8;
 }
 
 .course__tabs {
@@ -752,14 +748,36 @@ input[type="color"] {
 
 /* Chapters Sidebar */
 .chapters-sidebar {
-  @apply bg-customgreys-secondarybg border-x border-gray-700 overflow-y-auto transition-all duration-500 ease-in-out animate-in fade-in slide-in-from-left flex-shrink-0;
+  @apply bg-customgreys-secondarybg border-x border-gray-700 overflow-y-auto transition-all duration-300 ease-in-out animate-in fade-in slide-in-from-left flex-shrink-0;
   height: 100vh;
+  width: 300px;
 }
 
 .chapters-sidebar__title {
-  @apply text-lg font-bold pt-9 pb-6 px-8;
+  @apply text-lg font-bold pt-8 pb-6 px-4;
 }
 
+.chapters-sidebar--collapsed {
+  width: 50px; /* Adjust width for collapsed state */
+  overflow: hidden;
+}
+
+.chapters-sidebar__toggle-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.chapters-sidebar__toggle-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.chapters-sidebar__title-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 .chapters-sidebar__divider {
   @apply border-gray-700;
 }
