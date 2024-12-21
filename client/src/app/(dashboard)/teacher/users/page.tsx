@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import Loading from "@/components/Loading";
 import Header from "@/components/Header";
 import { useUser, useClerk } from "@clerk/nextjs";
+import { Box, Typography, List, ListItem, ListItemText, ListItemSecondaryAction, Divider } from "@mui/material";
 
 type UserType = {
   id: string;
@@ -70,72 +71,93 @@ const Users = () => {
   return (
     <>
       <Header title="Users" subtitle="Manage all users" />
+      {error && <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>}
 
-      {error && <div className="text-red-500 mb-4">{error}</div>}
-
-      <table className="min-w-full table-auto border-collapse border border-gray-300 rounded-lg">
-        <thead>
-          <tr>
-            <th className="border-b border-gray-200 p-2 text-left">Username</th>
-            <th className="border-b border-gray-200 p-2 text-left">Email</th>
-            <th className="border-b border-gray-200 p-2 text-left">Role</th>
-            <th className="border-b border-gray-200 p-2 text-left">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {sortedUsers.map((user: UserType) => {
+      <Box
+        sx={{
+          mt: 4,
+          bgcolor: "#2c2c2c",
+          p: 3,
+          borderRadius: 2,
+          color: "#f5f5f5",
+        }}
+      >
+        <List>
+          {sortedUsers.map((user: UserType, index: number) => {
             const userType = user.publicMetadata?.userType ?? "Unknown";
             const email = user.emailAddresses?.[0]?.emailAddress ?? "No email";
 
             return (
-              <tr key={user.id}>
-                <td className="border-b border-gray-200 p-2">
-                  {user.firstName || "Unknown"}
-                </td>
-                <td className="border-b border-gray-200 p-2">{email}</td>
-                <td className="border-b border-gray-200 p-2">
-                  {userType[0]?.toUpperCase() + userType.slice(1)}
-                </td>
-                <td className="border-b border-gray-200 p-2">
-                  {user.id === userId ? (
-                    <Button
-                      className="bg-gray-700 text-white px-4 py-2 rounded mr-2"
-                      onClick={() => signOut()}
-                    >
-                      Sign Out
-                    </Button>
-                  ) : (
-                    <>
-                      {user.publicMetadata?.userType !== "teacher" && (
-                        <Button
-                          className="bg-gray-100 text-gray-800 px-4 py-2 rounded mr-2"
-                          onClick={() => handlePromote(user.id)}
-                        >
-                          Promote
-                        </Button>
-                      )}
-                      {user.publicMetadata?.userType === "teacher" && (
-                        <Button
-                          className="bg-gray-100 text-gray-800 px-4 py-2 rounded mr-2"
-                          onClick={() => handleDemote(user.id)}
-                        >
-                          Demote
-                        </Button>
-                      )}
+              <React.Fragment key={user.id}>
+                <ListItem
+                  sx={{
+                    bgcolor: user.id === userId ? "#424242" : "#333333",
+                    borderRadius: 1,
+                    mb: 1,
+                    p: 2,
+                    "&:hover": {
+                      bgcolor: "#4a4a4a",
+                    },
+                  }}
+                >
+                  <ListItemText
+                    primary={`${user.firstName || "Unknown"} (${userType})`}
+                    secondary={email}
+                    primaryTypographyProps={{
+                      fontWeight: user.id === userId ? "bold" : "normal",
+                      fontSize: "1.1rem",
+                      color: user.id === userId ? "#90caf9" : "#f5f5f5",
+                    }}
+                    secondaryTypographyProps={{
+                      fontSize: "0.9rem",
+                      color: "#bdbdbd",
+                    }}
+                  />
+                  <ListItemSecondaryAction>
+                    {user.id === userId ? (
                       <Button
-                        className="bg-gray-700 text-white px-4 py-2 rounded"
-                        onClick={() => handleDelete(user.id)}
+                        variant="outline"
+                        className="mr-2"
+                        onClick={() => signOut()}
                       >
-                        Delete User
+                        Sign Out
                       </Button>
-                    </>
-                  )}
-                </td>
-              </tr>
+                    ) : (
+                      <>
+                        {user.publicMetadata?.userType !== "teacher" && (
+                          <Button
+                            variant="default"
+                            className="mr-2 bg-gray-700"
+                            onClick={() => handlePromote(user.id)}
+                          >
+                            Promote
+                          </Button>
+                        )}
+                        {user.publicMetadata?.userType === "teacher" && (
+                          <Button
+                            variant="default"
+                            className="mr-2 bg-gray-700"
+                            onClick={() => handleDemote(user.id)}
+                          >
+                            Demote
+                          </Button>
+                        )}
+                        <Button
+                          variant="destructive"
+                          onClick={() => handleDelete(user.id)}
+                        >
+                          Delete
+                        </Button>
+                      </>
+                    )}
+                  </ListItemSecondaryAction>
+                </ListItem>
+                {index < sortedUsers.length - 1 && <Divider sx={{ bgcolor: "#444" }} />}
+              </React.Fragment>
             );
           })}
-        </tbody>
-      </table>
+        </List>
+      </Box>
     </>
   );
 };
