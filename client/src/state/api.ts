@@ -83,6 +83,29 @@ export const api = createApi({
       query: () => "users/clerk",
     }),
 
+    promoteUserToAdmin: build.mutation<User, string>({
+      query: (userId) => ({
+        url: `users/clerk/${userId}/promote`,
+        method: "PUT",
+      }),
+      invalidatesTags: ["Users"],
+    }),
+
+    demoteUserFromAdmin: build.mutation<User, string>({
+      query: (userId) => ({
+        url: `users/clerk/${userId}/demote`,
+        method: "PUT",
+      }),
+      invalidatesTags: ["Users"],
+    }),
+
+    deleteUser: build.mutation<{ message: string }, string>({
+      query: (userId) => ({
+        url: `users/clerk/${userId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Users"],
+    }),
     /* 
     ===============
     COURSES
@@ -261,6 +284,9 @@ export const api = createApi({
 
 export const {
   useGetUsersQuery,
+  usePromoteUserToAdminMutation,
+  useDemoteUserFromAdminMutation,
+  useDeleteUserMutation,
   useUpdateUserMutation,
   useCreateCourseMutation,
   useUpdateCourseMutation,

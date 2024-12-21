@@ -1,11 +1,16 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { useGetUsersQuery } from '@/state/api';
-import { Button } from '@/components/ui/button';
-import Loading from '@/components/Loading';
-import Header from '@/components/Header';
-import { useUser, useClerk } from '@clerk/nextjs';
+import React, { useState } from "react";
+import {
+  useGetUsersQuery,
+  usePromoteUserToAdminMutation,
+  useDemoteUserFromAdminMutation,
+  useDeleteUserMutation,
+} from "@/state/api";
+import { Button } from "@/components/ui/button";
+import Loading from "@/components/Loading";
+import Header from "@/components/Header";
+import { useUser, useClerk } from "@clerk/nextjs";
 
 type UserType = {
   id: string;
@@ -21,45 +26,41 @@ const Users = () => {
   const user = useUser().user;
   const userId = user?.id;
   const { signOut } = useClerk();
+  const [promoteUserToAdmin] = usePromoteUserToAdminMutation();
+  const [demoteUserFromAdmin] = useDemoteUserFromAdminMutation();
+  const [deleteUser] = useDeleteUserMutation();
 
-  // Handle promoting a user to admin
-  const handlePromote = async (targetUserId: string) => {
+  const handlePromote = async (userId: string) => {
     try {
-      // Replace with API call
-      // await promoteUserToAdmin(targetUserId);
-      await refetch();
-    } catch {
-      setError('Error promoting user.');
+      await promoteUserToAdmin(userId);
+      refetch();
+    } catch (error) {
+      setError("Error promoting user: " + error);
     }
   };
 
-  // Handle demoting a user from admin
-  const handleDemote = async (targetUserId: string) => {
+  const handleDemote = async (userId: string) => {
     try {
-      // Replace with API call
-      // await demoteUserFromAdmin(targetUserId);
-      await refetch();
-    } catch {
-      setError('Error demoting user.');
+      await demoteUserFromAdmin(userId);
+      refetch();
+    } catch (error) {
+      setError("Error demoting user: " + error);
     }
   };
 
-  // Handle deleting a user
-  const handleDelete = async (targetUserId: string) => {
+  const handleDelete = async (userId: string) => {
     try {
-      // Replace with API call
-      // await deleteUser(targetUserId);
-      await refetch();
-    } catch {
-      setError('Error deleting user.');
+      await deleteUser(userId);
+      refetch();
+    } catch (error) {
+      setError("Error deleting user: " + error);
     }
   };
 
   if (isLoading) return <Loading />;
   if (isError || !data) return <div>Error loading users.</div>;
-  if (!data.data?.length) return <div>No users found.</div>;
+  if (data.data.length === 0) return <div>No users found.</div>;
 
-  // Sort users so the logged-in user is first
   const sortedUsers = [...data.data].sort((a: UserType, b: UserType) => {
     if (a.id === userId) return -1;
     if (b.id === userId) return 1;
@@ -83,12 +84,14 @@ const Users = () => {
         </thead>
         <tbody>
           {sortedUsers.map((user: UserType) => {
-            const userType = user.publicMetadata?.userType ?? 'Unknown';
-            const email = user.emailAddresses?.[0]?.emailAddress ?? 'No email';
+            const userType = user.publicMetadata?.userType ?? "Unknown";
+            const email = user.emailAddresses?.[0]?.emailAddress ?? "No email";
 
             return (
               <tr key={user.id}>
-                <td className="border-b border-gray-200 p-2">{user.firstName || 'Unknown'}</td>
+                <td className="border-b border-gray-200 p-2">
+                  {user.firstName || "Unknown"}
+                </td>
                 <td className="border-b border-gray-200 p-2">{email}</td>
                 <td className="border-b border-gray-200 p-2">
                   {userType[0]?.toUpperCase() + userType.slice(1)}
@@ -96,31 +99,31 @@ const Users = () => {
                 <td className="border-b border-gray-200 p-2">
                   {user.id === userId ? (
                     <Button
-                      className="bg-blue-900 text-white px-4 py-2 rounded"
+                      className="bg-gray-700 text-white px-4 py-2 rounded mr-2"
                       onClick={() => signOut()}
                     >
                       Sign Out
                     </Button>
                   ) : (
                     <>
-                      {user.role !== 'admin' && (
+                      {user.publicMetadata?.userType !== "teacher" && (
                         <Button
-                          className="bg-blue-900 text-white px-4 py-2 rounded mr-2"
+                          className="bg-gray-100 text-gray-800 px-4 py-2 rounded mr-2"
                           onClick={() => handlePromote(user.id)}
                         >
-                          Promote to Admin
+                          Promote
                         </Button>
                       )}
-                      {user.role === 'admin' && (
+                      {user.publicMetadata?.userType === "teacher" && (
                         <Button
-                          className="bg-blue-900 text-white px-4 py-2 rounded mr-2"
+                          className="bg-gray-100 text-gray-800 px-4 py-2 rounded mr-2"
                           onClick={() => handleDemote(user.id)}
                         >
-                          Demote from Admin
+                          Demote
                         </Button>
                       )}
                       <Button
-                        className="bg-red-500 text-white px-4 py-2 rounded"
+                        className="bg-gray-700 text-white px-4 py-2 rounded"
                         onClick={() => handleDelete(user.id)}
                       >
                         Delete User

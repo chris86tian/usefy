@@ -29,3 +29,43 @@ export const getUsers = async (req: Request, res: Response): Promise<void> => {
     res.status(500).json({ message: "Error retrieving users", error });
   }
 }
+
+export const promoteUser = async (req: Request, res: Response): Promise<void> => {
+  const { userId } = req.params;
+  try {
+    const user = await clerkClient.users.getUser(userId);
+    await clerkClient.users.updateUserMetadata(userId, {
+      publicMetadata: {
+        userType: "teacher",
+      },
+    });
+    res.json({ message: "User promoted successfully", data: user });
+  } catch (error) {
+    res.status(500).json({ message: "Error promoting user", error });
+  }
+}
+
+export const demoteUser = async (req: Request, res: Response): Promise<void> => {
+  const { userId } = req.params;
+  try {
+    const user = await clerkClient.users.getUser(userId);
+    await clerkClient.users.updateUserMetadata(userId, {
+      publicMetadata: {
+        userType: "user",
+      },
+    });
+    res.json({ message: "User demoted successfully", data: user });
+  } catch (error) {
+    res.status(500).json({ message: "Error demoting user", error });
+  }
+}
+
+export const deleteUser = async (req: Request, res: Response): Promise<void> => {
+  const { userId } = req.params;
+  try {
+    await clerkClient.users.deleteUser(userId);
+    res.json({ message: "User deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting user", error });
+  }
+}
