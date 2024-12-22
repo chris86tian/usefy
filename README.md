@@ -79,7 +79,7 @@ To run the application locally, you'll need to set up both the frontend and back
 - Clone the repository:
     
     ```bash
-    git clone https://github.com/ArslanKamchybekov/expertize
+    git clone https://github.com/ArslanKamchybekov/ghai-lms
     cd client
     
     ```
