@@ -1,4 +1,4 @@
-# Expertize - Virtual Learning Environment
+# GrowthHungry.ai - Virtual Learning Environment
 
 This project is a **Scalable Virtual Learning Environment (VLE) Application** designed to help users create and manage courses, track progress, and interact in an online learning environment. The application is built with **Next.js** for the frontend and **Node.js** for the backend, utilizing modern web technologies to deliver a scalable, fast, and secure user experience.
 

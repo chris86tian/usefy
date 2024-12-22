@@ -74,11 +74,11 @@ const AppSidebar = () => {
                   <Image
                     src="/logo.png"
                     alt="logo"
-                    width={20}
-                    height={20}
+                    width={15}
+                    height={15}
                     className="app-sidebar__logo"
                   />
-                  <p className="app-sidebar__title">Expertize.ai</p>
+                  <p className="app-sidebar__title">GrowthHungry</p>
                 </div>
                 <PanelLeft className="app-sidebar__collapse-icon" />
               </div>

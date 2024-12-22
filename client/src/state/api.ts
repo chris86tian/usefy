@@ -211,6 +211,9 @@ export const api = createApi({
         body: transaction,
       }),
     }),
+    getTransactionStats: build.query<Transaction, void>({
+      query: () => "transactions/stats",
+    }),
 
     /* 
     ===============
@@ -298,6 +301,7 @@ export const {
   useGetTransactionsQuery,
   useCreateTransactionMutation,
   useCreateStripePaymentIntentMutation,
+  useGetTransactionStatsQuery,
   useGetUserEnrolledCoursesQuery,
   useGetUserCourseProgressQuery,
   useUpdateUserCourseProgressMutation,

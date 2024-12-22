@@ -14,8 +14,8 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Expertize.ai",
-  description: "Expertize.ai is an AI Virtual Learning Environment",
+  title: "GrowthHungry.ai",
+  description: "GrowthHungry.ai is an AI Virtual Learning Environment",
 };
 
 export default function RootLayout({

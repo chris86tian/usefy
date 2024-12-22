@@ -170,3 +170,27 @@ export const createTransaction = async (
       .json({ message: "Error creating transaction and enrollment", error });
   }
 };
+
+export const getTransactionStats = async ( req: Request, res: Response): Promise<void> => {
+  try {
+    const transactions = await Transaction.scan().exec();
+    const totalAmountInCents = transactions.reduce((acc, curr) => acc + curr.amount, 0);
+    const totalAmount = totalAmountInCents / 100;
+    const percentageLastMonth = transactions
+      .filter(
+        (transaction) =>
+          new Date(transaction.dateTime) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+      )
+      .reduce((acc, curr) => acc + curr.amount, 0);
+
+    res.json({
+      message: "Transaction stats retrieved successfully",
+      data: {
+        totalAmount,
+        percentageLastMonth,
+      },
+    });
+  } catch (error) {
+    throw new Error("Error getting transaction stats");
+  }
+};

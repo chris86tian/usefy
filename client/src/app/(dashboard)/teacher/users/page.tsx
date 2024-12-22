@@ -30,6 +30,7 @@ const Users = () => {
   const [promoteUserToAdmin] = usePromoteUserToAdminMutation();
   const [demoteUserFromAdmin] = useDemoteUserFromAdminMutation();
   const [deleteUser] = useDeleteUserMutation();
+  const users = data?.users.data;
 
   const handlePromote = async (userId: string) => {
     try {
@@ -60,9 +61,9 @@ const Users = () => {
 
   if (isLoading) return <Loading />;
   if (isError || !data) return <div>Error loading users.</div>;
-  if (data.data.length === 0) return <div>No users found.</div>;
+  if (data?.users.length === 0) return <div>No users found.</div>;
 
-  const sortedUsers = [...data.data].sort((a: UserType, b: UserType) => {
+  const sortedUsers = [...users].sort((a: UserType, b: UserType) => {
     if (a.id === userId) return -1;
     if (b.id === userId) return 1;
     return 0;
