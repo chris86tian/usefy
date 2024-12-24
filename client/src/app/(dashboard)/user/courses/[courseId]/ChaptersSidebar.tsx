@@ -72,7 +72,7 @@ const ChaptersSidebar = () => {
             onClick={toggleSidebar}
             title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
           >
-            {isSidebarCollapsed ? <ChevronRight className="ml-2 mt-2" /> : <ChevronLeft className="ml-2 mt-2" />}
+            {isSidebarCollapsed ? <ChevronRight className="ml-2 mt-2" /> : <ChevronLeft className="ml-2" />}
           </button>
           <h2 className="chapters-sidebar__title">{!isSidebarCollapsed ? course.title : ""}</h2>
         </div>

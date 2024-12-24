@@ -3,6 +3,8 @@ import { ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import * as z from "zod";
 import { toast } from "sonner";
+import { Monaco } from "@monaco-editor/react";
+import { Id } from "../../convex/_generated/dataModel";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -33,6 +35,241 @@ export const priceSchema = z.string().transform((val) => {
   if (isNaN(dollars)) return "0";
   return dollarsToCents(dollars).toString();
 });
+
+export const customStyles = "text-gray-300 placeholder:text-gray-500";
+
+export function convertToSubCurrency(amount: number, factor = 100) {
+  return Math.round(amount * factor);
+}
+
+export const NAVBAR_HEIGHT = 48;
+
+export const courseCategories = [
+  { value: "technology", label: "Technology" },
+  { value: "science", label: "Science" },
+  { value: "mathematics", label: "Mathematics" },
+  { value: "artificial-intelligence", label: "Artificial Intelligence" },
+] as const;
+
+export const customDataGridStyles = {
+  border: "none",
+  backgroundColor: "#17181D",
+  "& .MuiDataGrid-columnHeaders": {
+    backgroundColor: "#1B1C22",
+    color: "#6e6e6e",
+    "& [role='row'] > *": {
+      backgroundColor: "#1B1C22 !important",
+      border: "none !important",
+    },
+  },
+  "& .MuiDataGrid-cell": {
+    color: "#6e6e6e",
+    border: "none !important",
+  },
+  "& .MuiDataGrid-row": {
+    backgroundColor: "#17181D",
+    "&:hover": {
+      backgroundColor: "#25262F",
+    },
+  },
+  "& .MuiDataGrid-footerContainer": {
+    backgroundColor: "#17181D",
+    color: "#6e6e6e",
+    border: "none !important",
+  },
+  "& .MuiDataGrid-filler": {
+    border: "none !important",
+    backgroundColor: "#17181D !important",
+    borderTop: "none !important",
+    "& div": {
+      borderTop: "none !important",
+    },
+  },
+  "& .MuiTablePagination-root": {
+    color: "#6e6e6e",
+  },
+  "& .MuiTablePagination-actions .MuiIconButton-root": {
+    color: "#6e6e6e",
+  },
+};
+
+export interface Snippet {
+  _id: Id<"snippets">;
+  _creationTime: number;
+  userId: string;
+  language: string;
+  code: string;
+  title: string;
+  userName: string;
+}
+
+export interface ExecutionResult {
+  code: string;
+  output: string;
+  error: string | null;
+}
+
+export interface CodeEditorState {
+  language: string;
+  output: string;
+  isRunning: boolean;
+  error: string | null;
+  theme: string;
+  fontSize: number;
+  editor: Monaco | null;
+  executionResult: ExecutionResult | null;
+
+  setEditor: (editor: Monaco) => void;
+  getCode: () => string;
+  setLanguage: (language: string) => void;
+  setTheme: (theme: string) => void;
+  setFontSize: (fontSize: number) => void;
+  runCode: () => Promise<void>;
+}
+
+export const createCourseFormData = (
+  data: CourseFormData,
+  sections: Section[],
+  thumbnailUrl: string
+): FormData => {
+  const formData = new FormData();
+  formData.append("title", data.courseTitle);
+  formData.append("description", data.courseDescription);
+  formData.append("category", data.courseCategory);
+  formData.append("price", data.coursePrice.toString());
+  formData.append("status", data.courseStatus ? "Published" : "Draft");
+  formData.append("image", thumbnailUrl);
+
+  const sectionsWithVideos = sections.map((section) => ({
+    ...section,
+    chapters: section.chapters.map((chapter) => ({
+      ...chapter,
+      video: chapter.video,
+    })),
+  }));
+
+  formData.append("sections", JSON.stringify(sectionsWithVideos));
+
+  return formData;
+};
+
+export const uploadAllVideos = async (
+  localSections: Section[],
+  courseId: string,
+  getUploadVideoUrl: any,
+  setProgress: (progress: number) => void
+) => {
+  // Deep clone sections to avoid mutating original data
+  const updatedSections = localSections.map((section) => ({
+    ...section,
+    chapters: section.chapters.map((chapter) => ({ ...chapter })),
+  }));
+
+  // Count the total number of videos to upload
+  const totalVideos = updatedSections.reduce(
+    (count, section) =>
+      count +
+      section.chapters.filter(
+        (chapter) => chapter.video instanceof File && chapter.video.type === "video/mp4"
+      ).length,
+    0
+  );
+
+  let uploadedCount = 0;
+
+  for (let i = 0; i < updatedSections.length; i++) {
+    for (let j = 0; j < updatedSections[i].chapters.length; j++) {
+      const chapter = updatedSections[i].chapters[j];
+
+      // Check if the video is a File and needs to be uploaded
+      if (chapter.video instanceof File && chapter.video.type === "video/mp4") {
+        try {
+          const updatedChapter = await uploadVideo(
+            chapter,
+            courseId,
+            updatedSections[i].sectionId,
+            getUploadVideoUrl
+          );
+
+          updatedSections[i].chapters[j] = updatedChapter;
+        } catch (error) {
+          console.error(
+            `Failed to upload video for chapter ${chapter.chapterId}:`,
+            error
+          );
+        }
+
+        // Update progress after each upload attempt
+        uploadedCount++;
+        setProgress(Math.floor((uploadedCount / totalVideos) * 100));
+      }
+    }
+  }
+
+  return updatedSections;
+};
+
+async function uploadVideo(
+  chapter: Chapter,
+  courseId: string,
+  sectionId: string,
+  getUploadVideoUrl: any
+) {
+  const file = chapter.video as File;
+
+  try {
+    const { uploadUrl, videoUrl } = await getUploadVideoUrl({
+      courseId,
+      sectionId,
+      chapterId: chapter.chapterId,
+      fileName: file.name,
+      fileType: file.type,
+    }).unwrap();
+
+    await fetch(uploadUrl, {
+      method: "PUT",
+      headers: { "Content-Type": file.type },
+      body: file,
+    });
+
+    toast.success(`Video uploaded successfully for chapter ${chapter.chapterId}`);
+
+    return { ...chapter, video: videoUrl };
+  } catch (error) {
+    console.error(`Failed to upload video for chapter ${chapter.chapterId}:`, error);
+    toast.error(`Failed to upload video for chapter ${chapter.chapterId}`);
+    throw error;
+  }
+}
+
+export async function uploadThumbnail(
+  courseId: string,
+  getUploadImageUrl: any,
+  file: File
+) {
+  try {
+    const { uploadUrl, imageUrl } = await getUploadImageUrl({
+      courseId,
+      fileName: file.name,
+      fileType: file.type,
+    }).unwrap();
+
+    await fetch(uploadUrl, {
+      method: "PUT",
+      headers: { "Content-Type": file.type },
+      body: file,
+    });
+
+    toast.success("Thumbnail uploaded successfully!");
+
+    return imageUrl;
+  } catch (error) {
+    console.error("Failed to upload thumbnail:", error);
+    toast.error("Failed to upload thumbnail");
+    throw error;
+  }
+}
+
 
 export const countries = [
   "Afghanistan",
@@ -230,203 +467,3 @@ export const countries = [
   "Zambia",
   "Zimbabwe",
 ];
-
-export const customStyles = "text-gray-300 placeholder:text-gray-500";
-
-export function convertToSubCurrency(amount: number, factor = 100) {
-  return Math.round(amount * factor);
-}
-
-export const NAVBAR_HEIGHT = 48;
-
-export const courseCategories = [
-  { value: "technology", label: "Technology" },
-  { value: "science", label: "Science" },
-  { value: "mathematics", label: "Mathematics" },
-  { value: "artificial-intelligence", label: "Artificial Intelligence" },
-] as const;
-
-export const customDataGridStyles = {
-  border: "none",
-  backgroundColor: "#17181D",
-  "& .MuiDataGrid-columnHeaders": {
-    backgroundColor: "#1B1C22",
-    color: "#6e6e6e",
-    "& [role='row'] > *": {
-      backgroundColor: "#1B1C22 !important",
-      border: "none !important",
-    },
-  },
-  "& .MuiDataGrid-cell": {
-    color: "#6e6e6e",
-    border: "none !important",
-  },
-  "& .MuiDataGrid-row": {
-    backgroundColor: "#17181D",
-    "&:hover": {
-      backgroundColor: "#25262F",
-    },
-  },
-  "& .MuiDataGrid-footerContainer": {
-    backgroundColor: "#17181D",
-    color: "#6e6e6e",
-    border: "none !important",
-  },
-  "& .MuiDataGrid-filler": {
-    border: "none !important",
-    backgroundColor: "#17181D !important",
-    borderTop: "none !important",
-    "& div": {
-      borderTop: "none !important",
-    },
-  },
-  "& .MuiTablePagination-root": {
-    color: "#6e6e6e",
-  },
-  "& .MuiTablePagination-actions .MuiIconButton-root": {
-    color: "#6e6e6e",
-  },
-};
-
-export const createCourseFormData = (
-  data: CourseFormData,
-  sections: Section[],
-  thumbnailUrl: string
-): FormData => {
-  const formData = new FormData();
-  formData.append("title", data.courseTitle);
-  formData.append("description", data.courseDescription);
-  formData.append("category", data.courseCategory);
-  formData.append("price", data.coursePrice.toString());
-  formData.append("status", data.courseStatus ? "Published" : "Draft");
-  formData.append("image", thumbnailUrl);
-
-  const sectionsWithVideos = sections.map((section) => ({
-    ...section,
-    chapters: section.chapters.map((chapter) => ({
-      ...chapter,
-      video: chapter.video,
-    })),
-  }));
-
-  formData.append("sections", JSON.stringify(sectionsWithVideos));
-
-  return formData;
-};
-
-export const uploadAllVideos = async (
-  localSections: Section[],
-  courseId: string,
-  getUploadVideoUrl: any,
-  setProgress: (progress: number) => void
-) => {
-  // Deep clone sections to avoid mutating original data
-  const updatedSections = localSections.map((section) => ({
-    ...section,
-    chapters: section.chapters.map((chapter) => ({ ...chapter })),
-  }));
-
-  // Count the total number of videos to upload
-  const totalVideos = updatedSections.reduce(
-    (count, section) =>
-      count +
-      section.chapters.filter(
-        (chapter) => chapter.video instanceof File && chapter.video.type === "video/mp4"
-      ).length,
-    0
-  );
-
-  let uploadedCount = 0;
-
-  for (let i = 0; i < updatedSections.length; i++) {
-    for (let j = 0; j < updatedSections[i].chapters.length; j++) {
-      const chapter = updatedSections[i].chapters[j];
-
-      // Check if the video is a File and needs to be uploaded
-      if (chapter.video instanceof File && chapter.video.type === "video/mp4") {
-        try {
-          const updatedChapter = await uploadVideo(
-            chapter,
-            courseId,
-            updatedSections[i].sectionId,
-            getUploadVideoUrl
-          );
-
-          updatedSections[i].chapters[j] = updatedChapter;
-        } catch (error) {
-          console.error(
-            `Failed to upload video for chapter ${chapter.chapterId}:`,
-            error
-          );
-        }
-
-        // Update progress after each upload attempt
-        uploadedCount++;
-        setProgress(Math.floor((uploadedCount / totalVideos) * 100));
-      }
-    }
-  }
-
-  return updatedSections;
-};
-
-async function uploadVideo(
-  chapter: Chapter,
-  courseId: string,
-  sectionId: string,
-  getUploadVideoUrl: any
-) {
-  const file = chapter.video as File;
-
-  try {
-    const { uploadUrl, videoUrl } = await getUploadVideoUrl({
-      courseId,
-      sectionId,
-      chapterId: chapter.chapterId,
-      fileName: file.name,
-      fileType: file.type,
-    }).unwrap();
-
-    await fetch(uploadUrl, {
-      method: "PUT",
-      headers: { "Content-Type": file.type },
-      body: file,
-    });
-
-    toast.success(`Video uploaded successfully for chapter ${chapter.chapterId}`);
-
-    return { ...chapter, video: videoUrl };
-  } catch (error) {
-    console.error(`Failed to upload video for chapter ${chapter.chapterId}:`, error);
-    toast.error(`Failed to upload video for chapter ${chapter.chapterId}`);
-    throw error;
-  }
-}
-
-export async function uploadThumbnail(
-  courseId: string,
-  getUploadImageUrl: any,
-  file: File
-) {
-  try {
-    const { uploadUrl, imageUrl } = await getUploadImageUrl({
-      courseId,
-      fileName: file.name,
-      fileType: file.type,
-    }).unwrap();
-
-    await fetch(uploadUrl, {
-      method: "PUT",
-      headers: { "Content-Type": file.type },
-      body: file,
-    });
-
-    toast.success("Thumbnail uploaded successfully!");
-
-    return imageUrl;
-  } catch (error) {
-    console.error("Failed to upload thumbnail:", error);
-    toast.error("Failed to upload thumbnail");
-    throw error;
-  }
-}

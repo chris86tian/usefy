@@ -878,6 +878,16 @@ input[type="color"] {
   @apply text-gray-500 ml-2 w-4 h-4;
 }
 
+.chapters-sidebar__chapter--collapsed {
+  justify-content: center;
+  padding: 0.5rem;
+}
+
+.chapters-sidebar__chapter-number--completed {
+  background: none;
+  color: #22c55e; /* or whatever color you use for completed items */
+}
+
 /* Droppable Component */
 .droppable-section {
   @apply mb-4 p-2 rounded;
