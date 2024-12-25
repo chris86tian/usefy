@@ -12,6 +12,7 @@ import CustomModal from "@/components/CustomModal";
 import { ChapterFormData, chapterSchema } from "@/lib/schemas";
 import { addChapter, closeChapterModal, editChapter } from "@/state";
 import { useAppDispatch, useAppSelector } from "@/state/redux";
+import { Sparkles } from "lucide-react";
 
 const ChapterModal = () => {
   const dispatch = useAppDispatch();
@@ -24,6 +25,7 @@ const ChapterModal = () => {
       : undefined;
 
   const [videoType, setVideoType] = useState<"file" | "link">("file");
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const methods = useForm<ChapterFormData>({
     resolver: zodResolver(chapterSchema),
@@ -33,6 +35,44 @@ const ChapterModal = () => {
       video: "",
     },
   });
+
+  const videoUrl = methods.watch("video");
+
+  const handleAutoGenerate = async () => {
+    const videoUrl = methods.getValues("video");
+    
+    if (!videoUrl) {
+      toast.error('Please enter a YouTube video URL first');
+      return;
+    }
+  
+    setIsGenerating(true);
+    try {
+      const response = await fetch('/api/generate-content', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ videoUrl })
+      });
+  
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to generate content');
+      }
+  
+      methods.setValue('title', data.title);
+      methods.setValue('content', data.content);
+      
+      toast.success('Content generated successfully');
+    } catch (error) {
+      console.error('Error in auto-generation:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to auto-generate content');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   useEffect(() => {
     if (chapter) {
@@ -121,7 +161,7 @@ const ChapterModal = () => {
               <FormLabel className="text-customgreys-dirtyGrey text-sm">
                 Select Video Type
               </FormLabel>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 justify-center">
                 <label className="flex items-center">
                   <input
                     type="radio"
@@ -133,7 +173,7 @@ const ChapterModal = () => {
                   />
                   File Upload
                 </label>
-                <label className="flex items-center">
+                <label className="flex items-center mx-2">
                   <input
                     type="radio"
                     name="videoType"
@@ -144,6 +184,17 @@ const ChapterModal = () => {
                   />
                   YouTube/Vimeo Link
                 </label>
+                {videoType === "link" && (
+                  <Button
+                    type="button"
+                    onClick={handleAutoGenerate}
+                    disabled={isGenerating || !videoUrl}
+                    className="bg-primary-700"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    {isGenerating ? "Generating..." : "Auto-Fill"}
+                  </Button>
+                )}
               </div>
             </div>
 

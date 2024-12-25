@@ -22,7 +22,7 @@ import {
 } from "@/state/api";
 import { useAppDispatch, useAppSelector } from "@/state/redux";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft, Plus, Sparkles } from "lucide-react";
 import { useParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -32,6 +32,8 @@ import SectionModal from "./SectionModal";
 import { toast } from "sonner";
 import { courseSchema } from "@/lib/schemas";
 import Image from "next/image";
+import YouTubeDialog from "@/components/YouTubeDialog";
+import { v4 as uuid} from "uuid";
 
 const CourseEditor = () => {
   const params = useParams();
@@ -45,6 +47,55 @@ const CourseEditor = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [image, setImage] = useState<File | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  // Auto-fill chapters
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const handleURLSubmit = async (videoUrl: string) => {
+    setIsDialogOpen(false);
+    setIsGenerating(true);
+    
+    try {
+      const response = await fetch("/api/generate-course", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ videoUrl: videoUrl }),
+      });
+
+      const data = await response.json();
+      
+      if (data.error) {
+        toast.error(data.error);
+        return;
+      }
+
+      const { sections } = data;
+      console.log(sections);
+      dispatch(setSections(
+        sections.map((section: { sectionTitle: string; sectionDescription: string; chapters: { title: string; content: string; video: string }[] }) => ({
+          sectionId: uuid(),
+          sectionTitle: section.sectionTitle,
+          sectionDescription: section.sectionDescription,
+          chapters: section.chapters.map((chapter: { title: string; content: string; video: string }) => ({
+            chapterId: uuid(),
+            title: chapter.title,
+            content: chapter.content,
+            type: "Video",
+            video: chapter.video,
+          })),
+        }))
+      ));
+      toast.success("Chapters auto-filled successfully!");
+    } catch (error) {
+      console.error("Failed to auto-fill chapters:", error);
+      toast.error("An error occurred while auto-filling chapters.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const dispatch = useAppDispatch();
   const { sections } = useAppSelector((state) => state.global.courseEditor);
@@ -231,24 +282,58 @@ const CourseEditor = () => {
                   Sections
                 </h2>
 
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    dispatch(openSectionModal({ sectionIndex: null }))
-                  }
-                  className="border-none text-primary-700 group"
-                >
-                  <Plus className="mr-1 h-4 w-4 text-primary-700 group-hover:white-100" />
-                  <span className="text-primary-700 group-hover:white-100">
-                    Add Section
-                  </span>
-                </Button>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => dispatch(openSectionModal({ sectionIndex: null }))}
+                    className="border-none text-primary-700 group"
+                    disabled={isGenerating}
+                  >
+                    <Plus className="h-4 w-4 text-primary-700 group-hover:white-100" />
+                    <span className="text-primary-700 group-hover:white-100">
+                      Add Section
+                    </span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsDialogOpen(true)}
+                    className="border-none text-primary-700 group"
+                    disabled={isGenerating}
+                  >
+                    <Sparkles className="h-4 w-4 text-primary-700 group-hover:white-100" />
+                    <span className="text-primary-700 group-hover:white-100">
+                      {isGenerating ? 'Generating...' : 'Auto-Fill Chapters'}
+                    </span>
+                  </Button>
+                  <YouTubeDialog
+                    isOpen={isDialogOpen}
+                    onClose={() => setIsDialogOpen(false)}
+                    onSubmit={handleURLSubmit}
+                  />
+                </div>
               </div>
 
               {isLoading ? (
                 <p>Loading course content...</p>
+              ) : isGenerating ? (
+                <div className="flex flex-col items-center justify-center py-8 space-y-4">
+                  <div className="flex items-center space-x-3">
+                    <div
+                      className="w-6 h-6 border-2 border-primary-700 border-t-transparent rounded-full animate-spin"
+                      aria-label="Generating content"
+                    />
+                    <p className="text-secondary-foreground">
+                      Generating course content from video...
+                    </p>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    This may take a few moments as we analyze the video content.
+                  </p>
+                </div>
               ) : sections.length > 0 ? (
                 <DroppableComponent />
               ) : (

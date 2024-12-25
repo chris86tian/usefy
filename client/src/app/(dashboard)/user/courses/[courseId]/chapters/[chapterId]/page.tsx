@@ -154,7 +154,7 @@ const Course = () => {
           </CardHeader>
           <CardContent className="pt-6">
             <ScrollArea className="h-auto max-h-48 pr-4">
-              <p className="leading-relaxed text-gray-500">
+              <p className="text-lg leading-relaxed text-gray-300">
                 {currentChapter?.content}
               </p>
             </ScrollArea>
