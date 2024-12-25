@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Card,
   CardContent,
@@ -8,7 +8,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { TabsContent } from "@/components/ui/tabs";
 import {
   BarChart,
   Bar,
@@ -39,7 +38,6 @@ import {
   DollarSign
 } from 'lucide-react';
 import Header from '@/components/Header';
-import { Button } from '@mui/material';
 import Link from 'next/link';
 import { useGetTransactionStatsQuery, useGetUsersQuery } from '@/state/api';
 
@@ -107,7 +105,7 @@ const AdminDashboard = () => {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
         <Link href={`/teacher/users`}>
-          <Card>
+          <Card className='bg-[#1e1e2e]'>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Total Users</CardTitle>
                 <Users className="h-4 w-4 text-muted-foreground" />
@@ -119,7 +117,7 @@ const AdminDashboard = () => {
           </Card>
         </Link>
 
-        <Card>
+        <Card className='bg-[#1e1e2e]'>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Active Courses</CardTitle>
             <BookOpen className="h-4 w-4 text-muted-foreground" />
@@ -130,7 +128,7 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className='bg-[#1e1e2e]'> 
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Completion Rate</CardTitle>
             <GraduationCap className="h-4 w-4 text-muted-foreground" />
@@ -141,7 +139,7 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className='bg-[#1e1e2e]'>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Active Users</CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
@@ -152,7 +150,7 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className='bg-[#1e1e2e]'>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Revenue</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />

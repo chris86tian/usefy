@@ -758,7 +758,7 @@ input[type="color"] {
 }
 
 .chapters-sidebar--collapsed {
-  width: 50px; /* Adjust width for collapsed state */
+  width: 150px;
   overflow: hidden;
 }
 
@@ -885,7 +885,7 @@ input[type="color"] {
 
 .chapters-sidebar__chapter-number--completed {
   background: none;
-  color: #22c55e; /* or whatever color you use for completed items */
+  color: #22c55e;
 }
 
 /* Droppable Component */
@@ -1380,14 +1380,6 @@ input[type="color"] {
 
 .course-card-teacher__category {
   @apply bg-customgreys-dirtyGrey/50 px-2 py-1 mt-3 mb-3 rounded-xl w-fit text-sm;
-}
-
-.course-card-teacher__edit-button {
-  @apply rounded w-full bg-gray-700 border-none hover:bg-primary-600 hover:text-customgreys-primarybg text-white-100 cursor-pointer;
-}
-
-.course-card-teacher__delete-button {
-  @apply rounded w-full bg-gray-700 text-white-100 hover:bg-red-400 hover:text-customgreys-primarybg cursor-pointer;
 }
 
 /* NonDashboard Navbar Additional Classes */

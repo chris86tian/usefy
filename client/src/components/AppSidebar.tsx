@@ -1,10 +1,9 @@
-import { useClerk, useUser } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
 import React from "react";
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -16,7 +15,6 @@ import {
   Briefcase,
   DollarSign,
   Laptop,
-  LogOut,
   PanelLeft,
   Settings,
   User,
@@ -28,7 +26,6 @@ import Link from "next/link";
 
 const AppSidebar = () => {
   const { user, isLoaded } = useUser();
-  const { signOut } = useClerk();
   const pathname = usePathname();
   const { toggleSidebar } = useSidebar();
 
@@ -130,21 +127,6 @@ const AppSidebar = () => {
           })}
         </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <button
-                onClick={() => signOut()}
-                className="app-sidebar__signout"
-              >
-                <LogOut className="m-2 h-6 w-6" />
-                <span>Sign out</span>
-              </button>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
     </Sidebar>
   );
 };

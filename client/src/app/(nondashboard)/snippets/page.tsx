@@ -4,7 +4,6 @@ import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { useState } from "react";
 import SnippetsPageSkeleton from "./_components/snippetsPageSkeleton";
-import NavigationHeader from "@/components/NavigationHeader";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { BookOpen, Code, Grid, Layers, Search, Tag, X } from "lucide-react";
@@ -20,7 +19,6 @@ function SnippetsPage() {
   if (snippets === undefined) {
     return (
       <div className="min-h-screen">
-        <NavigationHeader />
         <SnippetsPageSkeleton />
       </div>
     );
@@ -41,9 +39,7 @@ function SnippetsPage() {
   });
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f]">
-      <NavigationHeader />
-
+    <div className="min-h-screen">
       <div className="relative max-w-7xl mx-auto px-4 py-12">
         {/* Hero */}
         <div className="text-center max-w-3xl mx-auto mb-16">
@@ -54,7 +50,7 @@ function SnippetsPage() {
              from-blue-500/10 to-purple-500/10 text-sm text-gray-400 mb-6"
           >
             <BookOpen className="w-4 h-4" />
-            Community Code Library
+            GrowthHungry Code Library
           </motion.div>
           <motion.h1
             initial={{ opacity: 0, y: 20 }}

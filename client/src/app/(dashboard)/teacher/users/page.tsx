@@ -8,10 +8,14 @@ import {
   useDeleteUserMutation,
 } from "@/state/api";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card, CardContent } from "@/components/ui/card";
 import Loading from "@/components/Loading";
 import Header from "@/components/Header";
 import { useUser, useClerk } from "@clerk/nextjs";
-import { Box, Typography, List, ListItem, ListItemText, ListItemSecondaryAction, Divider } from "@mui/material";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Crown, Shield, User, UserMinus, LogOut } from "lucide-react";
 
 type UserType = {
   id: string;
@@ -30,7 +34,8 @@ const Users = () => {
   const [promoteUserToAdmin] = usePromoteUserToAdminMutation();
   const [demoteUserFromAdmin] = useDemoteUserFromAdminMutation();
   const [deleteUser] = useDeleteUserMutation();
-  const users = data?.users.data;
+  
+  const users = data?.users.data 
 
   const handlePromote = async (userId: string) => {
     try {
@@ -70,96 +75,126 @@ const Users = () => {
   });
 
   return (
-    <>
+    <div className="space-y-6">
       <Header title="Users" subtitle="Manage all users" />
-      {error && <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>}
+      
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
 
-      <Box
-        sx={{
-          mt: 4,
-          bgcolor: "#2c2c2c",
-          p: 3,
-          borderRadius: 2,
-          color: "#f5f5f5",
-        }}
-      >
-        <List>
-          {sortedUsers.map((user: UserType, index: number) => {
+    <Card>
+      <CardContent>
+        <div className="space-y-4">
+          {sortedUsers.map((user: UserType) => {
             const userType = user.publicMetadata?.userType ?? "Unknown";
             const email = user.emailAddresses?.[0]?.emailAddress ?? "No email";
+            const isCurrentUser = user.id === userId;
+            const isTeacher = userType === "teacher";
 
             return (
-              <React.Fragment key={user.id}>
-                <ListItem
-                  sx={{
-                    bgcolor: user.id === userId ? "#424242" : "#333333",
-                    borderRadius: 1,
-                    mb: 1,
-                    p: 2,
-                    "&:hover": {
-                      bgcolor: "#4a4a4a",
-                    },
-                  }}
-                >
-                  <ListItemText
-                    primary={`${user.firstName || "Unknown"} (${userType})`}
-                    secondary={email}
-                    primaryTypographyProps={{
-                      fontWeight: user.id === userId ? "bold" : "normal",
-                      fontSize: "1.1rem",
-                      color: user.id === userId ? "#90caf9" : "#f5f5f5",
-                    }}
-                    secondaryTypographyProps={{
-                      fontSize: "0.9rem",
-                      color: "#bdbdbd",
-                    }}
-                  />
-                  <ListItemSecondaryAction>
-                    {user.id === userId ? (
+              <div
+                key={user.id}
+                className={`
+                  relative group rounded-xl p-4
+                  ${isCurrentUser 
+                    ? 'bg-gradient-to-r from-blue-950 to-zinc-900 border border-blue-800/40' 
+                    : 'bg-zinc-900/50 hover:bg-zinc-800/50 border border-zinc-800/50'
+                  }
+                  transition-all duration-200
+                `}
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <Avatar className="h-12 w-12 border-2 border-zinc-800">
+                      <AvatarFallback className="bg-zinc-950 text-zinc-400">
+                        {user.firstName?.[0] || ""}
+                      </AvatarFallback>
+                    </Avatar>
+                    
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className={`font-medium ${
+                          isCurrentUser ? 'text-blue-400' : 'text-zinc-100'
+                        }`}>
+                          {user.firstName || "Unknown"}
+                        </span>
+                        {isTeacher && (
+                          <Badge variant="secondary" className="bg-blue-900/30 text-blue-400">
+                            <Crown className="w-3 h-3 mr-1" />
+                            Teacher
+                          </Badge>
+                        )}
+                        {isCurrentUser && (
+                          <Badge variant="secondary" className="bg-zinc-800 text-zinc-400">
+                            <User className="w-3 h-3 mr-1" />
+                            You
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-sm text-zinc-400 flex items-center gap-2">
+                        {email}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {isCurrentUser ? (
                       <Button
                         variant="outline"
-                        className="mr-2"
+                        size="sm"
                         onClick={() => signOut()}
+                        className="gap-2 text-zinc-400 hover:text-zinc-100"
                       >
+                        <LogOut className="w-4 h-4" />
                         Sign Out
                       </Button>
                     ) : (
                       <>
-                        {user.publicMetadata?.userType !== "teacher" && (
+                        {!isTeacher && (
                           <Button
-                            variant="default"
-                            className="mr-2 bg-gray-700"
+                            variant="outline"
+                            size="sm"
                             onClick={() => handlePromote(user.id)}
+                            className="gap-2 text-blue-400 hover:text-blue-300"
                           >
+                            <Crown className="w-4 h-4" />
                             Promote
                           </Button>
                         )}
-                        {user.publicMetadata?.userType === "teacher" && (
+                        {isTeacher && (
                           <Button
-                            variant="default"
-                            className="mr-2 bg-gray-700"
+                            variant="outline"
+                            size="sm"
                             onClick={() => handleDemote(user.id)}
+                            className="gap-2 text-zinc-400 hover:text-zinc-300"
                           >
+                            <Shield className="w-4 h-4" />
                             Demote
                           </Button>
                         )}
                         <Button
-                          variant="destructive"
+                          variant="outline"
+                          size="sm"
                           onClick={() => handleDelete(user.id)}
+                          className="gap-2 text-red-400 hover:text-red-300 hover:border-red-800/50"
                         >
+                          <UserMinus className="w-4 h-4" />
                           Delete
                         </Button>
                       </>
                     )}
-                  </ListItemSecondaryAction>
-                </ListItem>
-                {index < sortedUsers.length - 1 && <Divider sx={{ bgcolor: "#444" }} />}
-              </React.Fragment>
+                  </div>
+                </div>
+              </div>
             );
           })}
-        </List>
-      </Box>
-    </>
+        </div>
+      </CardContent>
+    </Card>
+
+    </div>
   );
 };
 

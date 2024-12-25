@@ -3,17 +3,17 @@
 import React, { useRef } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ReactPlayer from "react-player";
 import Loading from "@/components/Loading";
 import { useCourseProgressData } from "@/hooks/useCourseProgressData";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Code } from "lucide-react";
 import Notes from "./notes/page";
 import Resources from "./resources/page";
 import Quiz from "./quiz/page";
+import { BookOpen, FileText, GraduationCap } from "lucide-react";
 
 const Course = () => {
   const {
@@ -84,12 +84,18 @@ const Course = () => {
         </div>
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">{currentChapter?.title}</h1>
-          <div className="flex items-center space-x-2">
-            <Avatar className="h-8 w-8">
-              <AvatarImage alt={course.teacherName} />
-              <AvatarFallback>{course.teacherName[0]}</AvatarFallback>
-            </Avatar>
-            <span className="text-sm font-medium">{course.teacherName}</span>
+          <div className="flex items-center space-x-4">
+            <Button 
+              size="sm"
+              onClick={() => router.push(`/user/courses/${course.courseId}/chapters/${currentChapter.chapterId}/code`)}
+              className="flex items-center bg-blue-500 hover:bg-blue-600 text-white"
+            >
+              <Code className="h-4 w-4 mr-2" />
+              Code Editor
+            </Button>
+            <div className="flex items-center space-x-2">
+              <span className="text-sm font-medium">{course.teacherName}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -120,59 +126,93 @@ const Course = () => {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0">
-          <CardTitle>Chapter Overview</CardTitle>
-          <div className="flex space-x-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleGoToPreviousChapter}
+      <div className="space-y-6">
+        <Card className="border-none shadow-lg">
+          <CardHeader className="rounded-t-lg bg-gray-800 text-white">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <BookOpen className="h-5 w-5 text-primary" />
+                <CardTitle className="text-lg">Chapter Overview</CardTitle>
+              </div>
+              <div className="flex space-x-3">
+                <Button
+                  onClick={handleGoToPreviousChapter}
+                  className="bg-gray-900 hover:bg-gray-700"
+                >
+                  <ChevronLeft className="h-4 w-4 mr-2" />
+                  Previous
+                </Button>
+                <Button
+                  onClick={handleGoToNextChapter}
+                  className="bg-gray-900 hover:bg-gray-700"
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4 ml-2" />
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <ScrollArea className="h-auto max-h-48 pr-4">
+              <p className="leading-relaxed text-gray-500">
+                {currentChapter?.content}
+              </p>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+
+        <Tabs defaultValue="Notes" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 bg-gray-800 rounded-b-lg pb-10 pt-4">
+            <TabsTrigger 
+              value="Notes" 
+              className="flex items-center space-x-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
             >
-              <ChevronLeft className="h-4 w-4 mr-2" />
-              Previous
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleGoToNextChapter}
+              <FileText className="h-4 w-4" />
+              <span>Notes</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="Resources" 
+              className="flex items-center space-x-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
             >
-              Next
-              <ChevronRight className="h-4 w-4 ml-2" />
-            </Button>
+              <BookOpen className="h-4 w-4" />
+              <span>Resources</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="Quiz" 
+              className="flex items-center space-x-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            >
+              <GraduationCap className="h-4 w-4" />
+              <span>Quiz</span>
+            </TabsTrigger>
+          </TabsList>
+
+          <div className="mt-6">
+            <TabsContent value="Notes">
+              <Card className="border-none shadow-lg">
+                <CardContent className="p-6">
+                  <Notes chapterId={currentChapter?.chapterId} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="Resources">
+              <Card className="border-none shadow-lg">
+                <CardContent className="p-6">
+                  <Resources chapterId={currentChapter?.chapterId} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="Quiz">
+              <Card className="border-none shadow-lg">
+                <CardContent className="p-6">
+                  <Quiz chapterId={currentChapter?.chapterId} />
+                </CardContent>
+              </Card>
+            </TabsContent>
           </div>
-        </CardHeader>
-        <CardContent>
-          {/* auto height */}
-          <ScrollArea className="h-auto">
-            <p className="text-sm">{currentChapter?.content}</p>
-          </ScrollArea>
-        </CardContent>
-      </Card>
-
-      <Tabs defaultValue="Notes" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="Notes">Notes</TabsTrigger>
-          <TabsTrigger value="Resources">Resources</TabsTrigger>
-          <TabsTrigger value="Quiz">Quiz</TabsTrigger>
-          <TabsTrigger value="Code" onClick={() => router.push(`/user/courses/${course.courseId}/chapters/${currentChapter.chapterId}/code`)}>Code</TabsTrigger>
-        </TabsList>
-
-        {/* Notes Tab */}
-        <TabsContent value="Notes">
-          <Notes chapterId={currentChapter?.chapterId} />
-        </TabsContent>
-
-        {/* Resources Tab */}
-        <TabsContent value="Resources">
-          <Resources chapterId={currentChapter?.chapterId} />
-        </TabsContent>
-
-        {/* Quiz Tab */}
-        <TabsContent value="Quiz">
-          <Quiz chapterId={currentChapter?.chapterId} />
-        </TabsContent>
-      </Tabs>
+        </Tabs>
+      </div>
     </div>
   );
 };

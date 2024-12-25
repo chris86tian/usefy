@@ -43,6 +43,12 @@ const NonDashboardNavbar = () => {
           <SignedIn>
             <div className="flex items-center gap-4">
               <Link
+                href="/snippets"
+                className="text-customgreys-dirtyGrey"
+              >
+                Snippets
+              </Link>
+              <Link
                 href={
                   userRole === "teacher"
                     ? "/teacher/courses"
@@ -50,7 +56,7 @@ const NonDashboardNavbar = () => {
                 }
                 className="text-customgreys-dirtyGrey"
               >
-                My Courses
+                Courses
               </Link>
               <UserButton
                 appearance={{

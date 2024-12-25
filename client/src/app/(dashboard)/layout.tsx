@@ -8,7 +8,7 @@ import { useUser } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import ChaptersSidebar from "./user/courses/[courseId]/ChaptersSidebar";
-import ConvexClientProvider from "@/components/providers/ConvexClientProvider";
+import { Toaster } from "react-hot-toast";
 
 export default function DashboardLayout({
   children,
@@ -48,9 +48,8 @@ export default function DashboardLayout({
             style={{ height: "100vh" }}
           >
             <Navbar isCoursePage={isCoursePage} />
-            <main className="dashboard__body">
-              <ConvexClientProvider>{children}</ConvexClientProvider>
-            </main>
+            <main className="dashboard__body">{children}</main>
+            <Toaster />
           </div>
         </div>
       </div>

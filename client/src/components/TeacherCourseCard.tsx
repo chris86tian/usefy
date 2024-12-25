@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/card";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { Button } from "./ui/button";
+import { Button } from "@/components/ui/button";
 import { Eye, Pencil, Trash2 } from "lucide-react";
 
 const TeacherCourseCard = ({
@@ -69,7 +69,16 @@ const TeacherCourseCard = ({
             <>
               <div>
                 <Button
-                  className="course-card-teacher__edit-button"
+                  className="bg-gray-800 text-white"
+                  onClick={() => { onViewCourse(course) }}
+                >
+                  <Eye className="w-4 h-4 mr-2" />
+                  View
+                </Button>
+              </div>
+              <div>
+                <Button
+                  className="bg-gray-800 text-white"
                   onClick={() => onEdit(course)}
                 >
                   <Pencil className="w-4 h-4 mr-2" />
@@ -78,20 +87,11 @@ const TeacherCourseCard = ({
               </div>
               <div className="flex flex-col gap-2">
                 <Button
-                  className="course-card-teacher__delete-button"
+                  className="bg-gray-800 text-white"
                   onClick={() => onDelete(course)}
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
                   Delete
-                </Button>
-              </div>
-              <div>
-                <Button
-                  className="course-card-teacher__delete-button"
-                  onClick={() => { onViewCourse(course) }}
-                >
-                  <Eye className="w-4 h-4 mr-2" />
-                  View
                 </Button>
               </div>
             </>

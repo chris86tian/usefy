@@ -4,7 +4,16 @@ import React from "react";
 const Footer = () => {
   return (
     <div className="footer">
-      <p>&copy; 2025 Arslan Kamchybekov | GrowhthHungry. All Rights Reserved.</p>
+      {/* link to my name, link to my company */}
+      <div className="flex flex-row items-center justify-center gap-2">
+        <p> &copy; 2025 All rights reserved.</p>
+        <Link href="https://www.linkedin.com/in/arslankamchybekov/" className="underline">
+          Arslan Kamchybekov
+        </Link>
+        <Link href="https://growthhungry.life" className="underline">
+          GrowthHungry
+        </Link>
+      </div>
       <div className="footer__links">
         {["About", "Privacy Policy", "Licensing", "Contact"].map((item) => (
           <Link

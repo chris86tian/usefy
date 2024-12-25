@@ -6,6 +6,7 @@ import Providers from "./providers"
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "sonner";
 import { Suspense } from "react";
+import ConvexClientProvider from "@/components/providers/ConvexClientProvider";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -14,8 +15,8 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "GrowthHungry.ai",
-  description: "GrowthHungry.ai is an AI Virtual Learning Environment",
+  title: "GrowthHungry",
+  description: "GrowthHungry is an AI Virtual Learning Environment",
 };
 
 export default function RootLayout({
@@ -29,7 +30,9 @@ export default function RootLayout({
         <body className={`${dmSans.className}`}>
           <Providers>
             <Suspense fallback={null}>
-              <div className="root-layout">{children}</div>
+              <div className="root-layout">
+                <ConvexClientProvider>{children}</ConvexClientProvider>
+              </div>
             </Suspense>
             <Toaster richColors closeButton />
           </Providers>
