@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { YoutubeTranscript } from 'youtube-transcript';
 import OpenAI from 'openai';
+import { extractVideoId } from '@/lib/utils';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -111,23 +112,6 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-}
-
-// Helper function to extract video ID from YouTube URL
-function extractVideoId(url: string): string | null {
-  const patterns = [
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
-    /^[a-zA-Z0-9_-]{11}$/
-  ];
-
-  for (const pattern of patterns) {
-    const match = url.match(pattern);
-    if (match) {
-      return match[1];
-    }
-  }
-
-  return null;
 }
 
 // Helper function to format timestamp from milliseconds to seconds

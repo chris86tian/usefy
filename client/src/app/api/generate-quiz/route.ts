@@ -1,98 +1,148 @@
-import { NextResponse } from "next/server"
-import { OpenAI } from "openai"
+import { NextResponse } from "next/server";
+import { OpenAI } from "openai";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+interface Question {
+  question: string;
+  options: string[];
+  correctAnswer: number;
+}
+
+interface TopicQuestions {
+  topic: string;
+  questions: Question[];
+}
+
+interface QuizResponse {
+  topics: string[];
+  allQuestions: TopicQuestions[];
+}
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(req: Request) {
-    const { transcript } = await req.json()
+  try {
+    const { videoTranscript } = await req.json();
 
-    if (!transcript) {
-        return NextResponse.json(
-            { error: "Transcript is required" },
-            { status: 400 },
-        )
+    if (!videoTranscript) {
+      return NextResponse.json(
+        { error: "Transcript is required" },
+        { status: 400 }
+      );
     }
 
-    try {
-        const topicResponse = await openai.chat.completions.create({
-            model: "gpt-4o",
-            messages: [
+    // Step 1: Extract topics with a more explicit prompt
+    const topicResponse = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        {
+          role: "system",
+          content: "You are an educational assistant. Respond only with a comma-separated list of topics, nothing else.",
+        },
+        {
+          role: "user",
+          content: `Extract 3-5 main topics from this lecture transcript: ${videoTranscript}`,
+        },
+      ],
+    });
+
+    const topics = topicResponse.choices[0].message?.content
+      ?.split(",")
+      .map((topic) => topic.trim())
+      .filter(Boolean) ?? [];
+
+    if (topics.length === 0) {
+      return NextResponse.json(
+        { error: "No topics could be extracted from the transcript" },
+        { status: 422 }
+      );
+    }
+
+    // Step 2: Generate questions with a more structured prompt
+    const allQuestions: TopicQuestions[] = [];
+
+    for (const topic of topics) {
+      const questionResponse = await openai.chat.completions.create({
+        model: "gpt-4",
+        messages: [
+          {
+            role: "system",
+            content: "You are an educational assistant. Respond only with a valid JSON object containing an array of questions.",
+          },
+          {
+            role: "user",
+            content: `Generate exactly 3 multiple-choice questions for the topic "${topic}". 
+            Format your response as a JSON object with this exact structure:
+            {
+              "questions": [
                 {
-                    role: "system",
-                    content: "You are an educational assistant.",
-                },
-                {
-                    role: "user",
-                    content: `Extract the main topics from this lecture transcript: ${transcript}. Provide the topics as a plain comma-separated list. Do not include any comments or extra text besides the list.`,
-                },
-            ],
-        })
-
-        const responseContent = topicResponse.choices[0].message?.content
-
-        if (!responseContent) {
-            throw new Error("No content returned from OpenAI for topics.")
-        }
-
-        const topics = responseContent
-            .split(",")
-            .map((topic) => topic.trim())
-            .filter((topic) => topic) // Remove empty strings
-
-        if (topics.length === 0) {
-            throw new Error("Failed to extract valid topics from the response.")
-        }
-
-        const quiz = []
-
-        for (const topic of topics) {
-            const questionResponse = await openai.chat.completions.create({
-                model: "gpt-4o",
-                messages: [
-                    {
-                        role: "system",
-                        content: "You are an educational assistant.",
-                    },
-                    {
-                        role: "user",
-                        content: `Generate 3 multiple-choice questions for the topic "${topic}". Provide the output as a valid JSON array with this structure:
-                        [
-                            {
-                                "question": "What is the capital of France?",
-                                "choices": ["Paris", "London", "Berlin", "Madrid"],
-                                "correctAnswer": "Paris"
-                            },
-                            ...
-                        ]
-                        Do not include anything else or any comments, besides the JSON itself.`,
-                    },
-                ],
-            })
-
-            const questionContent = questionResponse.choices[0].message?.content
-
-            let questions = []
-            try {
-                questions = JSON.parse(questionContent || "[]")
-            } catch (parseError) {
-                console.error(
-                    `Failed to parse questions for topic "${topic}":` + parseError,
-                    questionContent,
-                )
-                continue
+                  "question": "string",
+                  "options": ["string", "string", "string", "string"],
+                  "correctAnswer": number
+                }
+              ]
             }
+            Ensure each question has exactly 4 options and correctAnswer is a number 0-3.`,
+          },
+        ],
+        temperature: 0.7, // Add some variability but not too much
+        max_tokens: 1000,
+      });
 
-            quiz.push({
-                topic: topic.trim(),
-                questions,
-            })
+      const questionContent = questionResponse.choices[0].message?.content;
+
+      if (!questionContent) {
+        console.error(`No content returned for topic: ${topic}`);
+        continue; // Skip this topic but continue with others
+      }
+
+      try {
+        const parsedResponse = JSON.parse(questionContent.trim());
+        
+        // Validate the response structure
+        if (!parsedResponse.questions || !Array.isArray(parsedResponse.questions)) {
+          throw new Error("Invalid response structure");
         }
-        return NextResponse.json({ topics: quiz })
-    } catch (error) {
-        console.error(error)
-        return NextResponse.json(
-            { error: error || "Something went wrong" },
-            { status: 500 },
-        )
+
+        // Validate each question
+        const validQuestions = parsedResponse.questions.every((q: Question) => 
+          q.question &&
+          Array.isArray(q.options) &&
+          q.options.length === 4 &&
+          typeof q.correctAnswer === 'number' &&
+          q.correctAnswer >= 0 &&
+          q.correctAnswer <= 3
+        );
+
+        if (!validQuestions) {
+          throw new Error("Invalid question format");
+        }
+
+        allQuestions.push({ topic, questions: parsedResponse.questions });
+      } catch (error) {
+        console.error(`Error processing topic ${topic}:`, error);
+        continue; // Skip this topic but continue with others
+      }
     }
+
+    // Ensure we have at least some valid questions
+    if (allQuestions.length === 0) {
+      return NextResponse.json(
+        { error: "Failed to generate valid questions for any topic" },
+        { status: 422 }
+      );
+    }
+
+    const response: QuizResponse = {
+      topics,
+      allQuestions,
+    };
+
+    return NextResponse.json(response);
+  } catch (error) {
+    console.error("Error in quiz generation:", error);
+    return NextResponse.json(
+      { error: "Failed to generate quiz" },
+      { status: 500 }
+    );
+  }
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,8 +12,10 @@ import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Code } from "lucide-react";
 import Notes from "./notes/page";
 import Resources from "./resources/page";
-import Quiz from "./quiz/page";
+import AIQuiz from "./aiquiz/page";
 import { BookOpen, FileText, GraduationCap } from "lucide-react";
+import { YoutubeTranscript } from "youtube-transcript";
+import { extractVideoId } from "@/lib/utils";
 
 const Course = () => {
   const {
@@ -31,6 +33,7 @@ const Course = () => {
 
   const playerRef = useRef(null);
   const router = useRouter();
+  const [videoTranscript, setVideoTranscript] = useState("");
 
   const handleProgress = ({ played }: { played: number }) => {
     if (
@@ -67,6 +70,18 @@ const Course = () => {
       router.push(`/user/courses/${course.courseId}/chapters/${currentSection?.chapters[nextChapterIndex].chapterId}`);
     }
   };
+
+  useEffect(() => {
+    if (currentChapter?.video) {
+      const videoId = extractVideoId(currentChapter.video as string);
+      if (videoId) {
+        YoutubeTranscript.fetchTranscript(videoId).then((transcript) => {
+          const videoTranscript = transcript.map((t) => t.text).join(" ");
+          setVideoTranscript(videoTranscript);
+        });
+      }
+    }
+  }, [currentChapter]);
 
   if (isLoading) return <Loading />;
   if (!user) return <div className="p-4 text-center">Please sign in to view this course.</div>;
@@ -189,25 +204,19 @@ const Course = () => {
           <div className="mt-6">
             <TabsContent value="Notes">
               <Card className="border-none shadow-lg">
-                <CardContent className="p-6">
                   <Notes chapterId={currentChapter?.chapterId} />
-                </CardContent>
               </Card>
             </TabsContent>
 
             <TabsContent value="Resources">
               <Card className="border-none shadow-lg">
-                <CardContent className="p-6">
                   <Resources chapterId={currentChapter?.chapterId} />
-                </CardContent>
               </Card>
             </TabsContent>
 
             <TabsContent value="Quiz">
               <Card className="border-none shadow-lg">
-                <CardContent className="p-6">
-                  <Quiz chapterId={currentChapter?.chapterId} />
-                </CardContent>
+                  <AIQuiz videoTranscript={videoTranscript} />
               </Card>
             </TabsContent>
           </div>
