@@ -5,6 +5,7 @@ import { dark } from "@clerk/themes";
 import { BookOpen } from "lucide-react";
 import Link from "next/link";
 import React from "react";
+import { Button } from "./ui/button";
 
 const NonDashboardNavbar = () => {
   const { user } = useUser();
@@ -35,10 +36,6 @@ const NonDashboardNavbar = () => {
           </div>
         </div>
         <div className="nondashboard-navbar__actions">
-          {/* <button className="nondashboard-navbar__notification-button">
-            <span className="nondashboard-navbar__notification-indicator"></span>
-            <Bell className="nondashboard-navbar__notification-icon" />
-          </button> */}
 
           <SignedIn>
             <div className="flex items-center gap-4">
@@ -77,17 +74,15 @@ const NonDashboardNavbar = () => {
           <SignedOut>
             <Link
               href="/signin"
-              className="nondashboard-navbar__auth-button--login"
               scroll={false}
             >
-              Log in
+              <Button variant={"outline"} className="text-blue-500">Log In</Button>
             </Link>
             <Link
               href="/signup"
-              className="nondashboard-navbar__auth-button--signup"
               scroll={false}
             >
-              Sign up
+              <Button className="bg-blue-500 hover:bg-blue-600 text-white">Sign Up</Button>
             </Link>
           </SignedOut>
         </div>

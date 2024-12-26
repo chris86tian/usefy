@@ -69,7 +69,7 @@ const TeacherCourseCard = ({
             <>
               <div>
                 <Button
-                  className="bg-gray-800 text-white"
+                  className="bg-gray-800 hover:bg-gray-600" 
                   onClick={() => { onViewCourse(course) }}
                 >
                   <Eye className="w-4 h-4 mr-2" />
@@ -78,7 +78,7 @@ const TeacherCourseCard = ({
               </div>
               <div>
                 <Button
-                  className="bg-gray-800 text-white"
+                  className="bg-gray-800 hover:bg-gray-600"
                   onClick={() => onEdit(course)}
                 >
                   <Pencil className="w-4 h-4 mr-2" />
@@ -87,7 +87,7 @@ const TeacherCourseCard = ({
               </div>
               <div className="flex flex-col gap-2">
                 <Button
-                  className="bg-gray-800 text-white"
+                  className="bg-gray-800 hover:bg-gray-600"
                   onClick={() => onDelete(course)}
                 >
                   <Trash2 className="w-4 h-4 mr-2" />

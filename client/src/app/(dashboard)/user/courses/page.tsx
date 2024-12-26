@@ -8,6 +8,8 @@ import Header from "@/components/Header";
 import { useUser } from "@clerk/nextjs";
 import { useState, useMemo } from "react";
 import Loading from "@/components/Loading";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 const Courses = () => {
   const router = useRouter();
@@ -56,22 +58,50 @@ const Courses = () => {
     }
   };
 
-  if (!isLoaded || isLoading) return <Loading />;
-  if (!user) return <div className="text-center">Please sign in to view your courses</div>;
-  if (isError || !courses || courses.length === 0) {
+  if (!isLoaded || isLoading) return <Loading />
+
+  if (!user)
     return (
-      <div className="text-center space-y-4">
-        <p>You are not enrolled in any courses yet.</p>
-        <button
-          onClick={() => router.push("/search")}
-          className="px-4 py-2 bg-primary-700 text-white-100 rounded-lg hover:bg-primary-600"
-        >
-          Browse Courses
-        </button>
+      <div className="flex h-[80vh] items-center justify-center">
+        <Card className="w-full max-w-md text-center">
+          <CardHeader>
+            <CardTitle>Sign In Required</CardTitle>
+            <CardDescription>Please sign in to view your courses</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              onClick={() => router.push('/sign-in')}
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+            >
+              Sign In
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
-  }
   
+  if (isError || !courses || courses.length === 0) {
+    return (
+      <div className="flex h-[80vh] items-center justify-center">
+        <Card className="w-full max-w-md text-center">
+          <CardHeader>
+            <CardTitle>No Courses Found</CardTitle>
+            <CardDescription>
+              You are not enrolled in any courses yet.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              onClick={() => router.push('/search')}
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+            >
+              Browse Courses
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="user-courses">

@@ -1320,14 +1320,6 @@ input[type="color"] {
   @apply text-gray-400 w-4 h-4 sm:w-5 sm:h-5;
 }
 
-.nondashboard-navbar__auth-button--login {
-  @apply text-customgreys-dirtyGrey hover:bg-customgreys-darkerGrey hover:text-white-50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-md border-customgreys-dirtyGrey border-[1px] text-sm sm:text-base;
-}
-
-.nondashboard-navbar__auth-button--signup {
-  @apply bg-indigo-600 px-3 sm:px-4 py-1.5 sm:py-2 rounded-md hover:bg-primary-600 hover:text-customgreys-primarybg text-sm sm:text-base;
-}
-
 /* Add these classes for group hover effects */
 .group:hover .dashboard-navbar__search-icon,
 .group:hover .nondashboard-navbar__search-icon {

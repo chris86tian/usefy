@@ -47,7 +47,7 @@ const YouTubeDialog = ({ isOpen, onClose, onSubmit }: YouTubeDialogProps) => {
             <Input
               id="youtube-url"
               type="url"
-              placeholder="https://www.youtube.com/watch?v=example"
+              placeholder="YouTube Video URL"
               value={youtubeURL}
               onChange={(e) => setYoutubeURL(e.target.value)}
               className="w-full"

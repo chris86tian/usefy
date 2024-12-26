@@ -85,7 +85,7 @@ const AIQuiz = ({ videoTranscript }: AIQuizProps) => {
 
   if (!hasStarted && !loading && !error) {
     return (
-      <Card className="w-full mx-auto bg-gray-800 p-4">
+      <Card className="w-full mx-auto bg-gray-900 p-4">
         <CardContent className="p-4">
           <div className="flex flex-col items-center space-y-6">
             <BrainCircuit className="w-16 h-16 text-primary" />
