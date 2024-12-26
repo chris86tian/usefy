@@ -2,7 +2,7 @@
 
 import { SignedIn, SignedOut, UserButton, useUser } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
-import { BookOpen } from "lucide-react";
+import { BookOpen, Code2Icon } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 import { Button } from "./ui/button";
@@ -29,6 +29,20 @@ const NonDashboardNavbar = () => {
                 <span className="sm:hidden">Search</span>
               </Link>
               <BookOpen
+                className="nondashboard-navbar__search-icon"
+                size={18}
+              />
+            </div>
+            <div className="relative group">
+              <Link
+                href="/snippets"
+                className="nondashboard-navbar__search-input"
+                scroll={false}
+              >
+                <span className="hidden sm:inline">Explore Snippets</span>
+                <span className="sm:hidden">Search</span>
+              </Link>
+              <Code2Icon
                 className="nondashboard-navbar__search-icon"
                 size={18}
               />
