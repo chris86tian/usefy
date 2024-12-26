@@ -1,4 +1,4 @@
-import { useCodeEditorStore } from "@/store/useCodeEditorStore";
+import { useCodeEditorStore } from "@/hooks/useCodeEditorStore";
 import { useMutation } from "convex/react";
 import { useState } from "react";
 import { api } from "../../../../../../../../../convex/_generated/api";
@@ -23,7 +23,7 @@ function ShareSnippetDialog({ onClose }: { onClose: () => void }) {
       setTitle("");
       toast.success("Snippet shared successfully");
     } catch (error) {
-      console.log("Error creating snippet:", error);
+      console.error("Error creating snippet:", error);
       toast.error("Error creating snippet");
     } finally {
       setIsSharing(false);

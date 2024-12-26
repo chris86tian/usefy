@@ -52,11 +52,8 @@ const customBaseQuery = async (
     }
 
     return result;
-  } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
-
-    return { error: { status: "FETCH_ERROR", error: errorMessage } };
+  } catch (error) {
+    return { error: { status: "FETCH_ERROR", error } };
   }
 };
 

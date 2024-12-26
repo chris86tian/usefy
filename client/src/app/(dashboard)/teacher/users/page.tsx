@@ -17,7 +17,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Crown, Shield, User, UserMinus, LogOut } from "lucide-react";
 
-type UserType = {
+type User = {
   id: string;
   firstName: string;
   emailAddresses: { emailAddress: string }[];
@@ -28,8 +28,8 @@ type UserType = {
 const Users = () => {
   const { data, isLoading, isError, refetch } = useGetUsersQuery();
   const [error, setError] = useState<string | null>(null);
-  const user = useUser().user;
-  const userId = user?.id;
+  const currentUser = useUser().user;
+  const userId = currentUser?.id;
   const { signOut } = useClerk();
   const [promoteUserToAdmin] = usePromoteUserToAdminMutation();
   const [demoteUserFromAdmin] = useDemoteUserFromAdminMutation();
@@ -68,7 +68,7 @@ const Users = () => {
   if (isError || !data) return <div>Error loading users.</div>;
   if (data?.users.length === 0) return <div>No users found.</div>;
 
-  const sortedUsers = [...users].sort((a: UserType, b: UserType) => {
+  const sortedUsers = [...users].sort((a: User, b: User) => {
     if (a.id === userId) return -1;
     if (b.id === userId) return 1;
     return 0;
@@ -87,8 +87,8 @@ const Users = () => {
     <Card>
       <CardContent>
         <div className="space-y-4">
-          {sortedUsers.map((user: UserType) => {
-            const userType = user.publicMetadata?.userType ?? "Unknown";
+          {sortedUsers.map((user: User) => {
+            const userType = user.publicMetadata?.userType ?? "User";
             const email = user.emailAddresses?.[0]?.emailAddress ?? "No email";
             const isCurrentUser = user.id === userId;
             const isTeacher = userType === "teacher";
@@ -99,8 +99,8 @@ const Users = () => {
                 className={`
                   relative group rounded-xl p-4
                   ${isCurrentUser 
-                    ? 'bg-gradient-to-r from-blue-950 to-zinc-900 border border-blue-800/40' 
-                    : 'bg-zinc-900/50 hover:bg-zinc-800/50 border border-zinc-800/50'
+                    ? 'bg-gray-900/50 hover:bg-gray-900'
+                    : 'bg-zinc-900/50 hover:bg-zinc-900'
                   }
                   transition-all duration-200
                 `}
@@ -118,7 +118,7 @@ const Users = () => {
                         <span className={`font-medium ${
                           isCurrentUser ? 'text-blue-400' : 'text-zinc-100'
                         }`}>
-                          {user.firstName || "Unknown"}
+                          {user.firstName}
                         </span>
                         {isTeacher && (
                           <Badge variant="secondary" className="bg-blue-900/30 text-blue-400">

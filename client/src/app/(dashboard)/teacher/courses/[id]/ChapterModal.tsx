@@ -189,7 +189,7 @@ const ChapterModal = () => {
                     type="button"
                     onClick={handleAutoGenerate}
                     disabled={isGenerating || !videoUrl}
-                    className="bg-primary-700"
+                    className="bg-blue-500 hover:bg-blue-600"
                   >
                     <Sparkles className="w-4 h-4" />
                     {isGenerating ? "Generating..." : "Auto-Fill"}
@@ -234,7 +234,7 @@ const ChapterModal = () => {
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancel
               </Button>
-              <Button type="submit" className="bg-primary-700">
+              <Button type="submit" className="bg-blue-500 hover:bg-blue-600">
                 Save
               </Button>
             </div>

@@ -7,23 +7,7 @@ import QuizQuestionComponent from './_components/quizQuestion'
 import { AlertCircle, BookOpen, BrainCircuit, Loader2, RefreshCw, Trophy } from 'lucide-react'
 import { Progress } from '@radix-ui/react-progress'
 import { Sparkles } from 'lucide-react'
-
-// Define types to match the API response
-interface Question {
-  question: string
-  options: string[]
-  correctAnswer: number
-}
-
-interface TopicQuestions {
-  topic: string
-  questions: Question[]
-}
-
-interface QuizResponse {
-  topics: string[]
-  allQuestions: TopicQuestions[]
-}
+import { QuizResponse } from '@/lib/utils'
 
 interface AIQuizProps {
   videoTranscript: string

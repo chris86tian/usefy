@@ -1,6 +1,6 @@
 "use client";
 
-import { useCodeEditorStore } from "@/store/useCodeEditorStore";
+import { useCodeEditorStore } from "@/hooks/useCodeEditorStore";
 import React, { useEffect, useRef, useState } from "react";
 import { THEMES } from "../_constants";
 import { AnimatePresence, motion } from "framer-motion";

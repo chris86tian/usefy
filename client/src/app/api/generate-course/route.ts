@@ -29,15 +29,10 @@ export async function POST(request: Request) {
       // Fetch transcript with timestamps
       const transcript = await YoutubeTranscript.fetchTranscript(videoId);
 
-      console.log("Transcript:", transcript);
-
       // Format transcript to include timestamps
       const formattedTranscript = transcript
         .map(({ text, offset }) => `[${formatTimestamp(offset)}] ${text}`)
         .join("\n");
-
-       
-      console.log("Formatted transcript:", formattedTranscript); 
 
       // Generate course structure using OpenAI
       const completion = await openai.chat.completions.create({
@@ -90,8 +85,6 @@ export async function POST(request: Request) {
         temperature: 0.7,
         max_tokens: 4000,
       });
-
-      console.log("OpenAI Response:", completion.choices[0].message.content);
 
       // Sanitize and parse the response
       const sanitizedContent = sanitizeJSON(completion.choices[0].message.content || "{}");

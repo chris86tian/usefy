@@ -937,10 +937,6 @@ input[type="color"] {
   @apply flex items-center;
 }
 
-.droppable-chapter__actions {
-  @apply flex items-center gap-[1px];
-}
-
 .droppable-chapter__button {
   @apply p-1;
 }

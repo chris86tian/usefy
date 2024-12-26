@@ -73,7 +73,7 @@ const CourseEditor = () => {
       }
 
       const { sections } = data;
-      console.log(sections);
+
       dispatch(setSections(
         sections.map((section: { sectionTitle: string; sectionDescription: string; chapters: { title: string; content: string; video: string }[] }) => ({
           sectionId: uuid(),

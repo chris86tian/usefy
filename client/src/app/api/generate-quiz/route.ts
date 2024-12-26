@@ -1,21 +1,6 @@
 import { NextResponse } from "next/server";
 import { OpenAI } from "openai";
-
-interface Question {
-  question: string;
-  options: string[];
-  correctAnswer: number;
-}
-
-interface TopicQuestions {
-  topic: string;
-  questions: Question[];
-}
-
-interface QuizResponse {
-  topics: string[];
-  allQuestions: TopicQuestions[];
-}
+import { Question, QuizResponse, TopicQuestions } from "@/lib/utils";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 

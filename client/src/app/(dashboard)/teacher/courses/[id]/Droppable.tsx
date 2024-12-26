@@ -155,12 +155,12 @@ const SectionHeader = ({
             <GripVertical className="h-6 w-6 mb-1" />
             <h3 className="text-lg font-medium">{section.sectionTitle}</h3>
           </div>
-          <div className="droppable-chapter__actions">
+          <div>
             <Button
               type="button"
               variant="ghost"
               size="sm"
-              className="p-0"
+              className="droppable-chapter__button"
               onClick={() => dispatch(openSectionModal({ sectionIndex }))}
             >
               <Edit className="h-5 w-5" />
@@ -169,7 +169,7 @@ const SectionHeader = ({
               type="button"
               variant="ghost"
               size="sm"
-              className="p-0"
+              className="droppable-chapter__button"
               onClick={() => dispatch(deleteSection(sectionIndex))}
             >
               <Trash2 className="h-5 w-5" />
@@ -214,7 +214,7 @@ const ChapterItem = ({
         <GripVertical className="h-4 w-4 mb-[2px]" />
         <p className="text-sm">{`${chapterIndex + 1}. ${chapter.title}`}</p>
       </div>
-      <div className="droppable-chapter__actions">
+      <div>
         <Button
           type="button"
           variant="ghost"

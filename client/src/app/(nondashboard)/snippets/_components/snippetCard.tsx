@@ -23,7 +23,7 @@ function SnippetCard({ snippet }: { snippet: Snippet }) {
     try {
       await deleteSnippet({ snippetId: snippet._id });
     } catch (error) {
-      console.log("Error deleting snippet:", error);
+      console.error("Error deleting snippet:", error);
       toast.error("Error deleting snippet");
     } finally {
       setIsDeleting(false);

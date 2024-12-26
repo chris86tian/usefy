@@ -23,7 +23,7 @@ function Comments({ snippetId }: { snippetId: Id<"snippets"> }) {
     try {
       await addComment({ snippetId, content });
     } catch (error) {
-      console.log("Error adding comment:", error);
+      console.error("Error adding comment:", error);
       toast.error("Something went wrong");
     } finally {
       setIsSubmitting(false);
@@ -36,7 +36,7 @@ function Comments({ snippetId }: { snippetId: Id<"snippets"> }) {
     try {
       await deleteComment({ commentId });
     } catch (error) {
-      console.log("Error deleting comment:", error);
+      console.error("Error deleting comment:", error);
       toast.error("Something went wrong");
     } finally {
       setDeletingCommentId(null);

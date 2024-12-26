@@ -6,6 +6,65 @@ import { toast } from "sonner";
 import { Monaco } from "@monaco-editor/react";
 import { Id } from "../../convex/_generated/dataModel";
 
+export interface Snippet {
+  _id: Id<"snippets">;
+  _creationTime: number;
+  userId: string;
+  language: string;
+  code: string;
+  title: string;
+  userName: string;
+}
+
+export interface ExecutionResult {
+  code: string;
+  output: string;
+  error: string | null;
+}
+
+export interface CodeEditorState {
+  language: string;
+  output: string;
+  isRunning: boolean;
+  error: string | null;
+  theme: string;
+  fontSize: number;
+  editor: Monaco | null;
+  executionResult: ExecutionResult | null;
+
+  setEditor: (editor: Monaco) => void;
+  getCode: () => string;
+  setLanguage: (language: string) => void;
+  setTheme: (theme: string) => void;
+  setFontSize: (fontSize: number) => void;
+  runCode: () => Promise<void>;
+}
+
+export interface Quiz {
+  questions: Question[];
+}
+
+export interface Question {
+  question: string
+  options: string[]
+  correctAnswer: number
+}
+
+export interface TopicQuestions {
+  topic: string
+  questions: Question[]
+}
+
+export interface QuizResponse {
+  topics: string[]
+  allQuestions: TopicQuestions[]
+}
+
+export interface TopicQuestions {
+  topic: string;
+  questions: Question[];
+}
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -40,6 +99,22 @@ export const customStyles = "text-gray-300 placeholder:text-gray-500";
 
 export function convertToSubCurrency(amount: number, factor = 100) {
   return Math.round(amount * factor);
+}
+
+export function extractVideoId(url: string): string | null {
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+    /^[a-zA-Z0-9_-]{11}$/
+  ];
+
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) {
+      return match[1];
+    }
+  }
+
+  return null;
 }
 
 export const NAVBAR_HEIGHT = 48;
@@ -93,48 +168,6 @@ export const customDataGridStyles = {
   },
 };
 
-export interface Snippet {
-  _id: Id<"snippets">;
-  _creationTime: number;
-  userId: string;
-  language: string;
-  code: string;
-  title: string;
-  userName: string;
-}
-
-export interface ExecutionResult {
-  code: string;
-  output: string;
-  error: string | null;
-}
-
-export interface CodeEditorState {
-  language: string;
-  output: string;
-  isRunning: boolean;
-  error: string | null;
-  theme: string;
-  fontSize: number;
-  editor: Monaco | null;
-  executionResult: ExecutionResult | null;
-
-  setEditor: (editor: Monaco) => void;
-  getCode: () => string;
-  setLanguage: (language: string) => void;
-  setTheme: (theme: string) => void;
-  setFontSize: (fontSize: number) => void;
-  runCode: () => Promise<void>;
-}
-export interface QuizQuestion {
-  question: string;
-  options: string[];
-  correctAnswer: number;
-}
-
-export interface Quiz {
-  questions: QuizQuestion[];
-}
 
 export const createCourseFormData = (
   data: CourseFormData,
@@ -277,22 +310,6 @@ export async function uploadThumbnail(
     toast.error("Failed to upload thumbnail");
     throw error;
   }
-}
-
-export function extractVideoId(url: string): string | null {
-  const patterns = [
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
-    /^[a-zA-Z0-9_-]{11}$/
-  ];
-
-  for (const pattern of patterns) {
-    const match = url.match(pattern);
-    if (match) {
-      return match[1];
-    }
-  }
-
-  return null;
 }
 
 export const countries = [

@@ -98,8 +98,6 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
 
         const data = await response.json();
 
-        console.log("data back from piston:", data);
-
         // handle API-level erros
         if (data.message) {
           set({ error: data.message, executionResult: { code, output: "", error: data.message } });
@@ -146,7 +144,7 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
           },
         });
       } catch (error) {
-        console.log("Error running code:", error);
+        console.error("Error running code:", error);
         set({
           error: "Error running code",
           executionResult: { code, output: "", error: "Error running code" },

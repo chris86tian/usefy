@@ -2,15 +2,10 @@ import React from 'react';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card } from "@/components/ui/card";
 import { CheckCircle2, XCircle } from "lucide-react";
-
-interface QuizQuestion {
-  question: string;
-  options: string[];
-  correctAnswer: number;
-}
+import { Question } from "@/lib/utils";
 
 interface QuizQuestionProps {
-  question: QuizQuestion;
+  question: Question;
   onAnswer: (selectedAnswer: number) => void;
   userAnswer: number | null;
   showResult: boolean;
