@@ -68,7 +68,7 @@ export async function POST(request: Request) {
       const content = contentArr.join('\n');
 
       return NextResponse.json({
-        title: title.replace(/^.*?:/, '').trim(), // Remove any prefix like "Title:"
+        title: title.replace(/^.*?:/, '').trim(),
         content: content.trim()
       });
 
@@ -89,12 +89,12 @@ export async function POST(request: Request) {
 }
 
 
-// Rate limiting configuration (optional)
+// Rate limiting configuration
 export const config = {
   api: {
     bodyParser: {
       sizeLimit: '1mb',
     },
   },
-  runtime: 'edge', // Optional: Use edge runtime for better performance
+  runtime: 'edge',
 };

@@ -48,7 +48,7 @@ const ChapterModal = () => {
   
     setIsGenerating(true);
     try {
-      const response = await fetch('/api/generate-content', {
+      const response = await fetch('/api/generate-chapter-info', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

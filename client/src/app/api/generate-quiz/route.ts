@@ -84,7 +84,7 @@ export async function POST(req: Request) {
             Ensure each question has exactly 4 options and correctAnswer is a number 0-3.`,
           },
         ],
-        temperature: 0.7, // Add some variability but not too much
+        temperature: 0.7,
         max_tokens: 1000,
       });
 
@@ -146,3 +146,12 @@ export async function POST(req: Request) {
     );
   }
 }
+
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: "1mb",
+    },
+  },
+  runtime: "edge",
+};

@@ -89,12 +89,12 @@ export async function POST(request: Request) {
       const courseStructure = JSON.parse(completion.choices[0].message.content || '{}');
 
       // Add timestamps to video URLs
-        courseStructure.sections.forEach((section: { title: string; description: string; chapters: { title: string; content: string; videoUrl: string; }[]; }) => {
-            section.chapters.forEach((chapter: { title: string; content: string; videoUrl: string; }) => {
-            const startTime = extractTimestamp(chapter.content);
-            chapter.videoUrl = `https://www.youtube.com/watch?v=${videoId}&t=${startTime}s`;
-            });
-        });
+      courseStructure.sections.forEach((section: { title: string; description: string; chapters: { title: string; content: string; videoUrl: string; }[]; }) => {
+          section.chapters.forEach((chapter: { title: string; content: string; videoUrl: string; }) => {
+          const startTime = extractTimestamp(chapter.content);
+          chapter.videoUrl = `https://www.youtube.com/watch?v=${videoId}&t=${startTime}s`;
+          });
+      });
 
       return NextResponse.json(courseStructure);
 

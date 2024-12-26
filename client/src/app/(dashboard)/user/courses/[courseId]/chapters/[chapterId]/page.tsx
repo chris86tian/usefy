@@ -210,7 +210,7 @@ const Course = () => {
 
             <TabsContent value="Resources">
               <Card className="border-none shadow-lg">
-                  <Resources chapterId={currentChapter?.chapterId} />
+                  <Resources />
               </Card>
             </TabsContent>
 
