@@ -39,7 +39,7 @@ function RunButton() {
         focus:outline-none
       `}
     >
-      <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-500 rounded-xl opacity-100 transition-opacity group-hover:opacity-90" />
+      <div className="absolute inset-0 bg-gradient-to-r from-gray-100 to-gray-200 rounded-xl opacity-100 transition-opacity group-hover:opacity-90" />
 
       <div className="relative flex items-center gap-2.5">
         {isRunning ? (
@@ -53,9 +53,9 @@ function RunButton() {
         ) : (
           <>
             <div className="relative flex items-center justify-center w-4 h-4">
-              <Play className="w-4 h-4 text-white/90" />
+              <Play className="w-4 h-4 text-black" />
             </div>
-            <span className="text-sm font-semibold text-white/90 group-hover:text-white">
+            <span className="text-sm font-semibold text-black group-hover:text-white">
               Run Code
             </span>
           </>
