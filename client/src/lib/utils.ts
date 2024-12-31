@@ -26,10 +26,23 @@ export interface CodeEditorState {
   language: string;
   output: string;
   isRunning: boolean;
+  isSubmitting: boolean;
   error: string | null;
   theme: string;
   fontSize: number;
   editor: Monaco | null;
+  task: string;
+  evaluation: {
+    passed: boolean;
+    score: number;
+    feedback: {
+      correctness: string;
+      efficiency: string;
+      bestPractices: string;
+    };
+    suggestions: string[];
+    explanation: string;
+  }
   executionResult: ExecutionResult | null;
 
   setEditor: (editor: Monaco) => void;
@@ -38,6 +51,7 @@ export interface CodeEditorState {
   setTheme: (theme: string) => void;
   setFontSize: (fontSize: number) => void;
   runCode: () => Promise<void>;
+  submitCode: (task: string) => Promise<void>;
 }
 
 export interface Quiz {

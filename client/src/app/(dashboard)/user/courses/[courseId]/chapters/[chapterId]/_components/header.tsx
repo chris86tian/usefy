@@ -7,6 +7,7 @@ import { SignedIn } from "@clerk/nextjs";
 import ThemeSelector from "./themeSelector";
 import LanguageSelector from "./languageSelector";
 import RunButton from "./runButton";
+import SubmitButton from "./submitButton";
 import HeaderProfileBtn from "./headerProfileBtn";
 
 async function Header() {
@@ -94,6 +95,7 @@ async function Header() {
 
           <SignedIn>
             <RunButton />
+            <SubmitButton task="Write a program that prints sorts {1, 3, 2, 4} in ascending order" />
           </SignedIn>
 
           <div className="pl-3 border-l border-gray-800">

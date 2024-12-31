@@ -32,9 +32,22 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
     ...initialState,
     output: "",
     isRunning: false,
+    isSubmitting: false,
     error: null,
     editor: null,
     executionResult: null,
+    task: "",
+    evaluation: {
+      passed: false,
+      score: 0,
+      feedback: {
+        correctness: "",
+        efficiency: "",
+        bestPractices: "",
+      },
+      suggestions: [],
+      explanation: "",
+    },
 
     getCode: () => get().editor?.getValue() || "",
 
@@ -69,6 +82,46 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
         output: "",
         error: null,
       });
+    },
+
+    submitCode: async (task: string) => {
+      const { language, getCode } = get();
+      const code = getCode();
+      console.log("Code: " + code);
+    
+      if (!code) {
+        set({ error: "No code to check" });
+        return;
+      }
+    
+      set({ isSubmitting: true, error: null, output: "" });
+    
+      try {
+        const response = await fetch("/api/submit-code", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ language, code, task }),
+        });
+    
+        const data = await response.json();
+    
+        if (data.error) {
+          set({ error: data.error });
+          return;
+        }
+    
+        set({ 
+          evaluation: data.evaluation,
+          executionResult: { code, output: "", error: null },
+        });
+      } catch (error) {
+        console.error("Error running code:", error);
+        set({ error: "Error running code" });
+      } finally {
+        set({ isSubmitting: false });
+      }
     },
 
     runCode: async () => {
