@@ -11,7 +11,6 @@ import { useCourseProgressData } from "@/hooks/useCourseProgressData";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Code } from "lucide-react";
 import Notes from "./notes/page";
-import Resources from "./resources/page";
 import AIQuiz from "./aiquiz/page";
 import { BookOpen, FileText, GraduationCap } from "lucide-react";
 import { YoutubeTranscript } from "youtube-transcript";
@@ -177,20 +176,13 @@ const Course = () => {
         </Card>
 
         <Tabs defaultValue="Notes" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-gray-800 rounded-b-lg pb-10 pt-4">
+          <TabsList className="grid w-full grid-cols-2 bg-gray-800 rounded-b-lg pb-10 pt-4">
             <TabsTrigger 
               value="Notes" 
               className="flex items-center space-x-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
             >
               <FileText className="h-4 w-4" />
               <span>Notes</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="Resources" 
-              className="flex items-center space-x-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
-            >
-              <BookOpen className="h-4 w-4" />
-              <span>Resources</span>
             </TabsTrigger>
             <TabsTrigger 
               value="Quiz" 
@@ -205,12 +197,6 @@ const Course = () => {
             <TabsContent value="Notes">
               <Card className="border-none shadow-lg">
                   <Notes chapterId={currentChapter?.chapterId} />
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="Resources">
-              <Card className="border-none shadow-lg">
-                  <Resources />
               </Card>
             </TabsContent>
 

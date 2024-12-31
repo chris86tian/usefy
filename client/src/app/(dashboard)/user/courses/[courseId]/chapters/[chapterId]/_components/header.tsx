@@ -38,7 +38,7 @@ async function Header() {
               className="relative bg-gradient-to-br from-[#1a1a2e] to-[#0a0a0f] p-2 rounded-xl ring-1
               ring-white/10 group-hover:ring-white/20 transition-all"
             >
-              <Blocks className="size-6 text-blue-400 transform -rotate-6 group-hover:rotate-0 transition-transform duration-500" />
+              <Blocks className="size-6 text-blue-400 transform -rotate-6 group-hover:rotate-0 transition-transform duration-300" />
             </div>
 
             <div className="flex flex-col">
