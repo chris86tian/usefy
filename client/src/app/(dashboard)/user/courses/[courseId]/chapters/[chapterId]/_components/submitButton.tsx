@@ -5,7 +5,7 @@ import { getExecutionResult, useCodeEditorStore } from "@/hooks/useCodeEditorSto
 import { useUser } from "@clerk/nextjs";
 import { useMutation } from "convex/react";
 import { motion } from "framer-motion";
-import { Loader2, Play } from "lucide-react";
+import { Loader2, UploadCloud } from "lucide-react";
 import { api } from "../../../../../../../../../convex/_generated/api";
 
 interface SubmitButtonProps {
@@ -57,7 +57,7 @@ function SubmitButton({ task }: SubmitButtonProps) {
         ) : (
           <>
             <div className="relative flex items-center justify-center w-4 h-4">
-              <Play className="w-4 h-4 text-white/90 transition-transform group-hover:scale-110 group-hover:text-white" />
+              <UploadCloud className="w-4 h-4 text-white/90" />
             </div>
             <span className="text-sm font-semibold text-white/90 group-hover:text-white">
               Submit
