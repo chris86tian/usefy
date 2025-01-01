@@ -312,3 +312,44 @@ export const createAssignment = async (
     res.status(500).json({ message: "Error creating assignment", error });
   }
 }
+
+export const getAssignments = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { courseId } = req.params;
+  const { userId } = getAuth(req);
+
+  try {
+    const course = await Course.get(courseId);
+    if (!course) {
+      res.status(404).json({ message: "Course not found" });
+      return;
+    }
+
+    if (course.teacherId !== userId) {
+      res
+        .status(403)
+        .json({ message: "Not authorized to view assignments for this course" });
+      return;
+    }
+
+    const assignments = course.sections.reduce((acc: any, section: any) => {
+      section.chapters.forEach((chapter: any) => {
+        if (chapter.assignment) {
+          acc.push({
+            courseId,
+            sectionId: section.sectionId,
+            chapterId: chapter.chapterId,
+            assignment: chapter.assignment,
+          });
+        }
+      });
+      return acc;
+    }, []);
+
+    res.json({ message: "Assignments retrieved successfully", data: assignments });
+  } catch (error) {
+    res.status(500).json({ message: "Error retrieving assignments", error });
+  }
+}

@@ -9,6 +9,7 @@ import {
   getUploadVideoUrl,
   getUploadImageUrl,
   createAssignment,
+  getAssignments
 } from "../controllers/courseController";
 import { requireAuth } from "@clerk/express";
 
@@ -27,5 +28,6 @@ router.post("/:courseId/sections/:sectionId/chapters/:chapterId/get-upload-url",
 router.post("/:courseId/get-upload-image-url", requireAuth(), getUploadImageUrl);
 
 router.post("/:courseId/sections/:sectionId/chapters/:chapterId/assignments", requireAuth(), createAssignment);
+router.get("/:courseId/sections/:sectionId/chapters/:chapterId/assignments", requireAuth(), getAssignments);
 
 export default router;
