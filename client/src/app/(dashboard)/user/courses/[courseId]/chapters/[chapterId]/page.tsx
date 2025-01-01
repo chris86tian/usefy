@@ -15,6 +15,7 @@ import AIQuiz from "./aiquiz/page";
 import { BookOpen, FileText, GraduationCap } from "lucide-react";
 import { YoutubeTranscript } from "youtube-transcript";
 import { extractVideoId } from "@/lib/utils";
+import AssignmentModal from "./_components/assignmentModal";
 
 const Course = () => {
   const {
@@ -149,6 +150,16 @@ const Course = () => {
                 <CardTitle className="text-lg">Chapter Overview</CardTitle>
               </div>
               <div className="flex space-x-3">
+                {user.id === course.teacherId && (
+                  <AssignmentModal
+                    chapterId={currentChapter?.chapterId}
+                    sectionId={currentSection?.sectionId as string}
+                    courseId={course.courseId}
+                    onAssignmentCreate={() => {
+                      router.refresh();
+                    }}
+                  />
+                )}
                 <Button
                   onClick={handleGoToPreviousChapter}
                   className="bg-gray-900 hover:bg-gray-700"

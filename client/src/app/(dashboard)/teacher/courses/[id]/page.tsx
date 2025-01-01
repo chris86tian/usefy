@@ -49,7 +49,7 @@ const CourseEditor = () => {
   const [image, setImage] = useState<File | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // Auto-fill chapters
+  // Auto-fill course
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handleURLSubmit = async (videoUrl: string) => {
@@ -72,7 +72,10 @@ const CourseEditor = () => {
         return;
       }
 
-      const { sections } = data;
+      const { sections, courseTitle, courseDescription } = data;
+
+      methods.setValue("courseTitle", courseTitle);
+      methods.setValue("courseDescription", courseDescription);
 
       dispatch(setSections(
         sections.map((section: { sectionTitle: string; sectionDescription: string; chapters: { title: string; content: string; video: string }[] }) => ({
@@ -306,7 +309,7 @@ const CourseEditor = () => {
                   >
                     <Sparkles className="h-4 w-4 text-primary-700 group-hover:white-100" />
                     <span className="text-primary-700 group-hover:white-100">
-                      {isGenerating ? 'Generating...' : 'Auto-Fill Chapters'}
+                      {isGenerating ? 'Generating...' : 'Auto-Fill'}
                     </span>
                   </Button>
                   <YouTubeDialog

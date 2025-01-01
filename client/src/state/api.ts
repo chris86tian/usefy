@@ -5,6 +5,8 @@ import { BaseQueryApi, FetchArgs } from "@reduxjs/toolkit/query";
 import { User } from "@clerk/nextjs/server";
 import { Clerk } from "@clerk/clerk-js";
 import { toast } from "sonner";
+import { create } from "domain";
+import { Assignment } from "@/lib/utils";
 
 const customBaseQuery = async (
   args: string | FetchArgs,
@@ -183,6 +185,16 @@ export const api = createApi({
       }),
     }),
 
+    createAssignment: build.mutation<
+      { message: string },
+      { courseId: string; sectionId: string; chapterId: string; assignment: Assignment }
+    >({
+      query: ({ courseId, sectionId, chapterId, assignment }) => ({
+        url: `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/assignments`,
+        method: "POST",
+        body: assignment,
+      }),
+    }),
     /* 
     ===============
     TRANSACTIONS
@@ -295,6 +307,7 @@ export const {
   useGetCourseQuery,
   useGetUploadVideoUrlMutation,
   useGetUploadImageUrlMutation,
+  useCreateAssignmentMutation,
   useGetTransactionsQuery,
   useCreateTransactionMutation,
   useCreateStripePaymentIntentMutation,

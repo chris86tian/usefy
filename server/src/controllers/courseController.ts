@@ -251,3 +251,64 @@ export const getUploadImageUrl = async (
     res.status(500).json({ message: "Error generating upload URL", error });
   }
 };
+
+export const createAssignment = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { courseId, sectionId, chapterId } = req.params;
+  const { userId } = getAuth(req);
+  const { title, description } = req.body;
+
+  try {
+    const course = await Course.get(courseId);
+    if (!course) {
+      res.status(404).json({ message: "Course not found" });
+      return;
+    }
+
+    const section = course.sections.find(
+      (section: any) => section.sectionId === sectionId
+    );
+    if (!section) {
+      res.status(404).json({ message: "Section not found" });
+      return;
+    }
+
+    const chapter = section.chapters.find(
+      (chapter: any) => chapter.chapterId === chapterId
+    );
+    if (!chapter) {
+      res.status(404).json({ message: "Chapter not found" });
+      return;
+    }
+
+    if (course.teacherId !== userId) {
+      res
+        .status(403)
+        .json({ message: "Not authorized to create assignment for this course" });
+      return;
+    }
+
+    if (!title || !description) {
+      res.status(400).json({
+        message: "Title, description and due date are required",
+      });
+      return;
+    }
+
+    const assignment = {
+      assignmentId: uuidv4(),
+      title,
+      description,
+      submissions: [],
+    };
+
+    chapter.assignment = assignment;
+    await course.save();
+
+    res.json({ message: "Assignment created successfully", data: assignment });
+  } catch (error) {
+    res.status(500).json({ message: "Error creating assignment", error });
+  }
+}

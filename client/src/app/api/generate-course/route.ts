@@ -59,6 +59,8 @@ export async function POST(request: Request) {
             content: `Please analyze this video transcript and create a course structure. 
             Return the response in this exact JSON format:
             {
+              "courseTitle": "string",
+              "courseDescription": "string",
               "sections": [
                 {
                   "sectionId": "string",

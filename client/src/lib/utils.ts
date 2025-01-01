@@ -6,6 +6,19 @@ import { toast } from "sonner";
 import { Monaco } from "@monaco-editor/react";
 import { Id } from "../../convex/_generated/dataModel";
 
+export interface Assignment {
+  assignmentId: string;
+  title: string;
+  description: string;
+  submissions: Submission[];
+}
+
+export interface Submission {
+  submissionId: string;
+  userId: string;
+  code: string;
+}
+
 export interface Snippet {
   _id: Id<"snippets">;
   _creationTime: number;

@@ -1,24 +1,5 @@
 import { Schema, model } from "dynamoose";
 
-const commentSchema = new Schema({
-  commentId: {
-    type: String,
-    required: true,
-  },
-  userId: {
-    type: String,
-    required: true,
-  },
-  text: {
-    type: String,
-    required: true,
-  },
-  timestamp: {
-    type: String,
-    required: true,
-  },
-});
-
 const chapterSchema = new Schema({
   chapterId: {
     type: String,
@@ -37,12 +18,43 @@ const chapterSchema = new Schema({
     type: String,
     required: true,
   },
-  comments: {
-    type: Array,
-    schema: [commentSchema],
-  },
   video: {
     type: String,
+  },
+  assignment: {
+    type: Object,
+    schema: {
+      assignmentId: {
+        type: String,
+        required: true,
+      },
+      title: {
+        type: String,
+        required: true,
+      },
+      description: {
+        type: String,
+        required: true,
+      },
+      submissions: {
+        type: Array,
+        schema: [
+          new Schema({
+            userId: {
+              type: String,
+              required: true,
+            },
+            submission: {
+              type: String,
+              required: true,
+            },
+            grade: {
+              type: Number,
+            },
+          }),
+        ],
+      },
+    },
   },
 });
 
