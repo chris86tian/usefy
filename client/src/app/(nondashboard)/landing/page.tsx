@@ -12,23 +12,15 @@ import { BookOpen, Users, ArrowRightCircle, Brain } from 'lucide-react'
 
 const LoadingSkeleton = () => {
   return (
-    <div className="space-y-10 p-4 sm:p-6 lg:p-8">
-      <div className="space-y-2">
-        <Skeleton className="h-12 w-3/4" />
-        <Skeleton className="h-4 w-1/2" />
-      </div>
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {[1, 2, 3].map((_, index) => (
-          <Skeleton key={index} className="h-48 rounded-xl" />
-        ))}
-      </div>
-      <div className="space-y-2">
-        <Skeleton className="h-8 w-1/3" />
-        <Skeleton className="h-4 w-2/3" />
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {[1, 2, 3, 4].map((_, index) => (
-          <Skeleton key={index} className="h-64 rounded-xl" />
+    <div className="container mx-auto px-4 py-16 sm:px-6 lg:px-8">
+      <Skeleton className="h-8 w-32 mb-8" />
+      <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+        {[...Array(6)].map((_, index) => (
+          <div key={index} className="rounded-xl bg-gray-900 p-6">
+            <Skeleton className="h-12 w-12 mb-4" />
+            <Skeleton className="h-8 w-24 mb-2" />
+            <Skeleton className="h-6 w-32" />
+          </div>
         ))}
       </div>
     </div>
