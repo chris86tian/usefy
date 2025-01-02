@@ -21,9 +21,7 @@ const AssignmentModal = ({ chapterId, sectionId, courseId, onAssignmentCreate }:
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createAssignment] = useCreateAssignmentMutation();
-
-  console.log(chapterId);
-
+  
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);

@@ -37,6 +37,12 @@ export const notificationSettingsSchema = z.object({
   notificationFrequency: z.enum(["immediate", "daily", "weekly"]),
 });
 
+// Assignment Schema
+export const assignmentSchema = z.object({
+  title: z.string().min(2, "Title must be at least 2 characters"),
+  description: z.string().min(10, "Description must be at least 10 characters"),
+});
+
 export type NotificationSettingsFormData = z.infer<
   typeof notificationSettingsSchema
 >;

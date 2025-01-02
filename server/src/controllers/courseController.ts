@@ -257,8 +257,83 @@ export const createAssignment = async (
   res: Response
 ): Promise<void> => {
   const { courseId, sectionId, chapterId } = req.params;
-  const { userId } = getAuth(req);
+  const { userId } = getAuth(req); // Assuming `getAuth` extracts user info
   const { title, description } = req.body;
+
+  try {
+    // Fetch the course
+    const course = await Course.get(courseId);
+    if (!course) {
+      res.status(404).json({ message: "Course not found" });
+      return;
+    }
+
+    // Find the section
+    const section = course.sections.find(
+      (section: any) => section.sectionId === sectionId
+    );
+    if (!section) {
+      res.status(404).json({ message: "Section not found" });
+      return;
+    }
+
+    // Find the chapter
+    const chapter = section.chapters.find(
+      (chapter: any) => chapter.chapterId === chapterId
+    );
+    if (!chapter) {
+      res.status(404).json({ message: "Chapter not found" });
+      return;
+    }
+
+    // Authorization check
+    if (course.teacherId !== userId) {
+      res
+        .status(403)
+        .json({ message: "Not authorized to create assignment for this course" });
+      return;
+    }
+
+    // Validate input fields
+    if (!title || !description) {
+      res.status(400).json({
+        message: "Title and description are required",
+      });
+      return;
+    }
+
+    // Create the assignment
+    const assignment = {
+      assignmentId: uuidv4(), // Ensure `uuidv4` is imported from 'uuid'
+      title,
+      description,
+      submissions: [],
+    };
+
+    // Ensure `assignments` is an array in the chapter
+    if (!chapter.assignments) {
+      chapter.assignments = []; // Initialize if it doesn't exist
+    }
+
+    // Add the new assignment to the assignments array
+    chapter.assignments.push(assignment);
+
+    // Save the course
+    await course.save();
+
+    // Respond with success
+    res.json({ message: "Assignment created successfully", data: assignment });
+  } catch (error) {
+    // Handle errors
+    res.status(500).json({ message: "Error creating assignment", error });
+  }
+};
+
+export const getAssignment = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { courseId, sectionId, chapterId, assignmentId } = req.params;
 
   try {
     const course = await Course.get(courseId);
@@ -283,41 +358,70 @@ export const createAssignment = async (
       return;
     }
 
-    if (course.teacherId !== userId) {
-      res
-        .status(403)
-        .json({ message: "Not authorized to create assignment for this course" });
+    if (!chapter.assignments) {
+      res.status(404).json({ message: "Assignment not found" });
       return;
     }
 
-    if (!title || !description) {
-      res.status(400).json({
-        message: "Title, description and due date are required",
-      });
+    const assignment = chapter.assignments.find(
+      (assignment: any) => assignment.assignmentId === assignmentId
+    );
+    if (!assignment) {
+      res.status(404).json({ message: "Assignment not found" });
       return;
     }
 
-    const assignment = {
-      assignmentId: uuidv4(),
-      title,
-      description,
-      submissions: [],
-    };
-
-    chapter.assignment = assignment;
-    await course.save();
-
-    res.json({ message: "Assignment created successfully", data: assignment });
+    res.json({ message: "Assignment retrieved successfully", data: assignment });
   } catch (error) {
-    res.status(500).json({ message: "Error creating assignment", error });
+    res.status(500).json({ message: "Error retrieving assignment", error });
   }
-}
+};
 
 export const getAssignments = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const { courseId } = req.params;
+  const { courseId, sectionId, chapterId } = req.params;
+
+  try {
+    const course = await Course.get(courseId);
+    if (!course) {
+      res.status(404).json({ message: "Course not found" });
+      return;
+    }
+
+    const section = course.sections.find(
+      (section: any) => section.sectionId === sectionId
+    );
+    if (!section) {
+      res.status(404).json({ message: "Section not found" });
+      return;
+    }
+
+    const chapter = section.chapters.find(
+      (chapter: any) => chapter.chapterId === chapterId
+    );
+    if (!chapter) {
+      res.status(404).json({ message: "Chapter not found" });
+      return;
+    }
+
+    if (!chapter.assignments) {
+      res.json({ message: "No assignments found", data: [] });
+      return;
+    }
+
+    res.json({ message: "Assignments retrieved successfully", data: chapter.assignments });
+  } catch (error) {
+    res.status(500).json({ message: "Error retrieving assignments", error });
+  }
+}
+
+export const deleteAssignment = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { courseId, sectionId, chapterId, assignmentId } = req.params;
   const { userId } = getAuth(req);
 
   try {
@@ -330,26 +434,39 @@ export const getAssignments = async (
     if (course.teacherId !== userId) {
       res
         .status(403)
-        .json({ message: "Not authorized to view assignments for this course" });
+        .json({ message: "Not authorized to delete assignments for this course" });
       return;
     }
 
-    const assignments = course.sections.reduce((acc: any, section: any) => {
-      section.chapters.forEach((chapter: any) => {
-        if (chapter.assignment) {
-          acc.push({
-            courseId,
-            sectionId: section.sectionId,
-            chapterId: chapter.chapterId,
-            assignment: chapter.assignment,
-          });
-        }
-      });
-      return acc;
-    }, []);
+    const section = course.sections.find(
+      (section: any) => section.sectionId === sectionId
+    );
+    if (!section) {
+      res.status(404).json({ message: "Section not found" });
+      return;
+    }
 
-    res.json({ message: "Assignments retrieved successfully", data: assignments });
+    const chapter = section.chapters.find(
+      (chapter: any) => chapter.chapterId === chapterId
+    );
+    if (!chapter) {
+      res.status(404).json({ message: "Chapter not found" });
+      return;
+    }
+
+    if (!chapter.assignments) {
+      res.status(404).json({ message: "Assignment not found" });
+      return;
+    }
+
+    chapter.assignments = chapter.assignments.filter(
+      (assignment: any) => assignment.assignmentId !== assignmentId
+    );
+
+    await course.save();
+
+    res.json({ message: "Assignment deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Error retrieving assignments", error });
+    res.status(500).json({ message: "Error deleting assignment", error });
   }
 }

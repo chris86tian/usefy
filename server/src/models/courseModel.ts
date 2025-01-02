@@ -21,40 +21,42 @@ const chapterSchema = new Schema({
   video: {
     type: String,
   },
-  assignment: {
-    type: Object,
-    schema: {
-      assignmentId: {
-        type: String,
-        required: true,
-      },
-      title: {
-        type: String,
-        required: true,
-      },
-      description: {
-        type: String,
-        required: true,
-      },
-      submissions: {
-        type: Array,
-        schema: [
-          new Schema({
-            userId: {
-              type: String,
-              required: true,
-            },
-            submission: {
-              type: String,
-              required: true,
-            },
-            grade: {
-              type: Number,
-            },
-          }),
-        ],
-      },
-    },
+  assignments: {
+    type: Array,
+    schema: [
+      new Schema({
+        assignmentId: {
+          type: String,
+          required: true,
+        },
+        title: {
+          type: String,
+          required: true,
+        },
+        description: {
+          type: String,
+          required: true,
+        },
+        submissions: {
+          type: Array,
+          schema: [
+            new Schema({
+              userId: {
+                type: String,
+                required: true,
+              },
+              submissionUrl: {
+                type: String,
+                required: true,
+              },
+              grade: {
+                type: Number,
+              },
+            }),
+          ],
+        },
+      }),
+    ],
   },
 });
 

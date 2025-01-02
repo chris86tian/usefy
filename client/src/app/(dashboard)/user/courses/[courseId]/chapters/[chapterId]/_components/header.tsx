@@ -10,13 +10,17 @@ import RunButton from "./runButton";
 import SubmitButton from "./submitButton";
 import HeaderProfileBtn from "./headerProfileBtn";
 
-async function Header() {
+interface HeaderProps {
+  title: string;
+  description: string;
+}
+
+async function Header({ title, description }: HeaderProps) {
   const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
   const user = await currentUser();
+  const convexUser = await convex.query(api.users.getUser, { userId: user?.id as string });
 
-  const convexUser = await convex.query(api.users.getUser, {
-    userId: user?.id || "",
-  });
+  console.log(title, description);
 
   return (
     <div className="relative z-10">
@@ -95,7 +99,7 @@ async function Header() {
 
           <SignedIn>
             <RunButton />
-            <SubmitButton task="Write a program that prints sorts {1, 3, 2, 4} in ascending order" />
+            <SubmitButton assignment={description} />
           </SignedIn>
 
           <div className="pl-3 border-l border-gray-800">

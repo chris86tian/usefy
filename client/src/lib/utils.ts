@@ -7,16 +7,10 @@ import { Monaco } from "@monaco-editor/react";
 import { Id } from "../../convex/_generated/dataModel";
 
 export interface Assignment {
-  assignmentId: string;
-  title: string;
-  description: string;
-  submissions: Submission[];
-}
-
-export interface Submission {
-  submissionId: string;
-  userId: string;
-  code: string;
+  description: string
+  title: string
+  assignmentId: string
+  submissions: any[]
 }
 
 export interface Snippet {
@@ -194,7 +188,6 @@ export const customDataGridStyles = {
     color: "#6e6e6e",
   },
 };
-
 
 export const createCourseFormData = (
   data: CourseFormData,

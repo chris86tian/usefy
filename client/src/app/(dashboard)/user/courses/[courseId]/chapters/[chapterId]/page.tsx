@@ -10,12 +10,12 @@ import Loading from "@/components/Loading";
 import { useCourseProgressData } from "@/hooks/useCourseProgressData";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Code } from "lucide-react";
-import Notes from "./notes/page";
 import AIQuiz from "./aiquiz/page";
 import { BookOpen, FileText, GraduationCap } from "lucide-react";
 import { YoutubeTranscript } from "youtube-transcript";
 import { extractVideoId } from "@/lib/utils";
 import AssignmentModal from "./_components/assignmentModal";
+import Assignments from "./assignments/page";
 
 const Course = () => {
   const {
@@ -186,14 +186,14 @@ const Course = () => {
           </CardContent>
         </Card>
 
-        <Tabs defaultValue="Notes" className="w-full">
+        <Tabs defaultValue="Assignments" className="w-full">
           <TabsList className="grid w-full grid-cols-2 bg-gray-800 rounded-b-lg pb-10 pt-4">
             <TabsTrigger 
-              value="Notes" 
+              value="Assignments" 
               className="flex items-center space-x-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
             >
               <FileText className="h-4 w-4" />
-              <span>Notes</span>
+              <span>Assignments</span>
             </TabsTrigger>
             <TabsTrigger 
               value="Quiz" 
@@ -204,10 +204,15 @@ const Course = () => {
             </TabsTrigger>
           </TabsList>
 
-          <div className="mt-6">
-            <TabsContent value="Notes">
+          <div >
+            <TabsContent value="Assignments">
               <Card className="border-none shadow-lg">
-                  <Notes chapterId={currentChapter?.chapterId} />
+                  <Assignments 
+                    chapterId={currentChapter.chapterId} 
+                    sectionId={currentSection?.sectionId as string} 
+                    courseId={course.courseId}
+                    teacherId={course.teacherId}
+                  />
               </Card>
             </TabsContent>
 

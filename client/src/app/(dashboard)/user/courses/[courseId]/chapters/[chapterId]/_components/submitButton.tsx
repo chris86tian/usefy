@@ -9,16 +9,16 @@ import { Loader2, UploadCloud } from "lucide-react";
 import { api } from "../../../../../../../../../convex/_generated/api";
 
 interface SubmitButtonProps {
-    task: string;
+    assignment: string;
 }
 
-function SubmitButton({ task }: SubmitButtonProps) {
+function SubmitButton({ assignment }: SubmitButtonProps) {
   const { user } = useUser();
   const { submitCode, language, isSubmitting } = useCodeEditorStore();
   const saveExecution = useMutation(api.codeExecutions.saveExecution);
 
   const handleSubmit = async () => {
-    await submitCode(task);
+    await submitCode(assignment);
     const result = getExecutionResult();
 
     if (user && result) {

@@ -5,7 +5,6 @@ import { BaseQueryApi, FetchArgs } from "@reduxjs/toolkit/query";
 import { User } from "@clerk/nextjs/server";
 import { Clerk } from "@clerk/clerk-js";
 import { toast } from "sonner";
-import { create } from "domain";
 import { Assignment } from "@/lib/utils";
 
 const customBaseQuery = async (
@@ -195,6 +194,21 @@ export const api = createApi({
         body: assignment,
       }),
     }),
+
+    getAssignments: build.query<Assignment[], { courseId: string; sectionId: string; chapterId: string }>({
+      query: ({ courseId, sectionId, chapterId }) => `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/assignments`,
+    }),
+
+    deleteAssignment: build.mutation<{ message: string }, { courseId: string; sectionId: string; chapterId: string; assignmentId: string }>({
+      query: ({ courseId, sectionId, chapterId, assignmentId }) => ({
+        url: `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/assignments/${assignmentId}`,
+        method: "DELETE",
+      }),
+    }),
+
+    getAssignment: build.query<Assignment, { courseId: string; sectionId: string; chapterId: string; assignmentId: string }>({
+      query: ({ courseId, sectionId, chapterId, assignmentId }) => `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/assignments/${assignmentId}`,
+    }),
     /* 
     ===============
     TRANSACTIONS
@@ -308,6 +322,9 @@ export const {
   useGetUploadVideoUrlMutation,
   useGetUploadImageUrlMutation,
   useCreateAssignmentMutation,
+  useGetAssignmentsQuery,
+  useDeleteAssignmentMutation,
+  useGetAssignmentQuery,
   useGetTransactionsQuery,
   useCreateTransactionMutation,
   useCreateStripePaymentIntentMutation,
