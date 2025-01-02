@@ -9,18 +9,25 @@ import LanguageSelector from "./languageSelector";
 import RunButton from "./runButton";
 import SubmitButton from "./submitButton";
 import HeaderProfileBtn from "./headerProfileBtn";
+import axios from "axios";
 
-interface HeaderProps {
-  title: string;
-  description: string;
+async function fetchAssignment(courseId: string, sectionId: string, chapterId: string, assignmentId: string) {
+  const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/assignments/${assignmentId}`;
+  const { data } = await axios.get(url);
+  return data;
 }
 
-async function Header({ title, description }: HeaderProps) {
+interface HeaderProps {
+  searchParams: { courseId: string; sectionId: string; chapterId: string; assignmentId: string };
+}
+
+async function Header({ searchParams }: HeaderProps) {
   const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
   const user = await currentUser();
   const convexUser = await convex.query(api.users.getUser, { userId: user?.id as string });
 
-  console.log(title, description);
+  const { courseId, sectionId, chapterId, assignmentId } = await searchParams;
+  const assignment = await fetchAssignment(courseId, sectionId, chapterId, assignmentId);
 
   return (
     <div className="relative z-10">
@@ -80,7 +87,7 @@ async function Header({ title, description }: HeaderProps) {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-3">
             <ThemeSelector />
-            <LanguageSelector hasAccess={Boolean(convexUser?.isPro)} />
+            <LanguageSelector />
           </div>
 
           {!convexUser?.isPro && (
@@ -99,7 +106,7 @@ async function Header({ title, description }: HeaderProps) {
 
           <SignedIn>
             <RunButton />
-            <SubmitButton assignment={description} />
+            <SubmitButton assignment={assignment.data.description} />
           </SignedIn>
 
           <div className="pl-3 border-l border-gray-800">

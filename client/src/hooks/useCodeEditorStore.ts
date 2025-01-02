@@ -87,8 +87,7 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
     submitCode: async (task: string) => {
       const { language, getCode } = get();
       const code = getCode();
-      console.log("Code: " + code);
-    
+
       if (!code) {
         set({ error: "No code to check" });
         return;
@@ -114,7 +113,11 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
     
         set({ 
           evaluation: data.evaluation,
-          executionResult: { code, output: "", error: null },
+          executionResult: { 
+            code, output: "",
+            evaluation: data.evaluation,
+            error: null,
+          },
         });
       } catch (error) {
         console.error("Error running code:", error);
@@ -153,7 +156,25 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
 
         // handle API-level erros
         if (data.message) {
-          set({ error: data.message, executionResult: { code, output: "", error: data.message } });
+          set({ 
+            error: data.message, 
+            executionResult: { 
+              code, 
+              output: "", 
+              evaluation: {
+                passed: false,
+                score: 0,
+                feedback: {
+                  correctness: "",
+                  efficiency: "",
+                  bestPractices: "",
+                },
+                suggestions: [],
+                explanation: "",
+              }, 
+              error: data.message 
+            } 
+          });
           return;
         }
 
@@ -166,6 +187,17 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
               code,
               output: "",
               error,
+              evaluation: {
+                passed: false,
+                score: 0,
+                feedback: {
+                  correctness: "",
+                  efficiency: "",
+                  bestPractices: ""
+                },
+                suggestions: [],
+                explanation: ""
+              }
             },
           });
           return;
@@ -179,6 +211,17 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
               code,
               output: "",
               error,
+              evaluation: {
+                passed: false,
+                score: 0,
+                feedback: {
+                  correctness: "",
+                  efficiency: "",
+                  bestPractices: ""
+                },
+                suggestions: [],
+                explanation: ""
+              }
             },
           });
           return;
@@ -194,13 +237,37 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
             code,
             output: output.trim(),
             error: null,
+            evaluation: {
+              passed: false,
+              score: 0,
+              feedback: {
+                correctness: "",
+                efficiency: "",
+                bestPractices: ""
+              },
+              suggestions: [],
+              explanation: ""
+            }
           },
         });
       } catch (error) {
         console.error("Error running code:", error);
         set({
           error: "Error running code",
-          executionResult: { code, output: "", error: "Error running code" },
+          executionResult: {
+            code, output: "", error: "Error running code",
+            evaluation: {
+              passed: false,
+              score: 0,
+              feedback: {
+                correctness: "",
+                efficiency: "",
+                bestPractices: ""
+              },
+              suggestions: [],
+              explanation: ""
+            }
+          },
         });
       } finally {
         set({ isRunning: false });

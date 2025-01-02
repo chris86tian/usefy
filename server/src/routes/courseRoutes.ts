@@ -11,7 +11,8 @@ import {
   createAssignment,
   getAssignments,
   deleteAssignment,
-  getAssignment
+  getAssignment,
+  updateAssignment,
 } from "../controllers/courseController";
 import { requireAuth } from "@clerk/express";
 
@@ -29,9 +30,10 @@ router.post("/:courseId/sections/:sectionId/chapters/:chapterId/get-upload-url",
 
 router.post("/:courseId/get-upload-image-url", requireAuth(), getUploadImageUrl);
 
-router.get("/:courseId/sections/:sectionId/chapters/:chapterId/assignments/:assignmentId", requireAuth(), getAssignment);
+router.get("/:courseId/sections/:sectionId/chapters/:chapterId/assignments/:assignmentId", getAssignment); // requireAuth(),
 router.post("/:courseId/sections/:sectionId/chapters/:chapterId/assignments", requireAuth(), createAssignment);
 router.get("/:courseId/sections/:sectionId/chapters/:chapterId/assignments", requireAuth(), getAssignments);
 router.delete("/:courseId/sections/:sectionId/chapters/:chapterId/assignments/:assignmentId", requireAuth(), deleteAssignment);
+router.put("/:courseId/sections/:sectionId/chapters/:chapterId/assignments/:assignmentId", requireAuth(), updateAssignment);
 
 export default router;

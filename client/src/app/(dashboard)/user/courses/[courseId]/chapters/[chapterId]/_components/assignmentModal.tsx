@@ -1,51 +1,99 @@
-import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import React, { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Loader2, Plus } from "lucide-react";
-import { useCreateAssignmentMutation } from '@/state/api';
+import { Loader2 } from "lucide-react";
+import { useCreateAssignmentMutation, useUpdateAssignmentMutation } from '@/state/api';
 import { v4 as uuidv4 } from 'uuid';
 
-interface AssignmentModalProps {
-    chapterId: string;
-    sectionId: string;
-    courseId: string;
-    onAssignmentCreate?: () => void;
+interface Assignment {
+  assignmentId: string;
+  title: string;
+  description: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  submissions: any[];
 }
 
-const AssignmentModal = ({ chapterId, sectionId, courseId, onAssignmentCreate }: AssignmentModalProps) => {
-  const [open, setOpen] = useState(false);
+interface AssignmentModalProps {
+  chapterId: string;
+  sectionId: string;
+  courseId: string;
+  assignment?: Assignment;
+  mode?: 'create' | 'edit';
+  onAssignmentChange?: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+const AssignmentModal = ({ 
+  chapterId, 
+  sectionId, 
+  courseId, 
+  assignment,
+  mode = 'create',
+  onAssignmentChange,
+  open,
+  onOpenChange
+}: AssignmentModalProps) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [createAssignment] = useCreateAssignmentMutation();
   
+  const [createAssignment] = useCreateAssignmentMutation();
+  const [updateAssignment] = useUpdateAssignmentMutation();
+
+  useEffect(() => {
+    if (assignment && mode === 'edit') {
+      setTitle(assignment.title);
+      setDescription(assignment.description);
+    }
+  }, [assignment, mode]);
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
     
     try {
-      const { data } = await createAssignment({
+      if (mode === 'create') {
+        const { data } = await createAssignment({
           chapterId,
           courseId,
           sectionId,
           assignment: {
-              assignmentId: uuidv4(),
-              title,
-              description,
-              submissions: []
+            assignmentId: uuidv4(),
+            title,
+            description,
+            submissions: []
           },
-      });
+        });
 
-      if (data) {
-        setOpen(false);
-        resetForm();
-        onAssignmentCreate?.();
+        if (data) {
+          onOpenChange(false);
+          resetForm();
+          onAssignmentChange?.();
+        }
+      } else if (mode === 'edit' && assignment) {
+        const { data } = await updateAssignment({
+          chapterId,
+          courseId,
+          sectionId,
+          assignmentId: assignment.assignmentId,
+          assignment: {
+            ...assignment,
+            title,
+            description,
+          },
+        });
+
+        if (data) {
+          onOpenChange(false);
+          onAssignmentChange?.();
+        }
       }
     } catch (error) {
-      console.error("Failed to create assignment:", error);
+      console.error(`Failed to ${mode} assignment:`, error);
     } finally {
       setIsSubmitting(false);
     }
@@ -56,17 +104,15 @@ const AssignmentModal = ({ chapterId, sectionId, courseId, onAssignmentCreate }:
     setDescription("");
   };
 
+  const modalTitle = mode === 'create' ? 'Create New Assignment' : 'Edit Assignment';
+  const submitButtonText = mode === 'create' ? 'Create Assignment' : 'Update Assignment';
+  const loadingText = mode === 'create' ? 'Creating...' : 'Updating...';
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="bg-gray-900 hover:bg-gray-700">
-          <Plus className="h-4 w-4" />  
-          Add Assignment
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Create New Assignment</DialogTitle>
+          <DialogTitle>{modalTitle}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
@@ -96,7 +142,7 @@ const AssignmentModal = ({ chapterId, sectionId, courseId, onAssignmentCreate }:
             <Button 
               type="button" 
               variant="outline" 
-              onClick={() => setOpen(false)}
+              onClick={() => onOpenChange(false)}
             >
               Cancel
             </Button>
@@ -108,10 +154,10 @@ const AssignmentModal = ({ chapterId, sectionId, courseId, onAssignmentCreate }:
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
+                  {loadingText}
                 </>
               ) : (
-                "Create Assignment"
+                submitButtonText
               )}
             </Button>
           </div>

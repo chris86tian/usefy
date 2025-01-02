@@ -30,7 +30,7 @@ const AppSidebar = () => {
   const { toggleSidebar } = useSidebar();
 
   const navLinks = {
-    student: [
+    user: [
       { icon: BookOpen, label: "Courses", href: "/user/courses" },
       { icon: Briefcase, label: "Payments", href: "/user/billing" },
       { icon: User, label: "Profile", href: "/user/profile" },
@@ -48,8 +48,7 @@ const AppSidebar = () => {
   if (!isLoaded) return <Loading />;
   if (!user) return <div>User not found</div>;
 
-  const userType =
-    (user.publicMetadata.userType as "student" | "teacher") || "student";
+  const userType = (user.publicMetadata.userType as "user" | "teacher") || "user";
   const currentNavLinks = navLinks[userType];
 
   return (

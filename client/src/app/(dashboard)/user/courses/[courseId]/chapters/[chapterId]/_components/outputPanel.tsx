@@ -19,28 +19,6 @@ function OutputPanel() {
     setTimeout(() => setIsCopied(false), 2000);
   };
 
-  // Ensure evaluation object exists and has required properties
-  const safeEvaluation = {
-    passed: evaluation?.passed ?? false,
-    score: evaluation?.score ?? 0,
-    feedback: {
-      correctness: evaluation?.feedback?.correctness ?? "",
-      efficiency: evaluation?.feedback?.efficiency ?? "",
-      bestPractices: evaluation?.feedback?.bestPractices ?? "",
-    },
-    suggestions: evaluation?.suggestions ?? [],
-    explanation: evaluation?.explanation ?? "",
-  };
-
-  const hasEvaluation = Boolean(
-    safeEvaluation.feedback.correctness || 
-    safeEvaluation.feedback.efficiency || 
-    safeEvaluation.feedback.bestPractices ||
-    safeEvaluation.explanation
-  );
-
-  console.log(safeEvaluation);
-
   return (
     <div className="relative bg-[#181825] rounded-xl p-4 ring-1 ring-gray-800/50">
       {/* Header */}
@@ -116,12 +94,12 @@ function OutputPanel() {
               </div>
               <pre className="whitespace-pre-wrap text-gray-300">{output}</pre>
             </div>
-          ) : activeTab === 'evaluation' && hasEvaluation ? (
+          ) : activeTab === 'evaluation' && evaluation ? (
             <div className="text-gray-300 space-y-6">
               {/* Score and Status */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  {safeEvaluation.passed ? (
+                  {evaluation.passed ? (
                     <div className="flex items-center gap-2 text-emerald-400">
                       <CheckCircle className="w-5 h-5" />
                       <span className="font-medium">Passed</span>
@@ -134,51 +112,27 @@ function OutputPanel() {
                   )}
                 </div>
                 <div className="text-lg font-semibold">
-                  Score: {safeEvaluation.score}/100
+                  Score: {evaluation.score}/100
                 </div>
               </div>
-
-              {/* Feedback Sections */}
-              <div className="space-y-4">
-                {safeEvaluation.feedback.correctness && (
-                  <div className="space-y-2">
-                    <h3 className="font-medium text-blue-400">Correctness</h3>
-                    <p className="text-gray-400">{safeEvaluation.feedback.correctness}</p>
-                  </div>
-                )}
-                {safeEvaluation.feedback.efficiency && (
-                  <div className="space-y-2">
-                    <h3 className="font-medium text-blue-400">Efficiency</h3>
-                    <p className="text-gray-400">{safeEvaluation.feedback.efficiency}</p>
-                  </div>
-                )}
-                {safeEvaluation.feedback.bestPractices && (
-                  <div className="space-y-2">
-                    <h3 className="font-medium text-blue-400">Best Practices</h3>
-                    <p className="text-gray-400">{safeEvaluation.feedback.bestPractices}</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Suggestions */}
-              {safeEvaluation.suggestions.length > 0 && (
-                <div className="space-y-2">
-                  <h3 className="font-medium text-blue-400">Suggestions</h3>
-                  <ul className="list-disc list-inside space-y-1 text-gray-400">
-                    {safeEvaluation.suggestions.map((suggestion, index) => (
-                      <li key={index}>{suggestion}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
 
               {/* Detailed Explanation */}
-              {safeEvaluation.explanation && (
+              {evaluation.explanation && (
                 <div className="space-y-2">
                   <h3 className="font-medium text-blue-400">Detailed Analysis</h3>
-                  <p className="text-gray-400 whitespace-pre-wrap">{safeEvaluation.explanation}</p>
+                  <p className="text-gray-400 whitespace-pre-wrap">{evaluation.explanation}</p>
                 </div>
               )}
+
+              {/* Suggestions */}
+              <div className="space-y-2">
+                <h3 className="font-medium text-blue-400">Suggestions</h3>
+                <ul className="list-disc list-inside space-y-1 text-gray-400">
+                  {evaluation.suggestions.map((suggestion, index) => (
+                    <li key={index}>{suggestion}</li>
+                  ))}
+                </ul>
+              </div>
             </div>
           ) : (
             <div className="h-full flex flex-col items-center justify-center text-gray-500">

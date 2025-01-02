@@ -26,6 +26,17 @@ export interface Snippet {
 export interface ExecutionResult {
   code: string;
   output: string;
+  evaluation: {
+    passed: boolean;
+    score: number;
+    feedback: {
+      correctness: string;
+      efficiency: string;
+      bestPractices: string;
+    };
+    suggestions: string[];
+    explanation: string;
+  };
   error: string | null;
 }
 
@@ -42,13 +53,8 @@ export interface CodeEditorState {
   evaluation: {
     passed: boolean;
     score: number;
-    feedback: {
-      correctness: string;
-      efficiency: string;
-      bestPractices: string;
-    };
-    suggestions: string[];
     explanation: string;
+    suggestions: string[];
   }
   executionResult: ExecutionResult | null;
 

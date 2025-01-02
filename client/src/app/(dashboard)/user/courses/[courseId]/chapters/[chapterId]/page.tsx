@@ -9,7 +9,7 @@ import ReactPlayer from "react-player";
 import Loading from "@/components/Loading";
 import { useCourseProgressData } from "@/hooks/useCourseProgressData";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, Code } from "lucide-react";
+import { ChevronLeft, ChevronRight, Code, PlusCircle } from "lucide-react";
 import AIQuiz from "./aiquiz/page";
 import { BookOpen, FileText, GraduationCap } from "lucide-react";
 import { YoutubeTranscript } from "youtube-transcript";
@@ -34,6 +34,7 @@ const Course = () => {
   const playerRef = useRef(null);
   const router = useRouter();
   const [videoTranscript, setVideoTranscript] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   const handleProgress = ({ played }: { played: number }) => {
     if (
@@ -59,6 +60,14 @@ const Course = () => {
     ) ?? -1) - 1;
     if (previousChapterIndex >= 0 && course) {
       router.push(`/user/courses/${course.courseId}/chapters/${currentSection?.chapters[previousChapterIndex].chapterId}`);
+    } else {
+      const previousSectionIndex = (course?.sections?.findIndex(
+        (section) => section.sectionId === currentSection?.sectionId
+      ) ?? -1) - 1;
+      if (course?.sections && previousSectionIndex >= 0) {
+        const previousSection = course.sections[previousSectionIndex];
+        router.push(`/user/courses/${course.courseId}/chapters/${previousSection.chapters[previousSection.chapters.length - 1].chapterId}`);
+      }
     }
   };
 
@@ -68,8 +77,19 @@ const Course = () => {
     ) ?? -1) + 1;
     if (currentSection?.chapters && nextChapterIndex < currentSection.chapters.length && course) {
       router.push(`/user/courses/${course.courseId}/chapters/${currentSection?.chapters[nextChapterIndex].chapterId}`);
+    } else {
+      const nextSectionIndex = (course?.sections?.findIndex(
+        (section) => section.sectionId === currentSection?.sectionId
+      ) ?? -1) + 1;
+      if (course?.sections && nextSectionIndex < course.sections.length) {
+        router.push(`/user/courses/${course.courseId}/chapters/${course.sections[nextSectionIndex].chapters[0].chapterId}`);
+      }
     }
   };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false)
+  }
 
   useEffect(() => {
     if (currentChapter?.video) {
@@ -100,17 +120,7 @@ const Course = () => {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">{currentChapter?.title}</h1>
           <div className="flex items-center space-x-4">
-            <Button 
-              size="sm"
-              onClick={() => router.push(`/user/courses/${course.courseId}/chapters/${currentChapter.chapterId}/code`)}
-              className="flex items-center bg-blue-500 hover:bg-blue-600 text-white"
-            >
-              <Code className="h-4 w-4 mr-2" />
-              Code Editor
-            </Button>
-            <div className="flex items-center space-x-2">
-              <span className="text-sm font-medium">{course.teacherName}</span>
-            </div>
+            <span className="text-sm font-medium">{course.teacherName}</span>
           </div>
         </div>
       </div>
@@ -151,13 +161,28 @@ const Course = () => {
               </div>
               <div className="flex space-x-3">
                 {user.id === course.teacherId && (
+                  // button to create an assignment
+                  <Button
+                    onClick={() => setIsModalOpen(true)}
+                    className="bg-gray-900 hover:bg-gray-700"
+                  >
+                    <PlusCircle className="h-4 w-4" />
+                    Create Assignment
+                  </Button>
+                )}
+                {isModalOpen && (
                   <AssignmentModal
-                    chapterId={currentChapter?.chapterId}
-                    sectionId={currentSection?.sectionId as string}
+                    mode="create"
                     courseId={course.courseId}
-                    onAssignmentCreate={() => {
-                      router.refresh();
+                    sectionId={currentSection?.sectionId as string}
+                    chapterId={currentChapter.chapterId}
+                    onAssignmentChange={() => {
+                      handleModalClose()
+                      // Optionally refresh the data here if needed
+                      router.refresh()
                     }}
+                    open={isModalOpen}
+                    onOpenChange={setIsModalOpen}
                   />
                 )}
                 <Button

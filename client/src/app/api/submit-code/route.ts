@@ -30,13 +30,8 @@ export async function POST(request: Request) {
             evaluation: {
                 "passed": boolean,
                 "score": number (0-100),
-                "feedback": {
-                    "correctness": string,
-                    "efficiency": string,
-                    "bestPractices": string
-                },
+                "explanation": string,
                 "suggestions": string[],
-                "explanation": string
             }
             `
           },
@@ -86,7 +81,6 @@ export async function POST(request: Request) {
           };
         }
       }
-
       return NextResponse.json({ evaluation });
 
     } catch (error) {

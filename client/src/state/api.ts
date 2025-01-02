@@ -206,6 +206,14 @@ export const api = createApi({
       }),
     }),
 
+    updateAssignment: build.mutation<Assignment, { courseId: string; sectionId: string; chapterId: string; assignmentId: string; assignment: Assignment }>({
+      query: ({ courseId, sectionId, chapterId, assignmentId, assignment }) => ({
+        url: `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/assignments/${assignmentId}`,
+        method: "PUT",
+        body: assignment,
+      }),
+    }),
+
     getAssignment: build.query<Assignment, { courseId: string; sectionId: string; chapterId: string; assignmentId: string }>({
       query: ({ courseId, sectionId, chapterId, assignmentId }) => `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/assignments/${assignmentId}`,
     }),
@@ -324,6 +332,7 @@ export const {
   useCreateAssignmentMutation,
   useGetAssignmentsQuery,
   useDeleteAssignmentMutation,
+  useUpdateAssignmentMutation,
   useGetAssignmentQuery,
   useGetTransactionsQuery,
   useCreateTransactionMutation,

@@ -1,17 +1,18 @@
 "use client";
 
+import React, { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
+import { useGetUserEnrolledCoursesQuery } from "@/state/api";
+import Header from "@/components/Header";
 import Toolbar from "@/components/Toolbar";
 import CourseCard from "@/components/CourseCard";
-import { useGetUserEnrolledCoursesQuery } from "@/state/api";
-import { useRouter } from "next/navigation";
-import Header from "@/components/Header";
-import { useUser } from "@clerk/nextjs";
-import { useState, useMemo } from "react";
-import Loading from "@/components/Loading";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { CoursesSkeleton } from "./_components/CoursesSkeleton";
+import { CoursesEmpty } from "./_components/CoursesEmpty";
+import { CoursesError } from "./_components/CoursesError";
+import { SignInRequired } from "./_components/SignInRequired";
 
-const Courses = () => {
+const Courses: React.FC = () => {
   const router = useRouter();
   const { user, isLoaded } = useUser();
   const [searchTerm, setSearchTerm] = useState("");
@@ -58,67 +59,34 @@ const Courses = () => {
     }
   };
 
-  if (!isLoaded || isLoading) return <Loading />
+  if (!isLoaded || isLoading) return <CoursesSkeleton />;
 
-  if (!user)
-    return (
-      <div className="flex h-[80vh] items-center justify-center">
-        <Card className="w-full max-w-md text-center">
-          <CardHeader>
-            <CardTitle>Sign In Required</CardTitle>
-            <CardDescription>Please sign in to view your courses</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button
-              onClick={() => router.push('/sign-in')}
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white"
-            >
-              Sign In
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
+  if (!user) return <SignInRequired />;
   
-  if (isError || !courses || courses.length === 0) {
-    return (
-      <div className="flex h-[80vh] items-center justify-center">
-        <Card className="w-full max-w-md text-center">
-          <CardHeader>
-            <CardTitle>No Courses Found</CardTitle>
-            <CardDescription>
-              You are not enrolled in any courses yet.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button
-              onClick={() => router.push('/search')}
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white"
-            >
-              Browse Courses
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
+  if (isError) return <CoursesError />;
+
+  if (!courses || courses.length === 0) return <CoursesEmpty />;
 
   return (
-    <div className="user-courses">
+    <div className="user-courses text-[#e6e6e6] min-h-screen p-6">
       <Header title="My Courses" subtitle="View your enrolled courses" />
       <Toolbar
         onSearch={setSearchTerm}
         onCategoryChange={setSelectedCategory}
       />
-      <div className="user-courses__grid">
-        {filteredCourses.map((course) => (
-          <CourseCard
-            key={course.courseId}
-            course={course}
-            onGoToCourse={handleGoToCourse}
-          />
-        ))}
-      </div>
+      {filteredCourses.length === 0 ? (
+        <CoursesEmpty searchTerm={searchTerm} selectedCategory={selectedCategory} />
+      ) : (
+        <div className="user-courses__grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-6">
+          {filteredCourses.map((course) => (
+            <CourseCard
+              key={course.courseId}
+              course={course}
+              onGoToCourse={handleGoToCourse}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 };
