@@ -9,7 +9,7 @@ import ReactPlayer from "react-player";
 import Loading from "@/components/Loading";
 import { useCourseProgressData } from "@/hooks/useCourseProgressData";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, Code, PlusCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, PlusCircle } from "lucide-react";
 import AIQuiz from "./aiquiz/page";
 import { BookOpen, FileText, GraduationCap } from "lucide-react";
 import { YoutubeTranscript } from "youtube-transcript";
