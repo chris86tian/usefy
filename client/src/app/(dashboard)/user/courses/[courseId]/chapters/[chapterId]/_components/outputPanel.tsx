@@ -2,15 +2,29 @@
 
 import { useCodeEditorStore } from "@/hooks/useCodeEditorStore";
 import { AlertTriangle, CheckCircle, Clock, Copy, Terminal, Code2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import RunningCodeSkeleton from "./runningCodeSkeleton";
 
 function OutputPanel() {
-  const { output = "", error = null, isRunning = false, evaluation } = useCodeEditorStore();
+  const { 
+    output, 
+    error, 
+    isRunning, 
+    isSubmitting, 
+    executionResult 
+  } = useCodeEditorStore();
+  
   const [isCopied, setIsCopied] = useState(false);
   const [activeTab, setActiveTab] = useState('output');
 
-  const hasContent = error || output;
+  useEffect(() => {
+    if (executionResult?.evaluation) {
+      // Automatically switch to evaluation tab when we receive evaluation data
+      setActiveTab('evaluation');
+    }
+  }, [executionResult?.evaluation]);
+
+  const hasContent = error || output || executionResult?.evaluation;
 
   const handleCopy = async () => {
     if (!hasContent) return;
@@ -18,6 +32,9 @@ function OutputPanel() {
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2000);
   };
+
+  // Get evaluation data
+  const evaluation = executionResult?.evaluation;
 
   return (
     <div className="relative bg-[#181825] rounded-xl p-4 ring-1 ring-gray-800/50">
@@ -76,7 +93,7 @@ function OutputPanel() {
           className="relative bg-[#1e1e2e]/50 backdrop-blur-sm border border-[#313244] 
           rounded-xl p-4 h-[600px] overflow-auto font-mono text-sm"
         >
-          {isRunning ? (
+          {isRunning || isSubmitting ? (
             <RunningCodeSkeleton />
           ) : error ? (
             <div className="flex items-start gap-3 text-red-400">
@@ -112,7 +129,7 @@ function OutputPanel() {
                   )}
                 </div>
                 <div className="text-lg font-semibold">
-                  Score: {evaluation.score}/100
+                  Score: <span className="text-blue-400">{evaluation.score}%</span>
                 </div>
               </div>
 
@@ -125,14 +142,16 @@ function OutputPanel() {
               )}
 
               {/* Suggestions */}
-              <div className="space-y-2">
-                <h3 className="font-medium text-blue-400">Suggestions</h3>
-                <ul className="list-disc list-inside space-y-1 text-gray-400">
-                  {evaluation.suggestions.map((suggestion, index) => (
-                    <li key={index}>{suggestion}</li>
-                  ))}
-                </ul>
-              </div>
+              {/* {evaluation.suggestions.length > 0 && (
+                <div className="space-y-2">
+                  <h3 className="font-medium text-blue-400">Suggestions</h3>
+                  <ul className="list-disc list-inside text-gray-400">
+                    {evaluation.suggestions.map((suggestion, index) => (
+                      <li key={index}>{suggestion}</li>
+                    ))}
+                  </ul>
+                </div>
+              )} */}
             </div>
           ) : (
             <div className="h-full flex flex-col items-center justify-center text-gray-500">

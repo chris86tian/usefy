@@ -37,17 +37,6 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
     editor: null,
     executionResult: null,
     task: "",
-    evaluation: {
-      passed: false,
-      score: 0,
-      feedback: {
-        correctness: "",
-        efficiency: "",
-        bestPractices: "",
-      },
-      suggestions: [],
-      explanation: "",
-    },
 
     getCode: () => get().editor?.getValue() || "",
 
@@ -87,15 +76,40 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
     submitCode: async (task: string) => {
       const { language, getCode } = get();
       const code = getCode();
-
+    
+      console.log("[Store] Starting code submission");
+      console.log("[Store] Current code:", code);
+    
       if (!code) {
         set({ error: "No code to check" });
         return;
       }
     
-      set({ isSubmitting: true, error: null, output: "" });
+      set({ 
+        isSubmitting: true, 
+        error: null, 
+        output: "",
+        // Reset executionResult to ensure clean state
+        executionResult: {
+          code: "",
+          output: "",
+          error: null,
+          evaluation: {
+            passed: false,
+            score: 0,
+            feedback: {
+              correctness: "",
+              efficiency: "",
+              bestPractices: "",
+            },
+            suggestions: [],
+            explanation: "",
+          },
+        },
+      });
     
       try {
+        console.log("[Store] Sending API request");
         const response = await fetch("/api/submit-code", {
           method: "POST",
           headers: {
@@ -105,27 +119,40 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
         });
     
         const data = await response.json();
+        console.log("[Store] API Response:", data);
     
         if (data.error) {
+          console.log("[Store] API returned error:", data.error);
           set({ error: data.error });
           return;
         }
     
-        set({ 
-          evaluation: data.evaluation,
-          executionResult: { 
-            code, output: "",
-            evaluation: data.evaluation,
-            error: null,
+        // Force a new object creation to ensure reactivity
+        const newExecutionResult = {
+          code,
+          output: "",
+          error: null,
+          evaluation: {
+            ...data.evaluation,
           },
-        });
+        };
+    
+        console.log("[Store] Setting new execution result:", newExecutionResult);
+        
+        set(state => ({
+          ...state,
+          executionResult: newExecutionResult,
+        }));
+    
+        console.log("[Store] State after update:", get());
       } catch (error) {
-        console.error("Error running code:", error);
+        console.error("[Store] Error running code:", error);
         set({ error: "Error running code" });
       } finally {
         set({ isSubmitting: false });
       }
     },
+
 
     runCode: async () => {
       const { language, getCode } = get();

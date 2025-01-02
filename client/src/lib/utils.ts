@@ -50,12 +50,6 @@ export interface CodeEditorState {
   fontSize: number;
   editor: Monaco | null;
   task: string;
-  evaluation: {
-    passed: boolean;
-    score: number;
-    explanation: string;
-    suggestions: string[];
-  }
   executionResult: ExecutionResult | null;
 
   setEditor: (editor: Monaco) => void;

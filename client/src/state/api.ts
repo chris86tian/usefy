@@ -77,7 +77,7 @@ export const api = createApi({
       invalidatesTags: ["Users"],
     }),
 
-    getUsers: build.query<User[], void>({
+    getUsers: build.query<User, void>({
       query: () => "users/clerk",
     }),
 

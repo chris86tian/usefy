@@ -9,11 +9,11 @@ import { Progress } from '@radix-ui/react-progress'
 import { Sparkles } from 'lucide-react'
 import { QuizResponse } from '@/lib/utils'
 
-interface AIQuizProps {
-  videoTranscript: string
-}
+interface QuizProps {
+  videoTranscript: string;
+} 
 
-const AIQuiz = ({ videoTranscript }: AIQuizProps) => {
+export default function AIQuiz({ videoTranscript }: QuizProps) {
   const [quizData, setQuizData] = useState<QuizResponse | null>(null)
   const [currentTopic, setCurrentTopic] = useState(0)
   const [currentQuestion, setCurrentQuestion] = useState(0)
@@ -46,7 +46,7 @@ const AIQuiz = ({ videoTranscript }: AIQuizProps) => {
       }
 
       setQuizData(data)
-      // Initialize answers map for all topics
+
       const initialAnswers = new Map<string, number[]>()
       data.allQuestions.forEach(topicQuestions => {
         initialAnswers.set(
@@ -54,6 +54,7 @@ const AIQuiz = ({ videoTranscript }: AIQuizProps) => {
           new Array(topicQuestions.questions.length).fill(-1)
         )
       })
+      
       setUserAnswers(initialAnswers)
       setCurrentTopic(0)
       setCurrentQuestion(0)
@@ -303,5 +304,3 @@ const AIQuiz = ({ videoTranscript }: AIQuizProps) => {
     </div>
   )
 }
-
-export default AIQuiz
