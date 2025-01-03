@@ -21,7 +21,7 @@ declare global {
     username?: string;
     email: string;
     publicMetadata: {
-      userType: "teacher" | "student";
+      userType: "teacher" | "user";
     };
     privateMetadata: {
       settings?: UserSettings;

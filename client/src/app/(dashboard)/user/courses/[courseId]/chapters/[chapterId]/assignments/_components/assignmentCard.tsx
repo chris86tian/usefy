@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { FileText, Clock, Trash2, Edit } from 'lucide-react'
+import { FileText, Clock, Trash2, Edit, CodeIcon } from 'lucide-react'
 import { Assignment } from '@/lib/utils'
 import { useUser } from '@clerk/nextjs'
 import { useDeleteAssignmentMutation } from '@/state/api'
@@ -98,6 +98,7 @@ export function AssignmentCard({
               onClick={handleStartAssignment}
               className='bg-gray-700 hover:bg-gray-600 text-white'
             >
+              <CodeIcon className="h-4 w-4 mr-1" />
               Start Now
             </Button>
           </div>
