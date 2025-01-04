@@ -1,17 +1,29 @@
+"use client"
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import { Loader2, Link } from 'lucide-react';
 import { useCreateAssignmentMutation, useUpdateAssignmentMutation } from '@/state/api';
 import { v4 as uuidv4 } from 'uuid';
+import { ResourceList } from './ResourceList';
+import { AIGenerator } from './AIGenerator';
+
+interface Resource {
+  id: string;
+  type: 'link' | 'document';
+  name: string;
+  url: string;
+}
 
 interface Assignment {
   assignmentId: string;
   title: string;
   description: string;
+  resources: Resource[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   submissions: any[];
 }
@@ -39,6 +51,7 @@ const AssignmentModal = ({
 }: AssignmentModalProps) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [resources, setResources] = useState<Resource[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [createAssignment] = useCreateAssignmentMutation();
@@ -48,6 +61,7 @@ const AssignmentModal = ({
     if (assignment && mode === 'edit') {
       setTitle(assignment.title);
       setDescription(assignment.description);
+      setResources(assignment.resources || []);
     }
   }, [assignment, mode]);
 
@@ -56,17 +70,20 @@ const AssignmentModal = ({
     setIsSubmitting(true);
     
     try {
+      const assignmentData = {
+        assignmentId: mode === 'create' ? uuidv4() : assignment!.assignmentId,
+        title,
+        description,
+        resources,
+        submissions: mode === 'create' ? [] : assignment!.submissions
+      };
+
       if (mode === 'create') {
         const { data } = await createAssignment({
           chapterId,
           courseId,
           sectionId,
-          assignment: {
-            assignmentId: uuidv4(),
-            title,
-            description,
-            submissions: []
-          },
+          assignment: assignmentData,
         });
 
         if (data) {
@@ -80,11 +97,7 @@ const AssignmentModal = ({
           courseId,
           sectionId,
           assignmentId: assignment.assignmentId,
-          assignment: {
-            ...assignment,
-            title,
-            description,
-          },
+          assignment: assignmentData,
         });
 
         if (data) {
@@ -102,6 +115,20 @@ const AssignmentModal = ({
   const resetForm = () => {
     setTitle("");
     setDescription("");
+    setResources([]);
+  };
+
+  const handleAddResource = (resource: Resource) => {
+    setResources([...resources, resource]);
+  };
+
+  const handleRemoveResource = (id: string) => {
+    setResources(resources.filter(resource => resource.id !== id));
+  };
+
+  const handleAIGenerate = (generatedAssignment: { title: string; description: string }) => {
+    setTitle(generatedAssignment.title);
+    setDescription(generatedAssignment.description);
   };
 
   const modalTitle = mode === 'create' ? 'Create New Assignment' : 'Edit Assignment';
@@ -110,7 +137,7 @@ const AssignmentModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>{modalTitle}</DialogTitle>
         </DialogHeader>
@@ -137,6 +164,28 @@ const AssignmentModal = ({
               required
             />
           </div>
+
+          <ResourceList resources={resources} onRemove={handleRemoveResource} onUpdate={(id, field, value) => {
+            setResources(resources.map(resource => resource.id === id ? { ...resource, [field]: value } : resource));
+          }} />
+
+          <div className="flex space-x-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleAddResource({
+                id: uuidv4(),
+                type: 'link',
+                name: '',
+                url: ''
+              })}
+            >
+              <Link className="mr-2 h-4 w-4" />
+              Add Link
+            </Button>
+          </div>
+
+          <AIGenerator onGenerate={handleAIGenerate} />
 
           <div className="flex justify-end space-x-3">
             <Button 
@@ -168,3 +217,4 @@ const AssignmentModal = ({
 };
 
 export default AssignmentModal;
+
