@@ -3,9 +3,9 @@ import { useState, useEffect, useRef } from "react";
 import {
   ChevronDown,
   ChevronUp,
-  FileText,
   CheckCircle,
   Trophy,
+  Bell,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -29,7 +29,7 @@ const ChaptersSidebar = () => {
   } = useCourseProgressData();
 
   const sidebarRef = useRef<HTMLDivElement>(null);
-
+  
   useEffect(() => {
     setOpen(false);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -258,6 +258,7 @@ const Chapter = ({
     (c: any) => c.chapterId === chapter.chapterId
   );
   const isCompleted = chapterProgress?.completed;
+  const isQuizCompleted = chapterProgress?.quizCompleted;
   const isCurrentChapter = chapterId === chapter.chapterId;
 
   const handleToggleComplete = (e: React.MouseEvent) => {
@@ -290,6 +291,7 @@ const Chapter = ({
           {index + 1}
         </div>
       )}
+      
       <span
         className={cn("chapters-sidebar__chapter-title", {
           "chapters-sidebar__chapter-title--completed": isCompleted,
@@ -298,9 +300,18 @@ const Chapter = ({
       >
         {chapter.title}
       </span>
-      {chapter.type === "Text" && (
-        <FileText className="chapters-sidebar__text-icon" />
-      )}
+
+      <div className="flex items-center space-x-2">
+        {!isQuizCompleted ? (
+          <div className="animate-bounce ml-4">
+            <Bell className="w-5 h-5 text-yellow-500" />
+          </div>
+        ) : (
+          <div className="ml-4">
+            <CheckCircle className="w-5 h-5 text-green-500" />
+          </div>
+        )}
+      </div>
     </li>
   );
 };

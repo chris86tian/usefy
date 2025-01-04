@@ -9,9 +9,7 @@ import { useUpdateQuizProgressMutation } from '@/state/api';
 import { useUser } from '@clerk/nextjs';
 
 interface QuizzesProps {
-    quiz: {
-        questions: Question[];
-    };
+    quiz: { questions: Question[] };
     courseId: string;
     sectionId: string;
     chapterId: string;

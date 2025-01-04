@@ -54,7 +54,7 @@ export async function POST(request: Request) {
           },
           {
             role: "user",
-            content: `Please analyze this video transcript and create a course structure. Generate exactly 3 multiple-choice questions for each chapter. Ensure each question has exactly 4 options and correctAnswer is a number 0-3.
+            content: `Please analyze this video transcript and create a course structure. Generate exactly 5 multiple-choice questions for each chapter. Ensure each question has exactly 4 options and correctAnswer is a number 0-3.
             Return the response in this exact JSON format:
             {
               "courseTitle": "string",

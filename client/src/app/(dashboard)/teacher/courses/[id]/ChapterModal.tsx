@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
-import { X, Trash2, Sparkles, Brain } from "lucide-react";
+import { X, Trash2, Brain } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
@@ -24,7 +24,6 @@ const ChapterModal = () => {
       : undefined;
 
   const [videoType, setVideoType] = useState<"file" | "link">("file");
-  const [isGenerating, setIsGenerating] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([]);
 
   const methods = useForm<ChapterFormData>({
@@ -35,44 +34,6 @@ const ChapterModal = () => {
       video: "",
     },
   });
-
-  const videoUrl = methods.watch("video");
-
-  const handleAutoGenerate = async () => {
-    const videoUrl = methods.getValues("video");
-    
-    if (!videoUrl) {
-      toast.error('Please enter a YouTube video URL first');
-      return;
-    }
-  
-    setIsGenerating(true);
-    try {
-      const response = await fetch('/api/generate-chapter-info', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ videoUrl })
-      });
-  
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to generate content');
-      }
-  
-      methods.setValue('title', data.title);
-      methods.setValue('content', data.content);
-      
-      toast.success('Content generated successfully');
-    } catch (error) {
-      console.error('Error in auto-generation:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to auto-generate content');
-    } finally {
-      setIsGenerating(false);
-    }
-  };
 
   useEffect(() => {
     if (chapter) {
@@ -217,17 +178,6 @@ const ChapterModal = () => {
                   />
                   YouTube/Vimeo Link
                 </label>
-                {videoType === "link" && (
-                  <Button
-                    type="button"
-                    onClick={handleAutoGenerate}
-                    disabled={isGenerating || !videoUrl}
-                    className="bg-blue-500 hover:bg-blue-600"
-                  >
-                    <Sparkles className="w-4 h-4" />
-                    {isGenerating ? "Generating..." : "Auto-Fill"}
-                  </Button>
-                )}
               </div>
             </div>
 

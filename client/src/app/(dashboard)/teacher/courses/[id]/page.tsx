@@ -307,7 +307,7 @@ const CourseEditor = () => {
                   >
                     <Sparkles className="h-4 w-4 text-primary-700 group-hover:white-100" />
                     <span className="text-primary-700 group-hover:white-100">
-                      {isGenerating ? 'Generating...' : 'Auto-Fill'}
+                      {isGenerating ? 'Generating...' : 'Generate'}
                     </span>
                   </Button>
                   <YouTubeDialog

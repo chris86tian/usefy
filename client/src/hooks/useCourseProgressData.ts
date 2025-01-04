@@ -53,7 +53,22 @@ export const useCourseProgressData = () => {
         (c) => c.chapterId === currentChapter.chapterId && c.completed
       ) ?? false
     );
+    
   };
+
+  const isQuizCompleted = () => {
+    if (!currentSection || !currentChapter || !userProgress?.sections)
+      return false;
+
+    const section = userProgress.sections.find(
+      (s) => s.sectionId === currentSection.sectionId
+    );
+    return (
+      section?.chapters.some(
+        (c) => c.chapterId === currentChapter.chapterId && c.quizProgress?.completed
+      ) ?? false
+    );
+  }
 
   const updateChapterProgress = (
     sectionId: string,
@@ -93,6 +108,7 @@ export const useCourseProgressData = () => {
     currentChapter,
     isLoading,
     isChapterCompleted,
+    isQuizCompleted,
     updateChapterProgress,
     hasMarkedComplete,
     setHasMarkedComplete,
