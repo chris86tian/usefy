@@ -13,6 +13,7 @@ import { ChevronLeft, ChevronRight, PlusCircle } from "lucide-react";
 import { BookOpen, FileText, GraduationCap } from "lucide-react";
 import AssignmentModal from "./_components/assignmentModal";
 import Assignments from "./assignments/page";
+import Quizzes from "./quizzes/page";
 
 const Course = () => {
   const {
@@ -226,7 +227,7 @@ const Course = () => {
 
             <TabsContent value="Quiz">
               <Card className="border-none shadow-lg">
-                  
+                {currentChapter.quiz && <Quizzes quiz={currentChapter.quiz} />}
               </Card>
             </TabsContent>
           </div>
