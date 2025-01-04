@@ -93,6 +93,7 @@ export const createTransaction = async (
           chapters: section.chapters.map((chapter: any) => ({
             chapterId: chapter.chapterId,
             completed: false,
+            quizCompleted: false,
           })),
         })),
         lastAccessedTimestamp: new Date().toISOString(),
@@ -141,6 +142,7 @@ export const createTransaction = async (
         chapters: section.chapters.map((chapter: any) => ({
           chapterId: chapter.chapterId,
           completed: false,
+          quizCompleted: false,
         })),
       })),
       lastAccessedTimestamp: new Date().toISOString(),

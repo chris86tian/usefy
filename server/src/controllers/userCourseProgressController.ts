@@ -137,3 +137,57 @@ export const getUserCourseProgressStats = async (
       .json({ message: "Error retrieving user course progress stats", error });
   }
 }
+
+export const updateQuizProgress = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { userId, courseId } = req.params;
+  const { completed, sectionId, chapterId } = req.body;
+
+  console.log("updateQuizProgress", req.body);
+
+  try {
+    let progress = await UserCourseProgress.get({ userId, courseId });
+
+    if (!progress) {
+      res
+        .status(404)
+        .json({ message: "Course progress not found for this user" });
+      return;
+    }
+
+    const sectionIndex = progress.sections.findIndex(
+      (section: any) => section.sectionId === sectionId
+    );
+
+    if (sectionIndex === -1) {
+      res.status(404).json({ message: "Section not found" });
+      return;
+    }
+
+    const chapterIndex = progress.sections[sectionIndex].chapters.findIndex(
+      (chapter: any) => chapter.chapterId === chapterId
+    );
+
+    if (chapterIndex === -1) {
+      res.status(404).json({ message: "Chapter not found" });
+      return;
+    }
+
+    progress.sections[sectionIndex].chapters[chapterIndex].quizCompleted = completed;
+    progress.lastAccessedTimestamp = new Date().toISOString();
+    progress.overallProgress = calculateOverallProgress(progress.sections);
+
+    await progress.save();
+
+    res.json({
+      message: "Quiz progress updated successfully",
+      data: progress,
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error updating quiz progress", error });
+  }
+}

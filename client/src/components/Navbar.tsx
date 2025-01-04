@@ -2,7 +2,7 @@
 
 import { UserButton, useUser } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
-import { Bell, BookOpen, Code2Icon } from "lucide-react";
+import { BookOpen, Code2Icon } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -51,7 +51,7 @@ const Navbar = ({ isCoursePage }: { isCoursePage: boolean }) => {
               />
             </div>
           </div>
-          <Link
+          {/* <Link
             href={
               userRole === "teacher"
                 ? "/teacher/notifications"
@@ -61,7 +61,7 @@ const Navbar = ({ isCoursePage }: { isCoursePage: boolean }) => {
           >
             <span className="nondashboard-navbar__notification-indicator"></span>
             <Bell className="nondashboard-navbar__notification-icon" />
-          </Link>
+          </Link> */}
         </div>
 
         <div className="dashboard-navbar__actions">

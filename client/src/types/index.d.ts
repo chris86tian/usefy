@@ -94,13 +94,6 @@ declare global {
     onViewCourse: (course: Course) => void;
   }
 
-  interface Comment {
-    commentId: string;
-    userId: string;
-    text: string;
-    timestamp: string;
-  }
-
   interface Chapter {
     chapterId: string;
     type: "Text" | "Quiz" | "Video";
@@ -112,15 +105,25 @@ declare global {
     };
   }
 
+  interface Quiz {
+    questions: Question[];
+  }
+
   interface Question {
     question: string
     options: string[]
     correctAnswer: number
   }
 
+  interface QuizProgress {
+    quizId: string;
+    completed: boolean;
+  }
+
   interface ChapterProgress {
     chapterId: string;
     completed: boolean;
+    quizProgress?: QuizProgress;
   }
 
   interface SectionProgress {

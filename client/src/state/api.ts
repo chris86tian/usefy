@@ -313,6 +313,17 @@ export const api = createApi({
         }
       },
     }),
+
+    updateQuizProgress: build.mutation<
+      QuizProgress,
+      { userId: string; courseId: string; sectionId: string; chapterId: string; completed: boolean }
+    >({
+      query: ({ userId, courseId, sectionId, chapterId, completed }) => ({
+        url: `users/course-progress/${userId}/courses/${courseId}/quiz`,
+        method: "PUT",
+        body: { sectionId, chapterId, completed },
+      }),
+    }),
   }),
 });
 
@@ -341,5 +352,6 @@ export const {
   useGetUserEnrolledCoursesQuery,
   useGetUserCourseProgressQuery,
   useUpdateUserCourseProgressMutation,
+  useUpdateQuizProgressMutation,
   useGetNotificationsQuery,
 } = api;

@@ -227,7 +227,14 @@ const Course = () => {
 
             <TabsContent value="Quiz">
               <Card className="border-none shadow-lg">
-                {currentChapter.quiz && <Quizzes quiz={currentChapter.quiz} />}
+                {currentChapter.quiz && 
+                  <Quizzes 
+                    quiz={currentChapter.quiz} 
+                    courseId={course.courseId}
+                    chapterId={currentChapter.chapterId}
+                    sectionId={currentSection?.sectionId as string}
+                  />
+                }
               </Card>
             </TabsContent>
           </div>

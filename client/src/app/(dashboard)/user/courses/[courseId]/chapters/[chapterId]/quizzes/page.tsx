@@ -5,20 +5,33 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { CheckCircle2, XCircle } from "lucide-react";
 import { Question } from '@/lib/utils';
+import { useUpdateQuizProgressMutation } from '@/state/api';
+import { useUser } from '@clerk/nextjs';
 
 interface QuizzesProps {
     quiz: {
         questions: Question[];
     };
+    courseId: string;
+    sectionId: string;
+    chapterId: string;
     onQuizComplete?: (score: number, totalQuestions: number) => void;
 }
 
-const Quizzes = ({ quiz, onQuizComplete }: QuizzesProps) => {
+const Quizzes = ({ 
+  quiz, 
+  courseId,
+  sectionId,
+  chapterId,
+  onQuizComplete 
+}: QuizzesProps) => {
+  const user = useUser();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState(0);
   const [isQuizCompleted, setIsQuizCompleted] = useState(false);
+  const [updateQuizProgress] = useUpdateQuizProgressMutation();
 
   if (!quiz || quiz.questions.length === 0) {
     return (
@@ -40,7 +53,7 @@ const Quizzes = ({ quiz, onQuizComplete }: QuizzesProps) => {
     setSelectedAnswer(answerIndex);
   };
 
-  const handleNextQuestion = () => {
+  const handleNextQuestion = async () => {
     if (selectedAnswer === null) return;
 
     // Update score if answer is correct
@@ -53,10 +66,33 @@ const Quizzes = ({ quiz, onQuizComplete }: QuizzesProps) => {
       setSelectedAnswer(null);
       setShowResult(false);
     } else {
+      // Calculate final score
+      const finalScore = score + (selectedAnswer === currentQuestion.correctAnswer ? 1 : 0);
+      const percentage = (finalScore / totalQuestions) * 100;
+      console.log(percentage);
+      const passed = percentage >= 75;
+
       // Quiz completed
       setIsQuizCompleted(true);
-      if (onQuizComplete) {
-        onQuizComplete(score + (selectedAnswer === currentQuestion.correctAnswer ? 1 : 0), totalQuestions);
+      
+      try {
+        // Update quiz progress in the backend
+        await updateQuizProgress({
+          userId: user?.user?.id as string,
+          courseId,
+          sectionId,
+          chapterId,
+          completed: passed
+        }).unwrap();
+
+        console.log(passed);
+
+        // Call the completion callback if provided
+        if (onQuizComplete) {
+          onQuizComplete(finalScore, totalQuestions);
+        }
+      } catch (error) {
+        console.error('Failed to update quiz progress:', error);
       }
     }
   };
@@ -67,14 +103,13 @@ const Quizzes = ({ quiz, onQuizComplete }: QuizzesProps) => {
 
   const renderQuizContent = () => {
     if (isQuizCompleted) {
-      const finalScore = score + (selectedAnswer === currentQuestion.correctAnswer ? 1 : 0);
-      const percentage = (finalScore / totalQuestions) * 100;
+      const percentage = (score / totalQuestions) * 100;
       
       return (
         <div className="flex flex-col items-center justify-center py-8 text-center bg-gray-900 rounded-lg">
           <h3 className="text-2xl font-bold mb-4">Quiz Completed!</h3>
           <div className="text-6xl font-bold mb-4">{percentage.toFixed(0)}%</div>
-          <p className="text-lg mb-2">You scored {finalScore} out of {totalQuestions}</p>
+          <p className="text-lg mb-2">You scored {score} out of {totalQuestions}</p>
           {percentage >= 75 ? (
             <div className="flex items-center text-green-500">
               <CheckCircle2 className="w-6 h-6 mr-2" />

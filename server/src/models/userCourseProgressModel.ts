@@ -9,6 +9,10 @@ const chapterProgressSchema = new Schema({
     type: Boolean,
     required: true,
   },
+  quizCompleted: {
+    type: Boolean,
+    required: true,
+  },
 });
 
 const sectionProgressSchema = new Schema({
