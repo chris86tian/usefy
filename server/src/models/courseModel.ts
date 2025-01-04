@@ -21,6 +21,32 @@ const chapterSchema = new Schema({
   video: {
     type: String,
   },
+  quiz: {
+    type: Object,
+    schema: new Schema({
+      questions: {
+        type: Array,
+        schema: [
+          new Schema({
+            question: {
+              type: String,
+              required: true,
+            },
+            options: {
+              type: Array,
+              required: true,
+              schema: [String],
+            },
+            correctAnswer: {
+              type: Number,
+              required: true,
+            },
+          }),
+        ],
+      },
+    }),
+  },
+
   assignments: {
     type: Array,
     schema: [

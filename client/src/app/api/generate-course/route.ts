@@ -26,10 +26,8 @@ export async function POST(request: Request) {
     }
 
     try {
-      // Fetch transcript with timestamps
       const transcript = await YoutubeTranscript.fetchTranscript(videoId);
 
-      // Format transcript to include timestamps
       const formattedTranscript = transcript
         .map(({ text, offset }) => `[${formatTimestamp(offset)}] ${text}`)
         .join("\n");
@@ -56,7 +54,7 @@ export async function POST(request: Request) {
           },
           {
             role: "user",
-            content: `Please analyze this video transcript and create a course structure. 
+            content: `Please analyze this video transcript and create a course structure. Generate exactly 3 multiple-choice questions for each chapter. Ensure each question has exactly 4 options and correctAnswer is a number 0-3.
             Return the response in this exact JSON format:
             {
               "courseTitle": "string",
@@ -72,7 +70,16 @@ export async function POST(request: Request) {
                       "title": "string",
                       "content": "string",
                       "type": "string (e.g. 'Video')",
-                      "video": "string (original URL with timestamp: https://www.youtube.com/watch?v=<VIDEO_ID>&t=<START_TIME>s)"
+                      "video": "string (original URL with timestamp: https://www.youtube.com/watch?v=<VIDEO_ID>&t=<START_TIME>s)",
+                      "quiz": {
+                        "questions": [
+                          {
+                            "question": "string",
+                            "options": ["string", "string", "string", "string"],
+                            "correctAnswer": number
+                          }
+                        ]
+                      }
                     }
                   ]
                 }
@@ -80,8 +87,7 @@ export async function POST(request: Request) {
             }
 
             Video URL: ${videoUrl}
-            Transcript:
-            ${formattedTranscript}`,
+            Transcript: ${formattedTranscript}`,
           },
         ],
         temperature: 0.7,
@@ -99,7 +105,7 @@ export async function POST(request: Request) {
           chapter.videoUrl = `https://www.youtube.com/watch?v=${videoId}&t=${startTime}s`;
         });
       });
-
+      
       return NextResponse.json(courseStructure);
     } catch (error) {
       console.error("Error processing video:", error);
@@ -118,11 +124,10 @@ export async function POST(request: Request) {
 }
 
 function sanitizeJSON(response: string): string {
-  const jsonMatch = response.match(/{[\s\S]*}/); // Match content within `{}` braces
+  const jsonMatch = response.match(/{[\s\S]*}/);
   return jsonMatch ? jsonMatch[0] : "{}";
 }
 
-// Helper function to format timestamp from seconds to [mm:ss]
 function formatTimestamp(seconds: number): string {
   const totalSeconds = Math.floor(seconds);
   const minutes = Math.floor(totalSeconds / 60);
@@ -130,18 +135,16 @@ function formatTimestamp(seconds: number): string {
   return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
 }
 
-// Helper function to extract timestamp from formatted string
 function extractTimestamp(content: string): number {
-  const timestampMatch = content.match(/\[(\d+):(\d{2})\]/); // Matches [mm:ss]
+  const timestampMatch = content.match(/\[(\d+):(\d{2})\]/);
   if (timestampMatch) {
     const minutes = parseInt(timestampMatch[1], 10);
     const seconds = parseInt(timestampMatch[2], 10);
-    return minutes * 60 + seconds; // Convert to total seconds
+    return minutes * 60 + seconds;
   }
-  return 0; // Default to 0 if no timestamp is found
+  return 0;
 }
 
-// API configuration
 export const config = {
   api: {
     bodyParser: {

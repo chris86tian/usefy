@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
-import { X } from "lucide-react";
+import { X, Trash2, Sparkles, Brain } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
@@ -12,7 +12,6 @@ import CustomModal from "@/components/CustomModal";
 import { ChapterFormData, chapterSchema } from "@/lib/schemas";
 import { addChapter, closeChapterModal, editChapter } from "@/state";
 import { useAppDispatch, useAppSelector } from "@/state/redux";
-import { Sparkles } from "lucide-react";
 
 const ChapterModal = () => {
   const dispatch = useAppDispatch();
@@ -26,6 +25,7 @@ const ChapterModal = () => {
 
   const [videoType, setVideoType] = useState<"file" | "link">("file");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [questions, setQuestions] = useState<Question[]>([]);
 
   const methods = useForm<ChapterFormData>({
     resolver: zodResolver(chapterSchema),
@@ -82,14 +82,46 @@ const ChapterModal = () => {
         video: chapter.video || "",
       });
       setVideoType(typeof chapter.video === 'string' && chapter.video.startsWith("http") ? "link" : "file");
+      setQuestions(chapter.quiz?.questions || []);
     } else {
       methods.reset({
         title: "",
         content: "",
         video: "",
       });
+      setQuestions([]);
     }
   }, [chapter, methods]);
+
+  const addQuestion = () => {
+    setQuestions([
+      ...questions,
+      {
+        question: "",
+        options: ["", "", "", ""],
+        correctAnswer: 0,
+      },
+    ]);
+  };
+
+  const removeQuestion = (index: number) => {
+    setQuestions(questions.filter((_, i) => i !== index));
+  };
+
+  const updateQuestion = (index: number, field: string, value: string | number) => {
+    const updatedQuestions = [...questions];
+    updatedQuestions[index] = {
+      ...updatedQuestions[index],
+      [field]: value,
+    };
+    setQuestions(updatedQuestions);
+  };
+
+  const updateOption = (questionIndex: number, optionIndex: number, value: string) => {
+    const updatedQuestions = [...questions];
+    updatedQuestions[questionIndex].options[optionIndex] = value;
+    setQuestions(updatedQuestions);
+  };
 
   const onClose = () => {
     dispatch(closeChapterModal());
@@ -102,8 +134,9 @@ const ChapterModal = () => {
       chapterId: chapter?.chapterId || uuidv4(),
       title: data.title,
       content: data.content,
-      type: data.video ? "Video" : "Text",
+      type: questions.length > 0 ? "Quiz" : (data.video ? "Video" : "Text"),
       video: data.video,
+      quiz: questions.length > 0 ? { questions } : undefined,
     };
 
     if (selectedChapterIndex === null) {
@@ -161,7 +194,7 @@ const ChapterModal = () => {
               <FormLabel className="text-customgreys-dirtyGrey text-sm">
                 Select Video Type
               </FormLabel>
-              <div className="flex items-center gap-2 justify-center">
+              <div className="flex items-center gap-2 justify-center mt-2">
                 <label className="flex items-center">
                   <input
                     type="radio"
@@ -229,6 +262,69 @@ const ChapterModal = () => {
                 placeholder="Paste YouTube/Vimeo link here"
               />
             )}
+
+            <div className="mt-6">
+              <div className="flex items-center justify-between mb-4">
+                <FormLabel className="text-customgreys-dirtyGrey text-sm">
+                  Quiz Questions
+                </FormLabel>
+                <Button
+                  type="button"
+                  onClick={addQuestion}
+                  className="bg-blue-500 hover:bg-blue-600"
+                >
+                  <Brain className="w-4 h-4" />
+                  Add Question
+                </Button>
+              </div>
+
+              {questions.map((question, questionIndex) => (
+                <div key={questionIndex} className="mb-6 p-4 rounded-lg bg-customgreys-darkGrey">
+                  <div className="flex items-center justify-between mb-2">
+                    <FormLabel className="text-customgreys-dirtyGrey text-sm">
+                      Question {questionIndex + 1}
+                    </FormLabel>
+                    <Button
+                      type="button"
+                      onClick={() => removeQuestion(questionIndex)}
+                      variant="destructive"
+                      size="sm"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+
+                  <Input
+                    value={question.question}
+                    onChange={(e) =>
+                      updateQuestion(questionIndex, "question", e.target.value)
+                    }
+                    placeholder="Enter your question"
+                    className="mb-2"
+                  />
+
+                  {question.options.map((option, optionIndex) => (
+                    <div key={optionIndex} className="flex items-center gap-2 mb-2">
+                      <input
+                        type="radio"
+                        name={`correct-answer-${questionIndex}`}
+                        checked={question.correctAnswer === optionIndex}
+                        onChange={() =>
+                          updateQuestion(questionIndex, "correctAnswer", optionIndex)
+                        }
+                      />
+                      <Input
+                        value={option}
+                        onChange={(e) =>
+                          updateOption(questionIndex, optionIndex, e.target.value)
+                        }
+                        placeholder={`Option ${optionIndex + 1}`}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
 
             <div className="chapter-modal__actions">
               <Button type="button" variant="outline" onClick={onClose}>

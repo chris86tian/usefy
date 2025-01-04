@@ -103,11 +103,19 @@ declare global {
 
   interface Chapter {
     chapterId: string;
+    type: "Text" | "Quiz" | "Video";
     title: string;
     content: string;
     video?: string | File;
-    freePreview?: boolean;
-    type: "Text" | "Quiz" | "Video";
+    quiz?: {
+      questions: Question[];
+    };
+  }
+
+  interface Question {
+    question: string
+    options: string[]
+    correctAnswer: number
   }
 
   interface ChapterProgress {

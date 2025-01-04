@@ -71,21 +71,6 @@ export interface Question {
   correctAnswer: number
 }
 
-export interface TopicQuestions {
-  topic: string
-  questions: Question[]
-}
-
-export interface QuizResponse {
-  topics: string[]
-  allQuestions: TopicQuestions[]
-}
-
-export interface TopicQuestions {
-  topic: string;
-  questions: Question[];
-}
-
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }

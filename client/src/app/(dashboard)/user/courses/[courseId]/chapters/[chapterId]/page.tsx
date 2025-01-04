@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,10 +10,7 @@ import Loading from "@/components/Loading";
 import { useCourseProgressData } from "@/hooks/useCourseProgressData";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, PlusCircle } from "lucide-react";
-import AIQuiz from "./aiquiz/page";
 import { BookOpen, FileText, GraduationCap } from "lucide-react";
-import { YoutubeTranscript } from "youtube-transcript";
-import { extractVideoId } from "@/lib/utils";
 import AssignmentModal from "./_components/assignmentModal";
 import Assignments from "./assignments/page";
 
@@ -33,7 +30,6 @@ const Course = () => {
 
   const playerRef = useRef(null);
   const router = useRouter();
-  const [videoTranscript, setVideoTranscript] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   const handleProgress = ({ played }: { played: number }) => {
@@ -90,18 +86,6 @@ const Course = () => {
   const handleModalClose = () => {
     setIsModalOpen(false)
   }
-
-  useEffect(() => {
-    if (currentChapter?.video) {
-      const videoId = extractVideoId(currentChapter.video as string);
-      if (videoId) {
-        YoutubeTranscript.fetchTranscript(videoId).then((transcript) => {
-          const videoTranscript = transcript.map((t) => t.text).join(" ");
-          setVideoTranscript(videoTranscript);
-        });
-      }
-    }
-  }, [currentChapter]);
 
   if (isLoading) return <Loading />;
   if (!user) return <div className="p-4 text-center">Please sign in to view this course.</div>;
@@ -178,7 +162,6 @@ const Course = () => {
                     chapterId={currentChapter.chapterId}
                     onAssignmentChange={() => {
                       handleModalClose()
-                      // Optionally refresh the data here if needed
                       router.refresh()
                     }}
                     open={isModalOpen}
@@ -243,7 +226,7 @@ const Course = () => {
 
             <TabsContent value="Quiz">
               <Card className="border-none shadow-lg">
-                  <AIQuiz videoTranscript={videoTranscript} />
+                  
               </Card>
             </TabsContent>
           </div>

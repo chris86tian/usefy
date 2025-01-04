@@ -43,29 +43,28 @@ const CourseEditor = () => {
   const [updateCourse] = useUpdateCourseMutation();
   const [getUploadVideoUrl] = useGetUploadVideoUrlMutation();
   const [getUploadImageUrl] = useGetUploadImageUrlMutation();
-
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [image, setImage] = useState<File | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-
-  // Auto-fill course
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handleURLSubmit = async (videoUrl: string) => {
     setIsDialogOpen(false);
     setIsGenerating(true);
-    
+
     try {
       const response = await fetch("/api/generate-course", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ videoUrl: videoUrl }),
+        body: JSON.stringify({ videoUrl }),
       });
 
       const data = await response.json();
+
+      console.log(data);
       
       if (data.error) {
         toast.error(data.error);
@@ -78,16 +77,17 @@ const CourseEditor = () => {
       methods.setValue("courseDescription", courseDescription);
 
       dispatch(setSections(
-        sections.map((section: { sectionTitle: string; sectionDescription: string; chapters: { title: string; content: string; video: string }[] }) => ({
+        sections.map((section: { sectionTitle: string; sectionDescription: string; chapters: { title: string; content: string; video: string; quiz: { questions: { question: string; options: string[]; correctAnswer: number }[] } }[] }) => ({
           sectionId: uuid(),
           sectionTitle: section.sectionTitle,
           sectionDescription: section.sectionDescription,
-          chapters: section.chapters.map((chapter: { title: string; content: string; video: string }) => ({
+          chapters: section.chapters.map((chapter: { title: string; content: string; video: string, quiz: { questions: { question: string; options: string[]; correctAnswer: number }[] } }) => ({
             chapterId: uuid(),
             title: chapter.title,
             content: chapter.content,
             type: "Video",
             video: chapter.video,
+            quiz: chapter.quiz,
           })),
         }))
       ));
