@@ -63,10 +63,10 @@ export const useCourseProgressData = () => {
     const section = userProgress.sections.find(
       (s) => s.sectionId === currentSection.sectionId
     );
+
     return (
       section?.chapters.some(
-        (c) => c.chapterId === currentChapter.chapterId && c.quizProgress?.completed
-      ) ?? false
+        (c) => c.chapterId === currentChapter.chapterId && c.quizCompleted ) ?? false
     );
   }
 

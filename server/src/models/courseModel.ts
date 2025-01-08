@@ -63,6 +63,25 @@ const chapterSchema = new Schema({
           type: String,
           required: true,
         },
+        resources : {
+          type: Array,
+          schema: [
+            new Schema({
+              id: {
+                type: String,
+                required: true,
+              },
+              title: {
+                type: String,
+                required: true,
+              },
+              url: {
+                type: String,
+                required: true,
+              },
+            }),
+          ],
+        },
         submissions: {
           type: Array,
           schema: [

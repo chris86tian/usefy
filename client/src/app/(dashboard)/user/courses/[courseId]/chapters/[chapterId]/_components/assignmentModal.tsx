@@ -11,23 +11,7 @@ import { useCreateAssignmentMutation, useUpdateAssignmentMutation } from '@/stat
 import { v4 as uuidv4 } from 'uuid';
 import { ResourceList } from './ResourceList';
 import { AIGenerator } from './AIGenerator';
-
-interface Resource {
-  id: string;
-  type: 'link' | 'document';
-  name: string;
-  url: string;
-}
-
-interface Assignment {
-  assignmentId: string;
-  title: string;
-  description: string;
-  resources: Resource[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  submissions: any[];
-}
-
+import { Resource, Assignment } from '@/lib/utils';
 interface AssignmentModalProps {
   chapterId: string;
   sectionId: string;
@@ -70,6 +54,7 @@ const AssignmentModal = ({
     setIsSubmitting(true);
     
     try {
+      console.log('res:', resources);
       const assignmentData = {
         assignmentId: mode === 'create' ? uuidv4() : assignment!.assignmentId,
         title,
@@ -119,6 +104,7 @@ const AssignmentModal = ({
   };
 
   const handleAddResource = (resource: Resource) => {
+    console.log('resource:', resource);
     setResources([...resources, resource]);
   };
 
@@ -175,8 +161,7 @@ const AssignmentModal = ({
               variant="outline"
               onClick={() => handleAddResource({
                 id: uuidv4(),
-                type: 'link',
-                name: '',
+                title: '',
                 url: ''
               })}
             >

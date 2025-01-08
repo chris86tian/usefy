@@ -315,7 +315,7 @@ export const api = createApi({
     }),
 
     updateQuizProgress: build.mutation<
-      QuizProgress,
+      ChapterProgress,
       { userId: string; courseId: string; sectionId: string; chapterId: string; completed: boolean }
     >({
       query: ({ userId, courseId, sectionId, chapterId, completed }) => ({

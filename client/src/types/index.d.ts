@@ -115,15 +115,10 @@ declare global {
     correctAnswer: number
   }
 
-  interface QuizProgress {
-    quizId: string;
-    completed: boolean;
-  }
-
   interface ChapterProgress {
     chapterId: string;
     completed: boolean;
-    quizProgress?: QuizProgress;
+    quizCompleted?: boolean;
   }
 
   interface SectionProgress {

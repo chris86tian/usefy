@@ -6,14 +6,14 @@ import { cn } from "@/lib/utils";
 
 interface Resource {
   id: string;
-  name: string;
+  title: string;
   url: string;
 }
 
 interface ResourceListProps {
   resources: Resource[];
   onRemove: (id: string) => void;
-  onUpdate: (id: string, field: 'name' | 'url', value: string) => void;
+  onUpdate: (id: string, field: 'title' | 'url', value: string) => void;
 }
 
 export const ResourceList: React.FC<ResourceListProps> = ({ resources, onRemove, onUpdate }) => {
@@ -38,8 +38,8 @@ export const ResourceList: React.FC<ResourceListProps> = ({ resources, onRemove,
 
           <div className="flex-1 space-y-2 sm:space-y-0 sm:space-x-3 sm:flex sm:items-center">
             <Input
-              value={resource.name}
-              onChange={(e) => onUpdate(resource.id, 'name', e.target.value)}
+              value={resource.title}
+              onChange={(e) => onUpdate(resource.id, 'title', e.target.value)}
               className="flex-1 bg-gray-800 text-white"
               placeholder="Resource name"
               aria-label="Resource name"
@@ -73,9 +73,6 @@ export const ResourceList: React.FC<ResourceListProps> = ({ resources, onRemove,
       
       {resources.length === 0 && (
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 mb-4">
-            <Link className="h-4 w-4 text-gray-400" />
-          </div>
           <p className="text-gray-500 text-sm">No resources added yet</p>
         </div>
       )}

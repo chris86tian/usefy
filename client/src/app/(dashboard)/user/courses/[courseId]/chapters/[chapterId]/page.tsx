@@ -9,7 +9,7 @@ import ReactPlayer from "react-player";
 import Loading from "@/components/Loading";
 import { useCourseProgressData } from "@/hooks/useCourseProgressData";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, PlusCircle } from "lucide-react";
+import { CheckCircle, ChevronLeft, ChevronRight, PlusCircle } from "lucide-react";
 import { BookOpen, FileText, GraduationCap } from "lucide-react";
 import AssignmentModal from "./_components/assignmentModal";
 import Assignments from "./assignments/page";
@@ -24,6 +24,7 @@ const Course = () => {
     currentChapter,
     isLoading,
     isChapterCompleted,
+    isQuizCompleted,
     updateChapterProgress,
     hasMarkedComplete,
     setHasMarkedComplete,
@@ -161,12 +162,12 @@ const Course = () => {
                     courseId={course.courseId}
                     sectionId={currentSection?.sectionId as string}
                     chapterId={currentChapter.chapterId}
+                    open={isModalOpen}
+                    onOpenChange={setIsModalOpen}
                     onAssignmentChange={() => {
                       handleModalClose()
                       router.refresh()
                     }}
-                    open={isModalOpen}
-                    onOpenChange={setIsModalOpen}
                   />
                 )}
                 <Button
@@ -227,14 +228,21 @@ const Course = () => {
 
             <TabsContent value="Quiz">
               <Card className="border-none shadow-lg">
-                {currentChapter.quiz && 
-                  <Quizzes 
-                    quiz={currentChapter.quiz} 
-                    courseId={course.courseId}
-                    chapterId={currentChapter.chapterId}
-                    sectionId={currentSection?.sectionId as string}
-                  />
-                }
+                {isQuizCompleted() ? (
+                  <div className="flex items-center text-green-500 p-4">
+                    <CheckCircle className="w-6 h-6 mr-2" />
+                    <span>Completed</span>
+                  </div>
+                ) : (
+                  currentChapter.quiz && (
+                    <Quizzes 
+                      quiz={currentChapter.quiz} 
+                      courseId={course.courseId}
+                      chapterId={currentChapter.chapterId}
+                      sectionId={currentSection?.sectionId as string}
+                    />
+                  )
+                )}
               </Card>
             </TabsContent>
           </div>

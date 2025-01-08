@@ -70,14 +70,15 @@ export const createCourse = async (
       courseId: newCourse.courseId,
       enrollmentDate: new Date().toISOString(),
       overallProgress: 0,
+      lastAccessedTimestamp: new Date().toISOString(),
       sections: newCourse.sections.map((section: any) => ({
         sectionId: section.sectionId,
         chapters: section.chapters.map((chapter: any) => ({
           chapterId: chapter.chapterId,
           completed: false,
+          quizCompleted: false,
         })),
       })),
-      lastAccessedTimestamp: new Date().toISOString(),
     });
     await initialProgress.save();
 
@@ -257,8 +258,8 @@ export const createAssignment = async (
   res: Response
 ): Promise<void> => {
   const { courseId, sectionId, chapterId } = req.params;
-  const { userId } = getAuth(req); // Assuming `getAuth` extracts user info
-  const { title, description } = req.body;
+  const { userId } = getAuth(req);
+  const { title, description, resources } = req.body;
 
   try {
     // Fetch the course
@@ -304,9 +305,10 @@ export const createAssignment = async (
 
     // Create the assignment
     const assignment = {
-      assignmentId: uuidv4(), // Ensure `uuidv4` is imported from 'uuid'
+      assignmentId: uuidv4(),
       title,
       description,
+      resources: resources || [],
       submissions: [],
     };
 

@@ -7,10 +7,17 @@ import { Monaco } from "@monaco-editor/react";
 import { Id } from "../../convex/_generated/dataModel";
 
 export interface Assignment {
-  description: string
-  title: string
   assignmentId: string
+  title: string
+  description: string
+  resources: Resource[]
   submissions: any[]
+}
+
+export interface Resource {
+  id: string
+  title: string
+  url: string
 }
 
 export interface Snippet {
