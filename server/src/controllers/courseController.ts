@@ -134,6 +134,8 @@ export const updateCourse = async (
           ? JSON.parse(updateData.sections)
           : updateData.sections;
 
+      console.log("sectionsData", sectionsData);   
+
       updateData.sections = sectionsData.map((section: any) => ({
         ...section,
         sectionId: section.sectionId || uuidv4(),

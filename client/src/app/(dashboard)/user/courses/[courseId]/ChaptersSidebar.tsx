@@ -6,6 +6,7 @@ import {
   CheckCircle,
   Trophy,
   Bell,
+  Lock,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -108,6 +109,10 @@ const Section = ({
   const totalChapters = section.chapters.length;
   const isExpanded = expandedSections.includes(section.sectionTitle);
 
+  const isReleased = section.releaseDate 
+    ? new Date(section.releaseDate) <= new Date() 
+    : false;
+
   return (
     <div className="chapters-sidebar__section">
       <div
@@ -124,9 +129,21 @@ const Section = ({
             <ChevronDown className="chapters-sidebar__chevron" />
           )}
         </div>
-        <h3 className="chapters-sidebar__section-title">
-          {section.sectionTitle}
-        </h3>
+        <div className="flex items-center justify-between w-full">
+          <h3 className="chapters-sidebar__section-title">
+            {section.sectionTitle}
+          </h3>
+          {!isReleased && (
+            <div className="flex items-center text-muted-foreground text-sm">
+              <Lock className="h-4 w-4 mr-1" />
+              <span>
+                {section.releaseDate 
+                  ? `Available ${new Date(section.releaseDate).toLocaleDateString()}`
+                  : 'Locked'}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
       <hr className="chapters-sidebar__divider" />
 
@@ -137,6 +154,7 @@ const Section = ({
             sectionProgress={sectionProgress}
             completedChapters={completedChapters}
             totalChapters={totalChapters}
+            isReleased={isReleased}
           />
           <ChaptersList
             section={section}
@@ -145,6 +163,7 @@ const Section = ({
             courseId={courseId}
             handleChapterClick={handleChapterClick}
             updateChapterProgress={updateChapterProgress}
+            isReleased={isReleased}
           />
         </div>
       )}
@@ -158,12 +177,23 @@ const ProgressVisuals = ({
   sectionProgress,
   completedChapters,
   totalChapters,
+  isReleased,
 }: {
   section: any;
   sectionProgress: any;
   completedChapters: number;
   totalChapters: number;
+  isReleased: boolean;
 }) => {
+  if (!isReleased) {
+    return (
+      <div className="flex items-center justify-center py-4 text-muted-foreground">
+        <Lock className="h-5 w-5 mr-2" />
+        <span>Content locked</span>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="chapters-sidebar__progress">
@@ -201,6 +231,7 @@ const ChaptersList = ({
   courseId,
   handleChapterClick,
   updateChapterProgress,
+  isReleased,
 }: {
   section: any;
   sectionProgress: any;
@@ -212,7 +243,12 @@ const ChaptersList = ({
     chapterId: string,
     completed: boolean
   ) => void;
+  isReleased: boolean;
 }) => {
+  if (!isReleased) {
+    return null;
+  }
+
   return (
     <ul className="chapters-sidebar__chapters">
       {section.chapters.map((chapter: any, index: number) => (
@@ -226,6 +262,7 @@ const ChaptersList = ({
           courseId={courseId}
           handleChapterClick={handleChapterClick}
           updateChapterProgress={updateChapterProgress}
+          isReleased={isReleased}
         />
       ))}
     </ul>
@@ -240,6 +277,7 @@ const Chapter = ({
   chapterId,
   handleChapterClick,
   updateChapterProgress,
+  isReleased,
 }: {
   chapter: any;
   index: number;
@@ -253,6 +291,7 @@ const Chapter = ({
     chapterId: string,
     completed: boolean
   ) => void;
+  isReleased: boolean;
 }) => {
   const chapterProgress = sectionProgress?.chapters.find(
     (c: any) => c.chapterId === chapter.chapterId
@@ -262,19 +301,26 @@ const Chapter = ({
   const isCurrentChapter = chapterId === chapter.chapterId;
 
   const handleToggleComplete = (e: React.MouseEvent) => {
+    if (!isReleased) return;
     e.stopPropagation();
-
     updateChapterProgress(sectionId, chapter.chapterId, !isCompleted);
+  };
+
+  const handleChapterSelection = () => {
+    if (!isReleased) return;
+    handleChapterClick(sectionId, chapter.chapterId);
   };
 
   return (
     <li
       className={cn("chapters-sidebar__chapter", {
         "chapters-sidebar__chapter--current": isCurrentChapter,
+        "chapters-sidebar__chapter--locked": !isReleased,
+        "cursor-not-allowed opacity-50": !isReleased,
       })}
-      onClick={() => handleChapterClick(sectionId, chapter.chapterId)}
+      onClick={handleChapterSelection}
     >
-      {isCompleted ? (
+      {isCompleted && isReleased ? (
         <div
           className="chapters-sidebar__chapter-check"
           onClick={handleToggleComplete}
@@ -288,7 +334,7 @@ const Chapter = ({
             "chapters-sidebar__chapter-number--current": isCurrentChapter,
           })}
         >
-          {index + 1}
+          {!isReleased ? <Lock className="h-4 w-4" /> : index + 1}
         </div>
       )}
       
@@ -301,19 +347,22 @@ const Chapter = ({
         {chapter.title}
       </span>
 
-      <div className="flex items-center space-x-2">
-        {!isQuizCompleted ? (
-          <div className="animate-bounce ml-4">
-            <Bell className="w-5 h-5 text-yellow-500" />
-          </div>
-        ) : (
-          <div className="ml-4">
-            <CheckCircle className="w-5 h-5 text-green-500" />
-          </div>
-        )}
-      </div>
+      {isReleased && (
+        <div className="flex items-center space-x-2">
+          {!isQuizCompleted ? (
+            <div className="animate-bounce ml-4">
+              <Bell className="w-5 h-5 text-yellow-500" />
+            </div>
+          ) : (
+            <div className="ml-4">
+              <CheckCircle className="w-5 h-5 text-green-500" />
+            </div>
+          )}
+        </div>
+      )}
     </li>
   );
 };
+
 
 export default ChaptersSidebar;

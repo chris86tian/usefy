@@ -131,6 +131,7 @@ declare global {
     sectionTitle: string;
     sectionDescription?: string;
     chapters: Chapter[];
+    releaseDate?: string;
   }
 
   interface WizardStepperProps {

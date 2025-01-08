@@ -1,4 +1,5 @@
 import { Schema, model } from "dynamoose";
+import { release } from "os";
 
 const chapterSchema = new Schema({
   chapterId: {
@@ -120,6 +121,9 @@ const sectionSchema = new Schema({
   chapters: {
     type: Array,
     schema: [chapterSchema],
+  },
+  releaseDate: {
+    type: String,
   },
 });
 

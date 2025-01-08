@@ -3,7 +3,7 @@
 
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Button } from "@/components/ui/button";
-import { Trash2, Edit, Plus, GripVertical } from "lucide-react";
+import { Trash2, Edit, Plus, GripVertical, Lock, CalendarIcon } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/state/redux";
 import {
   setSections,
@@ -11,7 +11,11 @@ import {
   deleteChapter,
   openSectionModal,
   openChapterModal,
+  updateSectionReleaseDate,
 } from "@/state";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 
 export default function DroppableComponent() {
   const dispatch = useAppDispatch();
@@ -120,9 +124,7 @@ export default function DroppableComponent() {
                       className="add-chapter-button group"
                     >
                       <Plus className="add-chapter-button__icon" />
-                      <span className="add-chapter-button__text">
-                        Add Chapter
-                      </span>
+                      <span className="add-chapter-button__text">Add Chapter</span>
                     </Button>
                   </div>
                 )}
@@ -136,14 +138,10 @@ export default function DroppableComponent() {
   );
 }
 
-const SectionHeader = ({
+const SectionHeader: React.FC<{ section: Section; sectionIndex: number; dragHandleProps: any }> = ({
   section,
   sectionIndex,
   dragHandleProps,
-}: {
-  section: Section;
-  sectionIndex: number;
-  dragHandleProps: any;
 }) => {
   const dispatch = useAppDispatch();
 
@@ -155,7 +153,43 @@ const SectionHeader = ({
             <GripVertical className="h-6 w-6 mb-1" />
             <h3 className="text-lg font-medium">{section.sectionTitle}</h3>
           </div>
-          <div>
+          <div className="flex items-center gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  size="sm"
+                  className={cn(
+                    "justify-start text-left font-normal",
+                    !section.releaseDate && "text-muted-foreground"
+                  )}
+                  aria-label={section.releaseDate ? "Change release date" : "Set release date"}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {section.releaseDate ? (
+                    <span>{new Date(section.releaseDate).toLocaleDateString()}</span>
+                  ) : (
+                    <div className="flex items-center">
+                      <Lock className="h-4 w-4 mr-1" />
+                      <span>Locked</span>
+                    </div>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={section.releaseDate ? new Date(section.releaseDate) : undefined}
+                  onSelect={(date) => {
+                    dispatch(updateSectionReleaseDate({
+                      sectionIndex,
+                      releaseDate: date ? date.toISOString() : ""
+                    }));
+                    console.log(date);
+                  }}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
             <Button
               type="button"
               variant="ghost"
@@ -185,6 +219,7 @@ const SectionHeader = ({
     </div>
   );
 };
+
 
 const ChapterItem = ({
   chapter,
