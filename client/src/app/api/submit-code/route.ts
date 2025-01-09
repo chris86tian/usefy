@@ -21,7 +21,7 @@ export async function POST(request: Request) {
           {
             role: "system",
             content: `You are an experienced programming instructor and code reviewer. 
-            Evaluate student code submissions with these criteria:
+            Evaluate code submissions with these criteria:
             1. Correctness: Does the code solve the given task?
             2. Efficiency: Is the solution efficient and well-optimized?
             3. Best Practices: Are there any improvements needed?
