@@ -9,11 +9,17 @@ import ReactPlayer from "react-player";
 import Loading from "@/components/Loading";
 import { useCourseProgressData } from "@/hooks/useCourseProgressData";
 import { useRouter } from "next/navigation";
-import { CheckCircle, ChevronLeft, ChevronRight, PlusCircle } from "lucide-react";
+import { CheckCircle, ChevronLeft, ChevronRight, Lock, PlusCircle } from "lucide-react";
 import { BookOpen, FileText, GraduationCap } from "lucide-react";
 import AssignmentModal from "./_components/assignmentModal";
 import Assignments from "./assignments/page";
 import Quizzes from "./quizzes/page";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const isSectionReleased = (section: any) => {
+  if (!section.releaseDate) return false;
+  return new Date(section.releaseDate) <= new Date();
+};
 
 const Course = () => {
   const {
@@ -32,7 +38,64 @@ const Course = () => {
 
   const playerRef = useRef(null);
   const router = useRouter();
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const findNextAvailableChapter = (
+    direction: 'next' | 'previous'
+  ) => {
+    if (!course?.sections || !currentSection || !currentChapter) return null;
+  
+    const currentSectionIndex = course.sections.findIndex(
+      (section) => section.sectionId === currentSection.sectionId
+    );
+    
+    const currentChapterIndex = currentSection.chapters.findIndex(
+      (chapter) => chapter.chapterId === currentChapter.chapterId
+    );
+  
+    let sectionIndex = currentSectionIndex;
+    let chapterIndex = currentChapterIndex;
+  
+    while (sectionIndex >= 0 && sectionIndex < course.sections.length) {
+      const section = course.sections[sectionIndex];
+  
+      if (direction === 'next') {
+        // Check if we can move to the next chapter in current section
+        if (chapterIndex < section.chapters.length - 1) {
+          // Only need to check section release date since we're in same section
+          if (isSectionReleased(section)) {
+            return section.chapters[chapterIndex + 1].chapterId;
+          }
+        }
+        // Move to next section
+        sectionIndex++;
+        chapterIndex = 0;
+        // If valid section and it's released, return first chapter
+        if (sectionIndex < course.sections.length) {
+          const nextSection = course.sections[sectionIndex];
+          if (isSectionReleased(nextSection)) {
+            return nextSection.chapters[0].chapterId;
+          }
+        }
+      } else {
+        // Previous direction logic
+        if (chapterIndex > 0) {
+          if (isSectionReleased(section)) {
+            return section.chapters[chapterIndex - 1].chapterId;
+          }
+        }
+        sectionIndex--;
+        if (sectionIndex >= 0) {
+          const prevSection = course.sections[sectionIndex];
+          if (isSectionReleased(prevSection)) {
+            return prevSection.chapters[prevSection.chapters.length - 1].chapterId;
+          }
+        }
+      }
+    }
+  
+    return null;
+  };  
 
   const handleProgress = ({ played }: { played: number }) => {
     if (
@@ -41,7 +104,8 @@ const Course = () => {
       currentChapter &&
       currentSection &&
       userProgress?.sections &&
-      !isChapterCompleted()
+      !isChapterCompleted() &&
+      isSectionReleased(currentSection)
     ) {
       setHasMarkedComplete(true);
       updateChapterProgress(
@@ -53,45 +117,56 @@ const Course = () => {
   };
 
   const handleGoToPreviousChapter = () => {
-    const previousChapterIndex = (currentSection?.chapters?.findIndex(
-      (chapter) => chapter.chapterId === currentChapter?.chapterId
-    ) ?? -1) - 1;
-    if (previousChapterIndex >= 0 && course) {
-      router.push(`/user/courses/${course.courseId}/chapters/${currentSection?.chapters[previousChapterIndex].chapterId}`);
-    } else {
-      const previousSectionIndex = (course?.sections?.findIndex(
-        (section) => section.sectionId === currentSection?.sectionId
-      ) ?? -1) - 1;
-      if (course?.sections && previousSectionIndex >= 0) {
-        const previousSection = course.sections[previousSectionIndex];
-        router.push(`/user/courses/${course.courseId}/chapters/${previousSection.chapters[previousSection.chapters.length - 1].chapterId}`);
-      }
+    if (!course) return;
+    const previousChapterId = findNextAvailableChapter('previous');
+    if (previousChapterId) {
+      router.push(`/user/courses/${course.courseId}/chapters/${previousChapterId}`);
     }
   };
 
   const handleGoToNextChapter = () => {
-    const nextChapterIndex = (currentSection?.chapters?.findIndex(
-      (chapter) => chapter.chapterId === currentChapter?.chapterId
-    ) ?? -1) + 1;
-    if (currentSection?.chapters && nextChapterIndex < currentSection.chapters.length && course) {
-      router.push(`/user/courses/${course.courseId}/chapters/${currentSection?.chapters[nextChapterIndex].chapterId}`);
-    } else {
-      const nextSectionIndex = (course?.sections?.findIndex(
-        (section) => section.sectionId === currentSection?.sectionId
-      ) ?? -1) + 1;
-      if (course?.sections && nextSectionIndex < course.sections.length) {
-        router.push(`/user/courses/${course.courseId}/chapters/${course.sections[nextSectionIndex].chapters[0].chapterId}`);
-      }
+    if (!course) return;
+    const nextChapterId = findNextAvailableChapter('next');
+    if (nextChapterId) {
+      router.push(`/user/courses/${course.courseId}/chapters/${nextChapterId}`);
     }
   };
 
   const handleModalClose = () => {
-    setIsModalOpen(false)
-  }
+    setIsModalOpen(false);
+  };
 
   if (isLoading) return <Loading />;
   if (!user) return <div className="p-4 text-center">Please sign in to view this course.</div>;
-  if (!course || !userProgress || !currentChapter) return <div className="p-4 text-center">Error loading course</div>;
+  if (!course || !userProgress || !currentChapter || !currentSection) 
+    return <div className="p-4 text-center">Error loading course</div>;
+
+  const isCurrentSectionReleased = isSectionReleased(currentSection);
+  const hasPreviousChapter = !!findNextAvailableChapter('previous');
+  const hasNextChapter = !!findNextAvailableChapter('next');
+
+  if (!isCurrentSectionReleased) {
+    return (
+      <div className="container flex flex-col items-center justify-center space-y-6 py-6">
+        <Lock className="h-16 w-16 text-gray-400" />
+        <h2 className="text-2xl font-bold text-gray-500">Content Locked</h2>
+        <p className="text-gray-500 text-center">
+          This section will be available on{' '}
+          {currentSection.releaseDate ? new Date(currentSection.releaseDate).toLocaleDateString() : 'Unknown release date'}
+        </p>
+        {hasPreviousChapter && (
+          <Button
+            onClick={handleGoToPreviousChapter}
+            className="mt-4"
+          >
+            <ChevronLeft className="h-4 w-4 mr-2" />
+            Go to Previous Chapter
+          </Button>
+        )}
+      </div>
+    );
+  }
+
 
   return (
     <div className="container py-6 space-y-6">
@@ -170,20 +245,24 @@ const Course = () => {
                     }}
                   />
                 )}
-                <Button
-                  onClick={handleGoToPreviousChapter}
-                  className="bg-gray-900 hover:bg-gray-700"
-                >
-                  <ChevronLeft className="h-4 w-4 mr-2" />
-                  Previous
-                </Button>
-                <Button
-                  onClick={handleGoToNextChapter}
-                  className="bg-gray-900 hover:bg-gray-700"
-                >
-                  Next
-                  <ChevronRight className="h-4 w-4 ml-2" />
-                </Button>
+                <div className="flex items-center justify-between space-x-2">
+                  <Button
+                    onClick={handleGoToPreviousChapter}
+                    disabled={!hasPreviousChapter}
+                    className="bg-gray-900 hover:bg-gray-700"
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-2" />
+                    Previous
+                  </Button>
+                  <Button
+                    onClick={handleGoToNextChapter}
+                    disabled={!hasNextChapter}
+                    className="bg-gray-900 hover:bg-gray-700"
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </div>
               </div>
             </div>
           </CardHeader>
@@ -229,8 +308,8 @@ const Course = () => {
             <TabsContent value="Quiz">
               <Card className="border-none shadow-lg">
                 {isQuizCompleted() ? (
-                  <div className="flex items-center text-green-500 p-4">
-                    <CheckCircle className="w-6 h-6 mr-2" />
+                  <div className="bg-gray-900 text-green-500 p-4 rounded-lg flex items-center space-x-2">
+                    <CheckCircle className="w-5 h-5 mr-1" />
                     <span>Completed</span>
                   </div>
                 ) : (

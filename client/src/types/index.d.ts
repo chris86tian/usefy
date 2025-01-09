@@ -100,9 +100,31 @@ declare global {
     title: string;
     content: string;
     video?: string | File;
+    assignments?: Assignment[];
     quiz?: {
       questions: Question[];
     };
+  }
+
+  interface Assignment {
+    assignmentId: string;
+    title: string;
+    description: string;
+    resources?: Resource[];
+    submissions: Submission[];
+  }
+
+  interface Resource {
+    id: string;
+    title: string;
+    type: "link" | "image" | "file";
+    url: string;
+    fileUrl?: string;
+  }
+
+  interface Submission {
+    userId: string;
+    submition: string;
   }
 
   interface Quiz {

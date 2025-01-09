@@ -11,13 +11,20 @@ export interface Assignment {
   title: string
   description: string
   resources: Resource[]
-  submissions: any[]
+  submissions: Submission[]
 }
 
 export interface Resource {
-  id: string
-  title: string
-  url: string
+  id: string;
+  title: string;
+  url: string;
+  type: 'link' | 'image' | 'file';
+  fileUrl?: string;
+}
+
+export interface Submission {
+  userId: string
+  submission: string
 }
 
 export interface Snippet {

@@ -481,7 +481,7 @@ export const updateAssignment = async (
 ): Promise<void> => {
   const { courseId, sectionId, chapterId, assignmentId } = req.params;
   const { userId } = getAuth(req);
-  const { title, description } = req.body;
+  const { title, description, resources } = req.body;
 
   try {
     const course = await Course.get(courseId);
@@ -526,16 +526,18 @@ export const updateAssignment = async (
       return;
     }
 
-    if (title) {
-      assignment.title = title;
+    if (!title || !description) {
+      res.status(400).json({
+        message: "Title and description are required",
+      });
+      return;
     }
 
-    if (description) {
-      assignment.description = description;
-    }
+    assignment.title = title;
+    assignment.description = description;
+    assignment.resources = resources || [];
 
     await course.save();
-
     res.json({ message: "Assignment updated successfully", data: assignment });
   } catch (error) {
     res.status(500).json({ message: "Error updating assignment", error });

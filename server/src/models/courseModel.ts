@@ -76,9 +76,17 @@ const chapterSchema = new Schema({
                 type: String,
                 required: true,
               },
+              type: {
+                type: String,
+                required: true,
+                enum: ["link", "image", "file"],
+              },
               url: {
                 type: String,
                 required: true,
+              },
+              fileUrl: {
+                type: String,
               },
             }),
           ],
@@ -91,12 +99,9 @@ const chapterSchema = new Schema({
                 type: String,
                 required: true,
               },
-              submissionUrl: {
+              submission: {
                 type: String,
                 required: true,
-              },
-              grade: {
-                type: Number,
               },
             }),
           ],

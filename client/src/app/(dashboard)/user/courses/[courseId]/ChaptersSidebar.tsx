@@ -5,14 +5,16 @@ import {
   ChevronUp,
   CheckCircle,
   Trophy,
-  Bell,
   Lock,
+  AlertCircle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "@/components/ui/sidebar";
 import Loading from "@/components/Loading";
 import { useCourseProgressData } from "@/hooks/useCourseProgressData";
+import { TooltipProvider } from "@radix-ui/react-tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const ChaptersSidebar = () => {
   const router = useRouter();
@@ -120,29 +122,23 @@ const Section = ({
         className="chapters-sidebar__section-header"
       >
         <div className="chapters-sidebar__section-title-wrapper">
-          <p className="chapters-sidebar__section-number">
+          <p className="flex items-center text-gray-500">
+            {!isReleased && (
+                <Lock className="mr-1 h-4 w-4 text-muted-foreground" />
+            )}
             Section 0{index + 1}
           </p>
+          
           {isExpanded ? (
             <ChevronUp className="chapters-sidebar__chevron" />
           ) : (
             <ChevronDown className="chapters-sidebar__chevron" />
           )}
         </div>
-        <div className="flex items-center justify-between w-full">
+        <div className="flex items-center justify-between w-full mt-2">
           <h3 className="chapters-sidebar__section-title">
             {section.sectionTitle}
           </h3>
-          {!isReleased && (
-            <div className="flex items-center text-muted-foreground text-sm">
-              <Lock className="h-4 w-4 mr-1" />
-              <span>
-                {section.releaseDate 
-                  ? `Available ${new Date(section.releaseDate).toLocaleDateString()}`
-                  : 'Locked'}
-              </span>
-            </div>
-          )}
         </div>
       </div>
       <hr className="chapters-sidebar__divider" />
@@ -189,7 +185,7 @@ const ProgressVisuals = ({
     return (
       <div className="flex items-center justify-center py-4 text-muted-foreground">
         <Lock className="h-5 w-5 mr-2" />
-        <span>Content locked</span>
+        <span>Avaliable on {new Date(section.releaseDate).toLocaleDateString()}</span>
       </div>
     );
   }
@@ -351,7 +347,16 @@ const Chapter = ({
         <div className="flex items-center space-x-2">
           {!isQuizCompleted ? (
             <div className="animate-bounce ml-4">
-              <Bell className="w-5 h-5 text-yellow-500" />
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <AlertCircle className="w-5 h-5 text-yellow-500 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <p>Complete the quiz to mark this chapter as done</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           ) : (
             <div className="ml-4">

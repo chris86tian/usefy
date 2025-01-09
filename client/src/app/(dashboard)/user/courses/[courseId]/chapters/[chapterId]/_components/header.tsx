@@ -2,7 +2,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "../../../../../../../../../convex/_generated/api";
 import Link from "next/link";
-import { Blocks, Code2, Sparkles, BookOpen } from 'lucide-react';
+import { Blocks, Code2, BookOpen } from 'lucide-react';
 import { SignedIn } from "@clerk/nextjs";
 import ThemeSelector from "./themeSelector";
 import LanguageSelector from "./languageSelector";
@@ -25,6 +25,7 @@ async function Header({ searchParams }: HeaderProps) {
   const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
   const user = await currentUser();
   const convexUser = await convex.query(api.users.getUser, { userId: user?.id as string });
+  console.log(convexUser);
 
   const { courseId, sectionId, chapterId, assignmentId } = await searchParams;
   const assignment = await fetchAssignment(courseId, sectionId, chapterId, assignmentId);
@@ -73,18 +74,6 @@ async function Header({ searchParams }: HeaderProps) {
               <ThemeSelector />
               <LanguageSelector />
             </div>
-
-            {!convexUser?.isPro && (
-              <Link
-                href="/pricing"
-                className="flex items-center gap-2 px-4 py-1.5 rounded-lg border border-amber-500/20 hover:border-amber-500/40 bg-gradient-to-r from-amber-500/10 to-orange-500/10 hover:from-amber-500/20 hover:to-orange-500/20 transition-all duration-300"
-              >
-                <Sparkles className="w-4 h-4 text-amber-400 hover:text-amber-300" />
-                <span className="text-sm font-medium text-amber-400/90 hover:text-amber-300">
-                  Pro
-                </span>
-              </Link>
-            )}
 
             <SignedIn>
               <RunButton />
