@@ -153,7 +153,7 @@ const PaymentPageContent = () => {
                 </Button>
               ) : (
                 <Button
-                  className="payment__submit"
+                  className="bg-blue-500 hover:bg-blue-600"
                   onClick={handleFreeEnrollment}
                   type="button"
                 >

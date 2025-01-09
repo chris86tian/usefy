@@ -13,6 +13,7 @@ import Header from "./Header";
 import { Form } from "@/components/ui/form";
 import { CustomFormField } from "./CustomFormField";
 import { Button } from "@/components/ui/button";
+import { SignInRequired } from "@/app/(dashboard)/user/courses/_components/SignInRequired";
 
 const SharedNotificationSettings = ({
   title = "Notification Settings",
@@ -55,7 +56,8 @@ const SharedNotificationSettings = ({
     }
   };
 
-  if (!user) return <div>Please sign in to manage your settings.</div>;
+  if (!user) return <SignInRequired />;
+  
 
   return (
     <div className="notification-settings">

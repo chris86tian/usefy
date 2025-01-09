@@ -134,8 +134,6 @@ export const updateCourse = async (
           ? JSON.parse(updateData.sections)
           : updateData.sections;
 
-      console.log("sectionsData", sectionsData);   
-
       updateData.sections = sectionsData.map((section: any) => ({
         ...section,
         sectionId: section.sectionId || uuidv4(),
@@ -218,6 +216,7 @@ export const getUploadVideoUrl = async (
   }
 };
 
+// modify to getUploadFileUrl flexible for any file type
 export const getUploadImageUrl = async (
   req: Request,
   res: Response

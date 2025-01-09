@@ -331,6 +331,54 @@ export async function uploadThumbnail(
   }
 }
 
+export const uploadAssignmentFile = async (
+  file: File,
+  getUploadImageUrl: any,
+  onProgress?: (progress: number) => void
+) => {
+  try {
+    const { uploadUrl, imageUrl } = await getUploadImageUrl({
+      fileName: file.name,
+      fileType: file.type,
+    }).unwrap();
+
+    await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+
+      xhr.upload.addEventListener('progress', (event) => {
+        if (event.lengthComputable) {
+          const progress = event.loaded / event.total;
+          onProgress?.(progress);
+        }
+      });
+
+      xhr.addEventListener('load', () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve(xhr.response);
+        } else {
+          reject(new Error(`Upload failed with status ${xhr.status}`));
+        }
+      });
+
+      xhr.addEventListener('error', () => {
+        reject(new Error('Upload failed'));
+      });
+
+      xhr.open('PUT', uploadUrl);
+      xhr.setRequestHeader('Content-Type', file.type);
+      xhr.send(file);
+    });
+
+    toast.success("File uploaded successfully!");
+    return imageUrl;
+  } catch (error) {
+    console.error("Failed to upload file:", error);
+    toast.error("Failed to upload file");
+    throw error;
+  }
+};
+
+
 export const countries = [
   "Afghanistan",
   "Albania",

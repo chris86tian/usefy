@@ -15,6 +15,7 @@ import Loading from "@/components/Loading";
 import { useCourseProgressData } from "@/hooks/useCourseProgressData";
 import { TooltipProvider } from "@radix-ui/react-tooltip";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { SignInRequired } from "../_components/SignInRequired";
 
 const ChaptersSidebar = () => {
   const router = useRouter();
@@ -38,7 +39,7 @@ const ChaptersSidebar = () => {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (isLoading) return <Loading />;
-  if (!user) return <div>Please sign in to view course progress.</div>;
+  if (!user) return <SignInRequired />;
   if (!course || !userProgress) return <div>Error loading course content</div>;
 
   const toggleSection = (sectionTitle: string) => {
@@ -183,7 +184,7 @@ const ProgressVisuals = ({
 }) => {
   if (!isReleased) {
     return (
-      <div className="flex items-center justify-center py-4 text-muted-foreground">
+      <div className="flex items-center justify-center py-4 text-gray-500">
         <Lock className="h-5 w-5 mr-2" />
         <span>Avaliable on {new Date(section.releaseDate).toLocaleDateString()}</span>
       </div>

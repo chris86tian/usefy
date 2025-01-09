@@ -184,7 +184,6 @@ const SectionHeader: React.FC<{ section: Section; sectionIndex: number; dragHand
                       sectionIndex,
                       releaseDate: date ? date.toISOString() : ""
                     }));
-                    console.log(date);
                   }}
                   initialFocus
                 />

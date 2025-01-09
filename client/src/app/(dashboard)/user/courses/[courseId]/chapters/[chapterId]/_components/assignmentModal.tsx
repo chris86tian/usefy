@@ -11,6 +11,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { ResourceList } from './ResourceList';
 import { AIGenerator } from './AIGenerator';
 import { Resource, Assignment } from '@/lib/utils';
+import { useGetUploadImageUrlMutation } from '@/state/api';
+import { uploadAssignmentFile } from '@/lib/utils';
 
 interface AssignmentModalProps {
   chapterId: string;
@@ -39,9 +41,11 @@ const AssignmentModal = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedResourceType, setSelectedResourceType] = useState<Resource['type']>('link');
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{[key: string]: number}>({});
   
   const [createAssignment] = useCreateAssignmentMutation();
   const [updateAssignment] = useUpdateAssignmentMutation();
+  const [getUploadImageUrl] = useGetUploadImageUrlMutation();
 
   useEffect(() => {
     if (assignment && mode === 'edit') {
@@ -50,30 +54,6 @@ const AssignmentModal = ({
       setResources(assignment.resources?.map(r => ({ ...r, type: r.url ? 'file' : 'link' })) || []);
     }
   }, [assignment, mode]);
-
-  console.log(assignment);
-
-  const handleFileUpload = async (file: File) => {
-    setIsUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      
-      // Replace with your actual upload endpoint
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
-      
-      const data = await response.json();
-      return data.url;
-    } catch (error) {
-      console.error('Upload failed:', error);
-      throw error;
-    } finally {
-      setIsUploading(false);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -119,28 +99,69 @@ const AssignmentModal = ({
     setTitle("");
     setDescription("");
     setResources([]);
+    setUploadProgress({});
   };
 
   const handleAddResource = async (type: Resource['type'], file?: File) => {
-    const newResource: Resource = {
-      id: uuidv4(),
-      title: '',
-      url: '',
-      type,
-    };
-
-    if (file) {
-      try {
-        const fileUrl = await handleFileUpload(file);
-        newResource.fileUrl = fileUrl;
-        newResource.title = file.name;
-      } catch (error) {
-        console.error('Failed to upload file:', error);
-        return;
-      }
+    if (!file && type === 'link') {
+      const newResource: Resource = {
+        id: uuidv4(),
+        title: '',
+        url: '',
+        type,
+      };
+      setResources([...resources, newResource]);
+      return;
     }
 
-    setResources([...resources, newResource]);
+    if (file) {
+      const resourceId = uuidv4();
+      setIsUploading(true);
+      setUploadProgress(prev => ({ ...prev, [resourceId]: 0 }));
+
+      try {
+        const newResource: Resource = {
+          id: resourceId,
+          title: file.name,
+          url: '',
+          type,
+        };
+        
+        // Add the resource immediately to show loading state
+        setResources(prev => [...prev, newResource]);
+
+        const fileUrl = await uploadAssignmentFile(
+          file, 
+          getUploadImageUrl,
+          (progress) => {
+            setUploadProgress(prev => ({
+              ...prev,
+              [resourceId]: Math.round(progress * 100)
+            }));
+          }
+        );
+
+        // Update the resource with the file URL
+        setResources(prev => 
+          prev.map(r => 
+            r.id === resourceId 
+              ? { ...r, fileUrl, url: fileUrl } 
+              : r
+          )
+        );
+      } catch (error) {
+        console.error('Failed to upload file:', error);
+        // Remove the failed resource
+        setResources(prev => prev.filter(r => r.id !== resourceId));
+      } finally {
+        setIsUploading(false);
+        setUploadProgress(prev => {
+          const newProgress = { ...prev };
+          delete newProgress[resourceId];
+          return newProgress;
+        });
+      }
+    }
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -189,7 +210,7 @@ const AssignmentModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[1000px]">
         <DialogHeader>
           <DialogTitle>{mode === 'create' ? 'Create New Assignment' : 'Edit Assignment'}</DialogTitle>
         </DialogHeader>
@@ -219,7 +240,15 @@ const AssignmentModal = ({
 
           <ResourceList 
             resources={resources} 
-            onRemove={(id) => setResources(resources.filter(r => r.id !== id))}
+            uploadProgress={uploadProgress}
+            onRemove={(id) => {
+              setResources(resources.filter(r => r.id !== id));
+              setUploadProgress(prev => {
+                const newProgress = { ...prev };
+                delete newProgress[id];
+                return newProgress;
+              });
+            }}
             onUpdate={(id, field, value) => {
               setResources(resources.map(r => 
                 r.id === id ? { ...r, [field]: value } : r
@@ -261,12 +290,13 @@ const AssignmentModal = ({
               type="button" 
               variant="outline" 
               onClick={() => onOpenChange(false)}
+              disabled={isUploading}
             >
               Cancel
             </Button>
             <Button 
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isUploading}
               className="bg-blue-600 hover:bg-blue-700"
             >
               {isSubmitting ? (

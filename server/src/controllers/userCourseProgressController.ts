@@ -145,8 +145,6 @@ export const updateQuizProgress = async (
   const { userId, courseId } = req.params;
   const { completed, sectionId, chapterId } = req.body;
 
-  console.log("updateQuizProgress", req.body);
-
   try {
     let progress = await UserCourseProgress.get({ userId, courseId });
 

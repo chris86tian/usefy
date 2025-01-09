@@ -20,6 +20,7 @@ import { formatPrice } from "@/lib/utils";
 import { useGetTransactionsQuery } from "@/state/api";
 import { useUser } from "@clerk/nextjs";
 import React, { useState } from "react";
+import { SignInRequired } from "../../user/courses/_components/SignInRequired";
 
 const TeacherBilling = () => {
   const [paymentType, setPaymentType] = useState("all");
@@ -37,7 +38,8 @@ const TeacherBilling = () => {
     }) || [];
 
   if (!isLoaded) return <Loading />;
-  if (!user) return <div>Please sign in to view your billing information.</div>;
+
+  if (!user) return <SignInRequired />;
 
   return (
     <div className="billing">

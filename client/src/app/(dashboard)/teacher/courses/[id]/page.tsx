@@ -245,10 +245,7 @@ const CourseEditor = () => {
                     { value: "technology", label: "Technology" },
                     { value: "science", label: "Science" },
                     { value: "mathematics", label: "Mathematics" },
-                    {
-                      value: "Artificial Intelligence",
-                      label: "Artificial Intelligence",
-                    },
+                    { value: "Artificial Intelligence", label: "Artificial Intelligence" },
                   ]}
                   initialValue={course?.category}
                 />

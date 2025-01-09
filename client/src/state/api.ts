@@ -183,7 +183,11 @@ export const api = createApi({
         body: { fileName, fileType },
       }),
     }),
-
+    /*
+    ===============
+    ASSIGNMENTS
+    ===============
+    */
     createAssignment: build.mutation<
       { message: string },
       { courseId: string; sectionId: string; chapterId: string; assignment: Assignment }

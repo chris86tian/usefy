@@ -1,7 +1,7 @@
 "use client";
 
 import Header from "@/components/Header";
-import Loading from "@/components/Loading";
+import CoursesSkeleton from "./_components/CoursesSkeleton";
 import TeacherCourseCard from "@/components/TeacherCourseCard";
 import Toolbar from "@/components/Toolbar";
 import { Button } from "@/components/ui/button";
@@ -32,20 +32,24 @@ const Courses = () => {
   const filteredCourses = useMemo(() => {
     if (!courses) return [];
 
-    return courses.filter((course) => {
-      const matchesSearch = course.title
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
-      const matchesCategory =
-        selectedCategory === "all" || course.category === selectedCategory;
-      return matchesSearch && matchesCategory;
-    });
-  }, [courses, searchTerm, selectedCategory]);
+    return courses
+      .filter((course) => {
+        const matchesSearch = course.title
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase());
+        const matchesCategory =
+          selectedCategory === "all" || course.category === selectedCategory;
+        return matchesSearch && matchesCategory;
+      })
+      .sort((a, b) => {
+        if (a.teacherId === user?.id && b.teacherId !== user?.id) return -1;
+        if (a.teacherId !== user?.id && b.teacherId === user?.id) return 1;
+        return 0;
+      });
+  }, [courses, searchTerm, selectedCategory, user?.id]);
 
   const handleEdit = (course: Course) => {
-    router.push(`/teacher/courses/${course.courseId}`, {
-      scroll: false,
-    });
+    router.push(`/teacher/courses/${course.courseId}`, { scroll: false });
   };
 
   const handleDelete = async (course: Course) => {
@@ -55,22 +59,13 @@ const Courses = () => {
   };
 
   const handleGoToCourse = (course: Course) => {
-    if (
-      course.sections &&
-      course.sections.length > 0 &&
-      course.sections[0].chapters.length > 0
-    ) {
-      const firstChapter = course.sections[0].chapters[0];
+    if (course.sections?.[0]?.chapters?.[0]) {
       router.push(
-        `/user/courses/${course.courseId}/chapters/${firstChapter.chapterId}`,
-        {
-          scroll: false,
-        }
+        `/user/courses/${course.courseId}/chapters/${course.sections[0].chapters[0].chapterId}`,
+        { scroll: false }
       );
     } else {
-      router.push(`/user/courses/${course.courseId}`, {
-        scroll: false,
-      });
+      router.push(`/user/courses/${course.courseId}`, { scroll: false });
     }
   };
 
@@ -81,16 +76,19 @@ const Courses = () => {
       teacherId: user.id,
       teacherName: user.fullName || "Unknown Teacher",
     }).unwrap();
-    router.push(`/teacher/courses/${result.courseId}`, {
-      scroll: false,
-    });
+    router.push(`/teacher/courses/${result.courseId}`, { scroll: false });
   };
 
-  if (isLoading) return <Loading />;
-  if (isError || !courses) return <div>Error loading courses.</div>;
+  if (isLoading) return <CoursesSkeleton />;
+  if (isError || !courses) 
+    return (
+      <div className="flex items-center justify-center h-[600px] text-gray-500">
+        Error loading courses.
+      </div>
+    );
 
   return (
-    <div className="teacher-courses">
+    <div className="teacher-courses space-y-8">
       <Header
         title="Courses"
         subtitle="Browse your courses"
@@ -107,7 +105,7 @@ const Courses = () => {
         onSearch={setSearchTerm}
         onCategoryChange={setSelectedCategory}
       />
-      <div className="teacher-courses__grid">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredCourses.map((course) => (
           <TeacherCourseCard
             key={course.courseId}
@@ -118,6 +116,12 @@ const Courses = () => {
             onViewCourse={handleGoToCourse}
           />
         ))}
+        {filteredCourses.length === 0 && (
+          <div className="col-span-full flex flex-col items-center justify-center min-h-[400px] text-gray-500">
+            <p className="text-lg font-medium">No courses found</p>
+            <p className="text-sm">Try adjusting your search or filters</p>
+          </div>
+        )}
       </div>
     </div>
   );

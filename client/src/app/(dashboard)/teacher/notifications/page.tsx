@@ -12,6 +12,7 @@ import {
 import { useGetNotificationsQuery } from "@/state/api";
 import { useUser } from "@clerk/nextjs";
 import React from "react";
+import { SignInRequired } from "../../user/courses/_components/SignInRequired";
 
 const TeacherNotifications = () => {
   const { user, isLoaded } = useUser();
@@ -21,7 +22,9 @@ const TeacherNotifications = () => {
     });
 
   if (!isLoaded) return <Loading />;
-  if (!user) return <div>Please sign in to view your notifications.</div>;
+
+  if (!user) return <SignInRequired />;
+  
 
   return (
     <div className="notifications">

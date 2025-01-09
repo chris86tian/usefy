@@ -9,6 +9,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import ChaptersSidebar from "./user/courses/[courseId]/ChaptersSidebar";
 import { Toaster } from "react-hot-toast";
+import { SignInRequired } from "./user/courses/_components/SignInRequired";
 
 export default function DashboardLayout({
   children,
@@ -32,8 +33,9 @@ export default function DashboardLayout({
   }, [isCoursePage, pathname]);
 
   if (!isLoaded) return <Loading />;
-  if (!user) return <div>Please sign in to access this page.</div>;
 
+  if (!user) return <SignInRequired />;
+  
   return (
     <SidebarProvider>
       <div className="dashboard">

@@ -14,6 +14,7 @@ import { BookOpen, FileText, GraduationCap } from "lucide-react";
 import AssignmentModal from "./_components/assignmentModal";
 import Assignments from "./assignments/page";
 import Quizzes from "./quizzes/page";
+import { SignInRequired } from "../../../_components/SignInRequired";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const isSectionReleased = (section: any) => {
@@ -137,7 +138,7 @@ const Course = () => {
   };
 
   if (isLoading) return <Loading />;
-  if (!user) return <div className="p-4 text-center">Please sign in to view this course.</div>;
+  if (!user) return <SignInRequired />;
   if (!course || !userProgress || !currentChapter || !currentSection) 
     return <div className="p-4 text-center">Error loading course</div>;
 
