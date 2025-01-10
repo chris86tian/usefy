@@ -43,12 +43,6 @@ export interface ExecutionResult {
   evaluation: {
     passed: boolean;
     score: number;
-    feedback: {
-      correctness: string;
-      efficiency: string;
-      bestPractices: string;
-    };
-    suggestions: string[];
     explanation: string;
   };
   error: string | null;

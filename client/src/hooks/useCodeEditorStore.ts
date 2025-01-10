@@ -78,7 +78,6 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
       const code = getCode();
     
       console.log("[Store] Starting code submission");
-      console.log("[Store] Current code:", code);
     
       if (!code) {
         set({ error: "No code to check" });
@@ -89,7 +88,6 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
         isSubmitting: true, 
         error: null, 
         output: "",
-        // Reset executionResult to ensure clean state
         executionResult: {
           code: "",
           output: "",
@@ -97,19 +95,12 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
           evaluation: {
             passed: false,
             score: 0,
-            feedback: {
-              correctness: "",
-              efficiency: "",
-              bestPractices: "",
-            },
-            suggestions: [],
             explanation: "",
           },
         },
       });
     
       try {
-        console.log("[Store] Sending API request");
         const response = await fetch("/api/submit-code", {
           method: "POST",
           headers: {
@@ -127,13 +118,12 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
           return;
         }
     
-        // Force a new object creation to ensure reactivity
         const newExecutionResult = {
           code,
           output: "",
           error: null,
           evaluation: {
-            ...data.evaluation,
+            ...data.evaluation.evaluation,
           },
         };
     
@@ -191,12 +181,6 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
               evaluation: {
                 passed: false,
                 score: 0,
-                feedback: {
-                  correctness: "",
-                  efficiency: "",
-                  bestPractices: "",
-                },
-                suggestions: [],
                 explanation: "",
               }, 
               error: data.message 
@@ -217,12 +201,6 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
               evaluation: {
                 passed: false,
                 score: 0,
-                feedback: {
-                  correctness: "",
-                  efficiency: "",
-                  bestPractices: ""
-                },
-                suggestions: [],
                 explanation: ""
               }
             },
@@ -241,12 +219,6 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
               evaluation: {
                 passed: false,
                 score: 0,
-                feedback: {
-                  correctness: "",
-                  efficiency: "",
-                  bestPractices: ""
-                },
-                suggestions: [],
                 explanation: ""
               }
             },
@@ -267,12 +239,6 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
             evaluation: {
               passed: false,
               score: 0,
-              feedback: {
-                correctness: "",
-                efficiency: "",
-                bestPractices: ""
-              },
-              suggestions: [],
               explanation: ""
             }
           },
@@ -286,12 +252,6 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
             evaluation: {
               passed: false,
               score: 0,
-              feedback: {
-                correctness: "",
-                efficiency: "",
-                bestPractices: ""
-              },
-              suggestions: [],
               explanation: ""
             }
           },

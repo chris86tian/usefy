@@ -4,11 +4,11 @@ import { api } from "../../../../../../../../../convex/_generated/api";
 import Link from "next/link";
 import { Blocks, Code2, BookOpen } from 'lucide-react';
 import { SignedIn } from "@clerk/nextjs";
-import ThemeSelector from "./themeSelector";
-import LanguageSelector from "./languageSelector";
-import RunButton from "./runButton";
-import SubmitButton from "./submitButton";
-import HeaderProfileBtn from "./headerProfileBtn";
+import ThemeSelector from "./ThemeSelector";
+import LanguageSelector from "./LanguageSelector";
+import RunButton from "./RunButton";
+import SubmitButton from "./SubmitButton";
+import HeaderProfileBtn from "./HeaderProfileBtn";
 import axios from "axios";
 
 async function fetchAssignment(courseId: string, sectionId: string, chapterId: string, assignmentId: string) {

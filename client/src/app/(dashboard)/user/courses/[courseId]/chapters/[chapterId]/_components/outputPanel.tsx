@@ -2,8 +2,8 @@
 
 import { useCodeEditorStore } from "@/hooks/useCodeEditorStore";
 import { AlertTriangle, CheckCircle, Clock, Copy, Terminal, Code2 } from "lucide-react";
-import { useState, useEffect } from "react";
-import RunningCodeSkeleton from "./runningCodeSkeleton";
+import { useState } from "react";
+import RunningCodeSkeleton from "./RunningCodeSkeleton";
 
 function OutputPanel() {
   const { 
@@ -13,16 +13,10 @@ function OutputPanel() {
     isSubmitting, 
     executionResult 
   } = useCodeEditorStore();
+
   
   const [isCopied, setIsCopied] = useState(false);
   const [activeTab, setActiveTab] = useState('output');
-
-  useEffect(() => {
-    if (executionResult?.evaluation) {
-      // Automatically switch to evaluation tab when we receive evaluation data
-      setActiveTab('evaluation');
-    }
-  }, [executionResult?.evaluation]);
 
   const hasContent = error || output || executionResult?.evaluation;
 
@@ -33,8 +27,7 @@ function OutputPanel() {
     setTimeout(() => setIsCopied(false), 2000);
   };
 
-  // Get evaluation data
-  const evaluation = executionResult?.evaluation;
+  const evaluation = executionResult?.evaluation
 
   return (
     <div className="relative bg-[#181825] rounded-xl p-4 ring-1 ring-gray-800/50">
@@ -140,18 +133,6 @@ function OutputPanel() {
                   <p className="text-gray-400 whitespace-pre-wrap">{evaluation.explanation}</p>
                 </div>
               )}
-
-              {/* Suggestions */}
-              {/* {evaluation.suggestions.length > 0 && (
-                <div className="space-y-2">
-                  <h3 className="font-medium text-blue-400">Suggestions</h3>
-                  <ul className="list-disc list-inside text-gray-400">
-                    {evaluation.suggestions.map((suggestion, index) => (
-                      <li key={index}>{suggestion}</li>
-                    ))}
-                  </ul>
-                </div>
-              )} */}
             </div>
           ) : (
             <div className="h-full flex flex-col items-center justify-center text-gray-500">

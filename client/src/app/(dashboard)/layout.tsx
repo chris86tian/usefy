@@ -9,7 +9,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import ChaptersSidebar from "./user/courses/[courseId]/ChaptersSidebar";
 import { Toaster } from "react-hot-toast";
-import { SignInRequired } from "./user/courses/_components/SignInRequired";
+import { SignInRequired } from "@/components/SignInRequired";
 
 export default function DashboardLayout({
   children,

@@ -10,7 +10,7 @@ import CourseCard from "@/components/CourseCard";
 import { CoursesSkeleton } from "./_components/CoursesSkeleton";
 import { CoursesEmpty } from "./_components/CoursesEmpty";
 import { CoursesError } from "./_components/CoursesError";
-import { SignInRequired } from "./_components/SignInRequired";
+import { SignInRequired } from "@/components/SignInRequired";
 
 const Courses: React.FC = () => {
   const router = useRouter();

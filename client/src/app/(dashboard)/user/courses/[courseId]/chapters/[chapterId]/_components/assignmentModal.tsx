@@ -9,7 +9,6 @@ import { Loader2, Link, File, ImageIcon } from 'lucide-react';
 import { useCreateAssignmentMutation, useUpdateAssignmentMutation } from '@/state/api';
 import { v4 as uuidv4 } from 'uuid';
 import { ResourceList } from './ResourceList';
-import { AIGenerator } from './AIGenerator';
 import { Resource, Assignment } from '@/lib/utils';
 import { useGetUploadImageUrlMutation } from '@/state/api';
 import { uploadAssignmentFile } from '@/lib/utils';
@@ -279,11 +278,6 @@ const AssignmentModal = ({
               accept={selectedResourceType === 'image' ? 'image/*' : undefined}
             />
           </div>
-
-          <AIGenerator onGenerate={({ title, description }) => {
-            setTitle(title);
-            setDescription(description);
-          }} />
 
           <div className="flex justify-end space-x-3">
             <Button 

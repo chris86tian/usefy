@@ -31,7 +31,6 @@ export async function POST(request: Request) {
                 "passed": boolean,
                 "score": number (0-100),
                 "explanation": string,
-                "suggestions": string[],
             }
             `
           },

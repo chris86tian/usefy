@@ -15,7 +15,7 @@ import Loading from "@/components/Loading";
 import { useCourseProgressData } from "@/hooks/useCourseProgressData";
 import { TooltipProvider } from "@radix-ui/react-tooltip";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { SignInRequired } from "../_components/SignInRequired";
+import { SignInRequired } from "@/components/SignInRequired";
 
 const ChaptersSidebar = () => {
   const router = useRouter();

@@ -14,7 +14,7 @@ import { BookOpen, FileText, GraduationCap } from "lucide-react";
 import AssignmentModal from "./_components/assignmentModal";
 import Assignments from "./assignments/page";
 import Quizzes from "./quizzes/page";
-import { SignInRequired } from "../../../_components/SignInRequired";
+import { SignInRequired } from "@/components/SignInRequired";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const isSectionReleased = (section: any) => {
