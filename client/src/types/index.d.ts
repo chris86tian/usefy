@@ -123,8 +123,14 @@ declare global {
   }
 
   interface Submission {
+    submissionId: string;
     userId: string;
-    submition: string;
+    code: string;
+    evaluation?: {
+      passed: boolean;
+      score: number;
+      explanation?: string;
+    };
   }
 
   interface Quiz {

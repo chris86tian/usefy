@@ -4,7 +4,6 @@ import { create } from "zustand";
 import { Monaco } from "@monaco-editor/react";
 
 const getInitialState = () => {
-  // if we're on the server, return default values
   if (typeof window === "undefined") {
     return {
       language: "javascript",
@@ -13,7 +12,6 @@ const getInitialState = () => {
     };
   }
 
-  // if we're on the client, return values from local storage bc localStorage is a browser API.
   const savedLanguage = localStorage.getItem("editor-language") || "javascript";
   const savedTheme = localStorage.getItem("editor-theme") || "vs-dark";
   const savedFontSize = localStorage.getItem("editor-font-size") || 16;
@@ -76,9 +74,7 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
     submitCode: async (task: string) => {
       const { language, getCode } = get();
       const code = getCode();
-    
-      console.log("[Store] Starting code submission");
-    
+        
       if (!code) {
         set({ error: "No code to check" });
         return;
@@ -110,15 +106,13 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
         });
     
         const data = await response.json();
-        console.log("[Store] API Response:", data);
     
         if (data.error) {
-          console.log("[Store] API returned error:", data.error);
           set({ error: data.error });
           return;
         }
     
-        const newExecutionResult = {
+        const result = {
           code,
           output: "",
           error: null,
@@ -126,15 +120,11 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
             ...data.evaluation.evaluation,
           },
         };
-    
-        console.log("[Store] Setting new execution result:", newExecutionResult);
-        
+            
         set(state => ({
           ...state,
-          executionResult: newExecutionResult,
+          executionResult: result,
         }));
-    
-        console.log("[Store] State after update:", get());
       } catch (error) {
         console.error("[Store] Error running code:", error);
         set({ error: "Error running code" });
@@ -142,7 +132,6 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
         set({ isSubmitting: false });
       }
     },
-
 
     runCode: async () => {
       const { language, getCode } = get();
@@ -171,7 +160,6 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
 
         const data = await response.json();
 
-        // handle API-level erros
         if (data.message) {
           set({ 
             error: data.message, 
@@ -189,7 +177,6 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
           return;
         }
 
-        // handle compilation errors
         if (data.compile && data.compile.code !== 0) {
           const error = data.compile.stderr || data.compile.output;
           set({
@@ -226,7 +213,6 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
           return;
         }
 
-        // if we get here, execution was successful
         const output = data.run.output;
 
         set({

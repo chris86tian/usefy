@@ -221,6 +221,21 @@ export const api = createApi({
     getAssignment: build.query<Assignment, { courseId: string; sectionId: string; chapterId: string; assignmentId: string }>({
       query: ({ courseId, sectionId, chapterId, assignmentId }) => `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/assignments/${assignmentId}`,
     }),
+    /*
+    ===============
+    SUBMISSIONS
+    ===============
+    */
+    createSubmission: build.mutation<
+      { message: string },
+      { courseId: string; sectionId: string; chapterId: string; assignmentId: string; submission: Submission }
+    >({
+      query: ({ courseId, sectionId, chapterId, assignmentId, submission }) => ({
+        url: `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/assignments/${assignmentId}/submit`,
+        method: "POST",
+        body: submission,
+      }),
+    }),
     /* 
     ===============
     TRANSACTIONS
@@ -349,6 +364,7 @@ export const {
   useDeleteAssignmentMutation,
   useUpdateAssignmentMutation,
   useGetAssignmentQuery,
+  useCreateSubmissionMutation,
   useGetTransactionsQuery,
   useCreateTransactionMutation,
   useCreateStripePaymentIntentMutation,

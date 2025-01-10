@@ -13,6 +13,7 @@ import {
   deleteAssignment,
   getAssignment,
   updateAssignment,
+  createSubmission,
 } from "../controllers/courseController";
 import { requireAuth } from "@clerk/express";
 
@@ -35,5 +36,7 @@ router.post("/:courseId/sections/:sectionId/chapters/:chapterId/assignments", re
 router.get("/:courseId/sections/:sectionId/chapters/:chapterId/assignments", requireAuth(), getAssignments);
 router.delete("/:courseId/sections/:sectionId/chapters/:chapterId/assignments/:assignmentId", requireAuth(), deleteAssignment);
 router.put("/:courseId/sections/:sectionId/chapters/:chapterId/assignments/:assignmentId", requireAuth(), updateAssignment);
+
+router.post("/:courseId/sections/:sectionId/chapters/:chapterId/assignments/:assignmentId/submit", createSubmission); // requireAuth()
 
 export default router;

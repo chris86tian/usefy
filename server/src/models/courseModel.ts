@@ -47,7 +47,6 @@ const chapterSchema = new Schema({
       },
     }),
   },
-
   assignments: {
     type: Array,
     schema: [
@@ -95,13 +94,32 @@ const chapterSchema = new Schema({
           type: Array,
           schema: [
             new Schema({
+              submissionId: {
+                type: String,
+                required: true,
+              },
               userId: {
                 type: String,
                 required: true,
               },
-              submission: {
+              code: {
                 type: String,
-                required: true,
+              },
+              evaluation: {
+                type: Object,
+                schema: new Schema({
+                  passed: {
+                    type: Boolean,
+                    required: true,
+                  },
+                  score: {
+                    type: Number,
+                    required: true,
+                  },
+                  explanation: {
+                    type: String,
+                  },
+                }),
               },
             }),
           ],

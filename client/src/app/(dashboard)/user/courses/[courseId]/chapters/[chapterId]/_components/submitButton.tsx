@@ -1,40 +1,132 @@
-
 "use client";
 
 import { getExecutionResult, useCodeEditorStore } from "@/hooks/useCodeEditorStore";
 import { useUser } from "@clerk/nextjs";
-import { useMutation } from "convex/react";
 import { motion } from "framer-motion";
 import { Loader2, UploadCloud } from "lucide-react";
-import { api } from "../../../../../../../../../convex/_generated/api";
+import { useCreateSubmissionMutation } from "@/state/api";
+import { v4 as uuidv4 } from "uuid";
+import { useState } from "react";
+import { toast } from "sonner";
 
 interface SubmitButtonProps {
-    assignment: string;
+  courseId: string;
+  sectionId: string;
+  chapterId: string;
+  assignmentId: string;
+  assignment: string;
 }
 
-function SubmitButton({ assignment }: SubmitButtonProps) {
+interface ExecutionResult {
+  code: string;
+  output: string;
+  error?: string | null;
+  evaluation: {
+    passed: boolean;
+    score: number;
+    explanation: string;
+  };
+}
+
+function SubmitButton({ courseId, sectionId, chapterId, assignmentId, assignment }: SubmitButtonProps) {
   const { user } = useUser();
-  const { submitCode, language, isSubmitting } = useCodeEditorStore();
-  const saveExecution = useMutation(api.codeExecutions.saveExecution);
+  const { submitCode, isSubmitting: editorIsSubmitting } = useCodeEditorStore();
+  const [createSubmission] = useCreateSubmissionMutation();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleCodeExecution = async (): Promise<ExecutionResult | null> => {
+    try {
+      await submitCode(assignment);
+      const result = getExecutionResult();
+      
+      if (!result) {
+        throw new Error("No execution result received");
+      }
+      
+      return result;
+    } catch (error) {
+      console.error("Code execution failed:", error);
+      toast.error("Failed to execute code. Please try again.");
+      throw error;
+    }
+  };
+
+  const createAssignmentSubmission = async (result: ExecutionResult) => {
+    if (!user?.id) {
+      throw new Error("User ID is required");
+    }
+  
+    console.log("Preparing submission data:", {
+      courseId,
+      chapterId,
+      sectionId,
+      assignmentId,
+      submission: {
+        submissionId: uuidv4(),
+        userId: user.id,
+        code: result.code,
+        evaluation: {
+          passed: result.evaluation.passed,
+          score: result.evaluation.score,
+          explanation: result.evaluation.explanation,
+        },
+      },
+    });
+  
+    try {
+      await createSubmission({
+        courseId,
+        chapterId,
+        sectionId,
+        assignmentId,
+        submission: {
+          submissionId: uuidv4(),
+          userId: user.id,
+          code: result.code,
+          evaluation: {
+            passed: result.evaluation.passed,
+            score: result.evaluation.score,
+            explanation: result.evaluation.explanation,
+          },
+        },
+      });
+      console.log("Submission successfully created.");
+    } catch (error) {
+      console.error("Failed to create submission:", error);
+      toast.error("Failed to submit assignment. Please try again.");
+      throw error;
+    }
+  };  
 
   const handleSubmit = async () => {
-    await submitCode(assignment);
-    const result = getExecutionResult();
+    if (!user?.id) {
+      toast.error("Please sign in to submit your assignment");
+      return;
+    }
 
-    if (user && result) {
-      await saveExecution({
-        language,
-        code: result.code,
-        output: result.output || undefined,
-        error: result.error || undefined,
-      });
+    setIsSubmitting(true);
+
+    try {
+      // Step 1: Execute the code
+      const result = await handleCodeExecution();
+      console.error("Execution result:", result);
+      if (!result) return;
+
+      // Step 3: Create the submission
+      await createAssignmentSubmission(result);
+
+      toast.success("Assignment submitted successfully!");
+    } catch (error) {
+      console.error("Submission process failed:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <motion.button
       onClick={handleSubmit}
-      disabled={isSubmitting}
+      disabled={isSubmitting || editorIsSubmitting}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       className={`
@@ -46,7 +138,7 @@ function SubmitButton({ assignment }: SubmitButtonProps) {
       <div className="absolute inset-0 bg-gradient-to-r from-green-600 to-green-500 rounded-xl opacity-100 transition-opacity group-hover:opacity-90" />
 
       <div className="relative flex items-center gap-2.5">
-        {isSubmitting ? (
+        {(isSubmitting || editorIsSubmitting) ? (
           <>
             <div className="relative">
               <Loader2 className="w-4 h-4 animate-spin text-white/70" />
@@ -68,4 +160,5 @@ function SubmitButton({ assignment }: SubmitButtonProps) {
     </motion.button>
   );
 }
+
 export default SubmitButton;

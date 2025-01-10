@@ -23,8 +23,14 @@ export interface Resource {
 }
 
 export interface Submission {
+  submissionId: string
   userId: string
-  submission: string
+  code: string
+  evaluation: {
+    passed: boolean
+    score: number
+    explanation: string
+  }
 }
 
 export interface Snippet {

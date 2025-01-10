@@ -216,7 +216,6 @@ export const getUploadVideoUrl = async (
   }
 };
 
-// modify to getUploadFileUrl flexible for any file type
 export const getUploadImageUrl = async (
   req: Request,
   res: Response
@@ -540,5 +539,67 @@ export const updateAssignment = async (
     res.json({ message: "Assignment updated successfully", data: assignment });
   } catch (error) {
     res.status(500).json({ message: "Error updating assignment", error });
+  }
+}
+
+export const createSubmission = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { courseId, sectionId, chapterId, assignmentId } = req.params;
+  const { userId } = getAuth(req);
+  const { submissionId, code, evaluation } = req.body;
+  
+  console.log("Submitting assignment", req.body);
+
+  try {
+    const course = await Course.get(courseId);
+    if (!course) {
+      res.status(404).json({ message: "Course not found" });
+      return;
+    }
+
+    const section = course.sections.find(
+      (section: any) => section.sectionId === sectionId
+    );
+    if (!section) {
+      res.status(404).json({ message: "Section not found" });
+      return;
+    }
+
+    const chapter = section.chapters.find(
+      (chapter: any) => chapter.chapterId === chapterId
+    );
+    if (!chapter) {
+      res.status(404).json({ message: "Chapter not found" });
+      return;
+    }
+
+    if (!chapter.assignments) {
+      res.status(404).json({ message: "Assignment not found" });
+      return;
+    }
+
+    const assignment = chapter.assignments.find(
+      (assignment: any) => assignment.assignmentId === assignmentId
+    );
+    if (!assignment) {
+      res.status(404).json({ message: "Assignment not found" });
+      return;
+    }
+
+    const submission = {
+      submissionId,
+      userId,
+      code,
+      evaluation: evaluation || {},
+    };
+
+    assignment.submissions.push(submission);
+
+    await course.save();
+    res.json({ message: "Assignment submitted successfully", data: submission });
+  } catch (error) {
+    res.status(500).json({ message: "Error submitting assignment", error });
   }
 }

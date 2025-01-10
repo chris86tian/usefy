@@ -77,7 +77,13 @@ async function Header({ searchParams }: HeaderProps) {
 
             <SignedIn>
               <RunButton />
-              <SubmitButton assignment={assignment.data.description} />
+              <SubmitButton 
+                courseId={courseId}
+                sectionId={sectionId}
+                chapterId={chapterId}
+                assignmentId={assignmentId}
+                assignment={assignment.data.description} 
+              />
             </SignedIn>
 
             <div className="pl-3 border-l border-gray-800">
