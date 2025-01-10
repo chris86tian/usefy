@@ -550,8 +550,6 @@ export const createSubmission = async (
   const { userId } = getAuth(req);
   const { submissionId, code, evaluation } = req.body;
   
-  console.log("Submitting assignment", req.body);
-
   try {
     const course = await Course.get(courseId);
     if (!course) {

@@ -56,23 +56,6 @@ function SubmitButton({ courseId, sectionId, chapterId, assignmentId, assignment
       throw new Error("User ID is required");
     }
   
-    console.log("Preparing submission data:", {
-      courseId,
-      chapterId,
-      sectionId,
-      assignmentId,
-      submission: {
-        submissionId: uuidv4(),
-        userId: user.id,
-        code: result.code,
-        evaluation: {
-          passed: result.evaluation.passed,
-          score: result.evaluation.score,
-          explanation: result.evaluation.explanation,
-        },
-      },
-    });
-  
     try {
       await createSubmission({
         courseId,
@@ -90,7 +73,6 @@ function SubmitButton({ courseId, sectionId, chapterId, assignmentId, assignment
           },
         },
       });
-      console.log("Submission successfully created.");
     } catch (error) {
       console.error("Failed to create submission:", error);
       toast.error("Failed to submit assignment. Please try again.");
@@ -107,12 +89,10 @@ function SubmitButton({ courseId, sectionId, chapterId, assignmentId, assignment
     setIsSubmitting(true);
 
     try {
-      // Step 1: Execute the code
       const result = await handleCodeExecution();
       console.error("Execution result:", result);
       if (!result) return;
 
-      // Step 3: Create the submission
       await createAssignmentSubmission(result);
 
       toast.success("Assignment submitted successfully!");
