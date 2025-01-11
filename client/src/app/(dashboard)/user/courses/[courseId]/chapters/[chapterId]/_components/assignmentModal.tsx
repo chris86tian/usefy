@@ -9,9 +9,9 @@ import { Loader2, Link, File, ImageIcon } from 'lucide-react';
 import { useCreateAssignmentMutation, useUpdateAssignmentMutation } from '@/state/api';
 import { v4 as uuidv4 } from 'uuid';
 import { ResourceList } from './ResourceList';
-import { Resource, Assignment } from '@/lib/utils';
 import { useGetUploadImageUrlMutation } from '@/state/api';
 import { uploadAssignmentFile } from '@/lib/utils';
+import { Resource, Assignment } from '@/lib/utils';
 
 interface AssignmentModalProps {
   chapterId: string;

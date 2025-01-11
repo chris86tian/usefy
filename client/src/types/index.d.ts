@@ -43,7 +43,7 @@ declare global {
     description?: string;
     category: string;
     image?: string;
-    price?: number; // Stored in cents (e.g., 4999 for $49.99)
+    price?: number;
     level: "Beginner" | "Intermediate" | "Advanced";
     status: "Draft" | "Published" | "Archived";
     sections: Section[];
@@ -59,7 +59,7 @@ declare global {
     courseId: string;
     paymentProvider: "stripe";
     paymentMethodId?: string;
-    amount: number; // Stored in cents
+    amount: number;
     savePaymentMethod?: boolean;
   }
 
@@ -125,7 +125,7 @@ declare global {
     evaluation?: {
       passed: boolean;
       score: number;
-      explanation?: string;
+      explanation: string;
     };
   }
 

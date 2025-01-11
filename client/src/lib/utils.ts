@@ -74,14 +74,6 @@ export interface CodeEditorState {
   runCode: () => Promise<void>;
   submitCode: (task: string) => Promise<void>;
 }
-export interface Quiz {
-  questions: Question[];
-}
-export interface Question {
-  question: string
-  options: string[]
-  correctAnswer: number
-}
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
