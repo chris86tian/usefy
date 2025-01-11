@@ -1,23 +1,38 @@
 'use client';
 
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import toast from "react-hot-toast";
 import ReactPlayer from "react-player";
 import Loading from "@/components/Loading";
 import { useCourseProgressData } from "@/hooks/useCourseProgressData";
 import { useRouter } from "next/navigation";
 import { CheckCircle, ChevronLeft, ChevronRight, Lock, PlusCircle } from "lucide-react";
 import { BookOpen, FileText, GraduationCap } from "lucide-react";
-import AssignmentModal from "./_components/assignmentModal";
+import AssignmentModal from "./_components/AssignmentModal";
 import Assignments from "./assignments/page";
 import Quizzes from "./quizzes/page";
 import { SignInRequired } from "@/components/SignInRequired";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const isSectionReleased = (section: any) => {
+const parseYouTubeTime = (url: string) => {
+  const timeParam = url.split('t=')[1];
+  if (!timeParam) return 0;
+
+  let seconds = 0;
+  const minutes = timeParam.match(/(\d+)m/);
+  const secs = timeParam.match(/(\d+)s/);
+
+  if (minutes) seconds += parseInt(minutes[1]) * 60;
+  if (secs) seconds += parseInt(secs[1]);
+
+  return seconds;
+};
+
+
+const isSectionReleased = (section: Section) => {
   if (!section.releaseDate) return false;
   return new Date(section.releaseDate) <= new Date();
 };
@@ -37,9 +52,27 @@ const Course = () => {
     setHasMarkedComplete,
   } = useCourseProgressData();
 
-  const playerRef = useRef(null);
+  const playerRef = useRef<ReactPlayer>(null);
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [videoEndTime, setVideoEndTime] = useState<number | null>(null);
+  const [hasShownPrompt, setHasShownPrompt] = useState(false); 
+
+  useEffect(() => {
+    if (currentChapter?.video) {
+      const nextChapterId = findNextAvailableChapter('next');
+      const nextChapter = course?.sections
+        .flatMap(section => section.chapters)
+        .find(chapter => chapter.chapterId === nextChapterId);
+
+      if (nextChapter?.video) {
+        const nextVideoStartTime = parseYouTubeTime(nextChapter.video as string);
+        setVideoEndTime(nextVideoStartTime > 0 ? nextVideoStartTime : null);
+        setHasShownPrompt(false);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentChapter?.video, course?.sections]);
 
   const findNextAvailableChapter = (
     direction: 'next' | 'previous'
@@ -75,7 +108,10 @@ const Course = () => {
         if (sectionIndex < course.sections.length) {
           const nextSection = course.sections[sectionIndex];
           if (isSectionReleased(nextSection)) {
-            return nextSection.chapters[0].chapterId;
+            // Check if next section has any chapters
+            if (nextSection.chapters.length > 0) {
+              return nextSection.chapters[0].chapterId;
+            }
           }
         }
       } else {
@@ -89,7 +125,9 @@ const Course = () => {
         if (sectionIndex >= 0) {
           const prevSection = course.sections[sectionIndex];
           if (isSectionReleased(prevSection)) {
-            return prevSection.chapters[prevSection.chapters.length - 1].chapterId;
+            if (prevSection.chapters.length > 0) {
+              return prevSection.chapters[prevSection.chapters.length - 1].chapterId;
+            }
           }
         }
       }
@@ -98,7 +136,7 @@ const Course = () => {
     return null;
   };  
 
-  const handleProgress = ({ played }: { played: number }) => {
+  const handleProgress = ({ played, playedSeconds }: { played: number; playedSeconds: number }) => {
     if (
       played >= 0.8 &&
       !hasMarkedComplete &&
@@ -115,21 +153,73 @@ const Course = () => {
         true
       );
     }
+
+    // Quiz check logic for next video time
+    if (
+      videoEndTime &&
+      Math.floor(playedSeconds) === videoEndTime &&  // Check if current video time is equal to next video's time
+      !hasShownPrompt
+    ) {
+      setHasShownPrompt(true);
+  
+      if (currentChapter?.quiz && !isQuizCompleted()) {
+        toast.error(
+          "Please complete the quiz before moving to the next chapter.",
+          {
+            duration: 10000,
+            icon: <GraduationCap className="w-6 h-6 mr-2" />,
+          }
+        );
+  
+        // Pause the video and seek back slightly to prevent auto-forwarding
+        if (playerRef.current) {
+          const player = playerRef.current.getInternalPlayer();
+          if (player) {
+            player.pauseVideo();
+            player.seekTo(videoEndTime - 1); // Seek back 1 second
+          }
+        }
+      } else {
+        toast.error(
+          "You've reached the end of this chapter. Moving to the next one.",
+          {
+            duration: 5000,
+            icon: <ChevronRight className="w-6 h-6 mx-1 text-green-500" />,
+          }
+        );
+        handleGoToNextChapter();
+      }
+    }
   };
+
+  // Modify handleGoToNextChapter to check for quiz completion
+  const handleGoToNextChapter = () => {
+    if (!course) return;
+    
+    if (currentChapter?.quiz && !isQuizCompleted()) {
+      toast.error(
+        "Please complete the chapter quiz",
+        {
+          duration: 5000,
+          icon: <GraduationCap className="w-6 h-6 mx-1 text-green-500" />,
+        }
+      );
+      return; // Add return here to prevent navigation
+    }
+    
+    const nextChapterId = findNextAvailableChapter('next');
+    if (nextChapterId) {
+      setHasShownPrompt(false);
+      router.push(`/user/courses/${course.courseId}/chapters/${nextChapterId}`);
+    }
+  };
+
 
   const handleGoToPreviousChapter = () => {
     if (!course) return;
     const previousChapterId = findNextAvailableChapter('previous');
     if (previousChapterId) {
       router.push(`/user/courses/${course.courseId}/chapters/${previousChapterId}`);
-    }
-  };
-
-  const handleGoToNextChapter = () => {
-    if (!course) return;
-    const nextChapterId = findNextAvailableChapter('next');
-    if (nextChapterId) {
-      router.push(`/user/courses/${course.courseId}/chapters/${nextChapterId}`);
     }
   };
 
@@ -145,6 +235,8 @@ const Course = () => {
   const isCurrentSectionReleased = isSectionReleased(currentSection);
   const hasPreviousChapter = !!findNextAvailableChapter('previous');
   const hasNextChapter = !!findNextAvailableChapter('next');
+
+  if(!currentChapter) return <div className="p-4 text-center">Error loading chapter</div>;
 
   if (!isCurrentSectionReleased) {
     return (
@@ -167,7 +259,6 @@ const Course = () => {
       </div>
     );
   }
-
 
   return (
     <div className="container py-6 space-y-6">

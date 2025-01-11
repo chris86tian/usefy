@@ -9,14 +9,15 @@ import {
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Eye, Pencil, Trash2 } from "lucide-react";
+import { Archive, Eye, Pencil, Trash2 } from "lucide-react";
 
 const TeacherCourseCard = ({
   course,
   onEdit,
   onDelete,
+  onView,
+  onArchive,
   isOwner,
-  onViewCourse
 }: TeacherCourseCardProps) => {
   return (
     <Card className="course-card-teacher group">
@@ -70,7 +71,7 @@ const TeacherCourseCard = ({
               <div>
                 <Button
                   className="bg-gray-800 hover:bg-gray-600" 
-                  onClick={() => { onViewCourse(course) }}
+                  onClick={() => { onView(course) }}
                 >
                   <Eye className="w-4 h-4 mr-2" />
                   View
@@ -86,6 +87,15 @@ const TeacherCourseCard = ({
                 </Button>
               </div>
               <div className="flex flex-col gap-2">
+                <Button
+                  className="bg-gray-800 hover:bg-gray-600"
+                  onClick={() => onArchive(course)}
+                >
+                  <Archive className="w-4 h-4 mr-2" />
+                  Archive
+                </Button>
+              </div>
+              <div className="flex flex-col gap-2 text-red-500">
                 <Button
                   className="bg-gray-800 hover:bg-gray-600"
                   onClick={() => onDelete(course)}

@@ -140,6 +140,14 @@ export const updateCourse = async (
         chapters: section.chapters.map((chapter: any) => ({
           ...chapter,
           chapterId: chapter.chapterId || uuidv4(),
+          assignments: chapter.assignments.map((assignment: any) => ({
+            ...assignment,
+            assignmentId: assignment.assignmentId || uuidv4(),
+            submissions: assignment.submissions.map((submission: any) => ({
+              ...submission,
+              submissionId: submission.submissionId || uuidv4(),
+            })),
+          })),
         })),
       }));
     }
@@ -152,6 +160,36 @@ export const updateCourse = async (
     res.status(500).json({ message: "Error updating course", error });
   }
 };
+
+export const archiveCourse = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { courseId } = req.params;
+  const { userId } = getAuth(req);
+
+  try {
+    const course = await Course.get(courseId);
+    if (!course) {
+      res.status(404).json({ message: "Course not found" });
+      return;
+    }
+
+    if (course.teacherId !== userId) {
+      res
+        .status(403)
+        .json({ message: "Not authorized to archive this course " });
+      return;
+    }
+
+    course.status = "Archived";
+    await course.save();
+
+    res.json({ message: "Course archived successfully", data: course });
+  } catch (error) {
+    res.status(500).json({ message: "Error archiving course", error });
+  }
+}
 
 export const deleteCourse = async (
   req: Request,

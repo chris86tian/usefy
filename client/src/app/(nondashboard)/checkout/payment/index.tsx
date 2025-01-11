@@ -204,6 +204,17 @@ const PaymentPageContent = () => {
         >
           Switch Account
         </Button>
+
+        {(course?.price ?? 0) > 0 ? (
+          <Button
+            form="payment-form"
+            type="submit"
+            className="payment__submit"
+            disabled={!stripe || !elements}
+          >
+            Pay Now
+          </Button>
+        ) : null}
       </div>
     </div>
   );

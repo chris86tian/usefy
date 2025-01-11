@@ -45,7 +45,7 @@ declare global {
     image?: string;
     price?: number; // Stored in cents (e.g., 4999 for $49.99)
     level: "Beginner" | "Intermediate" | "Advanced";
-    status: "Draft" | "Published";
+    status: "Draft" | "Published" | "Archived";
     sections: Section[];
     enrollments?: Array<{
       userId: string;
@@ -81,17 +81,13 @@ declare global {
   type CreateCourseArgs = Omit<Course, "courseId">;
   type CreateTransactionArgs = Omit<Transaction, "transactionId">;
 
-  interface CourseCardProps {
-    course: Course;
-    onGoToCourse: (course: Course) => void;
-  }
-
   interface TeacherCourseCardProps {
     course: Course;
+    isOwner: boolean;
     onEdit: (course: Course) => void;
     onDelete: (course: Course) => void;
-    isOwner: boolean;
-    onViewCourse: (course: Course) => void;
+    onView: (course: Course) => void;
+    onArchive: (course: Course) => void;
   }
 
   interface Chapter {

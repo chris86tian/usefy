@@ -15,7 +15,7 @@ import { Assignment } from '@/lib/utils'
 import { useUser } from '@clerk/nextjs'
 import { useDeleteAssignmentMutation } from '@/state/api'
 import { useRouter } from 'next/navigation'
-import AssignmentModal from '../../_components/assignmentModal'
+import AssignmentModal from '../../_components/AssignmentModal'
 import {
   Collapsible,
   CollapsibleContent,

@@ -128,6 +128,12 @@ const Section = ({
                 <Lock className="mr-1 h-4 w-4 text-muted-foreground" />
             )}
             Section 0{index + 1}
+            {/* section completion percentage */}
+            {isReleased && (
+              <span className="ml-2 text-green-500">
+                {completedChapters/totalChapters * 100 || 0}% completed
+              </span>
+            )}
           </p>
           
           {isExpanded ? (

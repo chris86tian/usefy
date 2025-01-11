@@ -20,7 +20,7 @@ import { formatPrice } from "@/lib/utils";
 import { useGetTransactionsQuery } from "@/state/api";
 import { useUser } from "@clerk/nextjs";
 import React, { useState } from "react";
-import { SignInRequired } from "../courses/_components/SignInRequired";
+import { SignInRequired } from "@/components/SignInRequired";
 
 const UserBilling = () => {
   const [paymentType, setPaymentType] = useState("all");

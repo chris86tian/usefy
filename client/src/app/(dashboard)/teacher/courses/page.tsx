@@ -9,6 +9,7 @@ import {
   useCreateCourseMutation,
   useDeleteCourseMutation,
   useGetCoursesQuery,
+  useArchiveCourseMutation,
 } from "@/state/api";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
@@ -25,6 +26,7 @@ const Courses = () => {
 
   const [createCourse] = useCreateCourseMutation();
   const [deleteCourse] = useDeleteCourseMutation();
+  const [archiveCourse] = useArchiveCourseMutation();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -57,6 +59,10 @@ const Courses = () => {
       await deleteCourse(course.courseId).unwrap();
     }
   };
+
+  const handleArchive = async (course: Course) => {
+    await archiveCourse(course.courseId).unwrap();
+  }
 
   const handleGoToCourse = (course: Course) => {
     if (course.sections?.[0]?.chapters?.[0]) {
@@ -106,14 +112,15 @@ const Courses = () => {
         onCategoryChange={setSelectedCategory}
       />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredCourses.map((course) => (
+        {filteredCourses.map((course: Course) => (
           <TeacherCourseCard
             key={course.courseId}
             course={course}
             onEdit={handleEdit}
             onDelete={handleDelete}
             isOwner={course.teacherId === user?.id}
-            onViewCourse={handleGoToCourse}
+            onView={handleGoToCourse}
+            onArchive={handleArchive}
           />
         ))}
         {filteredCourses.length === 0 && (

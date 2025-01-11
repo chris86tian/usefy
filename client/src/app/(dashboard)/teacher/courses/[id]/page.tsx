@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import {
   centsToDollars,
-  createCourseFormData,
+  dollarsToCents,
   uploadAllVideos,
   uploadThumbnail,
 } from "@/lib/utils";
@@ -69,26 +69,33 @@ const CourseEditor = () => {
         return;
       }
 
-      const { sections, courseTitle, courseDescription } = data;
+      const { sections: newSections, courseTitle, courseDescription } = data;
 
       methods.setValue("courseTitle", courseTitle);
       methods.setValue("courseDescription", courseDescription);
 
-      dispatch(setSections(
-        sections.map((section: { sectionTitle: string; sectionDescription: string; chapters: { title: string; content: string; video: string; quiz: { questions: { question: string; options: string[]; correctAnswer: number }[] } }[] }) => ({
-          sectionId: uuid(),
-          sectionTitle: section.sectionTitle,
-          sectionDescription: section.sectionDescription,
-          chapters: section.chapters.map((chapter: { title: string; content: string; video: string, quiz: { questions: { question: string; options: string[]; correctAnswer: number }[] } }) => ({
+      const mergedSections = newSections.map((section: Section) => ({
+        sectionId: uuid(),
+        sectionTitle: section.sectionTitle,
+        sectionDescription: section.sectionDescription,
+        chapters: section.chapters.map((chapter: Chapter) => {
+          const existingChapter = sections
+            .flatMap(s => s.chapters)
+            .find(c => c.title === chapter.title);
+
+          return {
             chapterId: uuid(),
             title: chapter.title,
             content: chapter.content,
             type: "Video",
             video: chapter.video,
             quiz: chapter.quiz,
-          })),
-        }))
-      ));
+            assignments: existingChapter?.assignments || chapter.assignments || [],
+          };
+        }),
+      }));
+
+      dispatch(setSections(mergedSections));
       toast.success("Chapters auto-filled successfully!");
     } catch (error) {
       console.error("Failed to auto-fill chapters:", error);
@@ -123,10 +130,52 @@ const CourseEditor = () => {
         courseStatus: course.status === "Published",
         courseImage: course.image || "",
       });
-      dispatch(setSections(course.sections || []));
+      
+      // Preserve existing sections if they exist, otherwise use course sections
+      if (course.sections?.length) {
+        dispatch(setSections(course.sections.map(section => ({
+          ...section,
+          chapters: section.chapters.map(chapter => ({
+            ...chapter,
+            assignments: chapter.assignments || [] // Ensure assignments array exists
+          }))
+        }))));
+      }
     }
   }, [course, methods]); // eslint-disable-line react-hooks/exhaustive-deps
 
+
+  const createCourseFormData = (
+    data: CourseFormData,
+    sections: Section[],
+    thumbnailUrl: string
+  ): FormData => {
+    const formData = new FormData();
+    formData.append("title", data.courseTitle);
+    formData.append("description", data.courseDescription);
+    formData.append("category", data.courseCategory);
+    formData.append("price", dollarsToCents(data.coursePrice).toString());
+    formData.append("status", data.courseStatus ? "Published" : "Draft");
+    formData.append("image", thumbnailUrl);
+  
+    console.log(sections);
+
+    // Include existing assignments and submissions
+    const sectionsWithPreservedData = sections.map((section) => ({
+      ...section,
+      chapters: section.chapters.map(chapter => ({
+        ...chapter,
+        assignments: chapter.assignments?.map((assignment: { submissions: Submission[]; }) => ({
+          ...assignment,
+          submissions: assignment.submissions || [], // Preserve submissions array
+        })),
+      })),
+    }));
+  
+    formData.append("sections", JSON.stringify(sectionsWithPreservedData));
+    return formData;
+  };
+  
 
   const onSubmit = async (data: CourseFormData) => {
     setIsUploading(true);
@@ -156,7 +205,7 @@ const CourseEditor = () => {
       refetch();
     } catch (error) {
       console.error("Failed to update course:", error);
-      toast.error("An error occurred while updating the course.");
+      toast.error("An error occurred while updating the course." + error);
     } finally {
       setIsUploading(false);
     }

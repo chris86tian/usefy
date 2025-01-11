@@ -79,10 +79,19 @@ const ChapterModal = () => {
   };
 
   const updateOption = (questionIndex: number, optionIndex: number, value: string) => {
-    const updatedQuestions = [...questions];
-    updatedQuestions[questionIndex].options[optionIndex] = value;
-    setQuestions(updatedQuestions);
-  };
+    setQuestions((prevQuestions) => {
+      const updatedQuestions = [...prevQuestions];
+      const updatedOptions = [...updatedQuestions[questionIndex].options];
+      updatedOptions[optionIndex] = value;
+  
+      updatedQuestions[questionIndex] = {
+        ...updatedQuestions[questionIndex],
+        options: updatedOptions,
+      };
+  
+      return updatedQuestions;
+    });
+  };  
 
   const onClose = () => {
     dispatch(closeChapterModal());
@@ -98,6 +107,7 @@ const ChapterModal = () => {
       type: questions.length > 0 ? "Quiz" : (data.video ? "Video" : "Text"),
       video: data.video,
       quiz: questions.length > 0 ? { questions } : undefined,
+      assignments: chapter?.assignments || [],
     };
 
     if (selectedChapterIndex === null) {

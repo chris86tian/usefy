@@ -62,11 +62,11 @@ const Quizzes = ({
       setError("Please select an answer before proceeding.");
       return;
     }
-
+  
     if (selectedAnswer === currentQuestion.correctAnswer) {
       setScore(score + 1);
     }
-
+  
     if (currentQuestionIndex + 1 < totalQuestions) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
       setSelectedAnswer(null);
@@ -76,26 +76,26 @@ const Quizzes = ({
       const finalScore = score + (selectedAnswer === currentQuestion.correctAnswer ? 1 : 0);
       const percentage = (finalScore / totalQuestions) * 100;
       const passed = percentage >= 75;
-
+  
       setIsQuizCompleted(true);
-      
+  
       try {
         await updateQuizProgress({
           userId: user?.user?.id as string,
           courseId,
           sectionId,
           chapterId,
-          completed: passed
+          completed: passed,
         }).unwrap();
-
+  
         if (onQuizComplete) {
           onQuizComplete(finalScore, totalQuestions);
         }
       } catch (error) {
-        setError('Failed to update quiz progress. Please try again.' + error);
+        setError("Failed to update quiz progress. Please try again." + error);
       }
     }
-  };
+  };  
 
   const handleCheckAnswer = () => {
     if (selectedAnswer === null) {
@@ -131,7 +131,6 @@ const Quizzes = ({
               <AlertDescription>Congratulations! You passed the quiz.</AlertDescription>
             </Alert>
           ) : (
-            //button to retake quiz
             <div className="flex items-center space-x-2">
               <Alert className=" bg-red-900/20 border-red-500 text-red-500 w-auto">
                 <AlertDescription>Keep practicing! You need 75% to pass.</AlertDescription>
@@ -179,7 +178,7 @@ const Quizzes = ({
             </Alert>
           )}
           <RadioGroup
-            value={selectedAnswer?.toString()}
+            value={selectedAnswer !== null ? selectedAnswer.toString() : undefined}
             onValueChange={(value) => handleAnswerSelect(parseInt(value))}
             className="space-y-3"
           >

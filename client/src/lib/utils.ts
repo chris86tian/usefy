@@ -5,7 +5,7 @@ import * as z from "zod";
 import { toast } from "sonner";
 import { Monaco } from "@monaco-editor/react";
 import { Id } from "../../convex/_generated/dataModel";
-
+  
 export interface Assignment {
   assignmentId: string
   title: string
@@ -74,11 +74,9 @@ export interface CodeEditorState {
   runCode: () => Promise<void>;
   submitCode: (task: string) => Promise<void>;
 }
-
 export interface Quiz {
   questions: Question[];
 }
-
 export interface Question {
   question: string
   options: string[]

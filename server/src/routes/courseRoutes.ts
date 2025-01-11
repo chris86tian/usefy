@@ -2,6 +2,7 @@ import express from "express";
 import multer from "multer";
 import {
   createCourse,
+  archiveCourse,
   deleteCourse,
   getCourse,
   listCourses,
@@ -25,6 +26,7 @@ router.post("/", requireAuth(), createCourse);
 
 router.get("/:courseId", getCourse);
 router.put("/:courseId", requireAuth(), upload.single("image"), updateCourse);
+router.put("/:courseId/archive", requireAuth(), archiveCourse);
 router.delete("/:courseId", requireAuth(), deleteCourse);
 
 router.post("/:courseId/sections/:sectionId/chapters/:chapterId/get-upload-url", requireAuth(), getUploadVideoUrl);
@@ -37,6 +39,6 @@ router.get("/:courseId/sections/:sectionId/chapters/:chapterId/assignments", req
 router.delete("/:courseId/sections/:sectionId/chapters/:chapterId/assignments/:assignmentId", requireAuth(), deleteAssignment);
 router.put("/:courseId/sections/:sectionId/chapters/:chapterId/assignments/:assignmentId", requireAuth(), updateAssignment);
 
-router.post("/:courseId/sections/:sectionId/chapters/:chapterId/assignments/:assignmentId/submit", createSubmission); // requireAuth()
+router.post("/:courseId/sections/:sectionId/chapters/:chapterId/assignments/:assignmentId/submit", requireAuth(), createSubmission);
 
 export default router;

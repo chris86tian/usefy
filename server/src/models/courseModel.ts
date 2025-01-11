@@ -190,7 +190,7 @@ const courseSchema = new Schema(
     status: {
       type: String,
       required: true,
-      enum: ["Draft", "Published"],
+      enum: ["Draft", "Published", "Archived"],
     },
     sections: {
       type: Array,
