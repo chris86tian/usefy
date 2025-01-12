@@ -1,11 +1,14 @@
+import { Card, CardContent } from '@/components/ui/card'
 import React from 'react'
-import { FileText } from 'lucide-react'
 
 export const EmptyAssignments: React.FC = () => (
-  <div className="text-center text-[#a0aec0] py-8" role="status">
-    <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" aria-hidden="true" />
-    <p className="text-lg font-semibold">No assignments available</p>
-    <p className="text-sm mt-2">Check back later for new assignments.</p>
-  </div>
+  <Card className="mt-4">
+    <CardContent className="pt-6">
+      <div className="flex flex-col items-center justify-center py-8 text-center">
+        <h3 className="text-xl font-semibold mb-2">No Assignments Available</h3>
+        <p className="text-muted-foreground">This chapter does not have any assignments yet.</p>
+      </div>
+    </CardContent>
+  </Card>
 )
 

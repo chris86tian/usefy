@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
+import { CheckCircle2, XCircle, AlertTriangle, Brain } from "lucide-react";
 import { useUpdateQuizProgressMutation } from '@/state/api';
 import { useUser } from '@clerk/nextjs';
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useRouter } from 'next/navigation';
 
 interface QuizzesProps {
     quiz: { questions: Question[] };
@@ -33,14 +34,24 @@ const Quizzes = ({
   const [isQuizCompleted, setIsQuizCompleted] = useState(false);
   const [updateQuizProgress] = useUpdateQuizProgressMutation();
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
-  if (!quiz || quiz.questions.length === 0) {
+  if (!quiz ||!quiz.questions.length) {
     return (
-      <Card className="mt-4">
+      <Card className="mt-4 bg-gray-900">
         <CardContent className="pt-6">
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <h3 className="text-xl font-semibold mb-2">No Quiz Available</h3>
             <p className="text-muted-foreground">This chapter does not have any quiz questions yet.</p>
+            {/* if the user is a teacher, they can add a quiz */}
+            {user?.user?.publicMetadata?.userType === 'teacher' && (
+              <Button className="mt-4 bg-blue-500 hover:bg-blue-600 transition-colors"
+                onClick={() => { router.push(`/teacher/courses/${courseId}`)}}
+              >
+                <Brain className="w-4 h-4 mr-1" />
+                Add Quiz
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>

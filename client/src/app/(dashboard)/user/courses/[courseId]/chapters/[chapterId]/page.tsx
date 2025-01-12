@@ -405,14 +405,12 @@ const Course = () => {
                     <span>Completed</span>
                   </div>
                 ) : (
-                  currentChapter.quiz && (
-                    <Quizzes 
-                      quiz={currentChapter.quiz} 
-                      courseId={course.courseId}
-                      chapterId={currentChapter.chapterId}
-                      sectionId={currentSection?.sectionId as string}
-                    />
-                  )
+                  <Quizzes 
+                    quiz={currentChapter.quiz as Quiz}
+                    courseId={course.courseId}
+                    chapterId={currentChapter.chapterId}
+                    sectionId={currentSection?.sectionId as string}
+                  />
                 )}
               </Card>
             </TabsContent>
