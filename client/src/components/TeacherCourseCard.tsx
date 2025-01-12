@@ -17,6 +17,7 @@ const TeacherCourseCard = ({
   onDelete,
   onView,
   onArchive,
+  onUnarchive,
   isOwner,
 }: TeacherCourseCardProps) => {
   return (
@@ -87,13 +88,23 @@ const TeacherCourseCard = ({
                 </Button>
               </div>
               <div className="flex flex-col gap-2">
-                <Button
-                  className="bg-gray-800 hover:bg-gray-600"
-                  onClick={() => onArchive(course)}
-                >
-                  <Archive className="w-4 h-4 mr-2" />
-                  Archive
-                </Button>
+                {course.status === "Published" || course.status === "Draft" ? (
+                  <Button
+                    className="bg-gray-800 hover:bg-gray-600"
+                    onClick={() => onArchive(course)}
+                  >
+                    <Archive className="w-4 h-4 mr-2" />
+                    Archive
+                  </Button>
+                ) : (
+                  <Button
+                    className="bg-gray-800 hover:bg-gray-600"
+                    onClick={() => onUnarchive(course)}
+                  >
+                    <Archive className="w-4 h-4 mr-2" />
+                    Unarchive
+                  </Button>
+                )}
               </div>
               <div className="flex flex-col gap-2 text-red-500">
                 <Button

@@ -131,13 +131,12 @@ const CourseEditor = () => {
         courseImage: course.image || "",
       });
       
-      // Preserve existing sections if they exist, otherwise use course sections
       if (course.sections?.length) {
         dispatch(setSections(course.sections.map(section => ({
           ...section,
           chapters: section.chapters.map(chapter => ({
             ...chapter,
-            assignments: chapter.assignments || [] // Ensure assignments array exists
+            assignments: chapter.assignments || [],
           }))
         }))));
       }
@@ -160,14 +159,13 @@ const CourseEditor = () => {
   
     console.log(sections);
 
-    // Include existing assignments and submissions
     const sectionsWithPreservedData = sections.map((section) => ({
       ...section,
       chapters: section.chapters.map(chapter => ({
         ...chapter,
         assignments: chapter.assignments?.map((assignment: { submissions: Submission[]; }) => ({
           ...assignment,
-          submissions: assignment.submissions || [], // Preserve submissions array
+          submissions: assignment.submissions || [],
         })),
       })),
     }));

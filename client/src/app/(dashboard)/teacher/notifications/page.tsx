@@ -12,7 +12,7 @@ import {
 import { useGetNotificationsQuery } from "@/state/api";
 import { useUser } from "@clerk/nextjs";
 import React from "react";
-import { SignInRequired } from "../../user/courses/_components/SignInRequired";
+import { SignInRequired } from "@/components/SignInRequired";
 
 const TeacherNotifications = () => {
   const { user, isLoaded } = useUser();

@@ -220,6 +220,33 @@ export const deleteCourse = async (
   }
 };
 
+export const unarchiveCourse = async (req: Request, res: Response): Promise<void> => {
+  const { courseId } = req.params;
+  const { userId } = getAuth(req);
+
+  try {
+    const course = await Course.get(courseId);
+    if (!course) {
+      res.status(404).json({ message: "Course not found" });
+      return;
+    }
+
+    if (course.teacherId !== userId) {
+      res
+        .status(403)
+        .json({ message: "Not authorized to unarchive this course " });
+      return;
+    }
+
+    course.status = "Draft";
+    await course.save();
+
+    res.json({ message: "Course unarchived successfully", data: course });
+  } catch (error) {
+    res.status(500).json({ message: "Error unarchiving course", error });
+  }
+}
+
 export const getUploadVideoUrl = async (
   req: Request,
   res: Response

@@ -1,4 +1,5 @@
 declare global {
+  
   interface PaymentMethod {
     methodId: string;
     type: string;
@@ -88,6 +89,14 @@ declare global {
     onDelete: (course: Course) => void;
     onView: (course: Course) => void;
     onArchive: (course: Course) => void;
+    onUnarchive: (course: Course) => void;
+  }
+
+  interface AssignmentsProps {
+    chapterId: string
+    sectionId: string
+    courseId: string
+    teacherId: string
   }
 
   interface Chapter {

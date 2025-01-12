@@ -157,6 +157,16 @@ export const api = createApi({
       ],
     }),
 
+    unarchiveCourse: build.mutation<Course, string>({
+      query: (courseId) => ({
+        url: `courses/${courseId}/unarchive`,
+        method: "PUT",
+      }),
+      invalidatesTags: (result, error, courseId) => [
+        { type: "Courses", id: courseId },
+      ],
+    }),
+
     deleteCourse: build.mutation<{ message: string }, string>({
       query: (courseId) => ({
         url: `courses/${courseId}`,
@@ -365,6 +375,7 @@ export const {
   useUpdateCourseMutation,
   useDeleteCourseMutation,
   useArchiveCourseMutation,
+  useUnarchiveCourseMutation,
   useGetCoursesQuery,
   useGetCourseQuery,
   useGetUploadVideoUrlMutation,

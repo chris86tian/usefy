@@ -10,6 +10,7 @@ import {
   useDeleteCourseMutation,
   useGetCoursesQuery,
   useArchiveCourseMutation,
+  useUnarchiveCourseMutation,
 } from "@/state/api";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
@@ -27,6 +28,7 @@ const Courses = () => {
   const [createCourse] = useCreateCourseMutation();
   const [deleteCourse] = useDeleteCourseMutation();
   const [archiveCourse] = useArchiveCourseMutation();
+  const [unarchiveCourse] = useUnarchiveCourseMutation();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -62,6 +64,10 @@ const Courses = () => {
 
   const handleArchive = async (course: Course) => {
     await archiveCourse(course.courseId).unwrap();
+  }
+
+  const handleUnarchive = async (course: Course) => {
+    await unarchiveCourse(course.courseId).unwrap();
   }
 
   const handleGoToCourse = (course: Course) => {
@@ -121,6 +127,7 @@ const Courses = () => {
             isOwner={course.teacherId === user?.id}
             onView={handleGoToCourse}
             onArchive={handleArchive}
+            onUnarchive={handleUnarchive}
           />
         ))}
         {filteredCourses.length === 0 && (
