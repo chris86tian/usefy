@@ -5,33 +5,6 @@ import * as z from "zod";
 import { toast } from "sonner";
 import { Monaco } from "@monaco-editor/react";
 import { Id } from "../../convex/_generated/dataModel";
-  
-export interface Assignment {
-  assignmentId: string
-  title: string
-  description: string
-  resources: Resource[]
-  submissions: Submission[]
-}
-
-export interface Resource {
-  id: string;
-  title: string;
-  url: string;
-  type: 'link' | 'image' | 'file';
-  fileUrl?: string;
-}
-
-export interface Submission {
-  submissionId: string
-  userId: string
-  code: string
-  evaluation: {
-    passed: boolean
-    score: number
-    explanation: string
-  }
-}
 
 export interface Snippet {
   _id: Id<"snippets">;

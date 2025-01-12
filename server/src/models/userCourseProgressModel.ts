@@ -11,7 +11,6 @@ const chapterProgressSchema = new Schema({
   },
   quizCompleted: {
     type: Boolean,
-    required: true,
   },
 });
 

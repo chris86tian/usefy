@@ -11,7 +11,6 @@ import {
   ChevronDown,
   ExternalLink
 } from 'lucide-react'
-import { Assignment } from '@/lib/utils'
 import { useUser } from '@clerk/nextjs'
 import { useDeleteAssignmentMutation } from '@/state/api'
 import { useRouter } from 'next/navigation'
@@ -167,7 +166,7 @@ export function AssignmentCard({
               </Button>
             </CollapsibleTrigger>
             <CollapsibleContent className="mt-4 space-y-3">
-              {assignment.resources?.length > 0 ? (
+              {assignment.resources && assignment.resources.length > 0 ? (
                 assignment.resources.map((resource, index) => (
                   <div key={index} className="flex items-center justify-between p-2 rounded-lg bg-gray-700">
                     <div className="flex items-center space-x-2">
