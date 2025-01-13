@@ -9,7 +9,7 @@ import { AssignmentsSkeleton } from './_components/AssignmentsSkeleton'
 import { AssignmentsError } from './_components/AssignmentsError'
 import { EmptyAssignments } from './_components/EmptyAssignments'
 
-const Assignments = ({ teacherId, courseId, chapterId, sectionId }: AssignmentsProps) => {
+export default function Assignments ({ teacherId, courseId, chapterId, sectionId }: AssignmentsProps) {
   const { data: assignments, isLoading, error } = useGetAssignmentsQuery({ chapterId, sectionId, courseId })
 
   const renderContent = () => {
@@ -51,5 +51,3 @@ const Assignments = ({ teacherId, courseId, chapterId, sectionId }: AssignmentsP
     </Card>
   )
 }
-
-export default Assignments

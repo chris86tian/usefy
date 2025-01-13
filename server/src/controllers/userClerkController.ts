@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { clerkClient } from "../index";
+import Course from "../models/courseModel";
 
 export const updateUser = async (
   req: Request,
@@ -33,6 +34,26 @@ export const getUsers = async (req: Request, res: Response): Promise<void> => {
     res.json({ message: "Users retrieved successfully", data: { users, joinedLastMonth } });
   } catch (error) {
     res.status(500).json({ message: "Error retrieving users", error });
+  }
+}
+
+export const getCourseUsers = async (req: Request, res: Response): Promise<void> => {
+  const { courseId } = req.params;
+  try {
+    const course = await Course.get(courseId);
+    if (!course) {
+      res.status(404).json({ message: "Course not found" });
+      return;
+    }
+    const courseUsers = await clerkClient.users.getUserList();
+
+    const courseUserIds = course.enrollments.map((enrollment: { userId: any; }) => enrollment.userId);
+
+    courseUsers.data = courseUsers.data.filter((user: any) => courseUserIds.includes(user.id));
+
+    res.json({ message: "Course users retrieved successfully", data: Array.isArray(courseUsers.data) ? courseUsers.data : [] });
+  } catch (error) {
+    res.status(500).json({ message: "Error retrieving course users", error });
   }
 }
 

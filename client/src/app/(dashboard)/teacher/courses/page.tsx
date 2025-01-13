@@ -56,6 +56,10 @@ const Courses = () => {
     router.push(`/teacher/courses/${course.courseId}`, { scroll: false });
   };
 
+  const handleStats = (course: Course) => {
+    router.push(`/teacher/courses/${course.courseId}/stats`, { scroll: false });
+  }
+
   const handleDelete = async (course: Course) => {
     if (window.confirm("Are you sure you want to delete this course?")) {
       await deleteCourse(course.courseId).unwrap();
@@ -128,6 +132,7 @@ const Courses = () => {
             onView={handleGoToCourse}
             onArchive={handleArchive}
             onUnarchive={handleUnarchive}
+            onStats={handleStats}
           />
         ))}
         {filteredCourses.length === 0 && (

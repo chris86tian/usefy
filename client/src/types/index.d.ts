@@ -53,6 +53,26 @@ declare global {
     }>;
   }
 
+  interface Section {
+    sectionId: string;
+    sectionTitle: string;
+    sectionDescription?: string;
+    chapters: Chapter[];
+    releaseDate?: string;
+  }
+
+  interface Chapter {
+    chapterId: string;
+    type: "Text" | "Quiz" | "Video";
+    title: string;
+    content: string;
+    video?: string | File;
+    assignments?: Assignment[];
+    quiz?: {
+      questions: Question[];
+    };
+  }
+
   interface Transaction {
     userId: string;
     transactionId: string;
@@ -78,6 +98,17 @@ declare global {
     lastAccessedTimestamp: string;
   }
 
+  interface ChapterProgress {
+    chapterId: string;
+    completed: boolean;
+    quizCompleted?: boolean;
+  }
+
+  interface SectionProgress {
+    sectionId: string;
+    chapters: ChapterProgress[];
+  }
+
   type CreateUserArgs = Omit<User, "userId">;
   type CreateCourseArgs = Omit<Course, "courseId">;
   type CreateTransactionArgs = Omit<Transaction, "transactionId">;
@@ -90,6 +121,7 @@ declare global {
     onView: (course: Course) => void;
     onArchive: (course: Course) => void;
     onUnarchive: (course: Course) => void;
+    onStats: (course: Course) => void;
   }
 
   interface AssignmentsProps {
@@ -97,18 +129,6 @@ declare global {
     sectionId: string
     courseId: string
     teacherId: string
-  }
-
-  interface Chapter {
-    chapterId: string;
-    type: "Text" | "Quiz" | "Video";
-    title: string;
-    content: string;
-    video?: string | File;
-    assignments?: Assignment[];
-    quiz?: {
-      questions: Question[];
-    };
   }
 
   interface Assignment {
@@ -157,14 +177,6 @@ declare global {
   interface SectionProgress {
     sectionId: string;
     chapters: ChapterProgress[];
-  }
-
-  interface Section {
-    sectionId: string;
-    sectionTitle: string;
-    sectionDescription?: string;
-    chapters: Chapter[];
-    releaseDate?: string;
   }
 
   interface WizardStepperProps {

@@ -14,7 +14,6 @@ import {
   BookOpen,
   Briefcase,
   DollarSign,
-  Laptop,
   PanelLeft,
   Settings,
   User,
@@ -38,7 +37,6 @@ const AppSidebar = () => {
     ],
     teacher: [
       { icon: BookOpen, label: "Courses", href: "/teacher/courses" },
-      { icon: Laptop, label: "Dashboard", href: "/teacher/dashboard" },
       { icon: DollarSign, label: "Payments", href: "/teacher/billing" },
       { icon: User, label: "Profile", href: "/teacher/profile" },
       { icon: Settings, label: "Settings", href: "/teacher/settings" },

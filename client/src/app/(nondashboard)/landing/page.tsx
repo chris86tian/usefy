@@ -92,7 +92,7 @@ const Landing = () => {
           viewport={{ amount: 0.3, once: true }}
           className="mb-16"
         >
-          <h2 className="mb-4 text-3xl font-bold text-white">Popular Courses</h2>
+          <h2 className="mb-4 text-3xl font-bold text-white">Featured Courses</h2>
           <p className="mb-8 text-xl text-gray-600">
             From beginner to advanced, in all industries, we have the right courses to propel your career forward.
           </p>

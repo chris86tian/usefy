@@ -6,6 +6,38 @@ import { toast } from "sonner";
 import { Monaco } from "@monaco-editor/react";
 import { Id } from "../../convex/_generated/dataModel";
 
+export interface User {
+  id: string
+  userId: string
+  email: string
+  privateMetadata: {
+      userType: string
+  }
+  unsafeMetadata: {
+      bio?: string
+  }
+  firstName: string
+  lastName: string
+  imageUrl: string | null
+  hasImage: boolean
+  createdAt: number
+  lastActiveAt: number
+  lastSignInAt: number
+  banned: boolean
+  passwordEnabled: boolean
+  twoFactorEnabled: boolean
+  primaryEmailAddressId: string
+  publicMetadata: {
+    userType: "user" | "teacher"
+  }
+  stats: UserStats[]
+}
+
+export interface UserStats {
+  week: string
+  progress: number
+}   
+
 export interface Snippet {
   _id: Id<"snippets">;
   _creationTime: number;

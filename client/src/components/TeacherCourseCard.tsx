@@ -9,7 +9,7 @@ import {
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Archive, Eye, Pencil, Trash2 } from "lucide-react";
+import { Archive, BarChartBig, Pencil, Trash2 } from "lucide-react";
 
 const TeacherCourseCard = ({
   course,
@@ -18,11 +18,12 @@ const TeacherCourseCard = ({
   onView,
   onArchive,
   onUnarchive,
+  onStats,
   isOwner,
 }: TeacherCourseCardProps) => {
   return (
     <Card className="course-card-teacher group">
-      <CardHeader className="course-card-teacher__header">
+      <CardHeader className="course-card-teacher__header"  onClick={() => onView(course)}>
         <Image
           src={course.image || "/placeholder.png"}
           alt={course.title}
@@ -33,7 +34,7 @@ const TeacherCourseCard = ({
         />
       </CardHeader>
 
-      <CardContent className="course-card-teacher__content">
+      <CardContent className="course-card-teacher__content" >
         <div className="flex flex-col">
           <CardTitle className="course-card-teacher__title">
             {course.title}
@@ -71,20 +72,20 @@ const TeacherCourseCard = ({
             <>
               <div>
                 <Button
-                  className="bg-gray-800 hover:bg-gray-600" 
-                  onClick={() => { onView(course) }}
-                >
-                  <Eye className="w-4 h-4 mr-2" />
-                  View
-                </Button>
-              </div>
-              <div>
-                <Button
                   className="bg-gray-800 hover:bg-gray-600"
                   onClick={() => onEdit(course)}
                 >
                   <Pencil className="w-4 h-4 mr-2" />
                   Edit
+                </Button>
+              </div>
+              <div>
+                <Button
+                  className="bg-gray-800 hover:bg-gray-600"
+                  onClick={() => onStats(course)}
+                >
+                  <BarChartBig className="w-4 h-4 mr-2" />
+                  Stats
                 </Button>
               </div>
               <div className="flex flex-col gap-2">

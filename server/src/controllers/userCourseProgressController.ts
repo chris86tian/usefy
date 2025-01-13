@@ -134,12 +134,6 @@ export const updateQuizProgress = async (
       return;
     }
 
-    // print each chapter
-    console.log(
-      "chapters",
-      progress.sections.map((section: any) => section.chapters)
-    );
-
     const sectionIndex = progress.sections.findIndex(
       (section: any) => section.sectionId === sectionId
     );
@@ -172,27 +166,5 @@ export const updateQuizProgress = async (
     res
       .status(500)
       .json({ message: "Error updating quiz progress", error });
-  }
-}
-
-export const getUserCourseProgressStats = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  try {
-    const progress = await UserCourseProgress.scan().exec();
-    const activeUsers = progress.length;
-    const activeUsersLastWeek = progress.filter((item: any) => {
-      const lastWeek = new Date();
-      lastWeek.setDate(lastWeek.getDate() - 7);
-      return new Date(item.lastAccessedTimestamp) > lastWeek;
-    }
-    ).length;
-    
-    
-  } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error retrieving user course progress stats", error });
   }
 }

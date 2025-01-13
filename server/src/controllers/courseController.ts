@@ -38,6 +38,7 @@ export const getCourse = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+
 export const createCourse = async (
   req: Request,
   res: Response
