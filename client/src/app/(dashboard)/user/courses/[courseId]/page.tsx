@@ -1,11 +1,14 @@
+'use client'
+
 import { Settings } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { useUser } from '@clerk/nextjs'
 
-interface EmptyCourseProps {
-  courseName: string
-}
+const EmptyCourse = () => {
+  const router = useRouter()
+  const { user } = useUser()
 
-const EmptyCourse = ({ courseName }: EmptyCourseProps) => {
-  console.log(courseName)
   return (
     <div className="flex flex-col items-center justify-center h-full">
       <Settings size={64} className="text-gray-400" />
@@ -15,6 +18,21 @@ const EmptyCourse = ({ courseName }: EmptyCourseProps) => {
       <p className="text-gray-300 mt-2 text-center">
         Check back soon!
       </p>
+      {user?.publicMetadata.userType === 'teacher' ? (
+        <Button
+          onClick={() => router.push('/teacher/courses')}
+          className="bg-gray-600 hover:bg-gray-700 mt-4"
+        >
+          Back to Courses
+        </Button>
+      ) : (
+        <Button
+          onClick={() => router.push('/user/courses')}
+          className="bg-gray-600 hover:bg-gray-700 mt-4"
+        >
+          Back to Courses
+        </Button>
+      )}
     </div>
   )
 }
