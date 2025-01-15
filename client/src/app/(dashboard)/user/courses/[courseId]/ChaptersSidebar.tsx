@@ -300,7 +300,7 @@ const Chapter = ({
     (c: any) => c.chapterId === chapter.chapterId
   );
   const isCompleted = chapterProgress?.completed;
-  const isQuizCompleted = chapterProgress?.quizCompleted;
+  const isQuizCompleted = chapterProgress?.quizCompleted || !chapter.quiz;
   const isCurrentChapter = chapterId === chapter.chapterId;
   const isCurrentChapterAssignmentsSubmitted = 
   !chapter.assignments || chapter.assignments.every(
