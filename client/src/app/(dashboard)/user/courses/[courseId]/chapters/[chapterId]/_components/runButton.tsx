@@ -39,9 +39,9 @@ function RunButton() {
         focus:outline-none
       `}
     >
-      <div className="absolute inset-0 bg-gradient-to-r from-gray-100 to-gray-200 rounded-xl opacity-100 transition-opacity group-hover:opacity-90" />
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-500 blur-xl" />
 
-      <div className="relative flex items-center gap-2.5">
+      <div className="relative flex items-center gap-2.5 px-5 py-2.5 bg-gradient-to-r from-blue-800 to-purple-800 rounded-lg text-white font-semibold shadow-lg transition-all duration-300">
         {isRunning ? (
           <>
             <div className="relative">
@@ -53,9 +53,9 @@ function RunButton() {
         ) : (
           <>
             <div className="relative flex items-center justify-center w-4 h-4">
-              <Play className="w-4 h-4 text-black" />
+              <Play className="w-4 h-4 text-white" />
             </div>
-            <span className="text-sm font-semibold text-black group-hover:text-white">
+            <span className="text-sm font-semibold text-white group-hover:text-white">
               Run Code
             </span>
           </>

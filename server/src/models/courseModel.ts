@@ -124,6 +124,10 @@ const chapterSchema = new Schema({
             }),
           ],
         },
+        hints: {
+          type: Array,
+          schema: [String],
+        },
       }),
     ],
   },

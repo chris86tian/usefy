@@ -325,7 +325,7 @@ export const createAssignment = async (
 ): Promise<void> => {
   const { courseId, sectionId, chapterId } = req.params;
   const { userId } = getAuth(req);
-  const { title, description, resources } = req.body;
+  const { title, description, resources, hints } = req.body;
 
   try {
     // Fetch the course
@@ -376,6 +376,7 @@ export const createAssignment = async (
       description,
       resources: resources || [],
       submissions: [],
+      hints: hints || [],
     };
 
     // Ensure `assignments` is an array in the chapter
@@ -545,7 +546,7 @@ export const updateAssignment = async (
 ): Promise<void> => {
   const { courseId, sectionId, chapterId, assignmentId } = req.params;
   const { userId } = getAuth(req);
-  const { title, description, resources } = req.body;
+  const { title, description, resources, hints } = req.body;
 
   try {
     const course = await Course.get(courseId);
@@ -600,6 +601,7 @@ export const updateAssignment = async (
     assignment.title = title;
     assignment.description = description;
     assignment.resources = resources || [];
+    assignment.hints = hints || [];
 
     await course.save();
     res.json({ message: "Assignment updated successfully", data: assignment });

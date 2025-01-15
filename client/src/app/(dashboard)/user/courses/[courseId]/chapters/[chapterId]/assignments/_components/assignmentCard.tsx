@@ -9,7 +9,8 @@ import {
   Link as LinkIcon,
   Users,
   ChevronDown,
-  ExternalLink
+  ExternalLink,
+  Info
 } from 'lucide-react'
 import { useUser } from '@clerk/nextjs'
 import { useDeleteAssignmentMutation } from '@/state/api'
@@ -42,6 +43,7 @@ export function AssignmentCard({
   const [deleteAssignment, { isLoading: isDeleting }] = useDeleteAssignmentMutation()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isResourcesOpen, setIsResourcesOpen] = useState(false)
+  const [isHintsOpen, setIsHintsOpen] = useState(false) // State to toggle viewing hints
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -60,27 +62,6 @@ export function AssignmentCard({
   const handleStartAssignment = () => {
     router.push(`/user/courses/${courseId}/chapters/${chapterId}/code?courseId=${courseId}&sectionId=${sectionId}&chapterId=${chapterId}&assignmentId=${assignment.assignmentId}`)
   }
-
-  // const formatDate = (date: string) => {
-  //   return new Date(date).toLocaleDateString('en-US', {
-  //     month: 'short',
-  //     day: 'numeric',
-  //     year: 'numeric'
-  //   })
-  // }
-
-  // const getDifficultyColor = (difficulty: string) => {
-  //   switch (difficulty.toLowerCase()) {
-  //     case 'easy':
-  //       return 'bg-green-500/10 text-green-500 border-green-500/20'
-  //     case 'medium':
-  //       return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'
-  //     case 'hard':
-  //       return 'bg-red-500/10 text-red-500 border-red-500/20'
-  //     default:
-  //       return 'bg-blue-500/10 text-blue-500 border-blue-500/20'
-  //   }
-  // }
 
   return (
     <>
@@ -116,20 +97,6 @@ export function AssignmentCard({
               </div>
             )}
           </div>
-        {/*           
-          <div className="flex items-center space-x-2 mt-2">
-            <Badge variant="outline" className={getDifficultyColor(assignment.difficulty)}>
-              {assignment.difficulty}
-            </Badge>
-            <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20">
-              {assignment.category}
-            </Badge>
-            {assignment.isRequired && (
-              <Badge variant="outline" className="bg-purple-500/10 text-purple-500 border-purple-500/20">
-                Required
-              </Badge>
-            )}
-          </div> */}
         </CardHeader>
 
         <CardContent className="p-4 pt-2">
@@ -140,18 +107,6 @@ export function AssignmentCard({
               <Users className="h-4 w-4" />
               <span>{assignment.submissions.length} Submissions</span>
             </div>
-            {/* <div className="flex items-center space-x-2">
-              <Clock className="h-4 w-4" />
-              <span>{assignment.estimatedTime} mins</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Calendar className="h-4 w-4" />
-              <span>Due {formatDate(assignment.dueDate)}</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <FileCode className="h-4 w-4" />
-              <span>{assignment.programmingLanguage}</span>
-            </div> */}
           </div>
 
           <Collapsible
@@ -187,6 +142,35 @@ export function AssignmentCard({
                 <Alert>
                   <AlertDescription>
                     No additional resources provided for this assignment.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </CollapsibleContent>
+          </Collapsible>
+
+          <Collapsible
+            open={isHintsOpen}
+            onOpenChange={setIsHintsOpen}
+            className="mt-4"
+          >
+            <CollapsibleTrigger asChild>
+              <Button variant="outline" className="w-full justify-between">
+                Hints
+                <ChevronDown className={`h-4 w-4 transition-transform ${isHintsOpen ? 'transform rotate-180' : ''}`} />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-4 space-y-3">
+              {assignment.hints && assignment.hints.length > 0 ? (
+                assignment.hints.map((hint, index) => (
+                  <div key={index} className="flex items-start space-x-2 p-2 rounded-lg bg-gray-700">
+                    <Info className="h-4 w-4 text-green-400" />
+                    <span className="text-sm">{hint}</span>
+                  </div>
+                ))
+              ) : (
+                <Alert>
+                  <AlertDescription>
+                    No hints provided for this assignment.
                   </AlertDescription>
                 </Alert>
               )}

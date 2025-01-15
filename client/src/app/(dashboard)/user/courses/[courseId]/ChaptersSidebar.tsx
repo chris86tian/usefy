@@ -282,7 +282,7 @@ const Chapter = ({
   updateChapterProgress,
   isReleased,
 }: {
-  chapter: any;
+  chapter: Chapter;
   index: number;
   sectionId: string;
   sectionProgress: any;
@@ -302,6 +302,9 @@ const Chapter = ({
   const isCompleted = chapterProgress?.completed;
   const isQuizCompleted = chapterProgress?.quizCompleted;
   const isCurrentChapter = chapterId === chapter.chapterId;
+  const isCurrentChapterAssignmentsSubmitted = chapter.assignments?.every(
+    (assignment: Assignment) => assignment.submissions.length > 0
+  );
 
   const handleToggleComplete = (e: React.MouseEvent) => {
     if (!isReleased) return;
@@ -352,7 +355,7 @@ const Chapter = ({
 
       {isReleased && (
         <div className="flex items-center space-x-2">
-          {!isQuizCompleted ? (
+          {!isQuizCompleted || !isCurrentChapterAssignmentsSubmitted ? (
             <div className="animate-bounce ml-4">
               <TooltipProvider>
                 <Tooltip>
@@ -360,7 +363,7 @@ const Chapter = ({
                     <AlertCircle className="w-5 h-5 text-yellow-500 cursor-help" />
                   </TooltipTrigger>
                   <TooltipContent side="right">
-                    <p>Complete the quiz to mark this chapter as done</p>
+                    <p>Complete the {isQuizCompleted ? 'assignments' : 'quiz'} to mark this chapter as completed</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>

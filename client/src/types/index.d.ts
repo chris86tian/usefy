@@ -135,8 +135,9 @@ declare global {
     assignmentId: string;
     title: string;
     description: string;
-    resources?: Resource[];
     submissions: Submission[];
+    resources?: Resource[];
+    hints?: string[];
   }
 
   interface Resource {

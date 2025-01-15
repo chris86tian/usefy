@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Link, File, ImageIcon } from 'lucide-react';
+import { Loader2, Link, File, ImageIcon, Plus, X } from 'lucide-react';
 import { useCreateAssignmentMutation, useUpdateAssignmentMutation } from '@/state/api';
 import { v4 as uuidv4 } from 'uuid';
 import { ResourceList } from './ResourceList';
@@ -36,11 +36,13 @@ const AssignmentModal = ({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [resources, setResources] = useState<Resource[]>([]);
+  const [hints, setHints] = useState<string[]>([]);
+  const [newHint, setNewHint] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedResourceType, setSelectedResourceType] = useState<Resource['type']>('link');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{[key: string]: number}>({});
-  
+
   const [createAssignment] = useCreateAssignmentMutation();
   const [updateAssignment] = useUpdateAssignmentMutation();
   const [getUploadImageUrl] = useGetUploadImageUrlMutation();
@@ -50,6 +52,7 @@ const AssignmentModal = ({
       setTitle(assignment.title);
       setDescription(assignment.description);
       setResources(assignment.resources?.map(r => ({ ...r, type: r.url ? 'file' : 'link' })) || []);
+      setHints(assignment.hints || []);
     }
   }, [assignment, mode]);
 
@@ -63,6 +66,7 @@ const AssignmentModal = ({
         title,
         description,
         resources,
+        hints,
         submissions: mode === 'create' ? [] : assignment!.submissions
       };
 
@@ -97,7 +101,19 @@ const AssignmentModal = ({
     setTitle("");
     setDescription("");
     setResources([]);
+    setHints([]);
     setUploadProgress({});
+  };
+
+  const handleAddHint = () => {
+    if (newHint.trim()) {
+      setHints([...hints, newHint.trim()]);
+      setNewHint("");
+    }
+  };
+
+  const handleRemoveHint = (index: number) => {
+    setHints(hints.filter((_, i) => i !== index));
   };
 
   const handleAddResource = async (type: Resource['type'], file?: File) => {
@@ -206,6 +222,7 @@ const AssignmentModal = ({
     );
   };
 
+ 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[1000px]">
@@ -236,6 +253,55 @@ const AssignmentModal = ({
             />
           </div>
 
+          <div className="space-y-4">
+            <Label>Hints</Label>
+            <div className="space-y-4">
+              {hints.map((hint, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <Input 
+                    value={hint}
+                    onChange={(e) => {
+                      const newHints = [...hints];
+                      newHints[index] = e.target.value;
+                      setHints(newHints);
+                    }}
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => handleRemoveHint(index)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+              <div className="flex items-center gap-2">
+                <Input
+                  value={newHint}
+                  onChange={(e) => setNewHint(e.target.value)}
+                  placeholder="Add a new hint..."
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddHint();
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={handleAddHint}
+                  disabled={!newHint.trim()}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+          
           <ResourceList 
             resources={resources} 
             uploadProgress={uploadProgress}
