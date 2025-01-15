@@ -10,6 +10,7 @@ import { useUpdateQuizProgressMutation } from '@/state/api';
 import { useUser } from '@clerk/nextjs';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 
 interface QuizzesProps {
     quiz: { questions: Question[] };
@@ -90,6 +91,11 @@ const Quizzes = ({
       const passed = percentage >= 75;
   
       setIsQuizCompleted(true);
+
+      toast.success(
+        'Quiz completed successfully! You can get started with assignments now.',
+        { duration: 5000 }
+      );
   
       try {
         await updateQuizProgress({
