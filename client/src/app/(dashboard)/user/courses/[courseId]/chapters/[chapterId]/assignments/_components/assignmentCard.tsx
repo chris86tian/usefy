@@ -65,7 +65,7 @@ export function AssignmentCard({
 
   return (
     <>
-      <Card className="bg-gray-800 border-gray-700 overflow-hidden">
+      <Card className="bg-gray-800 border-gray-700 overflow-hidden p-2">
         <CardHeader className="p-4 pb-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
@@ -163,7 +163,7 @@ export function AssignmentCard({
               {assignment.hints && assignment.hints.length > 0 ? (
                 assignment.hints.map((hint, index) => (
                   <div key={index} className="flex items-start space-x-2 p-2 rounded-lg bg-gray-700">
-                    <Info className="h-4 w-4 text-green-400" />
+                    <Info className="h-4 w-4 mr-1 text-green-400" />
                     <span className="text-sm">{hint}</span>
                   </div>
                 ))

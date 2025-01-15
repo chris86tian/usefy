@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export const CoursesSkeleton: React.FC = () => (
-  <div className="bg-[#1e2738] text-[#e6e6e6] min-h-screen p-6">
+  <div className="p-6 rounded-lg">
     <Skeleton className="h-10 w-1/4 mb-2 bg-[#3a4a64]" />
     <Skeleton className="h-6 w-1/3 mb-6 bg-[#3a4a64]" />
     <Skeleton className="h-12 w-full mb-6 bg-[#3a4a64]" />

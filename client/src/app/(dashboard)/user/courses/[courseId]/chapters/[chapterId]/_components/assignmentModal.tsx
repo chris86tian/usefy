@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Link, File, ImageIcon, Plus, X } from 'lucide-react';
+import { Loader2, Link, File, ImageIcon, Plus, X, Wand2 } from 'lucide-react';
 import { useCreateAssignmentMutation, useUpdateAssignmentMutation } from '@/state/api';
 import { v4 as uuidv4 } from 'uuid';
 import { ResourceList } from './ResourceList';
@@ -14,6 +14,7 @@ import { uploadAssignmentFile } from '@/lib/utils';
 
 interface AssignmentModalProps {
   chapterId: string;
+  chapter?: Chapter;
   sectionId: string;
   courseId: string;
   assignment?: Assignment;
@@ -23,8 +24,16 @@ interface AssignmentModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
+interface AIAssignment {
+  title: string;
+  description: string;
+  hints: string[];
+  resources: Resource[];
+}
+
 const AssignmentModal = ({ 
-  chapterId, 
+  chapterId,
+  chapter, 
   sectionId, 
   courseId, 
   assignment,
@@ -42,6 +51,7 @@ const AssignmentModal = ({
   const [selectedResourceType, setSelectedResourceType] = useState<Resource['type']>('link');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{[key: string]: number}>({});
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
   const [createAssignment] = useCreateAssignmentMutation();
   const [updateAssignment] = useUpdateAssignmentMutation();
@@ -222,153 +232,212 @@ const AssignmentModal = ({
     );
   };
 
- 
+  const generateAssignment = async () => {
+    setIsGeneratingAI(true);
+    try {
+      const response = await fetch('/api/generate-assignment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          assignmentTitle: chapter?.title,
+          assignmentDescription: chapter?.content
+        })
+      });
+  
+      const generatedAssignment: AIAssignment = await response.json();
+  
+      setTitle(generatedAssignment.title);
+      setDescription(generatedAssignment.description);
+      setHints(generatedAssignment.hints || []);
+      
+      if (generatedAssignment.resources && Array.isArray(generatedAssignment.resources)) {
+        const formattedResources = generatedAssignment.resources.map(resource => ({
+          id: uuidv4(),
+          title: resource.title,
+          url: resource.url,
+          type: resource.type as 'link' | 'image' | 'file'
+        }));
+        setResources(prevResources => [...prevResources, ...formattedResources]);
+      }
+  
+    } catch (error) {
+      console.error('Failed to generate assignment:', error);
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[1000px]">
+      <DialogContent className="sm:max-w-[1000px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{mode === 'create' ? 'Create New Assignment' : 'Edit Assignment'}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="title">Assignment Title</Label>
-            <Input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter assignment title"
-              required
-            />
-          </div>
+        <div className="space-y-6 py-2">
+          {mode === 'create' && (
+            <Button
+              type="button"
+              onClick={generateAssignment}
+              disabled={isGeneratingAI}
+              className="bg-teal-600 hover:bg-teal-700 w-full sm:w-auto"
+            >
+              {isGeneratingAI ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Wand2 className="h-4 w-4 mr-2" />
+                  Generate
+                </>
+              )}
+            </Button>
+          )}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="title">Assignment Title</Label>
+              <Input
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Enter assignment title"
+                required
+              />
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Enter assignment description"
-              className="h-32"
-              required
-            />
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Enter assignment description"
+                className="h-32"
+                required
+              />
+            </div>
 
-          <div className="space-y-4">
-            <Label>Hints</Label>
             <div className="space-y-4">
-              {hints.map((hint, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <Input 
-                    value={hint}
-                    onChange={(e) => {
-                      const newHints = [...hints];
-                      newHints[index] = e.target.value;
-                      setHints(newHints);
+              <Label>Hints</Label>
+              <div className="space-y-4">
+                {hints.map((hint, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <Input 
+                      value={hint}
+                      onChange={(e) => {
+                        const newHints = [...hints]
+                        newHints[index] = e.target.value
+                        setHints(newHints)
+                      }}
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => handleRemoveHint(index)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={newHint}
+                    onChange={(e) => setNewHint(e.target.value)}
+                    placeholder="Add a new hint..."
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        handleAddHint()
+                      }
                     }}
-                    className="flex-1"
                   />
                   <Button
                     type="button"
                     variant="outline"
                     size="icon"
-                    onClick={() => handleRemoveHint(index)}
+                    onClick={handleAddHint}
+                    disabled={!newHint.trim()}
                   >
-                    <X className="h-4 w-4" />
+                    <Plus className="h-4 w-4" />
                   </Button>
                 </div>
-              ))}
-              <div className="flex items-center gap-2">
-                <Input
-                  value={newHint}
-                  onChange={(e) => setNewHint(e.target.value)}
-                  placeholder="Add a new hint..."
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleAddHint();
-                    }
-                  }}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={handleAddHint}
-                  disabled={!newHint.trim()}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
               </div>
             </div>
-          </div>
-          
-          <ResourceList 
-            resources={resources} 
-            uploadProgress={uploadProgress}
-            onRemove={(id) => {
-              setResources(resources.filter(r => r.id !== id));
-              setUploadProgress(prev => {
-                const newProgress = { ...prev };
-                delete newProgress[id];
-                return newProgress;
-              });
-            }}
-            onUpdate={(id, field, value) => {
-              setResources(resources.map(r => 
-                r.id === id ? { ...r, [field]: value } : r
-              ));
-            }}
-          />
-
-          <div className="flex items-center space-x-2">
-            <Select
-              value={selectedResourceType}
-              onValueChange={(value: Resource['type']) => setSelectedResourceType(value)}
-            >
-              <SelectTrigger className="w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="link">Link</SelectItem>
-                <SelectItem value="image">Image</SelectItem>
-                <SelectItem value="file">File</SelectItem>
-              </SelectContent>
-            </Select>
-            {renderResourceButton()}
-            <input
-              id="file-upload"
-              type="file"
-              className="hidden"
-              onChange={handleFileChange}
-              accept={selectedResourceType === 'image' ? 'image/*' : undefined}
+            
+            <ResourceList 
+              resources={resources} 
+              uploadProgress={uploadProgress}
+              onRemove={(id) => {
+                setResources(resources.filter(r => r.id !== id))
+                setUploadProgress(prev => {
+                  const newProgress = { ...prev }
+                  delete newProgress[id]
+                  return newProgress
+                })
+              }}
+              onUpdate={(id, field, value) => {
+                setResources(resources.map(r => 
+                  r.id === id ? { ...r, [field]: value } : r
+                ))
+              }}
             />
-          </div>
 
-          <div className="flex justify-end space-x-3">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => onOpenChange(false)}
-              disabled={isUploading}
-            >
-              Cancel
-            </Button>
-            <Button 
-              type="submit"
-              disabled={isSubmitting || isUploading}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {mode === 'create' ? 'Creating...' : 'Updating...'}
-                </>
-              ) : (
-                mode === 'create' ? 'Create Assignment' : 'Update Assignment'
-              )}
-            </Button>
-          </div>
-        </form>
+            <div className="flex items-center space-x-2">
+              <Select
+                value={selectedResourceType}
+                onValueChange={(value: Resource['type']) => setSelectedResourceType(value)}
+              >
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="link">Link</SelectItem>
+                  <SelectItem value="image">Image</SelectItem>
+                  <SelectItem value="file">File</SelectItem>
+                </SelectContent>
+              </Select>
+              {renderResourceButton()}
+              <input
+                id="file-upload"
+                type="file"
+                className="hidden"
+                onChange={handleFileChange}
+                accept={selectedResourceType === 'image' ? 'image/*' : undefined}
+              />
+            </div>
+
+            <div className="flex justify-end space-x-3">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => onOpenChange(false)}
+                disabled={isUploading}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit"
+                disabled={isSubmitting || isUploading}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {mode === 'create' ? 'Creating...' : 'Updating...'}
+                  </>
+                ) : (
+                  mode === 'create' ? 'Create Assignment' : 'Update Assignment'
+                )}
+              </Button>
+            </div>
+          </form>
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -10,7 +10,7 @@ import ReactPlayer from "react-player";
 import Loading from "@/components/Loading";
 import { useCourseProgressData } from "@/hooks/useCourseProgressData";
 import { useRouter } from "next/navigation";
-import { CheckCircle, ChevronLeft, ChevronRight, Lock, PlusCircle } from "lucide-react";
+import { CheckCircle, ChevronLeft, ChevronRight, Lock, Sparkles } from "lucide-react";
 import { BookOpen, FileText, GraduationCap } from "lucide-react";
 import AssignmentModal from "./_components/AssignmentModal";
 import Assignments from "./assignments/page";
@@ -319,7 +319,7 @@ const Course = () => {
                     onClick={() => setIsModalOpen(true)}
                     className="bg-gray-900 hover:bg-gray-700"
                   >
-                    <PlusCircle className="h-4 w-4" />
+                    <Sparkles className="h-4 w-4 mr-2" />
                     Create Assignment
                   </Button>
                 )}
@@ -329,6 +329,7 @@ const Course = () => {
                     courseId={course.courseId}
                     sectionId={currentSection?.sectionId as string}
                     chapterId={currentChapter.chapterId}
+                    chapter={currentChapter}
                     open={isModalOpen}
                     onOpenChange={setIsModalOpen}
                     onAssignmentChange={() => {
