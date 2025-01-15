@@ -302,7 +302,8 @@ const Chapter = ({
   const isCompleted = chapterProgress?.completed;
   const isQuizCompleted = chapterProgress?.quizCompleted;
   const isCurrentChapter = chapterId === chapter.chapterId;
-  const isCurrentChapterAssignmentsSubmitted = chapter.assignments?.every(
+  const isCurrentChapterAssignmentsSubmitted = 
+  !chapter.assignments || chapter.assignments.every(
     (assignment: Assignment) => assignment.submissions.length > 0
   );
 

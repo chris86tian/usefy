@@ -47,6 +47,7 @@ const Course = () => {
     isLoading,
     isChapterCompleted,
     isQuizCompleted,
+    isCurrentChapterAssignemtsCompleted,
     updateChapterProgress,
     hasMarkedComplete,
     setHasMarkedComplete,
@@ -94,28 +95,23 @@ const Course = () => {
       const section = course.sections[sectionIndex];
   
       if (direction === 'next') {
-        // Check if we can move to the next chapter in current section
         if (chapterIndex < section.chapters.length - 1) {
-          // Only need to check section release date since we're in same section
           if (isSectionReleased(section)) {
             return section.chapters[chapterIndex + 1].chapterId;
           }
         }
-        // Move to next section
         sectionIndex++;
         chapterIndex = 0;
-        // If valid section and it's released, return first chapter
+
         if (sectionIndex < course.sections.length) {
           const nextSection = course.sections[sectionIndex];
           if (isSectionReleased(nextSection)) {
-            // Check if next section has any chapters
             if (nextSection.chapters.length > 0) {
               return nextSection.chapters[0].chapterId;
             }
           }
         }
       } else {
-        // Previous direction logic
         if (chapterIndex > 0) {
           if (isSectionReleased(section)) {
             return section.chapters[chapterIndex - 1].chapterId;
@@ -154,10 +150,9 @@ const Course = () => {
       );
     }
 
-    // Quiz check logic for next video time
     if (
       videoEndTime &&
-      Math.floor(playedSeconds) === videoEndTime &&  // Check if current video time is equal to next video's time
+      Math.floor(playedSeconds) === videoEndTime &&
       !hasShownPrompt
     ) {
       setHasShownPrompt(true);
@@ -171,12 +166,11 @@ const Course = () => {
           }
         );
   
-        // Pause the video and seek back slightly to prevent auto-forwarding
         if (playerRef.current) {
           const player = playerRef.current.getInternalPlayer();
           if (player) {
             player.pauseVideo();
-            player.seekTo(videoEndTime - 1); // Seek back 1 second
+            player.seekTo(videoEndTime - 1);
           }
         }
       } else {
@@ -192,19 +186,18 @@ const Course = () => {
     }
   };
 
-  // Modify handleGoToNextChapter to check for quiz completion
   const handleGoToNextChapter = () => {
     if (!course) return;
     
-    if (currentChapter?.quiz && !isQuizCompleted()) {
+    if (currentChapter?.quiz && (!isQuizCompleted() || !isCurrentChapterAssignemtsCompleted())) {
       toast.error(
-        "Please complete the chapter quiz",
+        `Please complete the chapter ${isQuizCompleted() ? 'assignments' : 'quiz'} before moving to the next chapter.`,
         {
           duration: 5000,
           icon: <GraduationCap className="w-6 h-6 mx-1 text-green-500" />,
         }
       );
-      return; // Add return here to prevent navigation
+      return;
     }
     
     const nextChapterId = findNextAvailableChapter('next');
@@ -213,7 +206,6 @@ const Course = () => {
       router.push(`/user/courses/${course.courseId}/chapters/${nextChapterId}`);
     }
   };
-
 
   const handleGoToPreviousChapter = () => {
     if (!course) return;
@@ -369,17 +361,17 @@ const Course = () => {
         </Card>
 
         <Tabs defaultValue="Assignments" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-gray-800 rounded-b-lg pb-10 pt-4">
+          <TabsList className="grid w-full grid-cols-2 bg-gray-800 rounded-b-lg pb-12 pt-4">
             <TabsTrigger 
               value="Assignments" 
-              className="flex items-center space-x-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              className="bg-gray-900 m-auto px-8 py-2 flex items-center space-x-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
             >
               <FileText className="h-4 w-4" />
               <span>Assignments</span>
             </TabsTrigger>
             <TabsTrigger 
               value="Quiz" 
-              className="flex items-center space-x-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              className="bg-gray-900 m-auto px-8 py-2 flex items-center space-x-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
             >
               <GraduationCap className="h-4 w-4" />
               <span>Quiz</span>

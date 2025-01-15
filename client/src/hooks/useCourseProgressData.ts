@@ -70,6 +70,16 @@ export const useCourseProgressData = () => {
     );
   }
 
+  const isCurrentChapterAssignemtsCompleted = () => {
+    if (!currentChapter) return false;
+
+    if (!currentChapter.assignments) return true;
+
+    return currentChapter.assignments?.every(
+      (assignment: Assignment) => assignment.submissions?.length > 0 
+    ) ?? false;
+  }
+
   const updateChapterProgress = (
     sectionId: string,
     chapterId: string,
@@ -109,6 +119,7 @@ export const useCourseProgressData = () => {
     isLoading,
     isChapterCompleted,
     isQuizCompleted,
+    isCurrentChapterAssignemtsCompleted,
     updateChapterProgress,
     hasMarkedComplete,
     setHasMarkedComplete,
