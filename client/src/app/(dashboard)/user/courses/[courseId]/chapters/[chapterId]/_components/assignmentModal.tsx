@@ -24,13 +24,6 @@ interface AssignmentModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
-interface AIAssignment {
-  title: string;
-  description: string;
-  hints: string[];
-  resources: Resource[];
-}
-
 const AssignmentModal = ({ 
   chapterId,
   chapter, 
@@ -151,7 +144,6 @@ const AssignmentModal = ({
           type,
         };
         
-        // Add the resource immediately to show loading state
         setResources(prev => [...prev, newResource]);
 
         const fileUrl = await uploadAssignmentFile(
@@ -165,7 +157,6 @@ const AssignmentModal = ({
           }
         );
 
-        // Update the resource with the file URL
         setResources(prev => 
           prev.map(r => 
             r.id === resourceId 
@@ -175,7 +166,6 @@ const AssignmentModal = ({
         );
       } catch (error) {
         console.error('Failed to upload file:', error);
-        // Remove the failed resource
         setResources(prev => prev.filter(r => r.id !== resourceId));
       } finally {
         setIsUploading(false);
@@ -246,14 +236,14 @@ const AssignmentModal = ({
         })
       });
   
-      const generatedAssignment: AIAssignment = await response.json();
+      const generatedAssignment = await response.json();
   
       setTitle(generatedAssignment.title);
       setDescription(generatedAssignment.description);
       setHints(generatedAssignment.hints || []);
       
       if (generatedAssignment.resources && Array.isArray(generatedAssignment.resources)) {
-        const formattedResources = generatedAssignment.resources.map(resource => ({
+        const formattedResources = generatedAssignment.resources.map((resource: Resource) => ({
           id: uuidv4(),
           title: resource.title,
           url: resource.url,
