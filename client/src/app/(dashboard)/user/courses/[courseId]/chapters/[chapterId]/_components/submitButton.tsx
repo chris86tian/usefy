@@ -115,9 +115,9 @@ function SubmitButton({ courseId, sectionId, chapterId, assignmentId, assignment
         focus:outline-none
       `}
     >
-      <div className="absolute inset-0 bg-gradient-to-r from-green-600 to-green-500 rounded-xl opacity-100 transition-opacity group-hover:opacity-90" />
+      <div className="absolute inset-0 bg-gradient-to-r from-green-600 to-green-500 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-500 blur-xl" />
 
-      <div className="relative flex items-center gap-2.5">
+      <div className="relative flex items-center gap-2.5 px-5 py-2.5 bg-gradient-to-r from-green-800 to-green-700 rounded-lg text-white font-semibold shadow-lg transition-all duration-300">
         {(isSubmitting || editorIsSubmitting) ? (
           <>
             <div className="relative">
