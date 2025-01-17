@@ -10,7 +10,7 @@ import {
   Users,
   ChevronDown,
   ExternalLink,
-  Info
+  Info,
 } from 'lucide-react'
 import { useUser } from '@clerk/nextjs'
 import { useDeleteAssignmentMutation } from '@/state/api'
@@ -22,6 +22,93 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+
+const Description = ({ text }: { text: string }) => {
+  // Split text by code block markers (```)
+  const parts = text.split(/```([\s\S]*?)```/);
+  const [openSections, setOpenSections] = useState<{ [key: number]: boolean }>({});
+
+  const toggleSection = (index: number) => {
+    setOpenSections(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
+  };
+
+  // Calculate if the text is long enough to warrant collapsing
+  const shouldCollapse = (text: string | string[]) => text.length > 100;
+  
+  return (
+    <div className="space-y-4">
+      {parts.map((part, index) => {
+        if (index % 2 === 1) {
+          // This is a code block
+          const isOpen = openSections[index] ?? false;
+          return (
+            <div key={index} className="relative group">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => toggleSection(index)}
+                className="w-full mb-1 flex items-center justify-between text-sm bg-gray-700 hover:bg-gray-900"
+              >
+                <span className="text-muted-foreground">Code Block {Math.ceil(index / 2)}</span>
+                <ChevronDown
+                  className={`h-4 w-4 transition-transform ${isOpen ? 'transform rotate-90' : ''}`}
+                />
+              </Button>
+              <Collapsible open={isOpen}>
+                <CollapsibleContent>
+                  <pre className="bg-gray-900 p-4 rounded-lg overflow-x-auto font-mono text-sm text-gray-100">
+                    <code>{part.trim()}</code>
+                  </pre>
+                </CollapsibleContent>
+              </Collapsible>
+            </div>
+          );
+        } else if (part.trim()) {
+          // This is regular text
+          const isOpen = openSections[index] ?? true;
+          const shouldCollapseText = shouldCollapse(part);
+          
+          if (!shouldCollapseText) {
+            return (
+              <p key={index} className="text-sm text-muted-foreground whitespace-pre-wrap">
+                {part}
+              </p>
+            );
+          }
+
+          return (
+            <div key={index}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => toggleSection(index)}
+                className="w-full flex items-center justify-between text-sm mb-1 hover:bg-gray-700"
+              >
+                <span className="text-muted-foreground">Description Text</span>
+                <ChevronDown
+                  className={`h-4 w-4 transition-transform ${isOpen ? 'transform rotate-90' : ''}`}
+                />
+              </Button>
+              <Collapsible open={isOpen}>
+                <CollapsibleContent>
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                    {part}
+                  </p>
+                </CollapsibleContent>
+              </Collapsible>
+            </div>
+          );
+        }
+        return null;
+      })}
+    </div>
+  );
+};
+
+
 
 interface AssignmentCardProps {
   assignment: Assignment
@@ -100,9 +187,9 @@ export function AssignmentCard({
         </CardHeader>
 
         <CardContent className="p-4 pt-2">
-          <p className="text-sm text-muted-foreground mb-4">{assignment.description}</p>
+          <Description text={assignment.description} />
           
-          <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground">
+          <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground mt-4">
             <div className="flex items-center space-x-2">
               <Users className="h-4 w-4" />
               <span>{assignment.submissions.length} Submissions</span>
