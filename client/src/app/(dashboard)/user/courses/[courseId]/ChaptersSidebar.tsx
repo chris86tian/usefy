@@ -221,7 +221,9 @@ const ProgressVisuals = ({
         </div>
       </div>
       <p className="chapters-sidebar__progress-text">
-        {completedChapters}/{totalChapters} COMPLETED
+        {totalChapters === 0 
+          ? 'This section is still being prepared.'
+          : `${completedChapters}/${totalChapters} COMPLETED`}
       </p>
     </>
   );
