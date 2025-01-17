@@ -367,6 +367,15 @@ export const api = createApi({
         body: { sectionId, chapterId, completed },
       }),
     }),
+
+    /*
+    ===============
+    COMMITS
+    ===============
+    */
+    getCommitsByDate: build.query<Commit[], { date: string; userId: string }>({
+      query: ({ date, userId }) => `commits/${date}/${userId}`,
+    }),
   }),
 });
 
@@ -401,4 +410,5 @@ export const {
   useUpdateUserCourseProgressMutation,
   useUpdateQuizProgressMutation,
   useGetNotificationsQuery,
+  useGetCommitsByDateQuery,
 } = api;

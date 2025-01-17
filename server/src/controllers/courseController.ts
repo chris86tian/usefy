@@ -4,6 +4,8 @@ import AWS from "aws-sdk";
 import { v4 as uuidv4 } from "uuid";
 import { getAuth } from "@clerk/express";
 import UserCourseProgress from "../models/userCourseProgressModel";
+import Commit from "../models/commitModel";
+import { count } from "console";
 
 const s3 = new AWS.S3();
 
@@ -654,15 +656,36 @@ export const createSubmission = async (
       return;
     }
 
-    const submission = {
-      submissionId,
-      userId,
-      code,
-      evaluation: evaluation || {},
-    };
+    const submission = assignment.submissions.find(
+      (submission: any) => submission.submissionId === submissionId
+    );
 
-    assignment.submissions.push(submission);
+    if (submission) {
+      submission.code = code;
+      submission.evaluation = evaluation;
+    } else {
+      assignment.submissions.push({
+        submissionId: uuidv4(),
+        userId,
+        code,
+        evaluation,
+        submittedAt: new Date().toISOString(),
+      });
+    }
 
+    // const commit = await Commit.get(new Date().toISOString().split("T")[0]);
+    // if (!commit) {
+    //   new Commit({
+    //     id: uuidv4(),
+    //     userId,
+    //     date: new Date().toISOString().split("T")[0],
+    //     count: 1,
+    //   })
+    // } else {
+    //   commit.count += 1;
+    // }
+
+    // await commit.save();
     await course.save();
     res.json({ message: "Assignment submitted successfully", data: submission });
   } catch (error) {

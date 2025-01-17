@@ -2,10 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Link, File, ImageIcon, Plus, X, Wand2 } from 'lucide-react';
+import { Loader2, Link, File, ImageIcon, Plus, X, Wand2, Code2 } from 'lucide-react';
 import { useCreateAssignmentMutation, useUpdateAssignmentMutation } from '@/state/api';
 import { v4 as uuidv4 } from 'uuid';
 import { ResourceList } from './ResourceList';
@@ -41,10 +40,11 @@ const AssignmentModal = ({
   const [hints, setHints] = useState<string[]>([]);
   const [newHint, setNewHint] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedResourceType, setSelectedResourceType] = useState<Resource['type']>('link');
+  const [selectedResourceType, setSelectedResourceType] = useState<'link' | 'image' | 'file'>('link');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{[key: string]: number}>({});
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const [isPreview, setIsPreview] = useState(false);
 
   const [createAssignment] = useCreateAssignmentMutation();
   const [updateAssignment] = useUpdateAssignmentMutation();
@@ -190,6 +190,7 @@ const AssignmentModal = ({
       link: <Link className="mr-2 h-4 w-4" />,
       image: <ImageIcon className="mr-2 h-4 w-4" />,
       file: <File className="mr-2 h-4 w-4" />,
+      code: <Code2 className="mr-2 h-4 w-4" />
     };
 
     if (selectedResourceType === 'link') {
@@ -217,7 +218,7 @@ const AssignmentModal = ({
         ) : (
           icons[selectedResourceType]
         )}
-        {isUploading ? 'Uploading...' : `Add ${selectedResourceType === 'image' ? 'Image' : 'File'}`}
+        {isUploading ? 'Uploading...' : `Add ${selectedResourceType === 'image' ? 'Image' : selectedResourceType === 'file' ? 'File' : 'Code'}`}
       </Button>
     );
   };
@@ -257,6 +258,36 @@ const AssignmentModal = ({
     } finally {
       setIsGeneratingAI(false);
     }
+  };
+
+  const insertCodeBlock = () => {
+    const textArea = document.getElementById('description');
+    const start = (textArea as HTMLTextAreaElement)?.selectionStart;
+    const end = (textArea as HTMLTextAreaElement)?.selectionEnd;
+    const text = description;
+    const before = text.substring(0, start);
+    const selection = text.substring(start, end);
+    const after = text.substring(end);
+    
+    const codeBlock = `\n\`\`\`\n${selection || 'Enter your code here'}\n\`\`\`\n`;
+    setDescription(before + codeBlock + after);
+  };
+
+  const togglePreview = () => {
+    setIsPreview(!isPreview);
+  };
+
+  const renderMarkdown = (text: string) => {
+    return text.split('```').map((block, index) => {
+      if (index % 2 === 1) {
+        return (
+          <pre key={index} className="bg-gray-900 p-4 rounded-md">
+            <code>{block.trim()}</code>
+          </pre>
+        );
+      }
+      return <p key={index} className="whitespace-pre-wrap">{block}</p>;
+    });
   };
 
 
@@ -300,15 +331,42 @@ const AssignmentModal = ({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Enter assignment description"
-                className="h-32"
-                required
-              />
+              <div className="flex justify-between items-center">
+                <Label htmlFor="description">Description</Label>
+                <div className="space-x-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={insertCodeBlock}
+                  >
+                    Add Code Block
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={togglePreview}
+                  >
+                    {isPreview ? 'Edit' : 'Preview'}
+                  </Button>
+                </div>
+              </div>
+              
+              {isPreview ? (
+                <div className="border rounded-md bg-gray-800 p-4">
+                  {renderMarkdown(description)}
+                </div>
+              ) : (
+                <textarea
+                  id="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Enter assignment description. Use ``` to create code blocks."
+                  className="w-full min-h-[8rem] p-4 border rounded-md resize-y bg-gray-800 text-white"
+                  required
+                />
+              )}
             </div>
 
             <div className="space-y-4">
@@ -381,7 +439,7 @@ const AssignmentModal = ({
             <div className="flex items-center space-x-2">
               <Select
                 value={selectedResourceType}
-                onValueChange={(value: Resource['type']) => setSelectedResourceType(value)}
+                onValueChange={(value: 'link' | 'image' | 'file') => setSelectedResourceType(value)}
               >
                 <SelectTrigger className="w-32">
                   <SelectValue />

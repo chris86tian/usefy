@@ -4,6 +4,8 @@ import UserCourseProgress from "../models/userCourseProgressModel";
 import Course from "../models/courseModel";
 import { calculateOverallProgress } from "../utils/utils";
 import { mergeSections } from "../utils/utils";
+import { v4 as uuidv4 } from "uuid";
+import Commit from "../models/commitModel";
 
 export const getUserEnrolledCourses = async (
   req: Request,
@@ -156,8 +158,26 @@ export const updateQuizProgress = async (
     progress.lastAccessedTimestamp = new Date().toISOString();
     progress.overallProgress = calculateOverallProgress(progress.sections);
 
-    await progress.save();
+    // const today = new Date().toISOString().split("T")[0];
+    // const commit = await Commit.query("date")
+    //   .eq(today)
+    //   .where("userId")
+    //   .eq(userId)
+    //   .exec();
 
+    // console.log(commit);
+
+    // if (!commit) {
+    //   const newCommit = new Commit({
+    //     id: uuidv4(),
+    //     userId,
+    //     date: today,
+    //     count: 1,
+    //   });
+    //   await newCommit.save();
+    // }
+
+    await progress.save();
     res.json({
       message: "Quiz progress updated successfully",
       data: progress,

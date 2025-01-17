@@ -7,7 +7,6 @@ import {
 } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import Image from "next/image";
-import { formatPrice } from "@/lib/utils";
 
 interface CourseCardProps {
   course: Course;
@@ -57,7 +56,7 @@ const CourseCard = ({ course, onGoToCourse }: CourseCardProps) => {
         <CardFooter className="course-card__footer">
           <div className="course-card__category">{course.category}</div>
           <span className="course-card__price">
-            {formatPrice(course.price)}
+            {course.level}
           </span>
         </CardFooter>
       </CardContent>

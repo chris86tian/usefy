@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Link, Image as ImageIcon, File, ExternalLink, Loader2 } from 'lucide-react';
+import { X, Link, ImageIcon, File, ExternalLink, Loader2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
@@ -25,9 +25,11 @@ const ResourcePreview = ({ resource, progress }: { resource: Resource; progress?
   if (resource.type === 'image' && resource.fileUrl) {
     return (
       <Image
-        src={resource.fileUrl}
+        src={resource.fileUrl || "/placeholder.svg"}
         alt={resource.title}
-        className="w-full h-full object-cover"
+        width={48}
+        height={48}
+        className="w-12 h-12 object-cover rounded"
       />
     );
   }
@@ -35,11 +37,11 @@ const ResourcePreview = ({ resource, progress }: { resource: Resource; progress?
   const icons = {
     link: <Link className="h-4 w-4" />,
     image: <ImageIcon className="h-4 w-4" />,
-    file: <File className="h-4 w-4" />
+    file: <File className="h-4 w-4" />,
   };
 
   return (
-    <div className="flex items-center justify-center w-12 h-12 rounded bg-gray-600">
+    <div className="flex items-center justify-center w-12 h-12 rounded bg-gray-600 text-white">
       {icons[resource.type]}
     </div>
   );
@@ -55,7 +57,7 @@ export const ResourceList: React.FC<ResourceListProps> = ({
     const labels = {
       link: 'Link',
       image: 'Image',
-      file: 'File'
+      file: 'File',
     };
     return labels[type];
   };
@@ -160,7 +162,7 @@ export const ResourceList: React.FC<ResourceListProps> = ({
         <div className="text-center py-6">
           <p className="text-gray-500 text-sm">No resources added yet</p>
           <p className="text-gray-400 text-xs mt-1">
-            Add links, images, or files using the buttons below
+            Add links, images, files, or any other resources to this assignment
           </p>
         </div>
       )}
@@ -169,3 +171,4 @@ export const ResourceList: React.FC<ResourceListProps> = ({
 };
 
 export default ResourceList;
+

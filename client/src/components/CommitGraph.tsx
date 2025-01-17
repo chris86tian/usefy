@@ -1,23 +1,27 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
+// interface CommitGridProps {
+//   courseId: string;
+// }
+
 const CommitGrid = () => {
-  // Sample data - replace with actual data
-  const generateSampleData = () => {
-    const data = [];
+
+  const generateSampleinfo = () => {
+    const info = [];
     const now = new Date();
-    for (let i = 0; i < 357; i++) { // 51 weeks * 7 days
+    for (let i = 0; i < 357; i++) {
       const date = new Date(now);
       date.setDate(date.getDate() - i);
-      data.unshift({
+      info.unshift({
         date: date.toISOString().split('T')[0],
         count: Math.floor(Math.random() * 10)
       });
     }
-    return data;
+    return info;
   };
 
-  const data = generateSampleData();
+  const info = generateSampleinfo();
 
   const getColor = (count: number) => {
     if (count === 0) return 'bg-gray-700';
@@ -32,12 +36,11 @@ const CommitGrid = () => {
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
-  // Create week arrays
   const weeks: { date: string; count: number; }[][] = [];
   let currentWeek: { date: string; count: number; }[] = [];
-  data.forEach((day, index) => {
+  info.forEach((day, index) => {
     currentWeek.push(day);
-    if (currentWeek.length === 7 || index === data.length - 1) {
+    if (currentWeek.length === 7 || index === info.length - 1) {
       weeks.push(currentWeek);
       currentWeek = [];
     }

@@ -1,8 +1,10 @@
+'use client';
+
 import Header from "@/components/Header";
 import { UserProfile } from "@clerk/nextjs";
-import CommitGraph from "../_components/CommitGraph";
 import { dark } from "@clerk/themes";
 import React from "react";
+import CommitGraph from "@/components/CommitGraph";
 
 const UserProfilePage = () => {
   return (

@@ -27,7 +27,7 @@ const CoursesSkeleton = () => {
         {skeletonCards.map((_, index) => (
           <div 
             key={index}
-            className="group relative bg-gray-900 rounded-lg p-4 space-y-4"
+            className="group relative bg-gray-800 rounded-lg p-4 space-y-4"
           >
             {/* Course Image Skeleton */}
             <Skeleton className="aspect-video w-full rounded-lg" />

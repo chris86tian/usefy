@@ -169,6 +169,13 @@ declare global {
     correctAnswer: number
   }
 
+  interface Commit {
+    id: string;
+    userId: string;
+    count: number;
+    date: string;
+  }
+
   interface ChapterProgress {
     chapterId: string;
     completed: boolean;

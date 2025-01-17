@@ -19,6 +19,7 @@ import userClerkRoutes from "./routes/userClerkRoutes";
 import transactionRoutes from "./routes/transactionRoutes";
 import userCourseProgressRoutes from "./routes/userCourseProgressRoutes";
 import notificationRoutes from "./routes/notificationRoutes";
+import commitRoutes from "./routes/commitRoutes";
 
 /* CONFIGURATIONS */
 dotenv.config();
@@ -50,6 +51,7 @@ app.use("/courses", courseRoutes);
 app.use("/users/clerk", requireAuth(), userClerkRoutes);
 app.use("/transactions", requireAuth(), transactionRoutes);
 app.use("/notifications", requireAuth(), notificationRoutes);
+app.use("/commits", requireAuth(), commitRoutes);
 app.use("/users/course-progress", requireAuth(), userCourseProgressRoutes);
 
 /* SERVER */
