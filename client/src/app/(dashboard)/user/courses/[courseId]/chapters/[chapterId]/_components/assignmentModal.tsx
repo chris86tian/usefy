@@ -242,17 +242,6 @@ const AssignmentModal = ({
       setTitle(generatedAssignment.title);
       setDescription(generatedAssignment.description);
       setHints(generatedAssignment.hints || []);
-      
-      if (generatedAssignment.resources && Array.isArray(generatedAssignment.resources)) {
-        const formattedResources = generatedAssignment.resources.map((resource: Resource) => ({
-          id: uuidv4(),
-          title: resource.title,
-          url: resource.url,
-          type: resource.type as 'link' | 'image' | 'file'
-        }));
-        setResources(prevResources => [...prevResources, ...formattedResources]);
-      }
-  
     } catch (error) {
       console.error('Failed to generate assignment:', error);
     } finally {

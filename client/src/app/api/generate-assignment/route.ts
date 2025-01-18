@@ -16,17 +16,10 @@ export async function POST(request: Request) {
         },
         { 
           role: "user", 
-          content: `Create a programming assignment based on the following:\n\nTitle: ${assignmentTitle}\n\nDescription: ${assignmentDescription}.\n\nThe output should include:\n1. A clear, concise title\n2. A detailed description explaining the task and requirements\n3. Three progressive hints\n4. Useful resources with title, url, and type.\n\nRespond in this JSON format:\n\n{
+          content: `Create a programming assignment based on the following:\n\nTitle: ${assignmentTitle}\n\nDescription: ${assignmentDescription}.\n\nThe output should include:\n1. A clear, concise title\n2. A detailed description explaining the task and requirements\n3. Three progressive hints\n4.\n\nRespond in this JSON format:\n\n{
             "title": "Assignment Title",
             "description": "Assignment Description",
             "hints": ["Hint 1", "Hint 2", "Hint 3"],
-            "resources": [
-              {
-                "title": "Resource Title",
-                "url": "Resource URL",
-                "type": "link"
-              }
-            ]
           }\n\nOnly return the JSON.` 
         }
       ],

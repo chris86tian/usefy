@@ -85,16 +85,16 @@ const Description = ({ text }: { text: string }) => {
                 variant="ghost"
                 size="sm"
                 onClick={() => toggleSection(index)}
-                className="w-full flex items-center justify-between text-sm mb-1 hover:bg-gray-700"
+                className="w-full flex items-center justify-between text-sm bg-gray-700 hover:bg-gray-900"
               >
-                <span className="text-muted-foreground">Description Text</span>
+                <span className="text-muted-foreground">Description</span>
                 <ChevronDown
                   className={`h-4 w-4 transition-transform ${isOpen ? 'transform rotate-90' : ''}`}
                 />
               </Button>
               <Collapsible open={isOpen}>
                 <CollapsibleContent>
-                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap mt-2">
                     {part}
                   </p>
                 </CollapsibleContent>
