@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useRef, useState, useEffect } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -10,27 +9,14 @@ import ReactPlayer from "react-player";
 import Loading from "@/components/Loading";
 import { useCourseProgressData } from "@/hooks/useCourseProgressData";
 import { useRouter } from "next/navigation";
-import { CheckCircle, ChevronLeft, ChevronRight, Lock, Sparkles } from "lucide-react";
-import { BookOpen, FileText, GraduationCap } from "lucide-react";
+import { ChevronLeft, ChevronRight, Lock, Sparkles, ThumbsDown, ThumbsUp } from "lucide-react";
+import { BookOpen, GraduationCap } from "lucide-react";
 import AssignmentModal from "./_components/AssignmentModal";
 import Assignments from "./assignments/page";
 import Quizzes from "./quizzes/page";
 import { SignInRequired } from "@/components/SignInRequired";
-
-const parseYouTubeTime = (url: string) => {
-  const timeParam = url.split('t=')[1];
-  if (!timeParam) return 0;
-
-  let seconds = 0;
-  const minutes = timeParam.match(/(\d+)m/);
-  const secs = timeParam.match(/(\d+)s/);
-
-  if (minutes) seconds += parseInt(minutes[1]) * 60;
-  if (secs) seconds += parseInt(secs[1]);
-
-  return seconds;
-};
-
+import { parseYouTubeTime } from "@/lib/utils";
+import { CourseComments } from "./_components/CourseComments";
 
 const isSectionReleased = (section: Section) => {
   if (!section.releaseDate) return false;
@@ -300,9 +286,17 @@ const Course = () => {
         <Card className="border-none shadow-lg">
           <CardHeader className="rounded-t-lg bg-gray-800 text-white">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-4">
                 <BookOpen className="h-5 w-5 text-primary" />
                 <CardTitle className="text-lg">Chapter Overview</CardTitle>
+                <div className="flex items-center space-x-2">
+                  <Button className="bg-gray-900 hover:bg-gray-700">
+                    <ThumbsUp className="h-4 w-4" />
+                  </Button>
+                  <Button className="bg-gray-900 hover:bg-gray-700">
+                    <ThumbsDown className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
               <div className="flex space-x-3">
                 {user.id === course.teacherId && (
@@ -358,57 +352,28 @@ const Course = () => {
               </p>
             </ScrollArea>
           </CardContent>
-        </Card>
+        </Card>       
+        {isQuizCompleted() ? (
+          <Assignments 
+            chapterId={currentChapter.chapterId} 
+            sectionId={currentSection?.sectionId as string} 
+            courseId={course.courseId}
+            teacherId={course.teacherId}
+          />
+        ) : (
+          <Quizzes 
+            quiz={currentChapter.quiz as Quiz}
+            courseId={course.courseId}
+            chapterId={currentChapter.chapterId}
+            sectionId={currentSection?.sectionId as string}
+          />
+        )}
 
-        <Tabs defaultValue="Assignments" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-gray-800 rounded-b-lg pb-12 pt-4">
-            <TabsTrigger 
-              value="Assignments" 
-              className="bg-gray-900 m-auto px-8 py-2 flex items-center space-x-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
-            >
-              <FileText className="h-4 w-4" />
-              <span>Assignments</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="Quiz" 
-              className="bg-gray-900 m-auto px-8 py-2 flex items-center space-x-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
-            >
-              <GraduationCap className="h-4 w-4" />
-              <span>Quiz</span>
-            </TabsTrigger>
-          </TabsList>
-
-          <div >
-            <TabsContent value="Assignments">
-              <Card className="border-none shadow-lg">
-                  <Assignments 
-                    chapterId={currentChapter.chapterId} 
-                    sectionId={currentSection?.sectionId as string} 
-                    courseId={course.courseId}
-                    teacherId={course.teacherId}
-                  />
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="Quiz">
-              <Card className="border-none shadow-lg">
-                {isQuizCompleted() ? (
-                  <div className="bg-gray-900 text-green-500 p-4 rounded-lg flex items-center space-x-2">
-                    <CheckCircle className="w-5 h-5 mr-1" />
-                    <span>Completed</span>
-                  </div>
-                ) : (
-                  <Quizzes 
-                    quiz={currentChapter.quiz as Quiz}
-                    courseId={course.courseId}
-                    chapterId={currentChapter.chapterId}
-                    sectionId={currentSection?.sectionId as string}
-                  />
-                )}
-              </Card>
-            </TabsContent>
-          </div>
-        </Tabs>
+        <CourseComments 
+          courseId={course.courseId} 
+          sectionId={currentSection.sectionId} 
+          chapterId={currentChapter.chapterId} 
+        />
       </div>
     </div>
   );

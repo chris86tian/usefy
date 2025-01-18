@@ -132,6 +132,20 @@ export function extractVideoId(url: string): string | null {
   return null;
 }
 
+export const parseYouTubeTime = (url: string) => {
+  const timeParam = url.split('t=')[1];
+  if (!timeParam) return 0;
+
+  let seconds = 0;
+  const minutes = timeParam.match(/(\d+)m/);
+  const secs = timeParam.match(/(\d+)s/);
+
+  if (minutes) seconds += parseInt(minutes[1]) * 60;
+  if (secs) seconds += parseInt(secs[1]);
+
+  return seconds;
+};
+
 export const NAVBAR_HEIGHT = 48;
 
 export const courseCategories = [

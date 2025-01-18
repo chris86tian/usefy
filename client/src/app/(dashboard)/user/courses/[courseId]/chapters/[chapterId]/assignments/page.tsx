@@ -36,7 +36,7 @@ export default function Assignments ({ teacherId, courseId, chapterId, sectionId
   return (
     <Card className="h-full bg-gray-900">
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-xl font-bold text-[#e6e6e6]">Assignments</CardTitle>
+        <CardTitle className="text-xl font-bold">Assignments</CardTitle>
         {(assignments?.length ?? 0) > 0 && (
           <span className="text-sm text-gray-400">
             {assignments?.length} {assignments?.length === 1 ? 'Assignment' : 'Assignments'}
@@ -44,7 +44,7 @@ export default function Assignments ({ teacherId, courseId, chapterId, sectionId
         )}
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-[calc(100vh-320px)] pr-4">
+        <ScrollArea className="h-auto pr-4">
           {renderContent()}
         </ScrollArea>
       </CardContent>

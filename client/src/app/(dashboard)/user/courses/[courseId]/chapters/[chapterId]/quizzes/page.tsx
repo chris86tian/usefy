@@ -29,7 +29,7 @@ const Quizzes = ({
 }: QuizzesProps) => {
   const user = useUser();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({});
   const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState(0);
   const [isQuizCompleted, setIsQuizCompleted] = useState(false);
@@ -44,7 +44,6 @@ const Quizzes = ({
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <h3 className="text-xl font-semibold mb-2">No Quiz Available</h3>
             <p className="text-muted-foreground">This chapter does not have any quiz questions yet.</p>
-            {/* if the user is a teacher, they can add a quiz */}
             {user?.user?.publicMetadata?.userType === 'teacher' && (
               <Button className="mt-4 bg-blue-500 hover:bg-blue-600 transition-colors"
                 onClick={() => { router.push(`/teacher/courses/${courseId}`)}}
@@ -62,31 +61,34 @@ const Quizzes = ({
   const currentQuestion = quiz.questions[currentQuestionIndex];
   const totalQuestions = quiz.questions.length;
   const progressPercentage = ((currentQuestionIndex + 1) / totalQuestions) * 100;
+  const currentSelectedAnswer = selectedAnswers[currentQuestionIndex];
 
   const handleAnswerSelect = (answerIndex: number) => {
     if (!showResult) {
-      setSelectedAnswer(answerIndex);
+      setSelectedAnswers(prev => ({
+        ...prev,
+        [currentQuestionIndex]: answerIndex
+      }));
       setError(null);
     }
   };
 
   const handleNextQuestion = async () => {
-    if (selectedAnswer === null) {
+    if (currentSelectedAnswer === undefined) {
       setError("Please select an answer before proceeding.");
       return;
     }
   
-    if (selectedAnswer === currentQuestion.correctAnswer) {
+    if (currentSelectedAnswer === currentQuestion.correctAnswer) {
       setScore(score + 1);
     }
   
     if (currentQuestionIndex + 1 < totalQuestions) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
-      setSelectedAnswer(null);
       setShowResult(false);
       setError(null);
     } else {
-      const finalScore = score + (selectedAnswer === currentQuestion.correctAnswer ? 1 : 0);
+      const finalScore = score + (currentSelectedAnswer === currentQuestion.correctAnswer ? 1 : 0);
       const percentage = (finalScore / totalQuestions) * 100;
       const passed = percentage >= 75;
   
@@ -116,12 +118,20 @@ const Quizzes = ({
   };  
 
   const handleCheckAnswer = () => {
-    if (selectedAnswer === null) {
+    if (currentSelectedAnswer === undefined) {
       setError("Please select an answer before checking.");
       return;
     }
     setShowResult(true);
     setError(null);
+  };
+
+  const handleRetakeQuiz = () => {
+    setCurrentQuestionIndex(0);
+    setSelectedAnswers({});
+    setShowResult(false);
+    setScore(0);
+    setIsQuizCompleted(false);
   };
 
   const renderQuizContent = () => {
@@ -145,22 +155,16 @@ const Quizzes = ({
           </div>
           <p className="text-lg mb-4">You scored {score} out of {totalQuestions}</p>
           {isPassed ? (
-            <Alert className=" bg-green-900/20 border-green-500 text-green-500 w-auto">
+            <Alert className="bg-green-900/20 border-green-500 text-green-500 w-auto">
               <AlertDescription>Congratulations! You passed the quiz.</AlertDescription>
             </Alert>
           ) : (
             <div className="flex items-center space-x-2">
-              <Alert className=" bg-red-900/20 border-red-500 text-red-500 w-auto">
+              <Alert className="bg-red-900/20 border-red-500 text-red-500 w-auto">
                 <AlertDescription>Keep practicing! You need 75% to pass.</AlertDescription>
               </Alert>
               <Button 
-                onClick={() => {
-                  setCurrentQuestionIndex(0);
-                  setSelectedAnswer(null);
-                  setShowResult(false);
-                  setScore(0);
-                  setIsQuizCompleted(false);
-                }}
+                onClick={handleRetakeQuiz}
                 className="bg-blue-500 hover:bg-blue-600 transition-colors"
               >
                 Retake Quiz
@@ -185,7 +189,7 @@ const Quizzes = ({
               style={{ width: `${progressPercentage}%` }}
             />
           </div>
-          <p className="text-lg font-medium">{currentQuestion.question}</p>
+          <p className="text-lg font-medium pt-4">{currentQuestion.question}</p>
         </CardHeader>
 
         <CardContent>
@@ -196,7 +200,7 @@ const Quizzes = ({
             </Alert>
           )}
           <RadioGroup
-            value={selectedAnswer !== null ? selectedAnswer.toString() : undefined}
+            value={currentSelectedAnswer?.toString()}
             onValueChange={(value) => handleAnswerSelect(parseInt(value))}
             className="space-y-3"
           >
@@ -207,7 +211,7 @@ const Quizzes = ({
                   showResult
                     ? index === currentQuestion.correctAnswer
                       ? 'border-green-500 bg-green-900/20'
-                      : selectedAnswer === index
+                      : currentSelectedAnswer === index
                       ? 'border-red-500 bg-red-900/20'
                       : 'border-gray-700'
                     : 'border-gray-700 hover:border-gray-600'
@@ -219,7 +223,7 @@ const Quizzes = ({
                   className={`flex-grow cursor-pointer ${
                     showResult && index === currentQuestion.correctAnswer
                       ? 'text-green-500'
-                      : showResult && selectedAnswer === index
+                      : showResult && currentSelectedAnswer === index
                       ? 'text-red-500'
                       : ''
                   }`}
@@ -229,7 +233,7 @@ const Quizzes = ({
                 {showResult && index === currentQuestion.correctAnswer && (
                   <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
                 )}
-                {showResult && selectedAnswer === index && index !== currentQuestion.correctAnswer && (
+                {showResult && currentSelectedAnswer === index && index !== currentQuestion.correctAnswer && (
                   <XCircle className="w-5 h-5 text-red-500 shrink-0" />
                 )}
               </div>
@@ -241,7 +245,7 @@ const Quizzes = ({
           {!showResult ? (
             <Button 
               onClick={handleCheckAnswer}
-              disabled={selectedAnswer === null}
+              disabled={currentSelectedAnswer === undefined}
               className="bg-blue-500 hover:bg-blue-600 transition-colors"
             >
               Check Answer

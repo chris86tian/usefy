@@ -22,6 +22,60 @@ const chapterSchema = new Schema({
   video: {
     type: String,
   },
+  comments : {
+    type: Array,
+    schema: [
+      new Schema({
+        id: {
+          type: String,
+          required: true,
+        },
+        userId: {
+          type: String,
+          required: true,
+        },
+        username: {
+          type: String,
+          required: true,
+        },
+        content: {
+          type: String,
+          required: true,
+        },
+        createdAt: {
+          type: String,
+          required: true,
+        },
+        replies: {
+          type: Array,
+          schema: [
+            new Schema({
+              id: {
+                type: String,
+                required: true,
+              },
+              userId: {
+                type: String,
+                required: true,
+              },
+              username: {
+                type: String,
+                required: true,
+              },
+              content: {
+                type: String,
+                required: true,
+              },
+              createdAt: {
+                type: String,
+                required: true,
+              },
+            }),
+          ],
+        },
+      }),
+    ],
+  },
   quiz: {
     type: Object,
     schema: new Schema({

@@ -16,6 +16,9 @@ import {
   getAssignment,
   updateAssignment,
   createSubmission,
+  createComment,
+  createReply,
+  getComments,
 } from "../controllers/courseController";
 import { requireAuth } from "@clerk/express";
 
@@ -42,5 +45,9 @@ router.delete("/:courseId/sections/:sectionId/chapters/:chapterId/assignments/:a
 router.put("/:courseId/sections/:sectionId/chapters/:chapterId/assignments/:assignmentId", requireAuth(), updateAssignment);
 
 router.post("/:courseId/sections/:sectionId/chapters/:chapterId/assignments/:assignmentId/submit", requireAuth(), createSubmission);
+
+router.post("/:courseId/sections/:sectionId/chapters/:chapterId/comments", requireAuth(), createComment);
+router.get("/:courseId/sections/:sectionId/chapters/:chapterId/comments", requireAuth(), getComments);
+router.post("/:courseId/sections/:sectionId/chapters/:chapterId/comments/:commentId/replies", requireAuth(), createReply);
 
 export default router;

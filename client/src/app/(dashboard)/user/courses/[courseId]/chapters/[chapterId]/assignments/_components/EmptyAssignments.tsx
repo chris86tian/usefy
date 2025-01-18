@@ -1,7 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card'
 import React from 'react'
 
-export const EmptyAssignments: React.FC = () => (
+export const EmptyAssignments = () => (
   <Card className="mt-4">
     <CardContent className="pt-6">
       <div className="flex flex-col items-center justify-center py-8 text-center">

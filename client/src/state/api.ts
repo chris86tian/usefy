@@ -376,6 +376,37 @@ export const api = createApi({
     getCommitsByDate: build.query<Commit[], { date: string; userId: string }>({
       query: ({ date, userId }) => `commits/${date}/${userId}`,
     }),
+
+    /*
+    ===============
+    COMMENTS
+    ===============
+    */
+    createComment: build.mutation<
+      { message: string },
+      { courseId: string; sectionId: string; chapterId: string; comment: ChapterComment }
+    >({
+      query: ({ courseId, sectionId, chapterId, comment }) => ({
+        url: `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/comments`,
+        method: "POST",
+        body: comment,
+      }),
+    }),
+
+    createReply: build.mutation<
+      { message: string },
+      { courseId: string; sectionId: string; chapterId: string; commentId: string; reply: Reply }
+    >({
+      query: ({ courseId, sectionId, chapterId, commentId, reply }) => ({
+        url: `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/comments/${commentId}/replies`,
+        method: "POST",
+        body: reply,
+      }),
+    }),
+
+    getChapterComments: build.query<ChapterComment[], { courseId: string; sectionId: string; chapterId: string }>({
+      query: ({ courseId, sectionId, chapterId }) => `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/comments`,
+    }),
   }),
 });
 
@@ -411,4 +442,7 @@ export const {
   useUpdateQuizProgressMutation,
   useGetNotificationsQuery,
   useGetCommitsByDateQuery,
+  useCreateCommentMutation,
+  useCreateReplyMutation,
+  useGetChapterCommentsQuery,
 } = api;

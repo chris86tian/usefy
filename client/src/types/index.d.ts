@@ -71,6 +71,24 @@ declare global {
     quiz?: {
       questions: Question[];
     };
+    comments?: Comment[];
+  }
+
+  interface ChapterComment {
+    id: string
+    userId: string
+    username: string
+    content: string
+    createdAt: string
+    replies: Reply[]
+  }
+  
+  interface Reply {
+    id: string
+    userId: string
+    username: string
+    content: string
+    createdAt: string
   }
 
   interface Transaction {
