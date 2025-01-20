@@ -68,7 +68,7 @@ const YouTubeDialog = ({ isOpen, onClose, onSubmit }: YouTubeDialogProps) => {
           <Button
             onClick={handleSubmit}
             disabled={!youtubeURL || isLoading}
-            className="w-full sm:w-auto"
+            className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700"
           >
             {isLoading ? (
               <span className="flex items-center gap-2">
@@ -76,7 +76,7 @@ const YouTubeDialog = ({ isOpen, onClose, onSubmit }: YouTubeDialogProps) => {
                 Processing...
               </span>
             ) : (
-              'Process Video'
+              'Process'
             )}
           </Button>
         </DialogFooter>

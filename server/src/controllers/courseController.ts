@@ -102,6 +102,20 @@ export const updateCourse = async (
   const { userId } = getAuth(req);
 
   try {
+    // Input validation
+    if (updateData.price !== undefined) {
+      const price = Number(updateData.price);
+      if (isNaN(price) || price < 0) {
+        res.status(400).json({
+          message: "Invalid price format",
+          error: "Price must be a non-negative number",
+        });
+        return;
+      }
+      updateData.price = price * 100;
+    }
+
+    // Fetch and validate course
     const course = await Course.get(courseId);
     if (!course) {
       res.status(404).json({ message: "Course not found" });
@@ -109,58 +123,72 @@ export const updateCourse = async (
     }
 
     if (course.teacherId !== userId) {
-      res
-        .status(403)
-        .json({ message: "Not authorized to update this course " });
+      res.status(403).json({ message: "Not authorized to update this course" });
       return;
     }
 
-    if (updateData.price) {
-      const price = parseInt(updateData.price);
-      if (isNaN(price)) {
-        res.status(400).json({
-          message: "Invalid price format",
-          error: "Price must be a valid number",
-        });
-        return;
-      }
-      updateData.price = price * 100;
-    }
-
+    // Handle image/thumbnail update
     if (updateData.thumbnail) {
-      course.image = updateData.thumbnail;
+      updateData.image = updateData.thumbnail;  // Transfer thumbnail to image field
+      delete updateData.thumbnail;  // Clean up the thumbnail field
     }
 
+    // Process sections if provided
     if (updateData.sections) {
-      const sectionsData =
-        typeof updateData.sections === "string"
+      try {
+        const sectionsData = typeof updateData.sections === "string"
           ? JSON.parse(updateData.sections)
           : updateData.sections;
 
-      updateData.sections = sectionsData.map((section: any) => ({
-        ...section,
-        sectionId: section.sectionId || uuidv4(),
-        chapters: section.chapters.map((chapter: any) => ({
-          ...chapter,
-          chapterId: chapter.chapterId || uuidv4(),
-          assignments: chapter.assignments.map((assignment: any) => ({
-            ...assignment,
-            assignmentId: assignment.assignmentId || uuidv4(),
-            submissions: assignment.submissions.map((submission: any) => ({
-              ...submission,
-              submissionId: submission.submissionId || uuidv4(),
-            })),
-          })),
-        })),
-      }));
+        // Validate section structure
+        if (!Array.isArray(sectionsData)) {
+          throw new Error("Sections must be an array");
+        }
+
+        updateData.sections = sectionsData.map(section => ({
+          ...section,
+          sectionId: section.sectionId || uuidv4(),
+          chapters: Array.isArray(section.chapters)
+            ? section.chapters.map((chapter: { chapterId: any; assignments: any[]; }) => ({
+                ...chapter,
+                chapterId: chapter.chapterId || uuidv4(),
+                assignments: Array.isArray(chapter.assignments)
+                  ? chapter.assignments.map(assignment => ({
+                      ...assignment,
+                      assignmentId: assignment.assignmentId || uuidv4(),
+                      submissions: Array.isArray(assignment.submissions)
+                        ? assignment.submissions.map((submission: { submissionId: any; }) => ({
+                            ...submission,
+                            submissionId: submission.submissionId || uuidv4(),
+                          }))
+                        : [],
+                    }))
+                  : [],
+              }))
+            : [],
+        }));
+      } catch (error) {
+        res.status(400).json({
+          message: "Invalid sections data format",
+          error: "Please provide valid JSON for sections",
+        });
+        return;
+      }
     }
 
-    Object.assign(course, updateData);
-    await course.save();
+    // Update course - now includes proper image handling
+    const updatedCourse = await Course.update(courseId, updateData);
 
-    res.json({ message: "Course updated successfully", data: course });
+    res.json({
+      message: "Course updated successfully",
+      data: updatedCourse,
+    });
   } catch (error) {
-    res.status(500).json({ message: "Error updating course", error });
+    console.error("Error updating course:", error);
+    res.status(500).json({
+      message: "Failed to update course",
+      error: "An unexpected error occurred",
+    });
   }
 };
 

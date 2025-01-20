@@ -23,7 +23,9 @@ const TeacherCourseCard = ({
 }: TeacherCourseCardProps) => {
   return (
     <Card className="course-card-teacher group">
-      <CardHeader className="course-card-teacher__header"  onClick={() => onView(course)}>
+      <CardHeader className="course-card-teacher__header" onClick={
+        isOwner ? () => onView(course) : undefined
+      }>
         <Image
           src={course.image || "/placeholder.png"}
           alt={course.title}

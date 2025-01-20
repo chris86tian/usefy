@@ -52,8 +52,9 @@ const CourseEditor = () => {
   const handleURLSubmit = async (videoUrl: string) => {
     setIsDialogOpen(false);
     setIsGenerating(true);
-
+  
     try {
+      // Fetch data from the API
       const response = await fetch("/api/generate-course", {
         method: "POST",
         headers: {
@@ -61,45 +62,71 @@ const CourseEditor = () => {
         },
         body: JSON.stringify({ videoUrl }),
       });
-
+  
       const data = await response.json();
-      
+  
       if (data.error) {
         toast.error(data.error);
         return;
       }
-
+  
       const { sections: newSections, courseTitle, courseDescription } = data;
-
-      methods.setValue("courseTitle", courseTitle);
-      methods.setValue("courseDescription", courseDescription);
-
-      const mergedSections = newSections.map((section: Section) => ({
-        sectionId: uuid(),
-        sectionTitle: section.sectionTitle,
-        sectionDescription: section.sectionDescription,
-        chapters: section.chapters.map((chapter: Chapter) => {
-          const existingChapter = sections
-            .flatMap(s => s.chapters)
-            .find(c => c.title === chapter.title);
-
-          return {
-            chapterId: uuid(),
-            title: chapter.title,
-            content: chapter.content,
-            type: "Video",
-            video: chapter.video,
-            quiz: chapter.quiz,
-            assignments: existingChapter?.assignments || chapter.assignments || [],
+  
+      // Update course details if provided
+      if (courseTitle) methods.setValue("courseTitle", courseTitle);
+      if (courseDescription) methods.setValue("courseDescription", courseDescription);
+  
+      // Merge new sections with existing sections
+      const updatedSections = [...sections];
+  
+      newSections.forEach((newSection: Section) => {
+        const existingSectionIndex = updatedSections.findIndex(
+          (section) => section.sectionTitle === newSection.sectionTitle
+        );
+  
+        if (existingSectionIndex !== -1) {
+          // Merge chapters into the existing section
+          const existingSection = updatedSections[existingSectionIndex];
+          const mergedChapters = newSection.chapters.map((newChapter: Chapter) => {
+            const existingChapter = existingSection.chapters.find(
+              (chapter) => chapter.title === newChapter.title
+            );
+  
+            return existingChapter
+              ? {
+                  ...existingChapter,
+                  content: newChapter.content || existingChapter.content,
+                  video: newChapter.video || existingChapter.video,
+                  quiz: newChapter.quiz || existingChapter.quiz,
+                }
+              : {
+                  ...newChapter,
+                  chapterId: newChapter.chapterId || uuid(),
+                };
+          });
+  
+          updatedSections[existingSectionIndex] = {
+            ...existingSection,
+            chapters: [...existingSection.chapters, ...mergedChapters],
           };
-        }),
-      }));
-
-      dispatch(setSections(mergedSections));
-      toast.success("Chapters auto-filled successfully!");
+        } else {
+          // Add a new section with unique IDs for sections and chapters
+          updatedSections.push({
+            ...newSection,
+            sectionId: uuid(),
+            chapters: newSection.chapters.map((chapter: Chapter) => ({
+              ...chapter,
+              chapterId: uuid(),
+            })),
+          });
+        }
+      });
+  
+      dispatch(setSections(updatedSections));
+      toast.success("Sections and chapters generated successfully!");
     } catch (error) {
-      console.error("Failed to auto-fill chapters:", error);
-      toast.error("An error occurred while auto-filling chapters.");
+      console.error("Error generating course content:", error);
+      toast.error("An error occurred while generating course content.");
     } finally {
       setIsGenerating(false);
     }
@@ -194,10 +221,7 @@ const CourseEditor = () => {
 
       const formData = createCourseFormData(data, updatedSections, thumbnailUrl || "");
 
-      await updateCourse({
-        courseId: id,
-        formData,
-      }).unwrap();
+      await updateCourse({ courseId: id, formData }).unwrap();
 
       toast.success("Course updated successfully!");
       refetch();

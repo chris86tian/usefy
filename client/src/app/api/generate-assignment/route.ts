@@ -27,7 +27,6 @@ export async function POST(request: Request) {
     });
 
     const responseText = completion.choices[0]?.message?.content || '';
-    console.log('Raw OpenAI response:', responseText);
 
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
     const generatedContent = jsonMatch ? JSON.parse(jsonMatch[0]) : null;

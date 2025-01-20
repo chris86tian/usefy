@@ -2,7 +2,6 @@ import React from 'react';
 import { Skeleton } from "@/components/ui/skeleton";
 
 const CoursesSkeleton = () => {
-  // Generate an array of 6 skeleton cards
   const skeletonCards = Array(6).fill(null);
 
   return (

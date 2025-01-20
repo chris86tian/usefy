@@ -94,8 +94,6 @@ export function CourseComments({ courseId, sectionId, chapterId }: CourseComment
       setReplyText((prev) => ({ ...prev, [commentId]: '' }));
       setShowReplyInput((prev) => ({ ...prev, [commentId]: false }));
       refetch();
-
-      console.log('Reply created:', replyContent);
     } catch (error) {
       console.error('Failed to create reply:', error);
     }
