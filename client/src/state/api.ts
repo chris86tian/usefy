@@ -368,6 +368,10 @@ export const api = createApi({
       }),
     }),
 
+    getUserCourseSubmissions: build.query<any[], { userId: string; courseId: string }>({
+      query: ({ userId, courseId }) => `courses/${courseId}/submissions/${userId}`,
+    }),
+
     /*
     ===============
     COMMITS
@@ -465,6 +469,7 @@ export const {
   useGetUserCourseProgressQuery,
   useUpdateUserCourseProgressMutation,
   useUpdateQuizProgressMutation,
+  useGetUserCourseSubmissionsQuery,
   useGetNotificationsQuery,
   useGetCommitsByDateQuery,
   useCreateCommentMutation,

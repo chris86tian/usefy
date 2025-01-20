@@ -94,7 +94,7 @@ export default function CourseStats({ courseId }: CourseStatsProps) {
           <CardTitle>Content Type Distribution</CardTitle>
         </CardHeader>
         <CardContent className="pt-2">
-            {/* White bars */}
+          {/* White bars */}
           <ChartContainer
             config={{
               value: {

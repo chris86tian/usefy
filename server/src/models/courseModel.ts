@@ -1,5 +1,4 @@
 import { Schema, model } from "dynamoose";
-import { release } from "os";
 
 const chapterSchema = new Schema({
   chapterId: {

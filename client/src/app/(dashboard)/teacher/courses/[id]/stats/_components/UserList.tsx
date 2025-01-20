@@ -1,27 +1,19 @@
 'use client'
 
-import { useState } from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useGetCourseUsersQuery } from '@/state/api'
-import { UserDetailsModal } from '@/app/(dashboard)/teacher/users/_components/UserDetailsModal'
 import { User } from '@/lib/utils'
 
-  
 interface UserListProps {
   courseId: string
+  selectedUser: User | null
+  onUserSelect: (user: User | null) => void
 }
 
-export default function UserList({ courseId }: UserListProps) {
-  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+export default function UserList({ courseId, selectedUser, onUserSelect }: UserListProps) {
   const { data: users } = useGetCourseUsersQuery(courseId)
-
-  console.log(users)
-
-  const handleUserClick = (user: User) => {
-    setSelectedUser(user)
-  }
 
   if (!users) {
     return (
@@ -35,7 +27,7 @@ export default function UserList({ courseId }: UserListProps) {
   }
 
   return (
-    <Card className="h-full bg-gray-900">
+    <Card className="bg-gray-900">
       <CardHeader>
         <CardTitle>Course Users</CardTitle>
       </CardHeader>
@@ -49,7 +41,7 @@ export default function UserList({ courseId }: UserListProps) {
                   className={`flex items-center space-x-4 cursor-pointer hover:bg-accent hover:text-accent-foreground p-2 rounded-md transition-colors ${
                     selectedUser?.id === user.id ? 'bg-accent text-accent-foreground' : ''
                   }`}
-                    onClick={() => handleUserClick(user as unknown as User)}
+                  onClick={() => onUserSelect(user as unknown as User)}
                 >
                   <Avatar>
                     <AvatarImage src={user.imageUrl || undefined} alt={`${user.firstName} ${user.lastName}`} />
@@ -74,15 +66,6 @@ export default function UserList({ courseId }: UserListProps) {
           </div>
         </ScrollArea>
       </CardContent>
-      {selectedUser && (
-        <UserDetailsModal
-            isOpen={!!selectedUser}
-            onClose={() => setSelectedUser(null)}
-            user={selectedUser}
-            courseId={courseId}
-        />
-       )}
     </Card>
   )
 }
-

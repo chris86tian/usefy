@@ -102,7 +102,6 @@ export const updateCourse = async (
   const { userId } = getAuth(req);
 
   try {
-    // Input validation
     if (updateData.price !== undefined) {
       const price = Number(updateData.price);
       if (isNaN(price) || price < 0) {
@@ -115,7 +114,6 @@ export const updateCourse = async (
       updateData.price = price * 100;
     }
 
-    // Fetch and validate course
     const course = await Course.get(courseId);
     if (!course) {
       res.status(404).json({ message: "Course not found" });
@@ -127,20 +125,17 @@ export const updateCourse = async (
       return;
     }
 
-    // Handle image/thumbnail update
     if (updateData.thumbnail) {
-      updateData.image = updateData.thumbnail;  // Transfer thumbnail to image field
-      delete updateData.thumbnail;  // Clean up the thumbnail field
+      updateData.image = updateData.thumbnail;
+      delete updateData.thumbnail;
     }
 
-    // Process sections if provided
     if (updateData.sections) {
       try {
         const sectionsData = typeof updateData.sections === "string"
           ? JSON.parse(updateData.sections)
           : updateData.sections;
 
-        // Validate section structure
         if (!Array.isArray(sectionsData)) {
           throw new Error("Sections must be an array");
         }
@@ -176,7 +171,6 @@ export const updateCourse = async (
       }
     }
 
-    // Update course - now includes proper image handling
     const updatedCourse = await Course.update(courseId, updateData);
 
     res.json({
@@ -358,14 +352,12 @@ export const createAssignment = async (
   const { title, description, resources, hints } = req.body;
 
   try {
-    // Fetch the course
     const course = await Course.get(courseId);
     if (!course) {
       res.status(404).json({ message: "Course not found" });
       return;
     }
 
-    // Find the section
     const section = course.sections.find(
       (section: any) => section.sectionId === sectionId
     );
@@ -374,7 +366,6 @@ export const createAssignment = async (
       return;
     }
 
-    // Find the chapter
     const chapter = section.chapters.find(
       (chapter: any) => chapter.chapterId === chapterId
     );
@@ -383,7 +374,6 @@ export const createAssignment = async (
       return;
     }
 
-    // Authorization check
     if (course.teacherId !== userId) {
       res
         .status(403)
@@ -391,7 +381,6 @@ export const createAssignment = async (
       return;
     }
 
-    // Validate input fields
     if (!title || !description) {
       res.status(400).json({
         message: "Title and description are required",
@@ -399,7 +388,6 @@ export const createAssignment = async (
       return;
     }
 
-    // Create the assignment
     const assignment = {
       assignmentId: uuidv4(),
       title,
@@ -409,21 +397,16 @@ export const createAssignment = async (
       hints: hints || [],
     };
 
-    // Ensure `assignments` is an array in the chapter
     if (!chapter.assignments) {
-      chapter.assignments = []; // Initialize if it doesn't exist
+      chapter.assignments = [];
     }
 
-    // Add the new assignment to the assignments array
     chapter.assignments.push(assignment);
 
-    // Save the course
     await course.save();
 
-    // Respond with success
     res.json({ message: "Assignment created successfully", data: assignment });
   } catch (error) {
-    // Handle errors
     res.status(500).json({ message: "Error creating assignment", error });
   }
 };
@@ -720,6 +703,61 @@ export const createSubmission = async (
     res.status(500).json({ message: "Error submitting assignment", error });
   }
 }
+
+export const getUserCourseSubmissions = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { courseId, userId } = req.params;
+
+  try {
+    const course = await Course.get(courseId);
+
+    if (!course) {
+      res.status(404).json({ message: "Course not found" });
+      return;
+    }
+
+    // Extract submission data from course structure for the specified userId
+    const submissions: any[] = [];
+
+    if (course.sections) {
+      course.sections.forEach((section: any) => {
+        if (section.chapters) {
+          section.chapters.forEach((chapter: any) => {
+            if (chapter.assignments) {
+              chapter.assignments.forEach((assignment: any) => {
+                if (assignment.submissions) {
+                  assignment.submissions.forEach((submission: any) => {
+                    if (submission.userId === userId) {
+                      submissions.push({
+                        assignmentId: assignment.assignmentId,
+                        assignmentTitle: assignment.title,
+                        userId: submission.userId,
+                        submissionId: submission.submissionId,
+                        code: submission.code,
+                        evaluation: submission.evaluation,
+                      });
+                    }
+                  });
+                }
+              });
+            }
+          });
+        }
+      });
+    }
+
+    res.json({
+      message: "Submissions retrieved successfully",
+      data: submissions,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error retrieving submissions", error });
+  }
+};
+
+
 
 export const createComment = async (
   req: Request,

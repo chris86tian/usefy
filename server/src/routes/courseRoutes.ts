@@ -21,6 +21,7 @@ import {
   getComments,
   likeChapter,
   dislikeChapter,
+  getUserCourseSubmissions,
 } from "../controllers/courseController";
 import { requireAuth } from "@clerk/express";
 
@@ -54,5 +55,7 @@ router.post("/:courseId/sections/:sectionId/chapters/:chapterId/comments/:commen
 
 router.post("/:courseId/sections/:sectionId/chapters/:chapterId/like", requireAuth(), likeChapter);
 router.post("/:courseId/sections/:sectionId/chapters/:chapterId/dislike", requireAuth(), dislikeChapter);
+
+router.get("/:courseId/submissions/:userId", requireAuth(), getUserCourseSubmissions);
 
 export default router;
