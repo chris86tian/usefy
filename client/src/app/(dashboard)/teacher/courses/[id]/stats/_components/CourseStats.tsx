@@ -1,120 +1,103 @@
-'use client'
+"use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts"
 import { useGetCourseQuery } from "@/state/api"
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Book, Users, Layers, FileText } from "lucide-react"
 
 interface CourseStatsProps {
   courseId: string
 }
 
 export default function CourseStats({ courseId }: CourseStatsProps) {
-  const { data: course } = useGetCourseQuery(courseId)
+  const { data: course, isLoading } = useGetCourseQuery(courseId)
 
-  if (!course) {
-    return <div>Loading course statistics...</div>
+  if (isLoading) {
+    return <LoadingSkeleton />
   }
 
-  const enrollmentData = course.sections.map((section, index) => ({
-    name: `Section ${index + 1}`,
-    enrollments: section.chapters.reduce((acc, chapter) => 
-      acc + (chapter.type === 'Quiz' ? chapter.quiz?.questions.length || 0 : 0), 0),
-  }))
-
-  const contentTypeData = [
-    { name: 'Text', value: course.sections.flatMap(s => s.chapters).filter(c => c.type === 'Text').length },
-    { name: 'Quiz', value: course.sections.flatMap(s => s.chapters).filter(c => c.type === 'Quiz').length },
-    { name: 'Video', value: course.sections.flatMap(s => s.chapters).filter(c => c.type === 'Video').length },
-  ]
+  if (!course) {
+    return <div>No course data available.</div>
+  }
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <Card className="bg-gray-900">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Enrollments</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{course.enrollments?.length || 0}</div>
-        </CardContent>
-      </Card>
-      <Card className="bg-gray-900">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Course Level</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{course.level}</div>
-        </CardContent>
-      </Card>
-      <Card className="bg-gray-900">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Sections</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{course.sections.length}</div>
-        </CardContent>
-      </Card>
-      <Card className="bg-gray-900">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Chapters</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">
-            {course.sections.reduce((acc, section) => acc + section.chapters.length, 0)}
-          </div>
-        </CardContent>
-      </Card>
-      <Card className="col-span-2 bg-gray-900">
-        <CardHeader>
-          <CardTitle>Enrollments by Section</CardTitle>
-        </CardHeader>
-        <CardContent className="pt-2">
-          <ChartContainer
-            config={{
-              enrollments: {
-                label: "Enrollments",
-                color: "hsl(var(--chart-1))",
-              },
-            }}
-            className="h-[200px]"
-          >
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={enrollmentData}>
-                <XAxis dataKey="name" />
-                <YAxis />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="enrollments" fill="var(--color-enrollments)" />
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartContainer>
-        </CardContent>
-      </Card>
-      <Card className="col-span-2 bg-gray-900">
-        <CardHeader>
-          <CardTitle>Content Type Distribution</CardTitle>
-        </CardHeader>
-        <CardContent className="pt-2">
-          {/* White bars */}
-          <ChartContainer
-            config={{
-              value: {
-                label: "Count",
-                color: "hsl(var(--chart-2))",
-              },
-            }}
-            className="h-[200px]"
-          >
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={contentTypeData}>
-                <XAxis dataKey="name" />
-                <YAxis />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="value" fill="var(--color-value)" />
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartContainer>
-        </CardContent>
-      </Card>
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <StatCard
+        title="Total Enrollments"
+        value={course.enrollments?.length || 0}
+        icon={<Users className="h-4 w-4 text-muted-foreground" />}
+        description="Students enrolled in the course"
+      />
+      <StatCard
+        title="Course Level"
+        value={course.level}
+        icon={<Layers className="h-4 w-4 text-muted-foreground" />}
+        description="Difficulty level of the course"
+      />
+      <StatCard
+        title="Total Sections"
+        value={course.sections.length}
+        icon={<Book className="h-4 w-4 text-muted-foreground" />}
+        description="Number of course sections"
+      />
+      <StatCard
+        title="Total Chapters"
+        value={course.sections.reduce((acc, section) => acc + section.chapters.length, 0)}
+        icon={<FileText className="h-4 w-4 text-muted-foreground" />}
+        description="Total chapters across all sections"
+      />
+    </div>
+  )
+}
+
+interface StatCardProps {
+  title: string
+  value: number | string
+  icon: React.ReactNode
+  description: string
+}
+
+function StatCard({ title, value, icon, description }: StatCardProps) {
+  return (
+    <Card className="bg-zinc-900">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        {icon}
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">{value}</div>
+        <p className="text-xs text-muted-foreground">{description}</p>
+      </CardContent>
+    </Card>
+  )
+}
+
+function LoadingSkeleton() {
+  return (
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      {[...Array(4)].map((_, i) => (
+        <Card key={i}>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <Skeleton className="h-4 w-[100px]" />
+            <Skeleton className="h-4 w-4 rounded-full" />
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-8 w-[60px]" />
+            <Skeleton className="h-4 w-[120px] mt-2" />
+          </CardContent>
+        </Card>
+      ))}
+      {[...Array(2)].map((_, i) => (
+        <Card key={i} className="col-span-2">
+          <CardHeader>
+            <Skeleton className="h-6 w-[200px]" />
+            <Skeleton className="h-4 w-[300px]" />
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-[300px] w-full" />
+          </CardContent>
+        </Card>
+      ))}
     </div>
   )
 }

@@ -27,18 +27,18 @@ export default function UserList({ courseId, selectedUser, onUserSelect }: UserL
   }
 
   return (
-    <Card className="bg-gray-900">
+    <Card className="bg-zinc-900">
       <CardHeader>
         <CardTitle>Course Users</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
         <ScrollArea className="h-[calc(100vh-12rem)] w-full rounded-md">
-          <div className="p-4">
+          <div className="px-4">
             <ul className="space-y-4">
               {users.map((user) => (
                 <li 
                   key={user.id} 
-                  className={`flex items-center space-x-4 cursor-pointer hover:bg-accent hover:text-accent-foreground p-2 rounded-md transition-colors ${
+                  className={`flex items-center space-x-4 p-4 rounded-md cursor-pointer border border-transparent hover:border-accent ${
                     selectedUser?.id === user.id ? 'bg-accent text-accent-foreground' : ''
                   }`}
                   onClick={() => onUserSelect(user as unknown as User)}
