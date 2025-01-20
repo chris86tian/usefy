@@ -17,6 +17,7 @@ import Quizzes from "./quizzes/page";
 import { SignInRequired } from "@/components/SignInRequired";
 import { parseYouTubeTime } from "@/lib/utils";
 import { CourseComments } from "./_components/CourseComments";
+import { useLikeChapterMutation, useDislikeChapterMutation } from "@/state/api";
 
 const isSectionReleased = (section: Section) => {
   if (!section.releaseDate) return false;
@@ -44,6 +45,9 @@ const Course = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [videoEndTime, setVideoEndTime] = useState<number | null>(null);
   const [hasShownPrompt, setHasShownPrompt] = useState(false); 
+
+  const [likeChapter] = useLikeChapterMutation();
+  const [dislikeChapter] = useDislikeChapterMutation();
 
   useEffect(() => {
     if (currentChapter?.video) {
@@ -205,6 +209,34 @@ const Course = () => {
     setIsModalOpen(false);
   };
 
+  const handleLike = async () => {
+    if (!currentChapter) return;
+    try {
+      await likeChapter({ 
+        courseId: course?.courseId as string, 
+        sectionId: currentSection?.sectionId as string, 
+        chapterId: currentChapter.chapterId 
+      }).unwrap();
+    } catch (error) {
+      console.error('Failed to like chapter:', error);
+      toast.error('Failed to like the chapter. Please try again.');
+    }
+  };
+  
+  const handleDislike = async () => {
+    if (!currentChapter) return;
+    try {
+      await dislikeChapter({ 
+        courseId: course?.courseId as string, 
+        sectionId: currentSection?.sectionId as string, 
+        chapterId: currentChapter.chapterId 
+      }).unwrap(); 
+    } catch (error) {
+      console.error('Failed to dislike chapter:', error);
+      toast.error('Failed to dislike the chapter. Please try again.');
+    }
+  };
+
   if (isLoading) return <Loading />;
   if (!user) return <SignInRequired />;
   if (!course || !userProgress || !currentChapter || !currentSection) 
@@ -290,11 +322,13 @@ const Course = () => {
                 <BookOpen className="h-5 w-5 text-primary" />
                 <CardTitle className="text-lg">Chapter Overview</CardTitle>
                 <div className="flex items-center space-x-2">
-                  <Button className="bg-gray-900 hover:bg-gray-700">
-                    <ThumbsUp className="h-4 w-4" />
+                  <Button className="bg-gray-900 hover:bg-gray-700" onClick={handleLike}>
+                    <span className="text-sm text-gray-300">{currentChapter?.likes ?? 0}</span>
+                    <ThumbsUp className="h-4 w-4"/>
                   </Button>
-                  <Button className="bg-gray-900 hover:bg-gray-700">
-                    <ThumbsDown className="h-4 w-4" />
+                  <Button className="bg-gray-900 hover:bg-gray-700" onClick={handleDislike}>
+                    <span className="text-sm text-gray-300">{currentChapter?.dislikes ?? 0}</span>
+                    <ThumbsDown className="h-4 w-4"/>
                   </Button>
                 </div>
               </div>

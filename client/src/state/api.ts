@@ -407,6 +407,31 @@ export const api = createApi({
     getChapterComments: build.query<ChapterComment[], { courseId: string; sectionId: string; chapterId: string }>({
       query: ({ courseId, sectionId, chapterId }) => `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/comments`,
     }),
+
+    /*
+    ===============
+    LIKE/DISLIKE
+    ===============
+    */
+    likeChapter: build.mutation<
+      { message: string },
+      { courseId: string; sectionId: string; chapterId: string }
+    >({
+      query: ({ courseId, sectionId, chapterId }) => ({
+        url: `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/like`,
+        method: "POST",
+      }),
+    }),
+
+    dislikeChapter: build.mutation<
+      { message: string },
+      { courseId: string; sectionId: string; chapterId: string }
+    >({
+      query: ({ courseId, sectionId, chapterId }) => ({
+        url: `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/dislike`,
+        method: "POST",
+      }),
+    }),
   }),
 });
 
@@ -445,4 +470,6 @@ export const {
   useCreateCommentMutation,
   useCreateReplyMutation,
   useGetChapterCommentsQuery,
+  useLikeChapterMutation,
+  useDislikeChapterMutation,
 } = api;

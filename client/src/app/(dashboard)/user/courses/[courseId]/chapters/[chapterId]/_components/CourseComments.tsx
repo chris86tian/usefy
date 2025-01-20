@@ -28,8 +28,6 @@ export function CourseComments({ courseId, sectionId, chapterId }: CourseComment
     sectionId,
     chapterId,
   });
-
-  console.log('comments:', comments);
   
   const [createComment] = useCreateCommentMutation();
   const [createReply] = useCreateReplyMutation();

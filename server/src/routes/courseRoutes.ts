@@ -19,6 +19,8 @@ import {
   createComment,
   createReply,
   getComments,
+  likeChapter,
+  dislikeChapter,
 } from "../controllers/courseController";
 import { requireAuth } from "@clerk/express";
 
@@ -49,5 +51,8 @@ router.post("/:courseId/sections/:sectionId/chapters/:chapterId/assignments/:ass
 router.post("/:courseId/sections/:sectionId/chapters/:chapterId/comments", requireAuth(), createComment);
 router.get("/:courseId/sections/:sectionId/chapters/:chapterId/comments", requireAuth(), getComments);
 router.post("/:courseId/sections/:sectionId/chapters/:chapterId/comments/:commentId/replies", requireAuth(), createReply);
+
+router.post("/:courseId/sections/:sectionId/chapters/:chapterId/like", requireAuth(), likeChapter);
+router.post("/:courseId/sections/:sectionId/chapters/:chapterId/dislike", requireAuth(), dislikeChapter);
 
 export default router;

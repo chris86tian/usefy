@@ -22,6 +22,12 @@ const chapterSchema = new Schema({
   video: {
     type: String,
   },
+  likes: {
+    type: Number,
+  },
+  dislikes: {
+    type: Number,
+  },
   comments : {
     type: Array,
     schema: [

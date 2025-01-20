@@ -68,10 +68,12 @@ declare global {
     content: string;
     video?: string | File;
     assignments?: Assignment[];
+    comments?: Comment[];
+    likes?: number;
+    dislikes?: number;
     quiz?: {
       questions: Question[];
     };
-    comments?: Comment[];
   }
 
   interface ChapterComment {
