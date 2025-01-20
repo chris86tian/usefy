@@ -699,9 +699,7 @@ export const createComment = async (
 ): Promise<void> => {
   const { courseId, sectionId, chapterId } = req.params;
   const { userId } = getAuth(req);
-  const { comment } = req.body;
-
-  console.log("comment", comment);
+  const { id, username, content, createdAt, replies } = req.body;
 
   try {
     const course = await Course.get(courseId);
@@ -727,10 +725,12 @@ export const createComment = async (
     }
 
     const newComment = {
-      id: comment.id || uuidv4(),
-      userId: comment.userId || userId,
-      content: comment.content,
-      createdAt: comment.createdAt || new Date().toISOString(),
+      id,
+      userId,
+      username,
+      content,
+      createdAt,
+      replies,
     };
 
     if (!chapter.comments) {
@@ -752,7 +752,7 @@ export const createReply = async (
 ): Promise<void> => {
   const { courseId, sectionId, chapterId, commentId } = req.params;
   const { userId } = getAuth(req);
-  const { content } = req.body;
+  const { id, username, content, createdAt } = req.body;
 
   try {
     const course = await Course.get(courseId);
@@ -786,10 +786,11 @@ export const createReply = async (
     }
 
     const newReply = {
-      id: uuidv4(),
+      id,
       userId,
+      username,
       content,
-      createdAt: new Date().toISOString(),
+      createdAt,
     };
 
     if (!comment.replies) {

@@ -50,7 +50,7 @@ export function CourseComments({ courseId, sectionId, chapterId }: CourseComment
 
     const chapterComment = {
       id: uuidv4(),
-      userId: user?.id || 'unknown',
+      userId: user?.id as string,
       username: getUsername(),
       content: newComment,
       createdAt: new Date().toISOString(),
@@ -58,19 +58,17 @@ export function CourseComments({ courseId, sectionId, chapterId }: CourseComment
     };
 
     try {
-      await createComment({
-        courseId,
-        sectionId,
-        chapterId,
-        comment: chapterComment,
-      }).unwrap();
+        await createComment({
+            courseId,
+            sectionId,
+            chapterId,
+            comment: chapterComment,
+        }).unwrap();
 
-      setNewComment('');
-      refetch();
-
-      console.log('Comment created:', newComment);
+        setNewComment('');
+        refetch();
     } catch (error) {
-      console.error('Failed to create comment:', error);
+        console.error('Failed to create comment:', error);
     }
   };
 
@@ -78,19 +76,21 @@ export function CourseComments({ courseId, sectionId, chapterId }: CourseComment
     const replyContent = replyText[commentId]?.trim();
     if (!replyContent) return;
 
+    const reply = {
+        id: uuidv4(),
+        userId: user?.id as string,
+        username: getUsername(),
+        content: replyContent,
+        createdAt: new Date().toISOString(),
+    };
+
     try {
       await createReply({
         courseId,
         sectionId,
         chapterId,
         commentId,
-        reply: {
-          id: uuidv4(),
-          userId: user?.id || 'unknown',
-          username: getUsername(),
-          content: replyContent,
-          createdAt: new Date().toISOString(),
-        },
+        reply,
       }).unwrap();
 
       setReplyText((prev) => ({ ...prev, [commentId]: '' }));
@@ -111,7 +111,7 @@ export function CourseComments({ courseId, sectionId, chapterId }: CourseComment
   };
 
   return (
-    <Card className="w-full">
+    <Card className="w-full bg-zinc-900">
       <CardHeader>
         <CardTitle>Comments</CardTitle>
       </CardHeader>
@@ -123,7 +123,7 @@ export function CourseComments({ courseId, sectionId, chapterId }: CourseComment
             placeholder="Add a comment..."
             className="flex-1"
           />
-          <Button type="submit" className="ml-4 bg-blue-500 text-white hover:bg-blue-600">
+          <Button type="submit" className="ml-4 bg-zinc-700 hover:bg-zinc-600">
             <Send className="h-4 w-4" />
           </Button>
         </form>
@@ -135,7 +135,7 @@ export function CourseComments({ courseId, sectionId, chapterId }: CourseComment
             comments.map((comment: ChapterComment) => (
               <div key={comment.id} className="mb-6">
                 <div className="flex items-start space-x-2">
-                  <Avatar>
+                  <Avatar className="border-2 border-gray-500">
                     <AvatarFallback>{comment.username[0]}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
@@ -168,7 +168,7 @@ export function CourseComments({ courseId, sectionId, chapterId }: CourseComment
                           placeholder="Write a reply..."
                           className="flex-1"
                         />
-                        <Button onClick={() => handleSubmitReply(comment.id)} className="ml-2">
+                        <Button onClick={() => handleSubmitReply(comment.id)} className="ml-2 bg-zinc-700 hover:bg-zinc-600">
                           <Send className="h-4 w-4" />
                         </Button>
                       </div>
@@ -179,7 +179,7 @@ export function CourseComments({ courseId, sectionId, chapterId }: CourseComment
                 {comment.replies?.map((reply: Reply) => (
                   <div key={reply.id} className="ml-8 mt-4">
                     <div className="flex items-start space-x-2">
-                      <Avatar>
+                      <Avatar className='border-2 border-gray-500'>
                         <AvatarFallback>{reply.username[0]}</AvatarFallback>
                       </Avatar>
                       <div>
