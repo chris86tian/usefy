@@ -8,6 +8,7 @@ const chapterProgressSchema = new Schema({
   completed: {
     type: Boolean,
     required: true,
+    default: false,
   },
   quizCompleted: {
     type: Boolean,
@@ -36,6 +37,11 @@ const userCourseProgressSchema = new Schema(
       type: String,
       rangeKey: true,
       required: true,
+      index: {
+        type: 'global',
+        name: "CourseIdIndex",
+        project: true,
+      },
     },
     enrollmentDate: {
       type: String,

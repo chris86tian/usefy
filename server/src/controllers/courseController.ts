@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import { getAuth } from "@clerk/express";
 import UserCourseProgress from "../models/userCourseProgressModel";
 import Commit from "../models/commitModel";
+import { mergeSections, calculateOverallProgress } from "../utils/utils";
 import { count } from "console";
 
 const s3 = new AWS.S3();
@@ -39,7 +40,6 @@ export const getCourse = async (req: Request, res: Response): Promise<void> => {
     res.status(500).json({ message: "Error retrieving course", error });
   }
 };
-
 
 export const createCourse = async (
   req: Request,
@@ -132,34 +132,40 @@ export const updateCourse = async (
 
     if (updateData.sections) {
       try {
-        const sectionsData = typeof updateData.sections === "string"
-          ? JSON.parse(updateData.sections)
-          : updateData.sections;
+        const sectionsData =
+          typeof updateData.sections === "string"
+            ? JSON.parse(updateData.sections)
+            : updateData.sections;
 
         if (!Array.isArray(sectionsData)) {
           throw new Error("Sections must be an array");
         }
 
-        updateData.sections = sectionsData.map(section => ({
+        updateData.sections = sectionsData.map((section) => ({
           ...section,
           sectionId: section.sectionId || uuidv4(),
           chapters: Array.isArray(section.chapters)
-            ? section.chapters.map((chapter: { chapterId: any; assignments: any[]; }) => ({
-                ...chapter,
-                chapterId: chapter.chapterId || uuidv4(),
-                assignments: Array.isArray(chapter.assignments)
-                  ? chapter.assignments.map(assignment => ({
-                      ...assignment,
-                      assignmentId: assignment.assignmentId || uuidv4(),
-                      submissions: Array.isArray(assignment.submissions)
-                        ? assignment.submissions.map((submission: { submissionId: any; }) => ({
-                            ...submission,
-                            submissionId: submission.submissionId || uuidv4(),
-                          }))
-                        : [],
-                    }))
-                  : [],
-              }))
+            ? section.chapters.map(
+                (chapter: { chapterId: any; assignments: any[] }) => ({
+                  ...chapter,
+                  chapterId: chapter.chapterId || uuidv4(),
+                  assignments: Array.isArray(chapter.assignments)
+                    ? chapter.assignments.map((assignment) => ({
+                        ...assignment,
+                        assignmentId: assignment.assignmentId || uuidv4(),
+                        submissions: Array.isArray(assignment.submissions)
+                          ? assignment.submissions.map(
+                              (submission: { submissionId: any }) => ({
+                                ...submission,
+                                submissionId:
+                                  submission.submissionId || uuidv4(),
+                              })
+                            )
+                          : [],
+                      }))
+                    : [],
+                })
+              )
             : [],
         }));
       } catch (error) {
@@ -173,6 +179,34 @@ export const updateCourse = async (
 
     const updatedCourse = await Course.update(courseId, updateData);
 
+    if (!userId) {
+      res.status(400).json({ message: "User ID is required" });
+      return;
+    }
+    const progressList = await UserCourseProgress.query("courseId")
+      .eq(courseId)
+      .using("CourseIdIndex")
+      .exec();
+
+
+    if (!progressList || progressList.length === 0) {
+      console.log("No progress records found for the given courseId.");
+      return;
+    }
+
+    for (const progress of progressList) {
+      // Merge sections
+      progress.sections = mergeSections(progress.sections, updateData.sections);
+
+      // Update timestamps and overall progress
+      progress.lastAccessedTimestamp = new Date().toISOString();
+      progress.overallProgress = calculateOverallProgress(progress.sections);
+
+      // Save the updated progress
+      await progress.save();
+    }
+
+
     res.json({
       message: "Course updated successfully",
       data: updatedCourse,
@@ -185,6 +219,7 @@ export const updateCourse = async (
     });
   }
 };
+
 
 export const archiveCourse = async (
   req: Request,

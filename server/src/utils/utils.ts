@@ -98,16 +98,26 @@ export const mergeSections = (
   newSections: any[]
 ): any[] => {
   const existingSectionsMap = new Map<string, any>();
+
+  // Map existing sections by sectionId
   for (const existingSection of existingSections) {
     existingSectionsMap.set(existingSection.sectionId, existingSection);
   }
 
+  // Merge new sections into the existing map
   for (const newSection of newSections) {
     const section = existingSectionsMap.get(newSection.sectionId);
     if (!section) {
-      existingSectionsMap.set(newSection.sectionId, newSection);
+      // Add new section, ensuring chapters have a default structure
+      existingSectionsMap.set(newSection.sectionId, {
+        ...newSection,
+        chapters: newSection.chapters.map((chapter: any) => ({
+          ...chapter,
+          completed: chapter.completed || false, // Ensure completed defaults to false
+        })),
+      });
     } else {
-      // Merge chapters within the existing section
+      // Merge chapters within the section
       section.chapters = mergeChapters(section.chapters, newSection.chapters);
       existingSectionsMap.set(newSection.sectionId, section);
     }
@@ -121,19 +131,34 @@ export const mergeChapters = (
   newChapters: any[]
 ): any[] => {
   const existingChaptersMap = new Map<string, any>();
+
+  // Map existing chapters by chapterId
   for (const existingChapter of existingChapters) {
     existingChaptersMap.set(existingChapter.chapterId, existingChapter);
   }
 
+  // Merge new chapters into the existing map
   for (const newChapter of newChapters) {
-    existingChaptersMap.set(newChapter.chapterId, {
-      ...(existingChaptersMap.get(newChapter.chapterId) || {}),
-      ...newChapter,
-    });
+    const existingChapter = existingChaptersMap.get(newChapter.chapterId);
+    if (existingChapter) {
+      // Merge existing chapter with new chapter data
+      existingChaptersMap.set(newChapter.chapterId, {
+        ...existingChapter,
+        ...newChapter,
+        completed: existingChapter.completed || false, // Retain or default completed to false
+      });
+    } else {
+      // Add new chapter with default completed value
+      existingChaptersMap.set(newChapter.chapterId, {
+        ...newChapter,
+        completed: newChapter.completed || false, // Default completed to false
+      });
+    }
   }
 
   return Array.from(existingChaptersMap.values());
 };
+
 
 export const calculateOverallProgress = (sections: any[]): number => {
   const totalChapters = sections.reduce(

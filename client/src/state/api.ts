@@ -5,7 +5,6 @@ import { BaseQueryApi, FetchArgs } from "@reduxjs/toolkit/query";
 import { User } from "@clerk/nextjs/server";
 import { Clerk } from "@clerk/clerk-js";
 import { toast } from "sonner";
-import { get } from "http";
 
 const customBaseQuery = async (
   args: string | FetchArgs,

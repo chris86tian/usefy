@@ -133,11 +133,7 @@ const Course = () => {
       isSectionReleased(currentSection)
     ) {
       setHasMarkedComplete(true);
-      updateChapterProgress(
-        currentSection.sectionId,
-        currentChapter.chapterId,
-        true
-      );
+      updateChapterProgress(currentSection.sectionId, currentChapter.chapterId, true);
     }
 
     if (

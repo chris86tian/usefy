@@ -2,8 +2,7 @@ import { Request, Response } from "express";
 import { getAuth } from "@clerk/express";
 import UserCourseProgress from "../models/userCourseProgressModel";
 import Course from "../models/courseModel";
-import { calculateOverallProgress } from "../utils/utils";
-import { mergeSections } from "../utils/utils";
+import { mergeSections, calculateOverallProgress } from "../utils/utils";
 import Commit from "../models/commitModel";
 import { v4 as uuidv4 } from "uuid";
 
@@ -125,7 +124,6 @@ export const updateQuizProgress = async (
   const { completed, sectionId, chapterId } = req.body;
 
   try {
-    // Fetch user course progress
     let progress = await UserCourseProgress.get({ userId, courseId });
 
     if (!progress) {
@@ -135,7 +133,6 @@ export const updateQuizProgress = async (
       return;
     }
 
-    // Find the section
     const sectionIndex = progress.sections.findIndex(
       (section: any) => section.sectionId === sectionId
     );

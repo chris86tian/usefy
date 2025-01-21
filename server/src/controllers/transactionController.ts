@@ -70,7 +70,6 @@ export const createStripePaymentIntent = async (
   }
 };
 
-
 export const createTransaction = async (
   req: Request,
   res: Response
@@ -78,9 +77,7 @@ export const createTransaction = async (
   const { userId, courseId, transactionId, amount, paymentProvider } = req.body;
 
   try {
-    // If the course is free, skip the transaction
     if (amount === 0) {
-      // Automatically enroll the user for free courses
       const course = await Course.get(courseId);
 
       const initialProgress = new UserCourseProgress({
@@ -88,6 +85,7 @@ export const createTransaction = async (
         courseId,
         enrollmentDate: new Date().toISOString(),
         overallProgress: 0,
+        lastAccessedTimestamp: new Date().toISOString(),
         sections: course.sections.map((section: any) => ({
           sectionId: section.sectionId,
           chapters: section.chapters.map((chapter: any) => ({
@@ -96,11 +94,9 @@ export const createTransaction = async (
             quizCompleted: false,
           })),
         })),
-        lastAccessedTimestamp: new Date().toISOString(),
       });
       await initialProgress.save();
 
-      // Update course enrollments
       await Course.update(
         { courseId },
         {
@@ -110,17 +106,12 @@ export const createTransaction = async (
         }
       );
 
-      res.json({
-        message: "Enrolled in free course successfully",
-        data: { courseProgress: initialProgress },
-      });
+      res.json({ message: "Enrolled in free course successfully", data: { courseProgress: initialProgress } });
       return;
     }
 
-    // 1. Get course info
     const course = await Course.get(courseId);
 
-    // 2. Create transaction record
     const newTransaction = new Transaction({
       dateTime: new Date().toISOString(),
       userId,
@@ -131,12 +122,12 @@ export const createTransaction = async (
     });
     await newTransaction.save();
 
-    // 3. Create initial course progress
     const initialProgress = new UserCourseProgress({
       userId,
       courseId,
       enrollmentDate: new Date().toISOString(),
       overallProgress: 0,
+      lastAccessedTimestamp: new Date().toISOString(),
       sections: course.sections.map((section: any) => ({
         sectionId: section.sectionId,
         chapters: section.chapters.map((chapter: any) => ({
@@ -145,11 +136,9 @@ export const createTransaction = async (
           quizCompleted: false,
         })),
       })),
-      lastAccessedTimestamp: new Date().toISOString(),
     });
     await initialProgress.save();
 
-    // 4. Add enrollment to relevant course
     await Course.update(
       { courseId },
       {
@@ -159,17 +148,9 @@ export const createTransaction = async (
       }
     );
 
-    res.json({
-      message: "Purchased Course successfully",
-      data: {
-        transaction: newTransaction,
-        courseProgress: initialProgress,
-      },
-    });
+    res.json({ message: "Purchased Course successfully", data: { transaction: newTransaction, courseProgress: initialProgress } });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error creating transaction and enrollment", error });
+    res.status(500).json({ message: "Error creating transaction and enrollment", error });
   }
 };
 
