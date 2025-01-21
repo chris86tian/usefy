@@ -630,7 +630,7 @@ export const createSubmission = async (
   const { courseId, sectionId, chapterId, assignmentId } = req.params;
   const { userId } = getAuth(req);
   const { submissionId, code, evaluation } = req.body;
-  
+
   try {
     const course = await Course.get(courseId);
     if (!course) {
@@ -684,25 +684,41 @@ export const createSubmission = async (
       });
     }
 
-    // const commit = await Commit.get(new Date().toISOString().split("T")[0]);
-    // if (!commit) {
-    //   new Commit({
-    //     id: uuidv4(),
-    //     userId,
-    //     date: new Date().toISOString().split("T")[0],
-    //     count: 1,
-    //   })
-    // } else {
-    //   commit.count += 1;
-    // }
+    try {
+      const today = new Date().toISOString().split("T")[0];
+      
+      let commit = await Commit.query("userId")
+        .eq(userId)
+        .where("date")
+        .eq(today)
+        .exec();
 
-    // await commit.save();
+      if (commit) {
+        await Commit.update(
+          { userId, date: today },
+          { count: commit.count + 1 }
+        )
+      } else {
+        // Create new commit if none exists for today
+        const newCommit = new Commit({
+          commitId: uuidv4(),
+          userId,
+          date: today,
+          count: 1
+        });
+        await newCommit.save();
+      }
+    } catch (commitError) {
+      console.error("Error handling commit:", commitError);
+    }      
+
     await course.save();
     res.json({ message: "Assignment submitted successfully", data: submission });
   } catch (error) {
     res.status(500).json({ message: "Error submitting assignment", error });
   }
-}
+};
+
 
 export const getUserCourseSubmissions = async (
   req: Request,

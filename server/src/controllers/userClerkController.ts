@@ -2,6 +2,16 @@ import { Request, Response } from "express";
 import { clerkClient } from "../index";
 import Course from "../models/courseModel";
 
+export const getUser = async (req: Request, res: Response): Promise<void> => {
+  const { userId } = req.params;
+  try {
+    const user = await clerkClient.users.getUser(userId);
+    res.json({ message: "User retrieved successfully", data: user });
+  } catch (error) {
+    res.status(500).json({ message: "Error retrieving user", error });
+  }
+}
+
 export const updateUser = async (
   req: Request,
   res: Response

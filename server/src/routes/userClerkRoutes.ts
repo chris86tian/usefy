@@ -1,8 +1,9 @@
 import express from "express";
-import { updateUser, getUsers, getCourseUsers, promoteUser, demoteUser, deleteUser } from "../controllers/userClerkController";
+import { getUser, updateUser, getUsers, getCourseUsers, promoteUser, demoteUser, deleteUser } from "../controllers/userClerkController";
 
 const router = express.Router();
 
+router.get("/:userId", getUser);
 router.put("/:userId", updateUser);
 router.get("/", getUsers);
 router.get("/:courseId", getCourseUsers);

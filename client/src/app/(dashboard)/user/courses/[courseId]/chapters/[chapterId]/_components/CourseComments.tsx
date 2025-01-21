@@ -3,11 +3,16 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send } from 'lucide-react';
-import { useCreateCommentMutation, useCreateReplyMutation, useGetChapterCommentsQuery } from '@/state/api';
+import { 
+  useCreateCommentMutation, 
+  useCreateReplyMutation, 
+  useGetChapterCommentsQuery, 
+  useGetUserQuery 
+} from '@/state/api';
 import { v4 as uuidv4 } from 'uuid';
 import { useUser } from '@clerk/nextjs';
 
@@ -16,6 +21,25 @@ interface CourseCommentsProps {
   sectionId: string;
   chapterId: string;
 }
+
+interface UserAvatarProps {
+  userId: string;
+  username: string;
+}
+
+const UserAvatar = ({ userId, username }: UserAvatarProps) => {
+  const { data: userData } = useGetUserQuery(userId);
+
+  return (
+    <Avatar className="border-2 border-gray-500">
+      {userData?.imageUrl ? (
+        <AvatarImage src={userData.imageUrl} alt={username} />
+      ) : (
+        <AvatarFallback>{username[0]}</AvatarFallback>
+      )}
+    </Avatar>
+  );
+};
 
 export function CourseComments({ courseId, sectionId, chapterId }: CourseCommentsProps) {
   const { user } = useUser();
@@ -31,7 +55,7 @@ export function CourseComments({ courseId, sectionId, chapterId }: CourseComment
   
   const [createComment] = useCreateCommentMutation();
   const [createReply] = useCreateReplyMutation();
-
+  
   const getUsername = () => {
     if (!user) return 'Anonymous';
     return (
@@ -56,17 +80,17 @@ export function CourseComments({ courseId, sectionId, chapterId }: CourseComment
     };
 
     try {
-        await createComment({
-            courseId,
-            sectionId,
-            chapterId,
-            comment: chapterComment,
-        }).unwrap();
+      await createComment({
+        courseId,
+        sectionId,
+        chapterId,
+        comment: chapterComment,
+      }).unwrap();
 
-        setNewComment('');
-        refetch();
+      setNewComment('');
+      refetch();
     } catch (error) {
-        console.error('Failed to create comment:', error);
+      console.error('Failed to create comment:', error);
     }
   };
 
@@ -75,11 +99,11 @@ export function CourseComments({ courseId, sectionId, chapterId }: CourseComment
     if (!replyContent) return;
 
     const reply = {
-        id: uuidv4(),
-        userId: user?.id as string,
-        username: getUsername(),
-        content: replyContent,
-        createdAt: new Date().toISOString(),
+      id: uuidv4(),
+      userId: user?.id as string,
+      username: getUsername(),
+      content: replyContent,
+      createdAt: new Date().toISOString(),
     };
 
     try {
@@ -129,11 +153,9 @@ export function CourseComments({ courseId, sectionId, chapterId }: CourseComment
             <div className="text-center py-4">Loading comments...</div>
           ) : (
             comments.map((comment: ChapterComment) => (
-              <div key={comment.id} className="mb-6">
+              <div key={comment.id} className="mb-4 bg-zinc-800 p-4 rounded-lg">
                 <div className="flex items-start space-x-2">
-                  <Avatar className="border-2 border-gray-500">
-                    <AvatarFallback>{comment.username[0]}</AvatarFallback>
-                  </Avatar>
+                  <UserAvatar userId={comment.userId} username={comment.username} />
                   <div className="flex-1">
                     <p className="font-semibold">{comment.username}</p>
                     <p className="mt-1">{comment.content}</p>
@@ -175,9 +197,7 @@ export function CourseComments({ courseId, sectionId, chapterId }: CourseComment
                 {comment.replies?.map((reply: Reply) => (
                   <div key={reply.id} className="ml-8 mt-4">
                     <div className="flex items-start space-x-2">
-                      <Avatar className='border-2 border-gray-500'>
-                        <AvatarFallback>{reply.username[0]}</AvatarFallback>
-                      </Avatar>
+                      <UserAvatar userId={reply.userId} username={reply.username} />
                       <div>
                         <p className="font-semibold">{reply.username}</p>
                         <p className="mt-1">{reply.content}</p>

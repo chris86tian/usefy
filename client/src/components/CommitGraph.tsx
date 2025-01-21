@@ -1,50 +1,59 @@
-import React from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-
-// interface CommitGridProps {
-//   courseId: string;
-// }
+import React from "react"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { useGetCommitsQuery } from "@/state/api"
+import { useUser } from "@clerk/nextjs"
 
 const CommitGrid = () => {
-
-  const generateSampleinfo = () => {
-    const info = [];
-    const now = new Date();
-    for (let i = 0; i < 357; i++) {
-      const date = new Date(now);
-      date.setDate(date.getDate() - i);
-      info.unshift({
-        date: date.toISOString().split('T')[0],
-        count: Math.floor(Math.random() * 10)
-      });
-    }
-    return info;
-  };
-
-  const info = generateSampleinfo();
+  const { user } = useUser()
+  const { data: commits } = useGetCommitsQuery({ userId: user?.id || "" })
 
   const getColor = (count: number) => {
-    if (count === 0) return 'bg-gray-700';
-    if (count <= 2) return 'bg-green-900';
-    if (count <= 5) return 'bg-green-700';
-    if (count <= 8) return 'bg-green-500';
-    return 'bg-green-300';
-  };
+    if (count === 0) return "bg-gray-700"
+    if (count <= 2) return "bg-green-900"
+    if (count <= 4) return "bg-green-700"
+    if (count <= 6) return "bg-green-500"
+    return "bg-green-300"
+  }
 
   const formatDate = (dateString: string | number | Date) => {
-    const options: Intl.DateTimeFormatOptions = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString(undefined, options);
-  };
+    const options: Intl.DateTimeFormatOptions = { weekday: "short", year: "numeric", month: "short", day: "numeric" }
+    return new Date(dateString).toLocaleDateString(undefined, options)
+  }
 
-  const weeks: { date: string; count: number; }[][] = [];
-  let currentWeek: { date: string; count: number; }[] = [];
-  info.forEach((day, index) => {
-    currentWeek.push(day);
-    if (currentWeek.length === 7 || index === info.length - 1) {
-      weeks.push(currentWeek);
-      currentWeek = [];
+  const processCommits = () => {
+    if (!commits) return []
+
+    const commitMap = new Map<string, number>()
+    commits.forEach((commit) => {
+      const date = new Date(commit.date).toISOString().split("T")[0]
+      commitMap.set(date, (commitMap.get(date) || 0) + commit.count)
+    })
+
+    const now = new Date()
+    const info = []
+    for (let i = 356; i >= 0; i--) {
+      const date = new Date(now)
+      date.setDate(date.getDate() - i)
+      const dateString = date.toISOString().split("T")[0]
+      info.push({
+        date: dateString,
+        count: commitMap.get(dateString) || 0,
+      })
     }
-  });
+    return info
+  }
+
+  const info = processCommits()
+
+  const weeks: { date: string; count: number }[][] = []
+  let currentWeek: { date: string; count: number }[] = []
+  info.forEach((day, index) => {
+    currentWeek.push(day)
+    if (currentWeek.length === 7 || index === info.length - 1) {
+      weeks.push(currentWeek)
+      currentWeek = []
+    }
+  })
 
   return (
     <Card className="w-5/12 h-64 bg-customgreys-darkGrey">
@@ -78,7 +87,8 @@ const CommitGrid = () => {
         </div>
       </CardContent>
     </Card>
-  );
-};
+  )
+}
 
-export default CommitGrid;
+export default CommitGrid
+

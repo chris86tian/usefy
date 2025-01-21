@@ -260,7 +260,7 @@ const Course = () => {
         {hasPreviousChapter && (
           <Button
             onClick={handleGoToPreviousChapter}
-            className="mt-4"
+            className="mt-4 bg-gray-800 hover:bg-gray-700"
           >
             <ChevronLeft className="h-4 w-4 mr-2" />
             Go to Previous Chapter

@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { useGetUserCourseProgressQuery, useGetUserCourseSubmissionsQuery } from "@/state/api"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Clock, Book, Trophy, ChevronRight } from "lucide-react"
+import { Clock, Book, Trophy } from "lucide-react"
 import type { User } from "@/lib/utils"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
@@ -100,7 +100,7 @@ export default function UserDetails({ user, courseId }: UserDetailsProps) {
             {isLoading ? (
               <Skeleton className="h-64 w-full" />
             ) : progress ? (
-              <Card>
+              <Card className="bg-zinc-800">
                 <CardHeader>
                   <CardTitle className="text-xl">Course Progress Details</CardTitle>
                 </CardHeader>
@@ -122,7 +122,6 @@ export default function UserDetails({ user, courseId }: UserDetailsProps) {
                                   <Badge variant={chapter.completed ? "default" : "secondary"}>
                                     {chapter.completed ? "Completed" : "In Progress"}
                                   </Badge>
-                                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
                                 </div>
                               </div>
                             ))}
@@ -139,7 +138,7 @@ export default function UserDetails({ user, courseId }: UserDetailsProps) {
             {isLoading ? (
               <Skeleton className="h-64 w-full" />
             ) : submissions && (
-              <Card>
+              <Card className="bg-zinc-800">
                 <CardHeader>
                   <CardTitle className="text-xl">Assignment Submissions</CardTitle>
                 </CardHeader>

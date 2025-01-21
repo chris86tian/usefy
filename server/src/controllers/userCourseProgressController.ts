@@ -4,8 +4,8 @@ import UserCourseProgress from "../models/userCourseProgressModel";
 import Course from "../models/courseModel";
 import { calculateOverallProgress } from "../utils/utils";
 import { mergeSections } from "../utils/utils";
-import { v4 as uuidv4 } from "uuid";
 import Commit from "../models/commitModel";
+import { v4 as uuidv4 } from "uuid";
 
 export const getUserEnrolledCourses = async (
   req: Request,
@@ -46,7 +46,6 @@ export const getUserEnrolledCourses = async (
       .json({ message: "Error retrieving enrolled courses", error });
   }
 };
-
 
 export const getUserCourseProgress = async (
   req: Request,
@@ -118,7 +117,6 @@ export const updateUserCourseProgress = async (
   }
 };
 
-
 export const updateQuizProgress = async (
   req: Request,
   res: Response
@@ -127,15 +125,17 @@ export const updateQuizProgress = async (
   const { completed, sectionId, chapterId } = req.body;
 
   try {
+    // Fetch user course progress
     let progress = await UserCourseProgress.get({ userId, courseId });
 
     if (!progress) {
-      res
-        .status(404)
-        .json({ message: "Course progress not found for this user" });
+      res.status(404).json({
+        message: "Course progress not found for this user",
+      });
       return;
     }
 
+    // Find the section
     const sectionIndex = progress.sections.findIndex(
       (section: any) => section.sectionId === sectionId
     );
@@ -145,6 +145,7 @@ export const updateQuizProgress = async (
       return;
     }
 
+    // Find the chapter
     const chapterIndex = progress.sections[sectionIndex].chapters.findIndex(
       (chapter: any) => chapter.chapterId === chapterId
     );
@@ -154,37 +155,49 @@ export const updateQuizProgress = async (
       return;
     }
 
+    // Update the progress
     progress.sections[sectionIndex].chapters[chapterIndex].quizCompleted = completed;
     progress.lastAccessedTimestamp = new Date().toISOString();
     progress.overallProgress = calculateOverallProgress(progress.sections);
 
-    // const today = new Date().toISOString().split("T")[0];
-    // const commit = await Commit.query("date")
-    //   .eq(today)
-    //   .where("userId")
-    //   .eq(userId)
-    //   .exec();
+    try {
+      const today = new Date().toISOString().split("T")[0];
+      
+      let commit = await Commit.query("userId")
+        .eq(userId)
+        .where("date")
+        .eq(today)
+        .exec();
 
-    // console.log(commit);
+      if (commit) {
+        await Commit.update(
+          { userId, date: today },
+          { count: commit.count + 1 }
+        )
+      } else {
+        // Create new commit if none exists for today
+        const newCommit = new Commit({
+          commitId: uuidv4(),
+          userId,
+          date: today,
+          count: 1
+        });
+        await newCommit.save();
+      }
+    } catch (commitError) {
+      console.error("Error handling commit:", commitError);
+    }        
 
-    // if (!commit) {
-    //   const newCommit = new Commit({
-    //     id: uuidv4(),
-    //     userId,
-    //     date: today,
-    //     count: 1,
-    //   });
-    //   await newCommit.save();
-    // }
-
+    // Save the updated progress
     await progress.save();
     res.json({
       message: "Quiz progress updated successfully",
       data: progress,
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error updating quiz progress", error });
+    res.status(500).json({
+      message: "Error updating quiz progress",
+      error,
+    });
   }
-}
+};

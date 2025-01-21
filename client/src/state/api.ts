@@ -5,6 +5,7 @@ import { BaseQueryApi, FetchArgs } from "@reduxjs/toolkit/query";
 import { User } from "@clerk/nextjs/server";
 import { Clerk } from "@clerk/clerk-js";
 import { toast } from "sonner";
+import { get } from "http";
 
 const customBaseQuery = async (
   args: string | FetchArgs,
@@ -67,6 +68,9 @@ export const api = createApi({
     USER CLERK
     =============== 
     */
+    getUser: build.query<User, string>({
+      query: (userId) => `users/clerk/${userId}`,
+    }),
     updateUser: build.mutation<User, Partial<User> & { userId: string }>({
       query: ({ userId, ...updatedUser }) => ({
         url: `users/clerk/${userId}`,
@@ -377,8 +381,8 @@ export const api = createApi({
     COMMITS
     ===============
     */
-    getCommitsByDate: build.query<Commit[], { date: string; userId: string }>({
-      query: ({ date, userId }) => `commits/${date}/${userId}`,
+    getCommits: build.query<Commit[], { userId: string }>({
+      query: ({ userId }) => `commits/${userId}`,
     }),
 
     /*
@@ -440,6 +444,7 @@ export const api = createApi({
 });
 
 export const {
+  useGetUserQuery,
   useGetUsersQuery,
   useGetCourseUsersQuery,
   usePromoteUserToAdminMutation,
@@ -471,7 +476,7 @@ export const {
   useUpdateQuizProgressMutation,
   useGetUserCourseSubmissionsQuery,
   useGetNotificationsQuery,
-  useGetCommitsByDateQuery,
+  useGetCommitsQuery,
   useCreateCommentMutation,
   useCreateReplyMutation,
   useGetChapterCommentsQuery,
