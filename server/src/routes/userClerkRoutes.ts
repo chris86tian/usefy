@@ -5,11 +5,10 @@ const router = express.Router();
 
 router.get("/:userId", getUser);
 router.put("/:userId", updateUser);
-router.get("/", getUsers);
-router.get("/:courseId", getCourseUsers);
+router.delete("/:userId", deleteUser);
 router.put("/:userId/promote", promoteUser);
 router.put("/:userId/demote", demoteUser);
-router.delete("/:userId", deleteUser);
-
+router.get("/", getUsers);
+router.get("/course/:courseId", getCourseUsers);
 
 export default router;

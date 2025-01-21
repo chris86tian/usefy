@@ -85,7 +85,7 @@ export const api = createApi({
 
     // pass the courseId as a parameter to the query
     getCourseUsers: build.query<User[], string>({
-      query: (courseId) => `users/clerk/${courseId}`,
+      query: (courseId) => `users/clerk/course/${courseId}`,
     }),
 
     promoteUserToAdmin: build.mutation<User, string>({

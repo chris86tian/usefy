@@ -45,6 +45,8 @@ const Course = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [videoEndTime, setVideoEndTime] = useState<number | null>(null);
   const [hasShownPrompt, setHasShownPrompt] = useState(false); 
+  const [likes, setLikes] = useState(currentChapter?.likes ?? 0);
+  const [dislikes, setDislikes] = useState(currentChapter?.dislikes ?? 0);
 
   const [likeChapter] = useLikeChapterMutation();
   const [dislikeChapter] = useDislikeChapterMutation();
@@ -207,31 +209,46 @@ const Course = () => {
 
   const handleLike = async () => {
     if (!currentChapter) return;
+
+    // Optimistically update UI
+    setLikes((prevLikes) => prevLikes + 1);
+
     try {
-      await likeChapter({ 
-        courseId: course?.courseId as string, 
-        sectionId: currentSection?.sectionId as string, 
-        chapterId: currentChapter.chapterId 
+      await likeChapter({
+        courseId: course?.courseId as string,
+        sectionId: currentSection?.sectionId as string,
+        chapterId: currentChapter.chapterId,
       }).unwrap();
     } catch (error) {
-      console.error('Failed to like chapter:', error);
-      toast.error('Failed to like the chapter. Please try again.');
+      console.error("Failed to like chapter:", error);
+      toast.error("Failed to like the chapter. Please try again.");
+
+      // Rollback UI update
+      setLikes((prevLikes) => prevLikes - 1);
     }
   };
-  
+
   const handleDislike = async () => {
     if (!currentChapter) return;
+
+    // Optimistically update UI
+    setDislikes((prevDislikes) => prevDislikes + 1);
+
     try {
-      await dislikeChapter({ 
-        courseId: course?.courseId as string, 
-        sectionId: currentSection?.sectionId as string, 
-        chapterId: currentChapter.chapterId 
-      }).unwrap(); 
+      await dislikeChapter({
+        courseId: course?.courseId as string,
+        sectionId: currentSection?.sectionId as string,
+        chapterId: currentChapter.chapterId,
+      }).unwrap();
     } catch (error) {
-      console.error('Failed to dislike chapter:', error);
-      toast.error('Failed to dislike the chapter. Please try again.');
+      console.error("Failed to dislike chapter:", error);
+      toast.error("Failed to dislike the chapter. Please try again.");
+
+      // Rollback UI update
+      setDislikes((prevDislikes) => prevDislikes - 1);
     }
   };
+
 
   if (isLoading) return <Loading />;
   if (!user) return <SignInRequired />;
@@ -314,23 +331,22 @@ const Course = () => {
         <Card className="border-none shadow-lg">
           <CardHeader className="rounded-t-lg bg-gray-800 text-white">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <BookOpen className="h-5 w-5 text-primary" />
-                <CardTitle className="text-lg">Chapter Overview</CardTitle>
-                <div className="flex items-center space-x-2">
-                  <Button className="bg-gray-900 hover:bg-gray-700" onClick={handleLike}>
-                    <span className="text-sm text-gray-300">{currentChapter?.likes ?? 0}</span>
-                    <ThumbsUp className="h-4 w-4"/>
-                  </Button>
-                  <Button className="bg-gray-900 hover:bg-gray-700" onClick={handleDislike}>
-                    <span className="text-sm text-gray-300">{currentChapter?.dislikes ?? 0}</span>
-                    <ThumbsDown className="h-4 w-4"/>
-                  </Button>
-                </div>
+            <div className="flex items-center space-x-4">
+              <BookOpen className="h-5 w-5 text-primary" />
+              <CardTitle className="text-lg">Chapter Overview</CardTitle>
+              <div className="flex items-center space-x-2">
+                <Button className="bg-gray-900 hover:bg-gray-700" onClick={handleLike}>
+                  <span className="text-sm text-gray-300">{likes}</span>
+                  <ThumbsUp className="h-4 w-4" />
+                </Button>
+                <Button className="bg-gray-900 hover:bg-gray-700" onClick={handleDislike}>
+                  <span className="text-sm text-gray-300">{dislikes}</span>
+                  <ThumbsDown className="h-4 w-4" />
+                </Button>
               </div>
-              <div className="flex space-x-3">
+            </div>
+            <div className="flex space-x-3">
                 {user.id === course.teacherId && (
-                  // button to create an assignment
                   <Button
                     onClick={() => setIsModalOpen(true)}
                     className="bg-gray-900 hover:bg-gray-700"

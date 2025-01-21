@@ -55,6 +55,7 @@ export const getCourseUsers = async (req: Request, res: Response): Promise<void>
       res.status(404).json({ message: "Course not found" });
       return;
     }
+
     const courseUsers = await clerkClient.users.getUserList();
 
     const courseUserIds = course.enrollments.map((enrollment: { userId: any; }) => enrollment.userId);
