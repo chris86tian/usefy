@@ -721,31 +721,31 @@ export const createSubmission = async (
 
     try {
       const today = new Date().toISOString().split("T")[0];
-      
+    
       let commit = await Commit.query("userId")
         .eq(userId)
         .where("date")
         .eq(today)
+        .using("userId-date-index")
         .exec();
-
-      if (commit) {
+    
+      if (commit.length > 0) {
         await Commit.update(
-          { userId, date: today },
-          { count: commit.count + 1 }
-        )
+          { commitId: commit[0].commitId },
+          { count: commit[0].count + 1 }
+        );
       } else {
-        // Create new commit if none exists for today
         const newCommit = new Commit({
           commitId: uuidv4(),
           userId,
           date: today,
-          count: 1
+          count: 1,
         });
         await newCommit.save();
       }
     } catch (commitError) {
       console.error("Error handling commit:", commitError);
-    }      
+    }       
 
     await course.save();
     res.json({ message: "Assignment submitted successfully", data: submission });

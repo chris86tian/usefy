@@ -55,24 +55,47 @@ const CommitGrid = () => {
     }
   })
 
+  const getMonths = () => {
+    const months: string[] = []
+    info.forEach((day, index) => {
+      const date = new Date(day.date)
+      const monthYear = date.toLocaleString("default", { month: "short", year: "2-digit" })
+      if (index === 0 || monthYear !== months[months.length - 1]) {
+        months.push(monthYear)
+      }
+    })
+    return months
+  }
+
+  const months = getMonths()
+
   return (
-    <Card className="w-5/12 h-64 bg-customgreys-darkGrey">
+    <Card className="w-5/12 h-72 bg-customgreys-darkGrey">
       <CardHeader>
         <CardTitle>Commit Activity</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="flex gap-1 overflow-x-auto pb-4">
-          {weeks.map((week, weekIndex) => (
-            <div key={weekIndex} className="flex flex-col gap-1">
-              {week.map((day, dayIndex) => (
-                <div
-                  key={`${weekIndex}-${dayIndex}`}
-                  className={`w-3 h-3 rounded-sm ${getColor(day.count)} hover:ring-2 hover:ring-white hover:ring-opacity-50 transition-all`}
-                  title={`${formatDate(day.date)}: ${day.count} commits`}
-                />
-              ))}
-            </div>
-          ))}
+        <div className="flex flex-col gap-1">
+          <div className="flex justify-between text-xs text-gray-400 mb-1">
+            {months.map((month, index) => (
+              <span key={index} className="w-14 text-center">
+                {month}
+              </span>
+            ))}
+          </div>
+          <div className="flex gap-1 overflow-x-auto pb-4">
+            {weeks.map((week, weekIndex) => (
+              <div key={weekIndex} className="flex flex-col gap-1">
+                {week.map((day, dayIndex) => (
+                  <div
+                    key={`${weekIndex}-${dayIndex}`}
+                    className={`w-3 h-3 rounded-sm ${getColor(day.count)} hover:ring-2 hover:ring-white hover:ring-opacity-50 transition-all`}
+                    title={`${formatDate(day.date)}: ${day.count} commits`}
+                  />
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
         <div className="flex items-center gap-2 mt-4 text-sm text-gray-400">
           <span>Less</span>

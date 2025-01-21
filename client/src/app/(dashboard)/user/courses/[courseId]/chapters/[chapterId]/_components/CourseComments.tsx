@@ -1,34 +1,34 @@
-'use client';
+"use client"
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Textarea } from '@/components/ui/textarea';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Send } from 'lucide-react';
-import { 
-  useCreateCommentMutation, 
-  useCreateReplyMutation, 
-  useGetChapterCommentsQuery, 
-  useGetUserQuery 
-} from '@/state/api';
-import { v4 as uuidv4 } from 'uuid';
-import { useUser } from '@clerk/nextjs';
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Textarea } from "@/components/ui/textarea"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Send } from "lucide-react"
+import {
+  useCreateCommentMutation,
+  useCreateReplyMutation,
+  useGetChapterCommentsQuery,
+  useGetUserQuery,
+} from "@/state/api"
+import { v4 as uuidv4 } from "uuid"
+import { useUser } from "@clerk/nextjs"
 
 interface CourseCommentsProps {
-  courseId: string;
-  sectionId: string;
-  chapterId: string;
+  courseId: string
+  sectionId: string
+  chapterId: string
 }
 
 interface UserAvatarProps {
-  userId: string;
-  username: string;
+  userId: string
+  username: string
 }
 
 const UserAvatar = ({ userId, username }: UserAvatarProps) => {
-  const { data: userData } = useGetUserQuery(userId);
+  const { data: userData } = useGetUserQuery(userId)
 
   return (
     <Avatar className="border-2 border-gray-500">
@@ -38,37 +38,36 @@ const UserAvatar = ({ userId, username }: UserAvatarProps) => {
         <AvatarFallback>{username[0]}</AvatarFallback>
       )}
     </Avatar>
-  );
-};
+  )
+}
 
 export function CourseComments({ courseId, sectionId, chapterId }: CourseCommentsProps) {
-  const { user } = useUser();
-  const [newComment, setNewComment] = useState('');
-  const [replyText, setReplyText] = useState<{ [key: string]: string }>({});
-  const [showReplyInput, setShowReplyInput] = useState<{ [key: string]: boolean }>({});
+  const { user } = useUser()
+  const [newComment, setNewComment] = useState("")
+  const [replyText, setReplyText] = useState<{ [key: string]: string }>({})
+  const [showReplyInput, setShowReplyInput] = useState<{ [key: string]: boolean }>({})
 
-  const { data: comments = [], isLoading, refetch } = useGetChapterCommentsQuery({
+  const {
+    data: comments = [],
+    isLoading,
+    refetch,
+  } = useGetChapterCommentsQuery({
     courseId,
     sectionId,
     chapterId,
-  });
-  
-  const [createComment] = useCreateCommentMutation();
-  const [createReply] = useCreateReplyMutation();
-  
+  })
+
+  const [createComment] = useCreateCommentMutation()
+  const [createReply] = useCreateReplyMutation()
+
   const getUsername = () => {
-    if (!user) return 'Anonymous';
-    return (
-      user.username ||
-      user.fullName ||
-      user.emailAddresses?.[0]?.emailAddress ||
-      'Anonymous'
-    );
-  };
+    if (!user) return "Anonymous"
+    return user.username || user.fullName || user.emailAddresses?.[0]?.emailAddress || "Anonymous"
+  }
 
   const handleSubmitComment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newComment.trim()) return;
+    e.preventDefault()
+    if (!newComment.trim()) return
 
     const chapterComment = {
       id: uuidv4(),
@@ -77,7 +76,7 @@ export function CourseComments({ courseId, sectionId, chapterId }: CourseComment
       content: newComment,
       createdAt: new Date().toISOString(),
       replies: [],
-    };
+    }
 
     try {
       await createComment({
@@ -85,18 +84,18 @@ export function CourseComments({ courseId, sectionId, chapterId }: CourseComment
         sectionId,
         chapterId,
         comment: chapterComment,
-      }).unwrap();
+      }).unwrap()
 
-      setNewComment('');
-      refetch();
+      setNewComment("")
+      refetch()
     } catch (error) {
-      console.error('Failed to create comment:', error);
+      console.error("Failed to create comment:", error)
     }
-  };
+  }
 
   const handleSubmitReply = async (commentId: string) => {
-    const replyContent = replyText[commentId]?.trim();
-    if (!replyContent) return;
+    const replyContent = replyText[commentId]?.trim()
+    if (!replyContent) return
 
     const reply = {
       id: uuidv4(),
@@ -104,7 +103,7 @@ export function CourseComments({ courseId, sectionId, chapterId }: CourseComment
       username: getUsername(),
       content: replyContent,
       createdAt: new Date().toISOString(),
-    };
+    }
 
     try {
       await createReply({
@@ -113,22 +112,28 @@ export function CourseComments({ courseId, sectionId, chapterId }: CourseComment
         chapterId,
         commentId,
         reply,
-      }).unwrap();
+      }).unwrap()
 
-      setReplyText((prev) => ({ ...prev, [commentId]: '' }));
-      setShowReplyInput((prev) => ({ ...prev, [commentId]: false }));
-      refetch();
+      setReplyText((prev) => ({ ...prev, [commentId]: "" }))
+      setShowReplyInput((prev) => ({ ...prev, [commentId]: false }))
+      refetch()
     } catch (error) {
-      console.error('Failed to create reply:', error);
+      console.error("Failed to create reply:", error)
     }
-  };
+  }
 
-  const toggleReplyInput = (commentId: string) => {
+  const toggleReplyInput = (commentId: string, username: string) => {
     setShowReplyInput((prev) => ({
       ...prev,
       [commentId]: !prev[commentId],
-    }));
-  };
+    }))
+    if (!showReplyInput[commentId]) {
+      setReplyText((prev) => ({
+        ...prev,
+        [commentId]: `@${username} `,
+      }))
+    }
+  }
 
   return (
     <Card className="w-full bg-zinc-900">
@@ -160,13 +165,11 @@ export function CourseComments({ courseId, sectionId, chapterId }: CourseComment
                     <p className="font-semibold">{comment.username}</p>
                     <p className="mt-1">{comment.content}</p>
                     <div className="flex items-center mt-2">
-                      <p className="text-sm text-gray-500">
-                        {new Date(comment.createdAt).toLocaleString()}
-                      </p>
+                      <p className="text-sm text-gray-500">{new Date(comment.createdAt).toLocaleString()}</p>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => toggleReplyInput(comment.id)}
+                        onClick={() => toggleReplyInput(comment.id, comment.username)}
                         className="ml-2"
                       >
                         Reply
@@ -176,7 +179,7 @@ export function CourseComments({ courseId, sectionId, chapterId }: CourseComment
                     {showReplyInput[comment.id] && (
                       <div className="mt-2 flex">
                         <Textarea
-                          value={replyText[comment.id] || ''}
+                          value={replyText[comment.id] || ""}
                           onChange={(e) =>
                             setReplyText((prev) => ({
                               ...prev,
@@ -186,7 +189,10 @@ export function CourseComments({ courseId, sectionId, chapterId }: CourseComment
                           placeholder="Write a reply..."
                           className="flex-1"
                         />
-                        <Button onClick={() => handleSubmitReply(comment.id)} className="ml-2 bg-zinc-700 hover:bg-zinc-600">
+                        <Button
+                          onClick={() => handleSubmitReply(comment.id)}
+                          className="ml-4 bg-zinc-700 hover:bg-zinc-600"
+                        >
                           <Send className="h-4 w-4" />
                         </Button>
                       </div>
@@ -201,9 +207,7 @@ export function CourseComments({ courseId, sectionId, chapterId }: CourseComment
                       <div>
                         <p className="font-semibold">{reply.username}</p>
                         <p className="mt-1">{reply.content}</p>
-                        <p className="text-sm text-gray-500 mt-2">
-                          {new Date(reply.createdAt).toLocaleString()}
-                        </p>
+                        <p className="text-sm text-gray-500 mt-2">{new Date(reply.createdAt).toLocaleString()}</p>
                       </div>
                     </div>
                   </div>
@@ -214,7 +218,7 @@ export function CourseComments({ courseId, sectionId, chapterId }: CourseComment
         </ScrollArea>
       </CardContent>
     </Card>
-  );
+  )
 }
 
-export default CourseComments;
+export default CourseComments

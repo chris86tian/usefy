@@ -82,7 +82,6 @@ export const updateUserCourseProgress = async (
     let progress = await UserCourseProgress.get({ userId, courseId });
 
     if (!progress) {
-      // If no progress exists, create initial progress
       progress = new UserCourseProgress({
         userId,
         courseId,
@@ -92,7 +91,6 @@ export const updateUserCourseProgress = async (
         lastAccessedTimestamp: new Date().toISOString(),
       });
     } else {
-      // Merge existing progress with new progress data
       progress.sections = mergeSections(
         progress.sections,
         progressData.sections || []
@@ -142,7 +140,6 @@ export const updateQuizProgress = async (
       return;
     }
 
-    // Find the chapter
     const chapterIndex = progress.sections[sectionIndex].chapters.findIndex(
       (chapter: any) => chapter.chapterId === chapterId
     );
@@ -152,40 +149,38 @@ export const updateQuizProgress = async (
       return;
     }
 
-    // Update the progress
     progress.sections[sectionIndex].chapters[chapterIndex].quizCompleted = completed;
     progress.lastAccessedTimestamp = new Date().toISOString();
     progress.overallProgress = calculateOverallProgress(progress.sections);
 
     try {
       const today = new Date().toISOString().split("T")[0];
-      
+    
       let commit = await Commit.query("userId")
         .eq(userId)
         .where("date")
         .eq(today)
+        .using("userId-date-index")
         .exec();
-
-      if (commit) {
+    
+      if (commit.length > 0) {
         await Commit.update(
-          { userId, date: today },
-          { count: commit.count + 1 }
-        )
+          { commitId: commit[0].commitId },
+          { count: commit[0].count + 1 }
+        );
       } else {
-        // Create new commit if none exists for today
         const newCommit = new Commit({
           commitId: uuidv4(),
           userId,
           date: today,
-          count: 1
+          count: 1,
         });
         await newCommit.save();
       }
     } catch (commitError) {
       console.error("Error handling commit:", commitError);
-    }        
+    }       
 
-    // Save the updated progress
     await progress.save();
     res.json({
       message: "Quiz progress updated successfully",
