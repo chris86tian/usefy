@@ -7,6 +7,7 @@ import {
   Trophy,
   Lock,
   AlertCircle,
+  ChevronRight,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -298,6 +299,8 @@ const Chapter = ({
   ) => void;
   isReleased: boolean;
 }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  
   const chapterProgress = sectionProgress?.chapters.find(
     (c: any) => c.chapterId === chapter.chapterId
   );
@@ -305,9 +308,9 @@ const Chapter = ({
   const isQuizCompleted = chapterProgress?.quizCompleted || !chapter.quiz;
   const isCurrentChapter = chapterId === chapter.chapterId;
   const isCurrentChapterAssignmentsSubmitted = 
-  !chapter.assignments || chapter.assignments.every(
-    (assignment: Assignment) => assignment.submissions.length > 0
-  );
+    !chapter.assignments || chapter.assignments.every(
+      (assignment: Assignment) => assignment.submissions.length > 0
+    );
 
   const handleToggleComplete = (e: React.MouseEvent) => {
     if (!isReleased) return;
@@ -320,67 +323,133 @@ const Chapter = ({
     handleChapterClick(sectionId, chapter.chapterId);
   };
 
+  const toggleExpand = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsExpanded(!isExpanded);
+  };
+
   return (
-    <li
-      className={cn("chapters-sidebar__chapter", {
-        "chapters-sidebar__chapter--current": isCurrentChapter,
-        "chapters-sidebar__chapter--locked": !isReleased,
-        "cursor-not-allowed opacity-50": !isReleased,
-      })}
-      onClick={handleChapterSelection}
-    >
-      {isCompleted && isReleased ? (
-        <div
-          className="chapters-sidebar__chapter-check"
-          onClick={handleToggleComplete}
-          title="Toggle completion status"
-        >
-          <CheckCircle className="chapters-sidebar__check-icon" />
-        </div>
-      ) : (
-        <div
-          className={cn("chapters-sidebar__chapter-number", {
-            "chapters-sidebar__chapter-number--current": isCurrentChapter,
+    <li className="flex flex-col">
+      <div
+        className={cn("chapters-sidebar__chapter", {
+          "chapters-sidebar__chapter--current": isCurrentChapter,
+          "chapters-sidebar__chapter--locked": !isReleased,
+          "cursor-not-allowed opacity-50": !isReleased,
+        })}
+        onClick={handleChapterSelection}
+      >
+        {isCompleted && isReleased ? (
+          <div
+            className="chapters-sidebar__chapter-check"
+            onClick={handleToggleComplete}
+            title="Toggle completion status"
+          >
+            <CheckCircle className="chapters-sidebar__check-icon" />
+          </div>
+        ) : (
+          <div
+            className={cn("chapters-sidebar__chapter-number", {
+              "chapters-sidebar__chapter-number--current": isCurrentChapter,
+            })}
+          >
+            {!isReleased ? <Lock className="h-4 w-4" /> : index + 1}
+          </div>
+        )}
+        
+        <span
+          className={cn("chapters-sidebar__chapter-title", {
+            "chapters-sidebar__chapter-title--completed": isCompleted,
+            "chapters-sidebar__chapter-title--current": isCurrentChapter,
           })}
         >
-          {!isReleased ? <Lock className="h-4 w-4" /> : index + 1}
-        </div>
-      )}
-      
-      <span
-        className={cn("chapters-sidebar__chapter-title", {
-          "chapters-sidebar__chapter-title--completed": isCompleted,
-          "chapters-sidebar__chapter-title--current": isCurrentChapter,
-        })}
-      >
-        {chapter.title}
-      </span>
+          {chapter.title}
+        </span>
 
-      {isReleased && (
-        <div className="flex items-center space-x-2">
-          {!isQuizCompleted || !isCurrentChapterAssignmentsSubmitted ? (
-            <div className="animate-bounce ml-4">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <AlertCircle className="w-5 h-5 text-yellow-500 cursor-help" />
-                  </TooltipTrigger>
-                  <TooltipContent side="right">
-                    <p>Complete the {isQuizCompleted ? 'assignments' : 'quiz'} to mark this chapter as completed</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-          ) : (
-            <div className="ml-4">
-              <CheckCircle className="w-5 h-5 text-green-500" />
+        {isReleased && (chapter.quiz || chapter.assignments) && (
+          <button 
+            onClick={toggleExpand}
+            className="ml-2 p-1 hover:bg-zinc-700 rounded-full transition-colors"
+          >
+            {isExpanded ? (
+              <ChevronDown className="h-4 w-4" />
+            ) : (
+              <ChevronRight className="h-4 w-4" />
+            )}
+          </button>
+        )}
+
+        {isReleased && (
+          <div className="flex items-center space-x-2 ml-auto">
+            {!isQuizCompleted || !isCurrentChapterAssignmentsSubmitted ? (
+              <div className="animate-bounce">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <AlertCircle className="w-5 h-5 text-yellow-500 cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent side="right">
+                      <p>Complete the {isQuizCompleted ? 'assignments' : 'quiz'}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            ) : (
+              <div>
+                <CheckCircle className="w-5 h-5 text-green-500" />
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {isExpanded && isReleased && (
+        <div className="ml-12 mt-2 space-y-2">
+          {chapter.quiz && (
+            <div 
+              className={cn(
+                "flex items-center space-x-2 text-sm py-1 px-2 rounded hover:bg-zinc-800 cursor-pointer",
+                {
+                  "text-green-500": isQuizCompleted,
+                  "text-yellow-500": !isQuizCompleted
+                }
+              )}
+            >
+              <div className="w-4 h-4">
+                {isQuizCompleted ? (
+                  <CheckCircle className="w-4 h-4" />
+                ) : (
+                  <AlertCircle className="w-4 h-4" />
+                )}
+              </div>
+              <span>Quiz</span>
             </div>
           )}
+          
+          {chapter.assignments?.map((assignment, i) => (
+            <div 
+              key={assignment.assignmentId}
+              className={cn(
+                "flex items-center space-x-2 text-sm py-1 px-2 rounded hover:bg-zinc-800 cursor-pointer",
+                {
+                  "text-green-500": assignment.submissions.length > 0,
+                  "text-yellow-500": assignment.submissions.length === 0
+                }
+              )}
+            >
+              <div className="w-4 h-4">
+                {assignment.submissions.length > 0 ? (
+                  <CheckCircle className="w-4 h-4" />
+                ) : (
+                  <AlertCircle className="w-4 h-4" />
+                )}
+              </div>
+              <span>Assignment {i + 1}</span>
+            </div>
+          ))}
         </div>
       )}
     </li>
   );
 };
-
 
 export default ChaptersSidebar;
