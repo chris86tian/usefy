@@ -31,6 +31,9 @@ const Landing = () => {
   const router = useRouter()
   const { data: courses, isLoading } = useGetCoursesQuery({})
 
+  // Filter published courses
+  const publishedCourses = courses?.filter(course => course.status === "Published") || []
+
   const handleCourseClick = (courseId: string) => {
     router.push(`/search?id=${courseId}`, {
       scroll: false,
@@ -111,8 +114,7 @@ const Landing = () => {
           </div>
 
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-            {courses &&
-              courses.slice(0, 4).map((course, index) => (
+            {publishedCourses.slice(0, 4).map((course, index) => (
                 <motion.div
                   key={course.courseId}
                   initial={{ y: 50, opacity: 0 }}
@@ -131,4 +133,3 @@ const Landing = () => {
 }
 
 export default Landing
-

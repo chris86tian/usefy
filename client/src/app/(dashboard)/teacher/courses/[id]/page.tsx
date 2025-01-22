@@ -270,8 +270,8 @@ const CourseEditor = () => {
                   className="bg-primary-700 hover:bg-primary-600"
                 >
                   {methods.watch("courseStatus")
-                    ? "Update Published Course"
-                    : "Save Draft"}
+                    ? "Update Course"
+                    : "Save"}
                 </Button>
               </div>
             }
