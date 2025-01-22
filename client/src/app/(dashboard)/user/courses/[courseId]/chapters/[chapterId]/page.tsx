@@ -41,6 +41,7 @@ const Course = () => {
   } = useCourseProgressData();
 
   const playerRef = useRef<ReactPlayer>(null);
+  const quizRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [videoEndTime, setVideoEndTime] = useState<number | null>(null);
@@ -153,6 +154,8 @@ const Course = () => {
             icon: <GraduationCap className="w-6 h-6 mr-2" />,
           }
         );
+
+        quizRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   
         if (playerRef.current) {
           const player = playerRef.current.getInternalPlayer();
@@ -210,7 +213,6 @@ const Course = () => {
   const handleLike = async () => {
     if (!currentChapter) return;
 
-    // Optimistically update UI
     setLikes((prevLikes) => prevLikes + 1);
 
     try {
@@ -223,7 +225,6 @@ const Course = () => {
       console.error("Failed to like chapter:", error);
       toast.error("Failed to like the chapter. Please try again.");
 
-      // Rollback UI update
       setLikes((prevLikes) => prevLikes - 1);
     }
   };
@@ -231,7 +232,6 @@ const Course = () => {
   const handleDislike = async () => {
     if (!currentChapter) return;
 
-    // Optimistically update UI
     setDislikes((prevDislikes) => prevDislikes + 1);
 
     try {
@@ -244,7 +244,6 @@ const Course = () => {
       console.error("Failed to dislike chapter:", error);
       toast.error("Failed to dislike the chapter. Please try again.");
 
-      // Rollback UI update
       setDislikes((prevDislikes) => prevDislikes - 1);
     }
   };
@@ -407,12 +406,14 @@ const Course = () => {
             teacherId={course.teacherId}
           />
         ) : (
-          <Quizzes 
-            quiz={currentChapter.quiz as Quiz}
-            courseId={course.courseId}
-            chapterId={currentChapter.chapterId}
-            sectionId={currentSection?.sectionId as string}
-          />
+          <div ref={quizRef}>
+            <Quizzes 
+              quiz={currentChapter.quiz as Quiz}
+              courseId={course.courseId}
+              chapterId={currentChapter.chapterId}
+              sectionId={currentSection?.sectionId as string}
+            />
+          </div>
         )}
 
         <CourseComments 
