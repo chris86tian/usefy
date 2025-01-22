@@ -61,7 +61,7 @@ const NonDashboardNavbar = () => {
                 }
                 className="text-customgreys-dirtyGrey"
               >
-                Courses
+                My Courses
               </Link>
               <UserButton
                 appearance={{
