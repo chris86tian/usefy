@@ -23,9 +23,10 @@ const TeacherCourseCard = ({
 }: TeacherCourseCardProps) => {
   return (
     <Card className="course-card-teacher group">
-      <CardHeader className="course-card-teacher__header" onClick={
-        isOwner ? () => onView(course) : undefined
-      }>
+      <CardHeader
+        className="course-card-teacher__header"
+        onClick={isOwner ? () => onView(course) : undefined}
+      >
         <Image
           src={course.image || "/placeholder.png"}
           alt={course.title}
@@ -36,7 +37,7 @@ const TeacherCourseCard = ({
         />
       </CardHeader>
 
-      <CardContent className="course-card-teacher__content" >
+      <CardContent className="course-card-teacher__content">
         <div className="flex flex-col">
           <CardTitle className="course-card-teacher__title">
             {course.title}
@@ -64,60 +65,53 @@ const TeacherCourseCard = ({
               <span className="font-bold text-white-100">
                 {course.enrollments.length}
               </span>{" "}
-               Enrolled
+              Enrolled
             </p>
           )}
         </div>
 
-        <div className="w-full xl:flex space-y-2 xl:space-y-0 gap-2 mt-3">
+        {/* Responsive buttons */}
+        <div className="flex flex-col gap-2 mt-3 sm:flex-row sm:flex-wrap xl:space-y-0 xl:gap-2">
           {isOwner ? (
             <>
-              <div>
+              <Button
+                className="bg-gray-800 hover:bg-gray-600"
+                onClick={() => onEdit(course)}
+              >
+                <Pencil className="w-4 h-4 mr-2" />
+                Edit
+              </Button>
+              <Button
+                className="bg-gray-800 hover:bg-gray-600"
+                onClick={() => onStats(course)}
+              >
+                <BarChartBig className="w-4 h-4 mr-2" />
+                Stats
+              </Button>
+              {course.status === "Published" || course.status === "Draft" ? (
                 <Button
                   className="bg-gray-800 hover:bg-gray-600"
-                  onClick={() => onEdit(course)}
+                  onClick={() => onArchive(course)}
                 >
-                  <Pencil className="w-4 h-4 mr-2" />
-                  Edit
+                  <Archive className="w-4 h-4 mr-2" />
+                  Archive
                 </Button>
-              </div>
-              <div>
+              ) : (
                 <Button
                   className="bg-gray-800 hover:bg-gray-600"
-                  onClick={() => onStats(course)}
+                  onClick={() => onUnarchive(course)}
                 >
-                  <BarChartBig className="w-4 h-4 mr-2" />
-                  Stats
+                  <Archive className="w-4 h-4 mr-2" />
+                  Unarchive
                 </Button>
-              </div>
-              <div className="flex flex-col gap-2">
-                {course.status === "Published" || course.status === "Draft" ? (
-                  <Button
-                    className="bg-gray-800 hover:bg-gray-600"
-                    onClick={() => onArchive(course)}
-                  >
-                    <Archive className="w-4 h-4 mr-2" />
-                    Archive
-                  </Button>
-                ) : (
-                  <Button
-                    className="bg-gray-800 hover:bg-gray-600"
-                    onClick={() => onUnarchive(course)}
-                  >
-                    <Archive className="w-4 h-4 mr-2" />
-                    Unarchive
-                  </Button>
-                )}
-              </div>
-              <div className="flex flex-col gap-2 text-red-500">
-                <Button
-                  className="bg-gray-800 hover:bg-gray-600"
-                  onClick={() => onDelete(course)}
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Delete
-                </Button>
-              </div>
+              )}
+              <Button
+                className="bg-gray-800 hover:bg-gray-600 text-red-500"
+                onClick={() => onDelete(course)}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete
+              </Button>
             </>
           ) : (
             <p className="text-sm text-gray-500 italic">View Only</p>

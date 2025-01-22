@@ -8,12 +8,8 @@ import {
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import Image from "next/image";
 
-interface CourseCardProps {
-  course: Course;
-  onGoToCourse: (course: Course) => void;
-}
 
-const CourseCard = ({ course, onGoToCourse }: CourseCardProps) => {
+const CourseCard = ({ course, onGoToCourse }) => {
   return (
     <Card className="course-card group" onClick={() => onGoToCourse(course)}>
       <CardHeader className="course-card__header">

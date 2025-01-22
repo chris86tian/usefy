@@ -31,7 +31,6 @@ const Landing = () => {
   const router = useRouter()
   const { data: courses, isLoading } = useGetCoursesQuery({})
 
-  // Filter published courses
   const publishedCourses = courses?.filter(course => course.status === "Published") || []
 
   const handleCourseClick = (courseId: string) => {
@@ -80,7 +79,7 @@ const Landing = () => {
             { icon: Users, title: "Collaborative Learning", description: "Engage with a global community" },
             { icon: Brain, title: "AI Learning Recommendations", description: "Personalized learning experience" },
           ].map((feature, index) => (
-            <div key={index} className="rounded-xl bg-gray-900 p-6">
+            <div key={index} className="rounded-xl bg-zinc-900 border border-zinc-700 p-6">
               <feature.icon className="mb-4 h-12 w-12 text-primary" />
               <h3 className="mb-2 text-xl font-semibold">{feature.title}</h3>
               <p className="text-gray-600">{feature.description}</p>
