@@ -54,7 +54,6 @@ const CourseEditor = () => {
     setIsGenerating(true);
   
     try {
-      // Fetch data from the API
       const response = await fetch("/api/generate-course", {
         method: "POST",
         headers: {

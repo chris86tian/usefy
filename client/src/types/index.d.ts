@@ -53,6 +53,14 @@ declare global {
     }>;
   }
 
+  interface Module {
+    moduleId: string;
+    title: string;
+    description?: string;
+    video?: string | File;
+    sections: Section[];
+  }
+
   interface Section {
     sectionId: string;
     sectionTitle: string;

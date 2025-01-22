@@ -1,6 +1,5 @@
 import * as z from "zod";
 
-// Course Editor Schemas
 export const courseSchema = z.object({
   courseTitle: z.string().min(1, "Title is required"),
   courseDescription: z.string().min(1, "Description is required"),
@@ -12,7 +11,6 @@ export const courseSchema = z.object({
 
 export type CourseFormData = z.infer<typeof courseSchema>;
 
-// Chapter Schemas
 export const chapterSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters"),
   content: z.string().min(10, "Content must be at least 10 characters"),
@@ -21,7 +19,6 @@ export const chapterSchema = z.object({
 
 export type ChapterFormData = z.infer<typeof chapterSchema>;
 
-// Section Schemas
 export const sectionSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
@@ -29,7 +26,6 @@ export const sectionSchema = z.object({
 
 export type SectionFormData = z.infer<typeof sectionSchema>;
 
-// Notification Settings Schema
 export const notificationSettingsSchema = z.object({
   courseNotifications: z.boolean(),
   emailAlerts: z.boolean(),
@@ -37,7 +33,14 @@ export const notificationSettingsSchema = z.object({
   notificationFrequency: z.enum(["immediate", "daily", "weekly"]),
 });
 
-// Assignment Schema
+export const moduleSchema = z.object({
+  title: z.string().min(2, "Title must be at least 2 characters"),
+  description: z.string().min(10, "Description must be at least 10 characters"),
+  video: z.string().optional(),
+});
+
+export type ModuleFormData = z.infer<typeof moduleSchema>;
+
 export const assignmentSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
