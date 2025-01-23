@@ -183,8 +183,6 @@ const CourseEditor = () => {
     formData.append("status", data.courseStatus ? "Published" : "Draft");
     formData.append("image", thumbnailUrl);
   
-    console.log(sections);
-
     const sectionsWithPreservedData = sections.map((section) => ({
       ...section,
       chapters: section.chapters.map(chapter => ({

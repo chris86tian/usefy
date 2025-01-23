@@ -15,8 +15,6 @@ interface UserListProps {
 export default function UserList({ courseId, selectedUser, onUserSelect }: UserListProps) {
   const { data: users } = useGetCourseUsersQuery(courseId)
 
-  console.log(users)
-
   if (!users) {
     return (
       <Card className="h-full">
