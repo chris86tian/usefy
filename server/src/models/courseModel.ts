@@ -47,6 +47,12 @@ const chapterSchema = new Schema({
           type: String,
           required: true,
         },
+        upvotes: {
+          type: Number,
+        },
+        downvotes: {
+          type: Number,
+        },
         createdAt: {
           type: String,
           required: true,

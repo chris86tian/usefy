@@ -76,7 +76,7 @@ declare global {
     content: string;
     video?: string | File;
     assignments?: Assignment[];
-    comments?: Comment[];
+    comments?: ChapterComment[];
     likes?: number;
     dislikes?: number;
     quiz?: {
@@ -89,6 +89,8 @@ declare global {
     userId: string
     username: string
     content: string
+    upvotes?: number
+    downvotes?: number
     createdAt: string
     replies: Reply[]
   }

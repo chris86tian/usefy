@@ -6,9 +6,11 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Send } from "lucide-react"
+import { Send, ArrowBigUp, ArrowBigDown } from "lucide-react"
 import {
   useCreateCommentMutation,
+  useUpvoteCommentMutation,
+  useDownvoteCommentMutation,
   useCreateReplyMutation,
   useGetChapterCommentsQuery,
   useGetUserQuery,
@@ -59,6 +61,8 @@ export function CourseComments({ courseId, sectionId, chapterId }: CourseComment
 
   const [createComment] = useCreateCommentMutation()
   const [createReply] = useCreateReplyMutation()
+  const [upvoteComment] = useUpvoteCommentMutation()
+  const [downvoteComment] = useDownvoteCommentMutation()
 
   const getUsername = () => {
     if (!user) return "Anonymous"
@@ -74,6 +78,8 @@ export function CourseComments({ courseId, sectionId, chapterId }: CourseComment
       userId: user?.id as string,
       username: getUsername(),
       content: newComment,
+      upvotes: 0,
+      downvotes: 0,
       createdAt: new Date().toISOString(),
       replies: [],
     }
@@ -122,6 +128,30 @@ export function CourseComments({ courseId, sectionId, chapterId }: CourseComment
     }
   }
 
+  const handleVote = async (commentId: string, voteType: 'upvote' | 'downvote') => {
+    try {
+      if (voteType === 'upvote') {
+        await upvoteComment({
+          courseId,
+          sectionId, 
+          chapterId,
+          commentId,
+        }).unwrap()
+      } else {
+        await downvoteComment({
+          courseId,
+          sectionId, 
+          chapterId,
+          commentId,
+        }).unwrap()
+      }
+
+      refetch()
+    } catch (error) {
+      console.error(`Failed to ${voteType} comment:`, error)
+    }
+  }
+
   const toggleReplyInput = (commentId: string, username: string) => {
     setShowReplyInput((prev) => ({
       ...prev,
@@ -164,16 +194,33 @@ export function CourseComments({ courseId, sectionId, chapterId }: CourseComment
                   <div className="flex-1">
                     <p className="font-semibold">{comment.username}</p>
                     <p className="mt-1">{comment.content}</p>
-                    <div className="flex items-center mt-2">
+                    <div className="flex items-center space-x-2">
                       <p className="text-sm text-gray-500">{new Date(comment.createdAt).toLocaleString()}</p>
                       <Button
                         variant="ghost"
-                        size="sm"
                         onClick={() => toggleReplyInput(comment.id, comment.username)}
                         className="ml-2"
                       >
                         Reply
                       </Button>
+                      <div className="flex items-center">
+                        <Button 
+                          variant="ghost" 
+                          onClick={() => handleVote(comment.id, 'upvote')}
+                          className="flex items-center"
+                        >
+                          <ArrowBigUp className="h-6 w-6" />
+                          {comment.upvotes || 0}
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          onClick={() => handleVote(comment.id, 'downvote')}
+                          className="flex items-center"
+                        >
+                          <ArrowBigDown className="h-6 w-6" />
+                          {-(comment.downvotes ?? 0)}
+                        </Button>
+                      </div>
                     </div>
 
                     {showReplyInput[comment.id] && (

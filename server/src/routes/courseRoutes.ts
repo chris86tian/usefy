@@ -17,6 +17,8 @@ import {
   updateAssignment,
   createSubmission,
   createComment,
+  upvoteComment,
+  downvoteComment,
   createReply,
   getComments,
   likeChapter,
@@ -50,6 +52,8 @@ router.put("/:courseId/sections/:sectionId/chapters/:chapterId/assignments/:assi
 router.post("/:courseId/sections/:sectionId/chapters/:chapterId/assignments/:assignmentId/submit", requireAuth(), createSubmission);
 
 router.post("/:courseId/sections/:sectionId/chapters/:chapterId/comments", requireAuth(), createComment);
+router.post("/:courseId/sections/:sectionId/chapters/:chapterId/comments/:commentId/upvote", requireAuth(), upvoteComment);
+router.post("/:courseId/sections/:sectionId/chapters/:chapterId/comments/:commentId/downvote", requireAuth(), downvoteComment);
 router.get("/:courseId/sections/:sectionId/chapters/:chapterId/comments", requireAuth(), getComments);
 router.post("/:courseId/sections/:sectionId/chapters/:chapterId/comments/:commentId/replies", requireAuth(), createReply);
 

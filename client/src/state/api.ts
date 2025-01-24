@@ -400,6 +400,26 @@ export const api = createApi({
       }),
     }),
 
+    upvoteComment: build.mutation<
+      { message: string },
+      { courseId: string; sectionId: string; chapterId: string; commentId: string }
+    >({
+      query: ({ courseId, sectionId, chapterId, commentId }) => ({
+        url: `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/comments/${commentId}/upvote`,
+        method: "POST",
+      }),
+    }),
+
+    downvoteComment: build.mutation<
+      { message: string },
+      { courseId: string; sectionId: string; chapterId: string; commentId: string }
+    >({
+      query: ({ courseId, sectionId, chapterId, commentId }) => ({
+        url: `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/comments/${commentId}/downvote`,
+        method: "POST",
+      }),
+    }),
+
     createReply: build.mutation<
       { message: string },
       { courseId: string; sectionId: string; chapterId: string; commentId: string; reply: Reply }
@@ -477,6 +497,8 @@ export const {
   useGetNotificationsQuery,
   useGetCommitsQuery,
   useCreateCommentMutation,
+  useUpvoteCommentMutation,
+  useDownvoteCommentMutation,
   useCreateReplyMutation,
   useGetChapterCommentsQuery,
   useLikeChapterMutation,

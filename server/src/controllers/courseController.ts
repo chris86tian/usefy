@@ -809,14 +809,13 @@ export const getUserCourseSubmissions = async (
 };
 
 
-
 export const createComment = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   const { courseId, sectionId, chapterId } = req.params;
   const { userId } = getAuth(req);
-  const { id, username, content, createdAt, replies } = req.body;
+  const { id, username, content, upvotes, downvotes, createdAt, replies } = req.body;
 
   try {
     const course = await Course.get(courseId);
@@ -846,6 +845,8 @@ export const createComment = async (
       userId,
       username,
       content,
+      upvotes,
+      downvotes,
       createdAt,
       replies,
     };
@@ -860,6 +861,118 @@ export const createComment = async (
     res.json({ message: "Comment created successfully", data: newComment });
   } catch (error) {
     res.status(500).json({ message: "Error creating comment", error });
+  }
+}
+
+export const upvoteComment = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { courseId, sectionId, chapterId, commentId } = req.params;
+  const { userId } = getAuth(req);
+
+  try {
+    const course = await Course.get(courseId);
+    if (!course) {
+      res.status(404).json({ message: "Course not found" });
+      return;
+    }
+
+    const section = course.sections.find(
+      (section: any) => section.sectionId === sectionId
+    );
+    if (!section) {
+      res.status(404).json({ message: "Section not found" });
+      return;
+    }
+
+    const chapter = section.chapters.find(
+      (chapter: any) => chapter.chapterId === chapterId
+    );
+    if (!chapter) {
+      res.status(404).json({ message: "Chapter not found" });
+      return;
+    }
+
+    if (!chapter.comments) {
+      res.status(404).json({ message: "Comment not found" });
+      return;
+    }
+
+    const comment = chapter.comments.find(
+      (comment: any) => comment.id === commentId
+    );
+    if (!comment) {
+      res.status(404).json({ message: "Comment not found" });
+      return;
+    }
+
+    if (!comment.upvotes) {
+      comment.upvotes = 0;
+    }
+
+    comment.upvotes += 1;
+
+    await course.save();
+    res.json({ message: "Comment upvoted successfully", data: comment });
+  } catch (error) {
+    res.status(500).json({ message: "Error upvoting comment", error });
+  }
+}
+
+export const downvoteComment = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { courseId, sectionId, chapterId, commentId } = req.params;
+  const { userId } = getAuth(req);
+
+  try {
+    const course = await Course.get(courseId);
+    if (!course) {
+      res.status(404).json({ message: "Course not found" });
+      return;
+    }
+
+    const section = course.sections.find(
+      (section: any) => section.sectionId === sectionId
+    );
+    if (!section) {
+      res.status(404).json({ message: "Section not found" });
+      return;
+    }
+
+    const chapter = section.chapters.find(
+      (chapter: any) => chapter.chapterId === chapterId
+    );
+    if (!chapter) {
+      res.status(404).json({ message: "Chapter not found" });
+      return;
+    }
+
+    if (!chapter.comments) {
+      res.status(404).json({ message: "Comment not found" });
+      return;
+    }
+
+    const comment = chapter.comments.find(
+      (comment: any) => comment.id === commentId
+    );
+    if (!comment) {
+      res.status(404).json({ message: "Comment not found" });
+      return;
+    }
+
+    if (!comment.downvotes) {
+      comment.downvotes = 0;
+    }
+
+    comment.downvotes += 1;
+
+    await course.save();
+    res.json({ message: "Comment downvoted successfully", data: comment });
+  } catch (error) {
+    res.status(500).json({ message: "Error downvoting comment", error });
   }
 }
 
@@ -1041,7 +1154,7 @@ export const dislikeChapter = async (
     chapter.dislikes += 1;
 
     await course.save();
-    res.json({ message: "Chapter disliked successfully", data: chapter });
+    res.json({ data: chapter });
   } catch (error) {
     res.status(500).json({ message: "Error disliking chapter", error });
   }
