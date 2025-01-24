@@ -56,12 +56,24 @@ export default function DroppableComponent() {
     dispatch(setSections(updatedSections));
   };
 
+  const lockAllSections = () => {
+    const updatedSections = sections.map((section) => ({
+      ...section,
+      releaseDate: "",
+    }));
+    dispatch(setSections(updatedSections));
+  }
+
   return (
     <>
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-end gap-2 mb-4">
+        <Button onClick={lockAllSections} variant="outline" size="sm">
+          <Lock className="h-4 w-4" />
+          Lock All Sections
+        </Button>
         <Button onClick={releaseAllSections} variant="outline" size="sm">
           <Unlock className="h-4 w-4" />
-          Release All Sections
+          Unlock All Sections
         </Button>
       </div>
       <DragDropContext onDragEnd={handleSectionDragEnd}>
