@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -29,6 +29,8 @@ interface UserAvatarProps {
   username: string
 }
 
+type SortOption = 'newest' | 'most_upvotes' | 'most_downvotes'
+
 const UserAvatar = ({ userId, username }: UserAvatarProps) => {
   const { data: userData } = useGetUserQuery(userId)
 
@@ -48,6 +50,7 @@ export function CourseComments({ courseId, sectionId, chapterId }: CourseComment
   const [newComment, setNewComment] = useState("")
   const [replyText, setReplyText] = useState<{ [key: string]: string }>({})
   const [showReplyInput, setShowReplyInput] = useState<{ [key: string]: boolean }>({})
+  const [sortOption, setSortOption] = useState<SortOption>('newest')
 
   const {
     data: comments = [],
@@ -58,6 +61,21 @@ export function CourseComments({ courseId, sectionId, chapterId }: CourseComment
     sectionId,
     chapterId,
   })
+
+  const sortedComments = useMemo(() => {
+    const sortedList = [...comments]
+    switch (sortOption) {
+      case 'most_upvotes':
+        return sortedList.sort((a, b) => (b.upvotes || 0) - (a.upvotes || 0))
+      case 'most_downvotes':
+        return sortedList.sort((a, b) => (b.downvotes || 0) - (a.downvotes || 0))
+      default:
+        return sortedList.sort((a, b) => 
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        )
+    }
+  }, [comments, sortOption])
+
 
   const [createComment] = useCreateCommentMutation()
   const [createReply] = useCreateReplyMutation()
@@ -169,6 +187,33 @@ export function CourseComments({ courseId, sectionId, chapterId }: CourseComment
     <Card className="w-full bg-zinc-900">
       <CardHeader>
         <CardTitle>Comments</CardTitle>
+        <div className="flex items-center space-x-2">
+          <Button 
+            variant={sortOption === 'newest' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => setSortOption('newest')}
+          >
+            Newest
+          </Button>
+          <Button 
+            variant={sortOption === 'most_upvotes' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => setSortOption('most_upvotes')}
+            className="flex items-center"
+          >
+            <ArrowBigUp className="h-4 w-4 mr-1" />
+            Most Upvotes
+          </Button>
+          <Button 
+            variant={sortOption === 'most_downvotes' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => setSortOption('most_downvotes')}
+            className="flex items-center"
+          >
+            <ArrowBigDown className="h-4 w-4 mr-1" />
+            Most Downvotes
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmitComment} className="flex mb-6">
@@ -187,7 +232,7 @@ export function CourseComments({ courseId, sectionId, chapterId }: CourseComment
           {isLoading ? (
             <div className="text-center py-4">Loading comments...</div>
           ) : (
-            comments.map((comment: ChapterComment) => (
+            sortedComments.map((comment) => (
               <div key={comment.id} className="mb-4 bg-zinc-800 p-4 rounded-lg">
                 <div className="flex items-start space-x-2">
                   <UserAvatar userId={comment.userId} username={comment.username} />
