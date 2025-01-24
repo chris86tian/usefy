@@ -96,7 +96,7 @@ const SharedNotificationSettings = ({
             />
           </div>
 
-          <Button type="submit" className="notification-settings__submit">
+          <Button type="submit" className="bg-blue-500 text-white hover:bg-blue-600">
             Update Settings
           </Button>
         </form>

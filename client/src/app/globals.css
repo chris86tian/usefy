@@ -1340,10 +1340,6 @@ input[type="color"] {
   @apply space-y-6;
 }
 
-.notification-settings__submit {
-  @apply !mt-8 text-gray-100 bg-primary-700 hover:bg-primary-600;
-}
-
 /* Header */
 .header {
   @apply mb-7 flex justify-between items-center;
