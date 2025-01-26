@@ -24,7 +24,6 @@ const CheckoutDetailsPage = () => {
           <CoursePreview course={selectedCourse} />
         </div>
 
-        {/* STRETCH FEATURE */}
         <div className="checkout-details__options">
           <div className="checkout-details__auth">
             {showSignUp ? <SignUpComponent /> : <SignInComponent />}
