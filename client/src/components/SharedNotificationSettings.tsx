@@ -97,7 +97,7 @@ const SharedNotificationSettings = ({
       <Form {...methods}>
         <form onSubmit={methods.handleSubmit(onSubmit)}>
           <Tabs defaultValue="notifications" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 rounded-t-lg">
+            <TabsList className="grid w-full grid-cols-4 rounded-t-lg mb-4">
               <TabsTrigger value="notifications">Notifications</TabsTrigger>
               <TabsTrigger value="learning">Learning</TabsTrigger>
               <TabsTrigger value="privacy">Privacy</TabsTrigger>
