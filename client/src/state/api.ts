@@ -83,7 +83,6 @@ export const api = createApi({
       query: () => "users/clerk",
     }),
 
-    // pass the courseId as a parameter to the query
     getCourseUsers: build.query<User[], string>({
       query: (courseId) => `users/clerk/course/${courseId}`,
     }),

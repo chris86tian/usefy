@@ -8,11 +8,42 @@ declare global {
   }
 
   interface UserSettings {
-    theme?: "light" | "dark";
+    // Theme & Display
+    theme?: "light" | "dark" | "system";
+    displayMode?: "light" | "dark" | "system";
+    language?: "english" | "spanish" | "french";
+    timeZone?: "UTC" | "EST" | "PST";
+    
+    // Notification Settings
     emailAlerts?: boolean;
     smsAlerts?: boolean;
     courseNotifications?: boolean;
     notificationFrequency?: "immediate" | "daily" | "weekly";
+    
+    // Course Notifications
+    assignmentReminders?: boolean;
+    dueDateAlerts?: boolean;
+    gradePostedNotifications?: boolean;
+    courseAnnouncements?: boolean;
+    instructorMessages?: boolean;
+    peerInteractions?: boolean;
+    
+    // Learning Preferences
+    contentDifficulty?: "beginner" | "intermediate" | "advanced" | "adaptive";
+    autoPlayVideos?: boolean;
+    showCaptions?: boolean;
+    
+    // Privacy Settings
+    profileVisibility?: "all" | "coursemates" | "private";
+    showOnlineStatus?: boolean;
+    shareProgress?: boolean;
+    allowMessageFromPeers?: boolean;
+    
+    // Study Preferences
+    dailyGoalHours?: number;
+    preferredStudyTime?: "morning" | "afternoon" | "evening" | "anytime";
+    breakReminders?: boolean;
+    breakInterval?: number;
   }
 
   interface User {
