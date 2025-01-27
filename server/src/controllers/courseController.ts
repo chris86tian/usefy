@@ -188,21 +188,12 @@ export const updateCourse = async (
       .using("CourseIdIndex")
       .exec();
 
-
-    if (!progressList || progressList.length === 0) {
-      console.log("No progress records found for the given courseId.");
-      return;
-    }
-
     for (const progress of progressList) {
-      // Merge sections
       progress.sections = mergeSections(progress.sections, updateData.sections);
 
-      // Update timestamps and overall progress
       progress.lastAccessedTimestamp = new Date().toISOString();
       progress.overallProgress = calculateOverallProgress(progress.sections);
 
-      // Save the updated progress
       await progress.save();
     }
 
