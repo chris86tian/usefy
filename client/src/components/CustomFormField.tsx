@@ -168,7 +168,7 @@ export const CustomFormField: React.FC<FormFieldProps> = ({
             type="number"
             placeholder={placeholder}
             {...field}
-            className={`border-none bg-customgreys-darkGrey p-4 ${inputClassName}`}
+            className={`border-none bg-customgreys-primarybg p-4 ${inputClassName}`}
             disabled={disabled}
           />
         );
