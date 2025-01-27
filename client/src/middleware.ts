@@ -17,20 +17,19 @@ export default clerkMiddleware(async (auth, req) => {
 
   if (isStudentRoute(req)) {
     if (userRole !== "user") {
-      const url = new URL("/teacher/courses", req.url); // Redirect teachers to their courses
+      const url = new URL("/teacher/courses", req.url);
       return NextResponse.redirect(url);
     }
   }
 
-  // Handle teacher routes
   if (isTeacherRoute(req)) {
     if (userRole !== "teacher") {
-      const url = new URL("/user/courses", req.url); // Redirect students to their courses
+      const url = new URL("/user/courses", req.url);
       return NextResponse.redirect(url);
     }
   }
 
-  return NextResponse.next(); // Allow the request to proceed if no restrictions apply
+  return NextResponse.next();
 });
 
 export const config = {
