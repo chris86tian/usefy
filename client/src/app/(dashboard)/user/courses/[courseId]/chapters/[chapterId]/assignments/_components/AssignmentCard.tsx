@@ -108,8 +108,6 @@ const Description = ({ text }: { text: string }) => {
   );
 };
 
-
-
 interface AssignmentCardProps {
   assignment: Assignment
   teacherId: string
