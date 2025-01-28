@@ -1,29 +1,29 @@
 "use client";
 
-import Loading from "@/components/Loading";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { useGetNotificationsQuery } from "@/state/api";
-import { useUser } from "@clerk/nextjs";
+// import Loading from "@/components/Loading";
+// import {
+//   Table,
+//   TableBody,
+//   TableCell,
+//   TableHead,
+//   TableHeader,
+//   TableRow,
+// } from "@/components/ui/table";
+// import { useGetNotificationsQuery } from "@/state/api";
+// import { useUser } from "@clerk/nextjs";
 import React from "react";
-import { SignInRequired } from "@/components/SignInRequired";
+// import { SignInRequired } from "@/components/SignInRequired";
 
 const TeacherNotifications = () => {
-  const { user, isLoaded } = useUser();
-  const { data: notifications, isLoading: isLoadingNotifications } =
-    useGetNotificationsQuery(user?.id || "", {
-      skip: !isLoaded || !user,
-    });
+  // const { user, isLoaded } = useUser();
+  // const { data: notifications, isLoading: isLoadingNotifications } =
+  //   useGetNotificationsQuery(user?.id || "", {
+  //     skip: !isLoaded || !user,
+  //   });
 
-  if (!isLoaded) return <Loading />;
+  // if (!isLoaded) return <Loading />;
 
-  if (!user) return <SignInRequired />;
+  // if (!user) return <SignInRequired />;
   
 
   return (
@@ -32,7 +32,7 @@ const TeacherNotifications = () => {
         <h2 className="notifications__title">Notifications</h2>
 
         <div className="notifications__grid">
-          {isLoadingNotifications ? (
+          {/* {isLoadingNotifications ? (
             <Loading />
           ) : (
             <Table className="notifications__table">
@@ -71,7 +71,7 @@ const TeacherNotifications = () => {
                 )}
               </TableBody>
             </Table>
-          )}
+          )} */}
         </div>
       </div>
     </div>
