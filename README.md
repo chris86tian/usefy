@@ -59,14 +59,8 @@ The following diagrams illustrate the key data models used in GrowthHungry:
 ### User Progress Schema
 ![User Progress Schema](assets/user-progress.png)
 
-### Transaction Schema
-![Transaction Schema](assets/transaction.png)
-
-### Notification Schema
-![Notification Schema](assets/notification.png)
-
-### Commit Schema
-![Commit Schema](assets/commit.png)
+### Transaction, Notification, Commit Schema
+![Notification-Transaction-Commit Schema](assets/notifications-transactions-commits.png)
 
 ---
 
