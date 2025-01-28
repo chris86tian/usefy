@@ -186,11 +186,12 @@ export function CourseComments({ courseId, sectionId, chapterId }: CourseComment
   return (
     <Card className="w-full bg-zinc-900">
       <CardHeader>
-        <CardTitle>Comments</CardTitle>
+        <CardTitle className="mb-2">Comments</CardTitle>
         <div className="flex items-center space-x-2">
           <Button 
             variant={sortOption === 'newest' ? 'default' : 'ghost'}
             size="sm"
+            className="bg-zinc-700 hover:bg-zinc-600"
             onClick={() => setSortOption('newest')}
           >
             Newest
@@ -199,7 +200,7 @@ export function CourseComments({ courseId, sectionId, chapterId }: CourseComment
             variant={sortOption === 'most_upvotes' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => setSortOption('most_upvotes')}
-            className="flex items-center"
+            className="bg-zinc-700 hover:bg-zinc-600"
           >
             <ArrowBigUp className="h-4 w-4 mr-1" />
             Most Upvotes
@@ -208,7 +209,7 @@ export function CourseComments({ courseId, sectionId, chapterId }: CourseComment
             variant={sortOption === 'most_downvotes' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => setSortOption('most_downvotes')}
-            className="flex items-center"
+            className="bg-zinc-700 hover:bg-zinc-600"
           >
             <ArrowBigDown className="h-4 w-4 mr-1" />
             Most Downvotes
