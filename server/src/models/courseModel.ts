@@ -219,26 +219,6 @@ const sectionSchema = new Schema({
   },
 });
 
-const moduleSchema = new Schema({
-  moduleId: {
-    type: String,
-    required: true,
-  },
-  moduleTitle: {
-    type: String,
-    required: true,
-  },
-  moduleDescription: {
-    type: String,
-  },
-  video: {
-    type: String,
-  },
-  sections: {
-    type: Array,
-    schema: [sectionSchema],
-  },
-});
 
 const courseSchema = new Schema(
   {
@@ -282,10 +262,6 @@ const courseSchema = new Schema(
       required: true,
       enum: ["Draft", "Published", "Archived"],
     },
-    // modules: {
-    //   type: Array,
-    //   schema: [moduleSchema],
-    // },
     sections: {
       type: Array,
       schema: [sectionSchema],
