@@ -3,8 +3,6 @@
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
 import { CheckCircle2, XCircle, AlertTriangle, Brain } from "lucide-react";
 import { useUpdateQuizProgressMutation } from '@/state/api';
 import { useUser } from '@clerk/nextjs';
@@ -37,7 +35,7 @@ const Quizzes = ({
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  if (!quiz ||!quiz.questions.length) {
+  if (!quiz || !quiz.questions.length) {
     return (
       <Card className="mt-4 bg-gray-900">
         <CardContent className="pt-6">
@@ -199,46 +197,42 @@ const Quizzes = ({
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
-          <RadioGroup
-            value={currentSelectedAnswer?.toString()}
-            onValueChange={(value) => handleAnswerSelect(parseInt(value))}
-            className="space-y-3"
-          >
+          <div className="space-y-3">
             {currentQuestion.options.map((option, index) => (
-              <div
+              <button
                 key={index}
-                className={`flex items-center space-x-2 p-4 rounded-lg border transition-all duration-200 ${
+                onClick={() => handleAnswerSelect(index)}
+                disabled={showResult}
+                className={`w-full text-left flex items-center justify-between p-4 rounded-lg border transition-all duration-200 ${
                   showResult
                     ? index === currentQuestion.correctAnswer
                       ? 'border-green-500 bg-green-900/20'
                       : currentSelectedAnswer === index
                       ? 'border-red-500 bg-red-900/20'
                       : 'border-gray-700'
+                    : currentSelectedAnswer === index
+                    ? 'border-blue-500 bg-blue-900/20'
                     : 'border-gray-700 hover:border-gray-600'
                 }`}
               >
-                <RadioGroupItem value={index.toString()} id={`option-${index}`} />
-                <Label 
-                  htmlFor={`option-${index}`} 
-                  className={`flex-grow cursor-pointer ${
-                    showResult && index === currentQuestion.correctAnswer
-                      ? 'text-green-500'
-                      : showResult && currentSelectedAnswer === index
-                      ? 'text-red-500'
-                      : ''
-                  }`}
-                >
+                <span className={`flex-grow ${
+                  showResult && index === currentQuestion.correctAnswer
+                    ? 'text-green-500'
+                    : showResult && currentSelectedAnswer === index
+                    ? 'text-red-500'
+                    : ''
+                }`}>
                   {option}
-                </Label>
+                </span>
                 {showResult && index === currentQuestion.correctAnswer && (
                   <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
                 )}
                 {showResult && currentSelectedAnswer === index && index !== currentQuestion.correctAnswer && (
                   <XCircle className="w-5 h-5 text-red-500 shrink-0" />
                 )}
-              </div>
+              </button>
             ))}
-          </RadioGroup>
+          </div>
         </CardContent>
 
         <CardFooter className="flex justify-end space-x-2">
