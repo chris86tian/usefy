@@ -9,21 +9,13 @@ import {
 } from "@/state/api";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Card, CardContent } from "@/components/ui/card";
+import { CardContent } from "@/components/ui/card";
 import Loading from "@/components/Loading";
 import Header from "@/components/Header";
 import { useUser, useClerk } from "@clerk/nextjs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Crown, Shield, User, UserMinus, LogOut } from "lucide-react";
-
-type User = {
-  id: string;
-  firstName: string;
-  emailAddresses: { emailAddress: string }[];
-  publicMetadata?: { userType?: string };
-  role?: string;
-};
+import { Crown, Shield, UserMinus, LogOut, User2 } from "lucide-react";
 
 const Users = () => {
   const { data, isLoading, isError, refetch } = useGetUsersQuery();
@@ -35,7 +27,10 @@ const Users = () => {
   const [demoteUserFromAdmin] = useDemoteUserFromAdminMutation();
   const [deleteUser] = useDeleteUserMutation();
   
+  // TODO: fix data fetching
   const users = data?.users.data 
+
+  console.log(users)
 
   const handlePromote = async (userId: string) => {
     try {
@@ -69,10 +64,10 @@ const Users = () => {
   if (data?.users.length === 0) return <div>No users found.</div>;
 
   const sortedUsers = [...users].sort((a: User, b: User) => {
-    if (a.id === userId) return -1;
-    if (b.id === userId) return 1;
+    if (a.publicMetadata?.userType === "teacher") return -1;
+    if (b.publicMetadata?.userType === "teacher") return 1;
     return 0;
-  });
+  });  
 
   return (
     <div className="space-y-6">
@@ -84,12 +79,12 @@ const Users = () => {
         </Alert>
       )}
 
-    <Card>
       <CardContent>
         <div className="space-y-4">
           {sortedUsers.map((user: User) => {
-            const userType = user.publicMetadata?.userType ?? "User";
-            const email = user.emailAddresses?.[0]?.emailAddress ?? "No email";
+            const userType = user.publicMetadata?.userType ?? "user";
+            const email = user.emailAddresses[0].emailAddress;
+            console.log(user)
             const isCurrentUser = user.id === userId;
             const isTeacher = userType === "teacher";
 
@@ -118,7 +113,7 @@ const Users = () => {
                         <span className={`font-medium ${
                           isCurrentUser ? 'text-blue-400' : 'text-zinc-100'
                         }`}>
-                          {user.firstName}
+                          {user.firstName + " " + user.lastName || user.username}
                         </span>
                         {isTeacher && (
                           <Badge variant="secondary" className="bg-blue-900/30 text-blue-400">
@@ -128,7 +123,7 @@ const Users = () => {
                         )}
                         {isCurrentUser && (
                           <Badge variant="secondary" className="bg-zinc-800 text-zinc-400">
-                            <User className="w-3 h-3 mr-1" />
+                            <User2 className="w-3 h-3 mr-1" />
                             You
                           </Badge>
                         )}
@@ -192,8 +187,6 @@ const Users = () => {
           })}
         </div>
       </CardContent>
-    </Card>
-
     </div>
   );
 };

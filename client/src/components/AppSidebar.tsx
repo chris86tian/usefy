@@ -17,6 +17,7 @@ import {
   PanelLeft,
   Settings,
   User,
+  LayoutDashboard as Dashboard,
 } from "lucide-react";
 import Loading from "./Loading";
 import Image from "next/image";
@@ -39,6 +40,7 @@ const AppSidebar = () => {
       { icon: BookOpen, label: "Courses", href: "/teacher/courses" },
       { icon: DollarSign, label: "Payments", href: "/teacher/billing" },
       { icon: User, label: "Profile", href: "/teacher/profile" },
+      { icon: Dashboard, label: "Dashboard", href: "/teacher/dashboard" },
       { icon: Settings, label: "Settings", href: "/settings" },
     ],
   };

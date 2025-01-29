@@ -46,12 +46,15 @@ declare global {
     breakInterval?: number;
   }
 
+  // TODO: update interface to match clerk user
   interface User {
-    userId: string;
+    id: string;
     firstName?: string;
     lastName?: string;
     username?: string;
-    email: string;
+    emailAddresses: Array<{
+      emailAddress: string;
+    }>;
     publicMetadata: {
       userType: "teacher" | "user";
     };
