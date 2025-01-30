@@ -106,17 +106,17 @@ export default function UserDetails({ user, courseId }: UserDetailsProps) {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <Accordion type="single" collapsible className="w-full">
-                    {progress.sections.map((section) => (
+                    {progress.sections.map((section, i) => (
                       <AccordionItem key={section.sectionId} value={`section-${section.sectionId}`}>
-                        <AccordionTrigger className="text-lg">Section {section.sectionId}</AccordionTrigger>
+                        <AccordionTrigger className="text-lg">Section {i + 1}</AccordionTrigger>
                         <AccordionContent>
                           <div className="space-y-2 mt-2">
-                            {section.chapters.map((chapter) => (
+                            {section.chapters.map((chapter, j) => (
                               <div
                                 key={chapter.chapterId}
                                 className="flex items-center justify-between bg-muted p-3 rounded-lg hover:bg-muted/80 transition-colors"
                               >
-                                <span className="text-sm font-medium">Chapter {chapter.chapterId}</span>
+                                <span className="text-sm font-medium">Chapter {j + 1}</span>
                                 <div className="flex items-center gap-3">
                                   {chapter.quizCompleted && <Badge variant="secondary">Quiz Complete</Badge>}
                                   <Badge variant={chapter.completed ? "default" : "secondary"}>
@@ -143,20 +143,24 @@ export default function UserDetails({ user, courseId }: UserDetailsProps) {
                   <CardTitle className="text-xl">Assignment Submissions</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {submissions?.map((submission) => (
-                    <div
-                      key={submission.submissionId}
-                      className="flex justify-between items-center bg-muted p-4 rounded-lg hover:bg-muted/80 transition-colors"
-                    >
-                      <div>
-                        <p className="text-sm font-medium">{submission.assignmentTitle}</p>
-                        <p className="text-xs text-muted-foreground mt-1">{submission.evaluation.explanation}</p>
+                  {submissions?.length ? (
+                    submissions.map((submission) => (
+                      <div
+                        key={submission.submissionId}
+                        className="flex justify-between items-center bg-muted p-4 rounded-lg hover:bg-muted/80 transition-colors"
+                      >
+                        <div>
+                          <p className="text-sm font-medium">{submission.assignmentTitle}</p>
+                          <p className="text-xs text-muted-foreground mt-1">{submission.evaluation.explanation}</p>
+                        </div>
+                        <Badge variant={submission.evaluation?.passed ? "default" : "destructive"} className="ml-4">
+                          {submission.evaluation?.passed ? `Passed (${submission.evaluation.score})` : "Failed"}
+                        </Badge>
                       </div>
-                      <Badge variant={submission.evaluation?.passed ? "default" : "destructive"} className="ml-4">
-                        {submission.evaluation?.passed ? `Passed (${submission.evaluation.score})` : "Failed"}
-                      </Badge>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No submissions found</p>
+                  )}
                 </CardContent>
               </Card>
             )}
