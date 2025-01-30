@@ -26,11 +26,7 @@ const Users = () => {
   const [promoteUserToAdmin] = usePromoteUserToAdminMutation();
   const [demoteUserFromAdmin] = useDemoteUserFromAdminMutation();
   const [deleteUser] = useDeleteUserMutation();
-  
-  // TODO: fix data fetching
-  const users = data?.users.data 
-
-  console.log(users)
+  const users = Array.isArray(data) ? data : []
 
   const handlePromote = async (userId: string) => {
     try {
@@ -61,13 +57,13 @@ const Users = () => {
 
   if (isLoading) return <Loading />;
   if (isError || !data) return <div>Error loading users.</div>;
-  if (data?.users.length === 0) return <div>No users found.</div>;
+  if (!data) return <div>No users found.</div>;
 
-  const sortedUsers = [...users].sort((a: User, b: User) => {
+  const sortedUsers = [...users].sort((a, b) => {
     if (a.publicMetadata?.userType === "teacher") return -1;
     if (b.publicMetadata?.userType === "teacher") return 1;
     return 0;
-  });  
+  })
 
   return (
     <div className="space-y-6">
@@ -81,7 +77,7 @@ const Users = () => {
 
       <CardContent>
         <div className="space-y-4">
-          {sortedUsers.map((user: User) => {
+          {sortedUsers.map((user) => {
             const userType = user.publicMetadata?.userType ?? "user";
             const email = user.emailAddresses[0].emailAddress;
             console.log(user)

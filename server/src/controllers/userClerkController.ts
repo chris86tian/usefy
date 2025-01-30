@@ -41,7 +41,7 @@ export const getUsers = async (req: Request, res: Response): Promise<void> => {
       lastMonth.setMonth(lastMonth.getMonth() - 1);
       return joinedDate > lastMonth;
     });
-    res.json({ message: "Users retrieved successfully", data: { users, joinedLastMonth } });
+    res.json({ message: "Users retrieved successfully", data: users.data });
   } catch (error) {
     res.status(500).json({ message: "Error retrieving users", error });
   }
