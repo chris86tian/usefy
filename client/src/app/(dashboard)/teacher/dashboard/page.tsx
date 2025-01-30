@@ -111,10 +111,10 @@ const AdminDashboard = () => {
               <CardTitle className="text-sm font-medium">Total Users</CardTitle>
                 <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
+            {/* <CardContent>
               <div className="text-2xl font-bold">{usersData?.users.totalCount}</div>
               <p className="text-xs text-muted-foreground">+{usersData?.joinedLastMonth.length} joined last month</p>
-            </CardContent>
+            </CardContent> */}
           </Card>
         </Link>
 
@@ -156,10 +156,10 @@ const AdminDashboard = () => {
             <CardTitle className="text-sm font-medium">Revenue</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
+          {/* <CardContent>
             <div className="text-2xl font-bold">{transactionStats?.totalAmount}</div>
             <p className="text-xs text-muted-foreground">+{transactionStats?.percentageLastMonth}% this month</p>
-          </CardContent>
+          </CardContent> */}
         </Card>
       </div>
 
