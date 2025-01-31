@@ -1,6 +1,6 @@
 "use client";
 
-import { UserButton, useUser } from "@clerk/nextjs";
+import { UserButton } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import { BookOpen, Code2Icon } from "lucide-react";
 import Link from "next/link";
@@ -9,8 +9,8 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 
 const Navbar = ({ isCoursePage }: { isCoursePage: boolean }) => {
-  const { user } = useUser();
-  const userRole = user?.publicMetadata?.userType as "user" | "teacher";
+  // const { user } = useUser();
+  // const userRole = user?.publicMetadata?.userType as "user" | "teacher";
 
   return (
     <nav className="dashboard-navbar">
@@ -75,9 +75,7 @@ const Navbar = ({ isCoursePage }: { isCoursePage: boolean }) => {
             }}
             showName={true}
             userProfileMode="navigation"
-            userProfileUrl={
-              userRole === "teacher" ? "/teacher/profile" : "/user/profile"
-            }
+            userProfileUrl={"/profile"}
           />
         </div>
       </div>

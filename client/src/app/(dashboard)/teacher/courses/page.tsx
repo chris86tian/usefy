@@ -15,6 +15,7 @@ import {
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import React, { useMemo, useState } from "react";
+import { WandSparkles } from "lucide-react";
 
 const Courses = () => {
   const router = useRouter();
@@ -113,6 +114,7 @@ const Courses = () => {
             onClick={handleCreateCourse}
             className="bg-blue-500 hover:bg-blue-600 text-white"
           >
+            <WandSparkles className="w-5 h-5" />
             Create Course
           </Button>
         }

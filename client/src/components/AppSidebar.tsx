@@ -33,13 +33,13 @@ const AppSidebar = () => {
     user: [
       { icon: BookOpen, label: "Courses", href: "/user/courses" },
       { icon: Briefcase, label: "Payments", href: "/user/billing" },
-      { icon: User, label: "Profile", href: "/user/profile" },
+      { icon: User, label: "Profile", href: "/profile" },
       { icon: Settings, label: "Settings", href: "/settings" },
     ],
     teacher: [
       { icon: BookOpen, label: "Courses", href: "/teacher/courses" },
       { icon: DollarSign, label: "Payments", href: "/teacher/billing" },
-      { icon: User, label: "Profile", href: "/teacher/profile" },
+      { icon: User, label: "Profile", href: "/profile" },
       { icon: Dashboard, label: "Dashboard", href: "/teacher/dashboard" },
       { icon: Settings, label: "Settings", href: "/settings" },
     ],

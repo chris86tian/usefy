@@ -19,7 +19,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
 const SharedNotificationSettings = ({
-  title = "Learning Settings",
+  title = "Settings",
   subtitle = "Customize your learning experience",
 }: SharedNotificationSettingsProps) => {
   const { user } = useUser();
@@ -91,7 +91,7 @@ const SharedNotificationSettings = ({
   if (!user) return <SignInRequired />;
 
   return (
-    <div className="settings-container max-w-4xl mx-auto p-4">
+    <div className="settings-container max-w-4xl">
       <Header title={title} subtitle={subtitle} />
       
       <Form {...methods}>

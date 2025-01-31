@@ -6,13 +6,13 @@ import { dark } from "@clerk/themes";
 import React from "react";
 import CommitGraph from "@/components/CommitGraph";
 
-const TeacherProfilePage = () => {
+const Profile = () => {
   return (
     <>
       <Header title="Profile" subtitle="View your profile" />
       <div className="flex flex-row gap-4">
         <UserProfile
-          path="/teacher/profile"
+          path="/profile"
           routing="path"
           appearance={{
             baseTheme: dark,
@@ -32,4 +32,4 @@ const TeacherProfilePage = () => {
   );
 };
 
-export default TeacherProfilePage;
+export default Profile;

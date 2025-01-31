@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle2, XCircle, AlertTriangle, Brain } from "lucide-react";
+import { CheckCircle2, XCircle, Brain } from "lucide-react";
 import { useUpdateQuizProgressMutation } from '@/state/api';
 import { useUser } from '@clerk/nextjs';
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -41,10 +41,8 @@ const AdaptiveQuiz = ({
     currentDifficulty: "easy" as "easy" | "medium" | "hard"
   });
 
-  console.log(quiz);
-
   useEffect(() => {
-    if (quiz.questions) {
+    if (quiz?.questions) {
       const initialQuestions = quiz.questions
         .filter(q => q.difficulty === "easy")
         .slice(0, 5);
@@ -310,7 +308,6 @@ const AdaptiveQuiz = ({
         <CardContent>
           {error && (
             <Alert className="mb-4 bg-red-900/20 border-red-500 text-red-500">
-              <AlertTriangle className="w-4 h-4" />
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
