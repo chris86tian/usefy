@@ -49,18 +49,20 @@ GrowthHungry provides a seamless way to manage courses, track user progress, han
 
 ---
 
-## Schema Diagrams
+## Schema Diagrams  
 
-The following diagrams illustrate the key data models used in GrowthHungry:
+The following diagrams illustrate the key data models used in GrowthHungry:  
 
-### Course Schema
-![Course Schema](assets/course.png)
+### Course Schema  
+![Course Schema](assets/course.png)  
 
-### User Progress Schema
-![User Progress Schema](assets/user-progress.png)
+### User Progress Schema  
+![User Progress Schema](assets/user-progress.png)  
 
-### Transaction, Notification, Commit Schema
-![Notification-Transaction-Commit Schema](assets/notifications-transactions-commits.png)
+### Transaction, Notification, Commit Schema  
+![Notification-Transaction-Commit Schema](assets/notifications-transactions-commits.png)  
+
+For an interactive version of these diagrams, visit [this workspace](https://app.eraser.io/workspace/cdYkToriyno1VkoxYAop?origin=share).  
 
 ---
 
