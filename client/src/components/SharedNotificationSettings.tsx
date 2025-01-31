@@ -15,7 +15,7 @@ import { CustomFormField } from "./CustomFormField";
 import { Button } from "@/components/ui/button";
 import { SignInRequired } from "@/components/SignInRequired";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
+import { CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
 const SharedNotificationSettings = ({
@@ -105,7 +105,6 @@ const SharedNotificationSettings = ({
             </TabsList>
 
             <TabsContent value="notifications" className="bg-zinc-900 rounded-lg p-4">
-              <Card>
                 <CardContent className="space-y-4 pt-6">
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold">General Notifications</h3>
@@ -174,11 +173,9 @@ const SharedNotificationSettings = ({
                     </div>
                   </div>
                 </CardContent>
-              </Card>
             </TabsContent>
 
             <TabsContent value="learning" className="bg-zinc-900 rounded-lg p-4">
-              <Card>
                 <CardContent className="space-y-4 pt-6">
                   <div className="grid grid-cols-2 gap-4">
                     <CustomFormField
@@ -234,11 +231,9 @@ const SharedNotificationSettings = ({
                     />
                   </div>
                 </CardContent>
-              </Card>
             </TabsContent>
 
             <TabsContent value="privacy" className="bg-zinc-900 rounded-lg p-4">
-              <Card>
                 <CardContent className="space-y-4 pt-6">
                   <div className="grid grid-cols-2 gap-4">
                     <CustomFormField
@@ -268,11 +263,9 @@ const SharedNotificationSettings = ({
                     />
                   </div>
                 </CardContent>
-              </Card>
             </TabsContent>
 
             <TabsContent value="study" className="bg-zinc-900 rounded-lg p-4">
-              <Card>
                 <CardContent className="space-y-4 pt-6">
                   <div className="grid grid-cols-2 gap-4">
                     <CustomFormField
@@ -303,7 +296,6 @@ const SharedNotificationSettings = ({
                     />
                   </div>
                 </CardContent>
-              </Card>
             </TabsContent>
           </Tabs>
 
