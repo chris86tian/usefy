@@ -16,7 +16,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Extract video ID
     const videoId = extractVideoId(videoUrl);
     if (!videoId) {
       return NextResponse.json(
@@ -32,7 +31,6 @@ export async function POST(request: Request) {
         .map(({ text, offset }) => `[${formatTimestamp(offset)}] ${text}`)
         .join("\n");
 
-      // Generate course structure using OpenAI
       const completion = await openai.chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
@@ -54,7 +52,7 @@ export async function POST(request: Request) {
           },
           {
             role: "user",
-            content: `Please analyze this video transcript and create a course structure. Generate exactly 5 multiple-choice questions for each chapter. Ensure each question has exactly 4 options and correctAnswer is a number 0-3.
+            content: `Please analyze this video transcript and create a course structure. Generate exactly 20 multiple-choice questions for each chapter. Ensure each question has exactly 4 options and correctAnswer is a number 0-3.
             Return the response in this exact JSON format:
             {
               "courseTitle": "string",
@@ -75,6 +73,7 @@ export async function POST(request: Request) {
                         "questions": [
                           {
                             "question": "string",
+                            "difficulty": "easy | medium | hard",
                             "options": ["string", "string", "string", "string"],
                             "correctAnswer": number
                           }

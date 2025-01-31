@@ -52,6 +52,7 @@ declare global {
     firstName?: string;
     lastName?: string;
     username?: string;
+    imageUrl?: string;
     emailAddresses: Array<{
       emailAddress: string;
     }>;
@@ -229,6 +230,7 @@ declare global {
 
   interface Question {
     question: string
+    difficulty?: "easy" | "medium" | "hard"
     options: string[]
     correctAnswer: number
   }

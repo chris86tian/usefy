@@ -100,6 +100,7 @@ export const updateCourse = async (
   const { courseId } = req.params;
   const updateData = { ...req.body };
   const { userId } = getAuth(req);
+  console.log("updateData", updateData);
 
   try {
     if (updateData.price !== undefined) {

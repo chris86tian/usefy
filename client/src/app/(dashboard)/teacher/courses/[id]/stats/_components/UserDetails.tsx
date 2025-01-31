@@ -1,15 +1,16 @@
 "use client"
 
 import type React from "react"
+import { useState } from "react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { useGetUserCourseProgressQuery, useGetUserCourseSubmissionsQuery } from "@/state/api"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Clock, Book, Trophy } from "lucide-react"
-import type { User } from "@/lib/utils"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Input } from "@/components/ui/input"
 
 interface UserDetailsProps {
   user: User
@@ -17,6 +18,7 @@ interface UserDetailsProps {
 }
 
 export default function UserDetails({ user, courseId }: UserDetailsProps) {
+  const [searchQuery, setSearchQuery] = useState("")
   const { data: progress, isLoading: isProgressLoading } = useGetUserCourseProgressQuery({ userId: user.id, courseId })
   const { data: submissions, isLoading: isSubmissionsLoading } = useGetUserCourseSubmissionsQuery({
     userId: user.id,
@@ -25,12 +27,16 @@ export default function UserDetails({ user, courseId }: UserDetailsProps) {
 
   const isLoading = isProgressLoading || isSubmissionsLoading
 
+  const filteredSubmissions = submissions?.filter((submission) =>
+    submission.assignmentTitle.toLowerCase().includes(searchQuery.toLowerCase()),
+  )
+
   return (
     <Card className="h-auto bg-zinc-900 border-none shadow-md">
       <CardHeader className="pb-2">
         <div className="flex items-center gap-4">
           <Avatar className="h-16 w-16 border-2 border-primary">
-            <AvatarImage src={user.imageUrl || undefined} alt={`${user.firstName} ${user.lastName}`} />
+            <AvatarImage src={user.imageUrl} alt={`${user.firstName} ${user.lastName}`} />
             <AvatarFallback className="text-lg">{`${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`}</AvatarFallback>
           </Avatar>
           <div>
@@ -137,32 +143,43 @@ export default function UserDetails({ user, courseId }: UserDetailsProps) {
             {/* User Submissions */}
             {isLoading ? (
               <Skeleton className="h-64 w-full" />
-            ) : submissions && (
-              <Card className="bg-zinc-800">
-                <CardHeader>
-                  <CardTitle className="text-xl">Assignment Submissions</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {submissions?.length ? (
-                    submissions.map((submission) => (
-                      <div
-                        key={submission.submissionId}
-                        className="flex justify-between items-center bg-muted p-4 rounded-lg hover:bg-muted/80 transition-colors"
-                      >
-                        <div>
-                          <p className="text-sm font-medium">{submission.assignmentTitle}</p>
-                          <p className="text-xs text-muted-foreground mt-1">{submission.evaluation.explanation}</p>
+            ) : (
+              submissions && (
+                <Card className="bg-zinc-800">
+                  <CardHeader>
+                    <CardTitle className="text-xl">Assignment Submissions</CardTitle>
+                    <div className="relative mt-2">
+                      <Input
+                        type="text"
+                        placeholder="Search assignments"
+                        className="toolbar__search"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {filteredSubmissions?.length ? (
+                      filteredSubmissions.map((submission) => (
+                        <div
+                          key={submission.submissionId}
+                          className="flex justify-between items-center bg-muted p-4 rounded-lg hover:bg-muted/80 transition-colors"
+                        >
+                          <div>
+                            <p className="text-sm font-medium">{submission.assignmentTitle}</p>
+                            <p className="text-xs text-muted-foreground mt-1">{submission.evaluation.explanation}</p>
+                          </div>
+                          <Badge variant={submission.evaluation?.passed ? "default" : "destructive"} className="ml-4">
+                            {submission.evaluation?.passed ? `Passed (${submission.evaluation.score})` : "Failed"}
+                          </Badge>
                         </div>
-                        <Badge variant={submission.evaluation?.passed ? "default" : "destructive"} className="ml-4">
-                          {submission.evaluation?.passed ? `Passed (${submission.evaluation.score})` : "Failed"}
-                        </Badge>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-muted-foreground">No submissions found</p>
-                  )}
-                </CardContent>
-              </Card>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No submissions found</p>
+                    )}
+                  </CardContent>
+                </Card>
+              )
             )}
           </div>
         </ScrollArea>

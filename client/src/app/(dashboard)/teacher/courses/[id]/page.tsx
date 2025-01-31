@@ -267,7 +267,7 @@ const CourseEditor = () => {
                   type="submit"
                   className="bg-primary-700 hover:bg-primary-600"
                 >
-                  {methods.watch("courseStatus") ? "Publish" : "Save"}
+                  Save
                 </Button>
               </div>
             }

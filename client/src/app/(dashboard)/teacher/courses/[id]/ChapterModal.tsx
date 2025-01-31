@@ -26,6 +26,8 @@ const ChapterModal = () => {
   const [videoType, setVideoType] = useState<"file" | "link">("file");
   const [questions, setQuestions] = useState<Question[]>([]);
 
+  console.log(questions);
+
   const methods = useForm<ChapterFormData>({
     resolver: zodResolver(chapterSchema),
     defaultValues: {
@@ -59,6 +61,7 @@ const ChapterModal = () => {
       ...questions,
       {
         question: "",
+        difficulty: "easy",
         options: ["", "", "", ""],
         correctAnswer: 0,
       },
@@ -75,6 +78,7 @@ const ChapterModal = () => {
       ...updatedQuestions[index],
       [field]: value,
     };
+    console.log(updatedQuestions);
     setQuestions(updatedQuestions);
   };
 
@@ -109,6 +113,8 @@ const ChapterModal = () => {
       quiz: questions.length > 0 ? { questions } : undefined,
       assignments: chapter?.assignments || [],
     };
+
+    console.log(newChapter);
 
     if (selectedChapterIndex === null) {
       dispatch(
@@ -262,6 +268,23 @@ const ChapterModal = () => {
                     placeholder="Enter your question"
                     className="mb-2"
                   />
+
+                  <div className="my-2">
+                    <FormLabel className="text-customgreys-dirtyGrey text-sm">
+                      Difficulty
+                    </FormLabel>
+                    <select
+                      value={question.difficulty}
+                      onChange={(e) =>
+                        updateQuestion(questionIndex, "difficulty", e.target.value)
+                      }
+                      className="w-full my-1 py-2 px-4 bg-zinc-800 text-white rounded-sm"
+                    >
+                      <option value="easy">Easy</option>
+                      <option value="medium">Medium</option>
+                      <option value="hard">Hard</option>
+                    </select>
+                  </div>
 
                   {question.options.map((option, optionIndex) => (
                     <div key={optionIndex} className="flex items-center gap-2 mb-2">

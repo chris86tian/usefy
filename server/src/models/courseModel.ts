@@ -98,6 +98,10 @@ const chapterSchema = new Schema({
               type: String,
               required: true,
             },
+            difficulty: {
+              type: String,
+              enum: ["easy", "medium", "hard"],
+            },
             options: {
               type: Array,
               required: true,

@@ -13,13 +13,15 @@ import { CardContent } from "@/components/ui/card";
 import Loading from "@/components/Loading";
 import Header from "@/components/Header";
 import { useUser, useClerk } from "@clerk/nextjs";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Crown, Shield, UserMinus, LogOut, User2 } from "lucide-react";
+import { Crown, Shield, UserMinus, LogOut, User2 } from 'lucide-react';
+import { Input } from "@/components/ui/input";
 
 const Users = () => {
   const { data, isLoading, isError, refetch } = useGetUsersQuery();
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const currentUser = useUser().user;
   const userId = currentUser?.id;
   const { signOut } = useClerk();
@@ -65,6 +67,12 @@ const Users = () => {
     return 0;
   })
 
+  const filteredUsers = sortedUsers.filter((user) =>
+    user.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    user.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    user.emailAddresses[0].emailAddress.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="space-y-6">
       <Header title="Users" subtitle="Manage all users" />
@@ -75,9 +83,19 @@ const Users = () => {
         </Alert>
       )}
 
+      <div className="relative mb-4">
+        <Input
+          type="text"
+          placeholder="Search users"
+          className="toolbar__search"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </div>
+
       <CardContent>
         <div className="space-y-4">
-          {sortedUsers.map((user) => {
+          {filteredUsers.map((user) => {
             const userType = user.publicMetadata?.userType ?? "user";
             const email = user.emailAddresses[0].emailAddress;
             console.log(user)
@@ -99,8 +117,9 @@ const Users = () => {
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
                     <Avatar className="h-12 w-12 border-2 border-zinc-800">
+                      <AvatarImage src={user.imageUrl} alt={`${user.firstName} ${user.lastName}`} />
                       <AvatarFallback className="bg-zinc-950 text-zinc-400">
-                        {user.firstName?.[0] || ""}
+                        {user.firstName[0]}
                       </AvatarFallback>
                     </Avatar>
                     

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle2, XCircle, AlertTriangle, Brain } from "lucide-react";
@@ -18,7 +18,7 @@ interface QuizzesProps {
     onQuizComplete?: (score: number, totalQuestions: number) => void;
 }
 
-const Quizzes = ({ 
+const AdaptiveQuiz = ({ 
   quiz, 
   courseId,
   sectionId,
@@ -26,6 +26,7 @@ const Quizzes = ({
   onQuizComplete 
 }: QuizzesProps) => {
   const user = useUser();
+  const [activeQuestions, setActiveQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({});
   const [showResult, setShowResult] = useState(false);
@@ -34,6 +35,86 @@ const Quizzes = ({
   const [updateQuizProgress] = useUpdateQuizProgressMutation();
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const [performanceMetrics, setPerformanceMetrics] = useState({
+    correct: 0,
+    incorrect: 0,
+    currentDifficulty: "easy" as "easy" | "medium" | "hard"
+  });
+
+  console.log(quiz);
+
+  useEffect(() => {
+    if (quiz.questions) {
+      const initialQuestions = quiz.questions
+        .filter(q => q.difficulty === "easy")
+        .slice(0, 5);
+        
+      if (initialQuestions.length === 0) {
+        setError("No questions available for this quiz.");
+        return;
+      }
+      
+      setActiveQuestions(initialQuestions);
+      setCurrentQuestionIndex(0);
+      setScore(0);
+      setShowResult(false);
+      setError(null);
+    }
+  }, [quiz]);
+
+  const selectNextQuestions = (performance: number) => {
+    const remainingQuestions = quiz.questions.filter(q => 
+      !activeQuestions.includes(q)
+    );
+
+    let targetDifficulty: "easy" | "medium" | "hard";
+    if (performance >= 0.8) {
+      targetDifficulty = "hard";
+    } else if (performance >= 0.6) {
+      targetDifficulty = "medium";
+    } else {
+      targetDifficulty = "easy";
+    }
+
+    const newQuestions = remainingQuestions
+      .filter(q => q.difficulty === targetDifficulty)
+      .slice(0, 5);
+
+    if (newQuestions.length < 5) {
+      const fallbackDifficulty = targetDifficulty === "hard" ? "medium" : "easy";
+      const fallbackQuestions = remainingQuestions
+        .filter(q => q.difficulty === fallbackDifficulty)
+        .slice(0, 5 - newQuestions.length);
+      
+      return [...newQuestions, ...fallbackQuestions];
+    }
+
+    return newQuestions;
+  };
+
+  const updatePerformanceMetrics = (isCorrect: boolean) => {
+    setPerformanceMetrics(prev => {
+      const newMetrics = {
+        correct: prev.correct + (isCorrect ? 1 : 0),
+        incorrect: prev.incorrect + (isCorrect ? 0 : 1),
+        currentDifficulty: prev.currentDifficulty
+      };
+
+      const performance = newMetrics.correct / (newMetrics.correct + newMetrics.incorrect);
+      
+      if (performance >= 0.8 && prev.currentDifficulty === "easy") {
+        newMetrics.currentDifficulty = "medium";
+      } else if (performance >= 0.8 && prev.currentDifficulty === "medium") {
+        newMetrics.currentDifficulty = "hard";
+      } else if (performance <= 0.4 && prev.currentDifficulty === "hard") {
+        newMetrics.currentDifficulty = "medium";
+      } else if (performance <= 0.4 && prev.currentDifficulty === "medium") {
+        newMetrics.currentDifficulty = "easy";
+      }
+
+      return newMetrics;
+    });
+  };
 
   if (!quiz || !quiz.questions.length) {
     return (
@@ -77,29 +158,53 @@ const Quizzes = ({
       return;
     }
   
-    if (currentSelectedAnswer === currentQuestion.correctAnswer) {
-      setScore(score + 1);
+    const currentQuestion = activeQuestions[currentQuestionIndex];
+    if (!currentQuestion) {
+      setError("Question not found. Please try refreshing the quiz.");
+      return;
     }
   
-    if (currentQuestionIndex + 1 < totalQuestions) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
+    const isCorrect = currentSelectedAnswer === currentQuestion.correctAnswer;
+    if (isCorrect) {
+      setScore(prevScore => prevScore + 1);
+    }
+    updatePerformanceMetrics(isCorrect);
+  
+    if (currentQuestionIndex + 1 < activeQuestions.length) {
+      setCurrentQuestionIndex(prevIndex => prevIndex + 1);
+      setShowResult(false);
+      setError(null);
+    } else if (activeQuestions.length < 20) {
+      const performance = score / (currentQuestionIndex + 1);
+      
+      const nextQuestions = selectNextQuestions(performance);
+      if (!nextQuestions.length) {
+        setError("No more questions available. Please complete the quiz.");
+        setIsQuizCompleted(true);
+        return;
+      }
+  
+      setActiveQuestions(prevQuestions => [...prevQuestions, ...nextQuestions]);
+      setCurrentQuestionIndex(prevIndex => prevIndex + 1);
       setShowResult(false);
       setError(null);
     } else {
-      const finalScore = score + (currentSelectedAnswer === currentQuestion.correctAnswer ? 1 : 0);
-      const percentage = (finalScore / totalQuestions) * 100;
+      const finalScore = score + (isCorrect ? 1 : 0);
+      const percentage = (finalScore / activeQuestions.length) * 100;
       const passed = percentage >= 75;
   
       setIsQuizCompleted(true);
-
-      toast.success(
-        'Quiz completed successfully! You can get started with assignments now.',
-        { duration: 5000 }
-      );
+      toast.success('Quiz completed! Your personalized assessment is ready.', { 
+        duration: 5000 
+      });
   
       try {
+        if (!user?.user?.id) {
+          throw new Error("User ID not found");
+        }
+  
         await updateQuizProgress({
-          userId: user?.user?.id as string,
+          userId: user.user.id,
           courseId,
           sectionId,
           chapterId,
@@ -107,13 +212,16 @@ const Quizzes = ({
         }).unwrap();
   
         if (onQuizComplete) {
-          onQuizComplete(finalScore, totalQuestions);
+          onQuizComplete(finalScore, activeQuestions.length);
         }
       } catch (error) {
-        setError("Failed to update quiz progress. Please try again." + error);
+        const errorMessage = error instanceof Error 
+          ? error.message 
+          : "Failed to update quiz progress";
+        setError(`Failed to update quiz progress: ${errorMessage}`);
       }
     }
-  };  
+  };
 
   const handleCheckAnswer = () => {
     if (currentSelectedAnswer === undefined) {
@@ -174,7 +282,16 @@ const Quizzes = ({
     }
 
     return (
-      <div className="bg-gray-900 rounded-lg">
+      <div className="bg-gray-900 rounded-lg px-4">
+        <div className="pt-4">
+          <Alert className="bg-gray-800 border-gray-700 text-white">
+            <AlertDescription>
+              {performanceMetrics.currentDifficulty === "easy" ? "You are currently practicing EASY questions." : null}
+              {performanceMetrics.currentDifficulty === "medium" ? "You are currently practicing MEDIUM questions." : null}
+              {performanceMetrics.currentDifficulty === "hard" ? "You are currently practicing HARD questions." : null}
+            </AlertDescription>
+          </Alert>
+        </div>
         <CardHeader>
           <div className="flex justify-between items-center">
             <CardTitle className="text-lg">
@@ -264,4 +381,4 @@ const Quizzes = ({
   );
 };
 
-export default Quizzes;
+export default AdaptiveQuiz;
