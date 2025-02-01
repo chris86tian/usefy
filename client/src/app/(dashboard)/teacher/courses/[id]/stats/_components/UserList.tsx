@@ -15,13 +15,15 @@ interface UserListProps {
 export default function UserList({ courseId, selectedUser, onUserSelect }: UserListProps) {
   const { data: users } = useGetCourseUsersQuery(courseId)
 
-  if (!users) {
+  console.log(users)
+
+  if (!users || users?.length === 0) {
     return (
-      <Card className="h-full">
+      <Card className="bg-zinc-900">
         <CardHeader>
             <CardTitle>Course Users</CardTitle>
         </CardHeader>
-        <CardContent>Loading users...</CardContent>
+        <CardContent>No users found for this course</CardContent>
       </Card>
     )
   }

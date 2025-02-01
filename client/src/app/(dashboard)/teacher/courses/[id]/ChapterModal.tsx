@@ -26,8 +26,6 @@ const ChapterModal = () => {
   const [videoType, setVideoType] = useState<"file" | "link">("file");
   const [questions, setQuestions] = useState<Question[]>([]);
 
-  console.log(questions);
-
   const methods = useForm<ChapterFormData>({
     resolver: zodResolver(chapterSchema),
     defaultValues: {
@@ -113,8 +111,6 @@ const ChapterModal = () => {
       quiz: questions.length > 0 ? { questions } : undefined,
       assignments: chapter?.assignments || [],
     };
-
-    console.log(newChapter);
 
     if (selectedChapterIndex === null) {
       dispatch(

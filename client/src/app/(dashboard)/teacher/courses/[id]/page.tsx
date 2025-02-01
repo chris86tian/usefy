@@ -22,7 +22,7 @@ import {
 } from "@/state/api";
 import { useAppDispatch, useAppSelector } from "@/state/redux";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, Plus, Sparkles } from "lucide-react";
+import { ArrowLeft, CheckCircle, Plus, Sparkles } from "lucide-react";
 import { useParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -71,9 +71,11 @@ const CourseEditor = () => {
   
       const { sections: newSections, courseTitle, courseDescription } = data;
   
-      // Update course details if provided
-      if (courseTitle) methods.setValue("courseTitle", courseTitle);
-      if (courseDescription) methods.setValue("courseDescription", courseDescription);
+      // Update course details only if title is "Untitled Course" and description is empty
+      if (course?.title === "Untitled Course" && !course?.description) {
+        methods.setValue("courseTitle", courseTitle);
+        methods.setValue("courseDescription", courseDescription);
+      }
   
       // Merge new sections with existing sections
       const updatedSections = [...sections];
@@ -267,6 +269,7 @@ const CourseEditor = () => {
                   type="submit"
                   className="bg-primary-700 hover:bg-primary-600"
                 >
+                  <CheckCircle className="w-5 h-5" />
                   Save
                 </Button>
               </div>

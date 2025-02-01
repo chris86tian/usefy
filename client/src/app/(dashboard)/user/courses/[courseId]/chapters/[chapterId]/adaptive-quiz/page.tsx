@@ -1,118 +1,62 @@
-'use client';
+"use client"
 
-import { useEffect, useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle2, XCircle, Brain } from "lucide-react";
-import { useUpdateQuizProgressMutation } from '@/state/api';
-import { useUser } from '@clerk/nextjs';
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useRouter } from 'next/navigation';
-import toast from 'react-hot-toast';
+import { useEffect, useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { CheckCircle2, XCircle, Brain } from "lucide-react"
+import { useUpdateQuizProgressMutation } from "@/state/api"
+import { useUser } from "@clerk/nextjs"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { useRouter } from "next/navigation"
+import toast from "react-hot-toast"
 
-interface QuizzesProps {
-    quiz: { questions: Question[] };
-    courseId: string;
-    sectionId: string;
-    chapterId: string;
-    onQuizComplete?: (score: number, totalQuestions: number) => void;
+interface Question {
+  question: string
+  options: string[]
+  correctAnswer: number
 }
 
-const AdaptiveQuiz = ({ 
-  quiz, 
-  courseId,
-  sectionId,
-  chapterId,
-  onQuizComplete 
-}: QuizzesProps) => {
-  const user = useUser();
-  const [activeQuestions, setActiveQuestions] = useState<Question[]>([]);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({});
-  const [showResult, setShowResult] = useState(false);
-  const [score, setScore] = useState(0);
-  const [isQuizCompleted, setIsQuizCompleted] = useState(false);
-  const [updateQuizProgress] = useUpdateQuizProgressMutation();
-  const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
-  const [performanceMetrics, setPerformanceMetrics] = useState({
-    correct: 0,
-    incorrect: 0,
-    currentDifficulty: "easy" as "easy" | "medium" | "hard"
-  });
+interface QuizzesProps {
+  quiz: { questions: Question[] }
+  courseId: string
+  sectionId: string
+  chapterId: string
+  onQuizComplete?: (score: number, totalQuestions: number) => void
+}
+
+const AdaptiveQuiz = ({ quiz, courseId, sectionId, chapterId, onQuizComplete }: QuizzesProps) => {
+  const user = useUser()
+  const [activeQuestions, setActiveQuestions] = useState<Question[]>([])
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({})
+  const [showResult, setShowResult] = useState(false)
+  const [score, setScore] = useState(0)
+  const [isQuizCompleted, setIsQuizCompleted] = useState(false)
+  const [updateQuizProgress] = useUpdateQuizProgressMutation()
+  const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
 
   useEffect(() => {
     if (quiz?.questions) {
-      const initialQuestions = quiz.questions
-        .filter(q => q.difficulty === "easy")
-        .slice(0, 5);
-        
+      const initialQuestions = quiz.questions.slice(0, 5)
+
       if (initialQuestions.length === 0) {
-        setError("No questions available for this quiz.");
-        return;
+        setError("No questions available for this quiz.")
+      } else {
+        setActiveQuestions(initialQuestions)
+        setCurrentQuestionIndex(0)
+        setScore(0)
+        setShowResult(false)
+        setError(null)
       }
-      
-      setActiveQuestions(initialQuestions);
-      setCurrentQuestionIndex(0);
-      setScore(0);
-      setShowResult(false);
-      setError(null);
     }
-  }, [quiz]);
+  }, [quiz])
 
-  const selectNextQuestions = (performance: number) => {
-    const remainingQuestions = quiz.questions.filter(q => 
-      !activeQuestions.includes(q)
-    );
+  const selectReplacementQuestion = () => {
+    const remainingQuestions = quiz.questions.filter((q) => !activeQuestions.includes(q))
 
-    let targetDifficulty: "easy" | "medium" | "hard";
-    if (performance >= 0.8) {
-      targetDifficulty = "hard";
-    } else if (performance >= 0.6) {
-      targetDifficulty = "medium";
-    } else {
-      targetDifficulty = "easy";
-    }
-
-    const newQuestions = remainingQuestions
-      .filter(q => q.difficulty === targetDifficulty)
-      .slice(0, 5);
-
-    if (newQuestions.length < 5) {
-      const fallbackDifficulty = targetDifficulty === "hard" ? "medium" : "easy";
-      const fallbackQuestions = remainingQuestions
-        .filter(q => q.difficulty === fallbackDifficulty)
-        .slice(0, 5 - newQuestions.length);
-      
-      return [...newQuestions, ...fallbackQuestions];
-    }
-
-    return newQuestions;
-  };
-
-  const updatePerformanceMetrics = (isCorrect: boolean) => {
-    setPerformanceMetrics(prev => {
-      const newMetrics = {
-        correct: prev.correct + (isCorrect ? 1 : 0),
-        incorrect: prev.incorrect + (isCorrect ? 0 : 1),
-        currentDifficulty: prev.currentDifficulty
-      };
-
-      const performance = newMetrics.correct / (newMetrics.correct + newMetrics.incorrect);
-      
-      if (performance >= 0.8 && prev.currentDifficulty === "easy") {
-        newMetrics.currentDifficulty = "medium";
-      } else if (performance >= 0.8 && prev.currentDifficulty === "medium") {
-        newMetrics.currentDifficulty = "hard";
-      } else if (performance <= 0.4 && prev.currentDifficulty === "hard") {
-        newMetrics.currentDifficulty = "medium";
-      } else if (performance <= 0.4 && prev.currentDifficulty === "medium") {
-        newMetrics.currentDifficulty = "easy";
-      }
-
-      return newMetrics;
-    });
-  };
+    return remainingQuestions[Math.floor(Math.random() * remainingQuestions.length)]
+  }
 
   if (!quiz || !quiz.questions.length) {
     return (
@@ -121,9 +65,12 @@ const AdaptiveQuiz = ({
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <h3 className="text-xl font-semibold mb-2">No Quiz Available</h3>
             <p className="text-muted-foreground">This chapter does not have any quiz questions yet.</p>
-            {user?.user?.publicMetadata?.userType === 'teacher' && (
-              <Button className="mt-4 bg-blue-500 hover:bg-blue-600 transition-colors"
-                onClick={() => { router.push(`/teacher/courses/${courseId}`)}}
+            {user?.user?.publicMetadata?.userType === "teacher" && (
+              <Button
+                className="mt-4 bg-blue-500 hover:bg-blue-600 transition-colors"
+                onClick={() => {
+                  router.push(`/teacher/courses/${courseId}`)
+                }}
               >
                 <Brain className="w-4 h-4 mr-1" />
                 Add Quiz
@@ -132,132 +79,123 @@ const AdaptiveQuiz = ({
           </div>
         </CardContent>
       </Card>
-    );
+    )
   }
 
-  const currentQuestion = quiz.questions[currentQuestionIndex];
-  const totalQuestions = quiz.questions.length;
-  const progressPercentage = ((currentQuestionIndex + 1) / totalQuestions) * 100;
-  const currentSelectedAnswer = selectedAnswers[currentQuestionIndex];
+  const currentQuestion = activeQuestions[currentQuestionIndex]
+  const totalQuestions = activeQuestions.length
+  const progressPercentage = ((currentQuestionIndex + 1) / totalQuestions) * 100
+  const currentSelectedAnswer = selectedAnswers[currentQuestionIndex]
 
   const handleAnswerSelect = (answerIndex: number) => {
     if (!showResult) {
-      setSelectedAnswers(prev => ({
+      setSelectedAnswers((prev) => ({
         ...prev,
-        [currentQuestionIndex]: answerIndex
-      }));
-      setError(null);
+        [currentQuestionIndex]: answerIndex,
+      }))
+      setError(null)
     }
-  };
+  }
 
   const handleNextQuestion = async () => {
     if (currentSelectedAnswer === undefined) {
-      setError("Please select an answer before proceeding.");
-      return;
+      setError("Please select an answer before proceeding.")
+      return
     }
-  
-    const currentQuestion = activeQuestions[currentQuestionIndex];
-    if (!currentQuestion) {
-      setError("Question not found. Please try refreshing the quiz.");
-      return;
-    }
-  
-    const isCorrect = currentSelectedAnswer === currentQuestion.correctAnswer;
+
+    const isCorrect = currentSelectedAnswer === currentQuestion.correctAnswer
     if (isCorrect) {
-      setScore(prevScore => prevScore + 1);
-    }
-    updatePerformanceMetrics(isCorrect);
-  
-    if (currentQuestionIndex + 1 < activeQuestions.length) {
-      setCurrentQuestionIndex(prevIndex => prevIndex + 1);
-      setShowResult(false);
-      setError(null);
-    } else if (activeQuestions.length < 20) {
-      const performance = score / (currentQuestionIndex + 1);
-      
-      const nextQuestions = selectNextQuestions(performance);
-      if (!nextQuestions.length) {
-        setError("No more questions available. Please complete the quiz.");
-        setIsQuizCompleted(true);
-        return;
-      }
-  
-      setActiveQuestions(prevQuestions => [...prevQuestions, ...nextQuestions]);
-      setCurrentQuestionIndex(prevIndex => prevIndex + 1);
-      setShowResult(false);
-      setError(null);
+      setScore((prevScore) => prevScore + 1)
     } else {
-      const finalScore = score + (isCorrect ? 1 : 0);
-      const percentage = (finalScore / activeQuestions.length) * 100;
-      const passed = percentage >= 75;
-  
-      setIsQuizCompleted(true);
-      toast.success('Quiz completed! Your personalized assessment is ready.', { 
-        duration: 5000 
-      });
-  
+      // Replace the incorrect question with a new one
+      const replacementQuestion = selectReplacementQuestion()
+      if (replacementQuestion) {
+        setActiveQuestions((prev) => [
+          ...prev.slice(0, currentQuestionIndex),
+          replacementQuestion,
+          ...prev.slice(currentQuestionIndex + 1),
+        ])
+      }
+    }
+
+    if (currentQuestionIndex + 1 < totalQuestions) {
+      setCurrentQuestionIndex((prevIndex) => prevIndex + 1)
+      setShowResult(false)
+      setError(null)
+    } else {
+      setIsQuizCompleted(true)
+      toast.success("Quiz completed! Your personalized assessment is ready.", {
+        duration: 5000,
+      })
+
       try {
         if (!user?.user?.id) {
-          throw new Error("User ID not found");
+          throw new Error("User ID not found")
         }
-  
+
+        const finalScore = score + (isCorrect ? 1 : 0)
+        const percentage = (finalScore / totalQuestions) * 100
+        const passed = percentage >= 75
+
         await updateQuizProgress({
           userId: user.user.id,
           courseId,
           sectionId,
           chapterId,
           completed: passed,
-        }).unwrap();
-  
+        }).unwrap()
+
         if (onQuizComplete) {
-          onQuizComplete(finalScore, activeQuestions.length);
+          onQuizComplete(finalScore, totalQuestions)
         }
       } catch (error) {
-        const errorMessage = error instanceof Error 
-          ? error.message 
-          : "Failed to update quiz progress";
-        setError(`Failed to update quiz progress: ${errorMessage}`);
+        const errorMessage = error instanceof Error ? error.message : "Failed to update quiz progress"
+        setError(`Failed to update quiz progress: ${errorMessage}`)
       }
     }
-  };
+  }
 
   const handleCheckAnswer = () => {
     if (currentSelectedAnswer === undefined) {
-      setError("Please select an answer before checking.");
-      return;
+      setError("Please select an answer before checking.")
+      return
     }
-    setShowResult(true);
-    setError(null);
-  };
+    setShowResult(true)
+    setError(null)
+  }
 
   const handleRetakeQuiz = () => {
-    setCurrentQuestionIndex(0);
-    setSelectedAnswers({});
-    setShowResult(false);
-    setScore(0);
-    setIsQuizCompleted(false);
-  };
+    const initialQuestions = quiz.questions.slice(0, 5)
+    setActiveQuestions(initialQuestions)
+    setCurrentQuestionIndex(0)
+    setSelectedAnswers({})
+    setShowResult(false)
+    setScore(0)
+    setIsQuizCompleted(false)
+  }
 
   const renderQuizContent = () => {
     if (isQuizCompleted) {
-      const percentage = (score / totalQuestions) * 100;
-      const isPassed = percentage >= 75;
-      
+      const percentage = (score / totalQuestions) * 100
+      const isPassed = percentage >= 75
+
       return (
         <div className="flex flex-col items-center justify-center py-8 text-center bg-gray-900 rounded-lg">
           <h3 className="text-2xl font-bold mb-4">Quiz Completed!</h3>
           <div className="relative w-32 h-32 mb-6">
-            <div 
+            <div
               className="absolute inset-0 rounded-full border-4 border-gray-700"
               style={{
-                background: `conic-gradient(${isPassed ? '#22c55e' : '#ef4444'} ${percentage}%, transparent 0)`
+                background: `conic-gradient(${isPassed ? "#22c55e" : "#ef4444"} ${percentage}%, transparent 0)`,
               }}
             />
             <div className="absolute inset-2 bg-gray-900 rounded-full flex items-center justify-center">
               <span className="text-4xl font-bold">{percentage.toFixed(0)}%</span>
             </div>
           </div>
-          <p className="text-lg mb-4">You scored {score} out of {totalQuestions}</p>
+          <p className="text-lg mb-4">
+            You scored {score} out of {totalQuestions}
+          </p>
           {isPassed ? (
             <Alert className="bg-green-900/20 border-green-500 text-green-500 w-auto">
               <AlertDescription>Congratulations! You passed the quiz.</AlertDescription>
@@ -267,29 +205,25 @@ const AdaptiveQuiz = ({
               <Alert className="bg-red-900/20 border-red-500 text-red-500 w-auto">
                 <AlertDescription>Keep practicing! You need 75% to pass.</AlertDescription>
               </Alert>
-              <Button 
-                onClick={handleRetakeQuiz}
-                className="bg-blue-500 hover:bg-blue-600 transition-colors"
-              >
+              <Button onClick={handleRetakeQuiz} className="bg-blue-500 hover:bg-blue-600 transition-colors">
                 Retake Quiz
               </Button>
             </div>
           )}
         </div>
-      );
+      )
+    }
+
+    if (!currentQuestion) {
+      return (
+        <div className="bg-gray-900 rounded-lg px-4 py-8 text-center">
+          <p className="text-lg font-medium">No questions available. Please try again later.</p>
+        </div>
+      )
     }
 
     return (
       <div className="bg-gray-900 rounded-lg px-4">
-        <div className="pt-4">
-          <Alert className="bg-gray-800 border-gray-700 text-white">
-            <AlertDescription>
-              {performanceMetrics.currentDifficulty === "easy" ? "You are currently practicing EASY questions." : null}
-              {performanceMetrics.currentDifficulty === "medium" ? "You are currently practicing MEDIUM questions." : null}
-              {performanceMetrics.currentDifficulty === "hard" ? "You are currently practicing HARD questions." : null}
-            </AlertDescription>
-          </Alert>
-        </div>
         <CardHeader>
           <div className="flex justify-between items-center">
             <CardTitle className="text-lg">
@@ -297,7 +231,7 @@ const AdaptiveQuiz = ({
             </CardTitle>
           </div>
           <div className="w-full bg-gray-800 h-2 rounded-full">
-            <div 
+            <div
               className="bg-blue-500 h-2 rounded-full transition-all duration-300"
               style={{ width: `${progressPercentage}%` }}
             />
@@ -320,22 +254,24 @@ const AdaptiveQuiz = ({
                 className={`w-full text-left flex items-center justify-between p-4 rounded-lg border transition-all duration-200 ${
                   showResult
                     ? index === currentQuestion.correctAnswer
-                      ? 'border-green-500 bg-green-900/20'
+                      ? "border-green-500 bg-green-900/20"
                       : currentSelectedAnswer === index
-                      ? 'border-red-500 bg-red-900/20'
-                      : 'border-gray-700'
+                        ? "border-red-500 bg-red-900/20"
+                        : "border-gray-700"
                     : currentSelectedAnswer === index
-                    ? 'border-blue-500 bg-blue-900/20'
-                    : 'border-gray-700 hover:border-gray-600'
+                      ? "border-blue-500 bg-blue-900/20"
+                      : "border-gray-700 hover:border-gray-600"
                 }`}
               >
-                <span className={`flex-grow ${
-                  showResult && index === currentQuestion.correctAnswer
-                    ? 'text-green-500'
-                    : showResult && currentSelectedAnswer === index
-                    ? 'text-red-500'
-                    : ''
-                }`}>
+                <span
+                  className={`flex-grow ${
+                    showResult && index === currentQuestion.correctAnswer
+                      ? "text-green-500"
+                      : showResult && currentSelectedAnswer === index
+                        ? "text-red-500"
+                        : ""
+                  }`}
+                >
                   {option}
                 </span>
                 {showResult && index === currentQuestion.correctAnswer && (
@@ -351,7 +287,7 @@ const AdaptiveQuiz = ({
 
         <CardFooter className="flex justify-end space-x-2">
           {!showResult ? (
-            <Button 
+            <Button
               onClick={handleCheckAnswer}
               disabled={currentSelectedAnswer === undefined}
               className="bg-blue-500 hover:bg-blue-600 transition-colors"
@@ -359,23 +295,17 @@ const AdaptiveQuiz = ({
               Check Answer
             </Button>
           ) : (
-            <Button 
-              onClick={handleNextQuestion}
-              className="bg-blue-500 hover:bg-blue-600 transition-colors"
-            >
-              {currentQuestionIndex + 1 === totalQuestions ? 'Finish Quiz' : 'Next Question'}
+            <Button onClick={handleNextQuestion} className="bg-blue-500 hover:bg-blue-600 transition-colors">
+              {currentQuestionIndex + 1 === totalQuestions ? "Finish Quiz" : "Next Question"}
             </Button>
           )}
         </CardFooter>
       </div>
-    );
-  };
+    )
+  }
 
-  return (
-    <Card className="mt-4">
-      {renderQuizContent()}
-    </Card>
-  );
-};
+  return <Card className="mt-4">{renderQuizContent()}</Card>
+}
 
-export default AdaptiveQuiz;
+export default AdaptiveQuiz
+

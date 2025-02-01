@@ -193,7 +193,7 @@ const ProgressVisuals = ({
     return (
       <div className="flex items-center justify-center py-4 text-gray-500">
         <Lock className="h-5 w-5 mr-2" />
-        <span>Avaliable on {new Date(section.releaseDate).toLocaleDateString()}</span>
+        <span>Avaliable {section.releaseDate !== undefined ? 'on ' + new Date(section.releaseDate).toLocaleDateString() : 'soon'}</span>
       </div>
     );
   }

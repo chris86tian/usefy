@@ -26,86 +26,134 @@ export async function POST(request: Request) {
 
     try {
       const transcript = await YoutubeTranscript.fetchTranscript(videoId);
-
       const formattedTranscript = transcript
         .map(({ text, offset }) => `[${formatTimestamp(offset)}] ${text}`)
         .join("\n");
 
+      // First, get a shorter response to test the structure
       const completion = await openai.chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
           {
             role: "system",
-            content: `You are an expert course creator who excels at organizing educational content into logical sections and chapters. 
-            Given a video transcript, create a well-structured course outline.
-            
-            For each major topic in the video, create a section with:
-            - A clear, descriptive title
-            - A brief overview of what will be covered
-            
-            For each subtopic, create a chapter with:
-            - A specific, focused title
-            - Detailed content summarizing the key points
-            - The exact timestamp from the transcript where this content begins
-            
-            Ensure the content is educational, well-organized, and maintains a logical flow.`,
+            content: `You are a course creator. Respond only with a valid JSON object containing course information. Do not include any explanation, formatting, or markdown.`
           },
           {
             role: "user",
-            content: `Please analyze this video transcript and create a course structure. Generate exactly 20 multiple-choice questions for each chapter. Ensure each question has exactly 4 options and correctAnswer is a number 0-3.
-            Return the response in this exact JSON format:
+            content: `Create a course outline from this transcript. Include 3 questions per chapter.
+            Format: 
             {
               "courseTitle": "string",
               "courseDescription": "string",
-              "sections": [
-                {
-                  "sectionId": "string",
-                  "sectionTitle": "string",
-                  "sectionDescription": "string",
-                  "chapters": [
-                    {
-                      "chapterId": "string",
-                      "title": "string",
-                      "content": "string",
-                      "type": "string (e.g. 'Video')",
-                      "video": "string (original URL with timestamp: https://www.youtube.com/watch?v=<VIDEO_ID>&t=<START_TIME>s)",
-                      "quiz": {
-                        "questions": [
-                          {
-                            "question": "string",
-                            "difficulty": "easy | medium | hard",
-                            "options": ["string", "string", "string", "string"],
-                            "correctAnswer": number
-                          }
-                        ]
-                      }
-                    }
-                  ]
-                }
-              ]
+              "sections": [{
+                "sectionId": "s1",
+                "sectionTitle": "string",
+                "sectionDescription": "string",
+                "chapters": [{
+                  "chapterId": "c1",
+                  "title": "string",
+                  "content": "string",
+                  "type": "Video",
+                  "video": "${videoUrl}",
+                  "quiz": {
+                    "questions": [{
+                      "question": "string",
+                      "difficulty": "easy",
+                      "options": ["string", "string", "string", "string"],
+                      "correctAnswer": 0
+                    }]
+                  }
+                }]
+              }]
             }
 
-            Video URL: ${videoUrl}
-            Transcript: ${formattedTranscript}`,
-          },
+            Transcript: ${formattedTranscript.slice(0, 1000)}...`
+          }
         ],
-        temperature: 0.7,
-        max_tokens: 4000,
+        temperature: 0.5,
+        max_tokens: 2000,
+        response_format: { type: "json_object" }
       });
 
-      // Sanitize and parse the response
-      const sanitizedContent = sanitizeJSON(completion.choices[0].message.content || "{}");
-      const courseStructure = JSON.parse(sanitizedContent);
+      let courseStructure;
+      try {
+        const content = completion?.choices[0]?.message?.content;
+        
+        // Debug logging
+        console.log("Raw OpenAI response:", content);
+        
+        if (!content) {
+          console.error("Empty content from OpenAI");
+          return NextResponse.json(
+            { error: "Empty response from OpenAI" },
+            { status: 500 }
+          );
+        }
 
-      // Process the parsed course structure
-      courseStructure.sections.forEach((section: { chapters: { content: string; videoUrl: string; }[]; }) => {
-        section.chapters.forEach((chapter: { content: string; videoUrl: string; }) => {
-          const startTime = extractTimestamp(chapter.content);
-          chapter.videoUrl = `https://www.youtube.com/watch?v=${videoId}&t=${startTime}s`;
+        // Clean and validate content
+        const cleanContent = content.replace(/```json\n?|```\n?/g, '').trim();
+        console.log("Cleaned content:", cleanContent);
+
+        if (!cleanContent) {
+          console.error("Empty content after cleaning");
+          return NextResponse.json(
+            { error: "Empty content after cleaning" },
+            { status: 500 }
+          );
+        }
+
+        try {
+          courseStructure = JSON.parse(cleanContent);
+        } catch (parseError) {
+          console.error("Parse error with content:", cleanContent);
+          console.error("Parse error details:", parseError);
+          return NextResponse.json(
+            { 
+              error: "JSON Parse Error", 
+              details: parseError,
+              content: cleanContent
+            },
+            { status: 500 }
+          );
+        }
+
+        // Validate structure
+        if (!courseStructure || typeof courseStructure !== 'object') {
+          console.error("Invalid course structure:", courseStructure);
+          return NextResponse.json(
+            { error: "Invalid course structure format" },
+            { status: 500 }
+          );
+        }
+
+        if (!courseStructure.sections || !Array.isArray(courseStructure.sections)) {
+          console.error("Missing or invalid sections:", courseStructure);
+          return NextResponse.json(
+            { error: "Missing or invalid sections array" },
+            { status: 500 }
+          );
+        }
+
+        // Update video URLs with timestamps
+        courseStructure.sections.forEach((section: Section) => {
+          section.chapters.forEach((chapter) => {
+            const startTime = extractTimestamp(chapter.content);
+            chapter.video = `https://www.youtube.com/watch?v=${videoId}&t=${startTime}s`;
+          });
         });
-      });
-      
-      return NextResponse.json(courseStructure);
+
+        return NextResponse.json(courseStructure);
+
+      } catch (error) {
+        console.error("Error in response processing:", error);
+        return NextResponse.json(
+          { 
+            error: "Failed to process response",
+            details: error
+          },
+          { status: 500 }
+        );
+      }
     } catch (error) {
       console.error("Error processing video:", error);
       return NextResponse.json(
@@ -122,11 +170,6 @@ export async function POST(request: Request) {
   }
 }
 
-function sanitizeJSON(response: string): string {
-  const jsonMatch = response.match(/{[\s\S]*}/);
-  return jsonMatch ? jsonMatch[0] : "{}";
-}
-
 function formatTimestamp(seconds: number): string {
   const totalSeconds = Math.floor(seconds);
   const minutes = Math.floor(totalSeconds / 60);
@@ -135,12 +178,20 @@ function formatTimestamp(seconds: number): string {
 }
 
 function extractTimestamp(content: string): number {
+  // First try to extract the timestamp in [MM:SS] format
   const timestampMatch = content.match(/\[(\d+):(\d{2})\]/);
   if (timestampMatch) {
     const minutes = parseInt(timestampMatch[1], 10);
     const seconds = parseInt(timestampMatch[2], 10);
     return minutes * 60 + seconds;
   }
+  
+  // If no [MM:SS] format found, try to extract floating point offset directly
+  const offsetMatch = content.match(/offset:\s*(\d+\.?\d*)/);
+  if (offsetMatch) {
+    return parseFloat(offsetMatch[1]);
+  }
+  
   return 0;
 }
 

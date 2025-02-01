@@ -1,3 +1,5 @@
+'use client';
+
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -54,7 +56,7 @@ const YouTubeDialog = ({ isOpen, onClose, onSubmit }: YouTubeDialogProps) => {
             />
           </div>
           <p className="text-sm text-muted-foreground">
-            The video must be publicly accessible and have captions available.
+            The video must be publicly accessible and have captions available. The duration of the video should not exceed 2 hours.
           </p>
         </div>
         <DialogFooter className="gap-2 sm:gap-0">
@@ -67,7 +69,7 @@ const YouTubeDialog = ({ isOpen, onClose, onSubmit }: YouTubeDialogProps) => {
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={!youtubeURL || isLoading}
+            disabled={!youtubeURL || isLoading || (!youtubeURL.includes('youtu.be') && !youtubeURL.includes('youtube.com'))}
             className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700"
           >
             {isLoading ? (
