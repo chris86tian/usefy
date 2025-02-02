@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { YoutubeTranscript } from "youtube-transcript";
 import OpenAI from "openai";
 import { extractVideoId } from "@/lib/utils";
+import * as use from "@tensorflow-models/universal-sentence-encoder";
+import * as tf from "@tensorflow/tfjs";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -29,6 +31,8 @@ export async function POST(request: Request) {
       const formattedTranscript = transcript
         .map(({ text, offset }) => `[${formatTimestamp(offset)}] ${text}`)
         .join("\n");
+
+      const topicTimestamps = await extractTopicTimestamps(transcript);  
 
       // First, get a shorter response to test the structure
       const completion = await openai.chat.completions.create({
@@ -134,10 +138,9 @@ export async function POST(request: Request) {
           );
         }
 
-        // Update video URLs with timestamps
         courseStructure.sections.forEach((section: Section) => {
-          section.chapters.forEach((chapter) => {
-            const startTime = extractTimestamp(chapter.content);
+          section.chapters.forEach((chapter, chapterIndex) => {
+            const startTime = topicTimestamps[chapterIndex] || 0;
             chapter.video = `https://www.youtube.com/watch?v=${videoId}&t=${startTime}s`;
           });
         });
@@ -177,23 +180,41 @@ function formatTimestamp(seconds: number): string {
   return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
 }
 
-function extractTimestamp(content: string): number {
-  // First try to extract the timestamp in [MM:SS] format
-  const timestampMatch = content.match(/\[(\d+):(\d{2})\]/);
-  if (timestampMatch) {
-    const minutes = parseInt(timestampMatch[1], 10);
-    const seconds = parseInt(timestampMatch[2], 10);
-    return minutes * 60 + seconds;
-  }
+async function extractTopicTimestamps(transcript: { offset: number; text: string; }[], threshold = 0.5) {
+  if (!transcript || transcript.length === 0) return [];
+
+  // Load the Universal Sentence Encoder model
+  const model = await use.load();
+  const sentences = transcript.map(({ text }) => text);
+
+  // Generate embeddings for each sentence
+  const embeddings = await model.embed(sentences);
+  const sentenceVectors = embeddings.arraySync();
+
+  const timestamps = [];
   
-  // If no [MM:SS] format found, try to extract floating point offset directly
-  const offsetMatch = content.match(/offset:\s*(\d+\.?\d*)/);
-  if (offsetMatch) {
-    return parseFloat(offsetMatch[1]);
+  for (let i = 1; i < sentenceVectors.length; i++) {
+    // Compute cosine similarity
+    const similarity = cosineSimilarity(sentenceVectors[i - 1], sentenceVectors[i]);
+
+    // If similarity drops below the threshold, mark as a topic change
+    if (similarity < threshold) {
+      timestamps.push(transcript[i].offset);
+    }
   }
-  
-  return 0;
+
+  return timestamps;
 }
+
+// Cosine similarity function
+function cosineSimilarity(vecA: number[], vecB: number[]): number {
+  const dotProduct = tf.tidy(() => tf.dot(tf.tensor1d(vecA), tf.tensor1d(vecB)).dataSync()[0]);
+  const magnitudeA = Math.sqrt(vecA.reduce((sum, val) => sum + val * val, 0));
+  const magnitudeB = Math.sqrt(vecB.reduce((sum, val) => sum + val * val, 0));
+
+  return dotProduct / (magnitudeA * magnitudeB);
+}
+
 
 export const config = {
   api: {
