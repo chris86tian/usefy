@@ -6,6 +6,8 @@ import helmet from "helmet";
 import morgan from "morgan";
 import * as dynamoose from "dynamoose";
 import serverless from "serverless-http";
+import AWS from "aws-sdk";
+import { DynamoDB } from "@aws-sdk/client-dynamodb";
 import "./utils/scheduledEmail";
 import {
   clerkMiddleware,
@@ -23,9 +25,20 @@ import commitRoutes from "./routes/commitRoutes";
 /* CONFIGURATIONS */
 dotenv.config();
 const isProduction = process.env.NODE_ENV === "production";
-if (!isProduction) {
-  dynamoose.aws.ddb.local();
-}
+
+// Local DynamoDB
+// if (!isProduction) {
+//   dynamoose.aws.ddb.local();
+// }
+
+AWS.config.update({
+  region: process.env.AWS_REGION,
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+});
+
+dynamoose.aws.ddb.set(new DynamoDB());
+
 
 export const clerkClient = createClerkClient({
   secretKey: process.env.CLERK_SECRET_KEY,
