@@ -6,12 +6,11 @@ import UserList from './_components/UserList';
 import UserDetails from './_components/UserDetails';
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { User } from '@/lib/utils';
 
 export default function CourseStatsPage() {
     const pathname = usePathname();
     const courseId = pathname.split('/')[3];
-    const [selectedUser, setSelectedUser] = useState<User | null>(null);
+    const [selectedUser, setSelectedUser] = useState<User>();
 
     return (
         <div className="container mx-auto p-4">

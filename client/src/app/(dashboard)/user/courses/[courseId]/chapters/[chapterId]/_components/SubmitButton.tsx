@@ -9,25 +9,6 @@ import { v4 as uuidv4 } from "uuid";
 import { useState } from "react";
 import { toast } from "sonner";
 
-interface SubmitButtonProps {
-  courseId: string;
-  sectionId: string;
-  chapterId: string;
-  assignmentId: string;
-  assignment: string;
-}
-
-interface ExecutionResult {
-  code: string;
-  output: string;
-  error?: string | null;
-  evaluation: {
-    passed: boolean;
-    score: number;
-    explanation: string;
-  };
-}
-
 function SubmitButton({ courseId, sectionId, chapterId, assignmentId, assignment }: SubmitButtonProps) {
   const { user } = useUser();
   const { submitCode, isSubmitting: editorIsSubmitting } = useCodeEditorStore();

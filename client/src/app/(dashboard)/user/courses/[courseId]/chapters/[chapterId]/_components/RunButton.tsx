@@ -45,10 +45,10 @@ function RunButton() {
         {isRunning ? (
           <>
             <div className="relative">
-              <Loader2 className="w-4 h-4 animate-spin text-black" />
+              <Loader2 className="w-4 h-4 animate-spin" />
               <div className="absolute inset-0 blur animate-pulse" />
             </div>
-            <span className="text-sm font-medium text-black">Executing...</span>
+            <span className="text-sm font-medium">Executing...</span>
           </>
         ) : (
           <>

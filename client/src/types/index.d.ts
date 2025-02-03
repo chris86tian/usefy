@@ -1,4 +1,56 @@
+import { ReactNode } from "react";
+import { Monaco } from "@monaco-editor/react";
+import { Id } from "../../convex/_generated/dataModel";
+import monaco from "monaco-editor";
+
 declare global {
+
+  interface UserStats {
+    week: string
+    progress: number
+  }   
+  
+  interface Snippet {
+    _id: Id<"snippets">;
+    _creationTime: number;
+    userId: string;
+    language: string;
+    code: string;
+    title: string;
+    userName: string;
+  }
+  
+  interface ExecutionResult {
+    code: string;
+    output: string;
+    error?: string | null;
+    evaluation: {
+      passed: boolean;
+      score: number;
+      explanation: string;
+    };
+  }
+  
+  interface CodeEditorState {
+    language: string;
+    output: string;
+    isRunning: boolean;
+    isSubmitting: boolean;
+    error: string | null;
+    theme: string;
+    fontSize: number;
+    editor: monaco.editor.IStandaloneCodeEditor | null;
+    task: string;
+    executionResult: ExecutionResult | null;
+  
+    setEditor: (editor: monaco.editor.IStandaloneCodeEditor) => void;
+    getCode: () => string;
+    setLanguage: (language: string) => void;
+    setTheme: (theme: string) => void;
+    setFontSize: (fontSize: number) => void;
+    runCode: () => Promise<void>;
+    submitCode: (task: string) => Promise<void>;
+  }  
   
   interface PaymentMethod {
     methodId: string;
@@ -51,8 +103,10 @@ declare global {
     id: string;
     firstName?: string;
     lastName?: string;
+    fullName?: string;
     username?: string;
-    imageUrl?: string;
+    hasImage: boolean;
+    imageUrl: string;
     emailAddresses: Array<{
       emailAddress: string;
     }>;
@@ -69,6 +123,8 @@ declare global {
       bio?: string;
       urls?: string[];
     };
+    lastSignInAt: Date | null
+    createdAt: Date
   }
 
   interface Course {
@@ -178,24 +234,6 @@ declare global {
   type CreateCourseArgs = Omit<Course, "courseId">;
   type CreateTransactionArgs = Omit<Transaction, "transactionId">;
 
-  interface TeacherCourseCardProps {
-    course: Course;
-    isOwner: boolean;
-    onEdit: (course: Course) => void;
-    onDelete: (course: Course) => void;
-    onView: (course: Course) => void;
-    onArchive: (course: Course) => void;
-    onUnarchive: (course: Course) => void;
-    onStats: (course: Course) => void;
-  }
-
-  interface AssignmentsProps {
-    chapterId: string
-    sectionId: string
-    courseId: string
-    teacherId: string
-  }
-
   interface Assignment {
     assignmentId: string;
     title: string;
@@ -242,15 +280,32 @@ declare global {
     date: string;
   }
 
-  interface ChapterProgress {
-    chapterId: string;
-    completed: boolean;
-    quizCompleted?: boolean;
+  interface CourseFormData {
+    courseTitle: string;
+    courseDescription: string;
+    courseCategory: string;
+    coursePrice: string;
+    courseStatus: boolean;
+    courseImage: string;
   }
 
-  interface SectionProgress {
+  // COMPONENT PROPS
+  interface TeacherCourseCardProps {
+    course: Course;
+    isOwner: boolean;
+    onEdit: (course: Course) => void;
+    onDelete: (course: Course) => void;
+    onView: (course: Course) => void;
+    onArchive: (course: Course) => void;
+    onUnarchive: (course: Course) => void;
+    onStats: (course: Course) => void;
+  }
+
+  interface AssignmentsProps {
+    chapterId: string;
     sectionId: string;
-    chapters: ChapterProgress[];
+    courseId: string;
+    teacherId: string;
   }
 
   interface WizardStepperProps {
@@ -327,13 +382,35 @@ declare global {
     handleDeleteChapter: (sectionIndex: number, chapterIndex: number) => void;
   }
 
-  interface CourseFormData {
-    courseTitle: string;
-    courseDescription: string;
-    courseCategory: string;
-    coursePrice: string;
-    courseStatus: boolean;
-    courseImage: string;
+  interface AdaptiveQuizProps {
+    quiz: { questions: Question[] };
+    courseId: string;
+    sectionId: string;
+    chapterId: string;
+    onQuizComplete?: (score: number, totalQuestions: number) => void;
+  }
+
+  interface CodeProps {
+    searchParams: Promise<{ 
+      courseId: string;
+      sectionId: string;
+      chapterId: string;
+      assignmentId: string;
+    }>;
+  }  
+
+  interface UserListProps {
+    courseId: string
+    selectedUser: User | undefined
+    onUserSelect: (user: User) => void
+  }
+
+  interface SubmitButtonProps {
+    courseId: string;
+    sectionId: string;
+    chapterId: string;
+    assignmentId: string;
+    assignment: string;
   }
 }
 

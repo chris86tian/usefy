@@ -4,13 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useGetCourseUsersQuery } from '@/state/api'
-import { User } from '@/lib/utils'
 
-interface UserListProps {
-  courseId: string
-  selectedUser: User | null
-  onUserSelect: (user: User | null) => void
-}
 
 export default function UserList({ courseId, selectedUser, onUserSelect }: UserListProps) {
   const { data: users } = useGetCourseUsersQuery(courseId)

@@ -10,21 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useRouter } from "next/navigation"
 import toast from "react-hot-toast"
 
-interface Question {
-  question: string
-  options: string[]
-  correctAnswer: number
-}
-
-interface QuizzesProps {
-  quiz: { questions: Question[] }
-  courseId: string
-  sectionId: string
-  chapterId: string
-  onQuizComplete?: (score: number, totalQuestions: number) => void
-}
-
-const AdaptiveQuiz = ({ quiz, courseId, sectionId, chapterId, onQuizComplete }: QuizzesProps) => {
+const AdaptiveQuiz = ({ quiz, courseId, sectionId, chapterId, onQuizComplete }: AdaptiveQuizProps) => {
   const user = useUser()
   const [activeQuestions, setActiveQuestions] = useState<Question[]>([])
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)

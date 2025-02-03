@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import React from 'react'
 import { useGetAssignmentsQuery } from '@/state/api'
@@ -9,7 +9,7 @@ import { AssignmentsSkeleton } from './_components/AssignmentsSkeleton'
 import { AssignmentsError } from './_components/AssignmentsError'
 import { EmptyAssignments } from './_components/EmptyAssignments'
 
-export default function Assignments ({ teacherId, courseId, chapterId, sectionId }: AssignmentsProps) {
+const Assignments = ({ teacherId, courseId, chapterId, sectionId }: AssignmentsProps) => {
   const { data: assignments, isLoading, error } = useGetAssignmentsQuery({ chapterId, sectionId, courseId })
 
   const renderContent = () => {
@@ -51,3 +51,5 @@ export default function Assignments ({ teacherId, courseId, chapterId, sectionId
     </Card>
   )
 }
+
+export default Assignments

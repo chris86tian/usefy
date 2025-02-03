@@ -12,12 +12,12 @@ import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Lock, Sparkles, ThumbsDown, ThumbsUp } from "lucide-react";
 import { BookOpen, GraduationCap } from "lucide-react";
 import AssignmentModal from "./_components/AssignmentModal";
-import Assignments from "./assignments/page";
+import Assignments from "./assignments/Assignments";
 import { SignInRequired } from "@/components/SignInRequired";
 import { parseYouTubeTime } from "@/lib/utils";
 import { CourseComments } from "./_components/CourseComments";
 import { useLikeChapterMutation, useDislikeChapterMutation } from "@/state/api";
-import AdaptiveQuiz from "./adaptive-quiz/page";
+import AdaptiveQuiz from "./adaptive-quiz/AdaptiveQuiz";
 
 const isSectionReleased = (section: Section) => {
   if (!section.releaseDate) return false;
