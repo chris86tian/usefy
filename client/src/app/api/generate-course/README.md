@@ -42,9 +42,6 @@ const sentenceVectors = embeddings.arraySync();
 - If the similarity score drops below a predefined **threshold**, it indicates a potential topic change.
 
 ### **Cosine Similarity Formula**  
-\[
-\text{cosine\_similarity}(A, B) = \frac{A \cdot B}{\|A\| \|B\|}
-\]
 
 ```javascript
 function cosineSimilarity(vecA, vecB) {
