@@ -12,6 +12,8 @@ GrowthHungry is a cutting-edge platform designed to empower individuals by enhan
 - [Technologies Used](#technologies-used)
 - [Installation](#installation)
 - [Usage](#usage)
+- [Deployment](#deployment)
+- [OAuth Configuration](#oauth-configuration)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -68,9 +70,11 @@ For an interactive version of these diagrams, visit [this workspace](https://app
 
 ## Technologies Used
 
-- **Backend**: Node.js, Express.js
+- **Backend**: Node.js, Express.js, Serverless Framework
 - **Database**: DynamoDB
 - **Authentication**: Clerk
+- **API Deployment**: AWS API Gateway, AWS Lambda
+- **Infrastructure**: AWS CloudFormation
 - **API Documentation**: Swagger/OpenAPI
 - **Other Tools**: AWS SDK, Dynamoose ORM
 
@@ -112,6 +116,46 @@ Follow these steps to set up the project locally:
 
 ---
 
+## Deployment
+
+The backend is deployed using AWS Lambda and API Gateway with the Serverless Framework.
+
+### Deploying to AWS
+1. Install the Serverless Framework globally:
+   ```bash
+   npm install -g serverless
+   ```
+2. Deploy the service:
+   ```bash
+   serverless deploy
+   ```
+3. The deployment will provide an API Gateway URL, e.g.:
+   ```
+   Service deployed to stack growthhungry-service-dev (60s)
+   
+   endpoints:
+     ANY - https://w10mtexzig.execute-api.us-east-1.amazonaws.com/dev/
+     ANY - https://w10mtexzig.execute-api.us-east-1.amazonaws.com/dev/{proxy+}
+   ```
+
+---
+
+## OAuth Configuration
+
+To enable Google OAuth, configure the following settings in the Google Cloud Console:
+
+### **Authorized JavaScript Origins (Frontend)**
+- ✅ `https://growthhungry.vercel.app`
+- ✅ `http://localhost:3000`
+
+### **Authorized Redirect URIs (Backend)**
+- ✅ `https://w10mtexzig.execute-api.us-east-1.amazonaws.com/dev/auth/google/callback`
+- ✅ `http://localhost:8001/auth/google/callback`
+
+Ensure that your backend has an `/auth/google/callback` route to handle authentication responses.
+
+---
+
 ## Contributing
 
 We welcome contributions from the community! To contribute:
@@ -137,4 +181,3 @@ This project is licensed under the MIT License. See the `LICENSE` file for detai
 ---
 
 Happy Learning! 🚀
-
