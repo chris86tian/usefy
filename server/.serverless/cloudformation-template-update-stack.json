@@ -91,9 +91,9 @@
       "Properties": {
         "Code": {
           "S3Bucket": "serverless-framework-deployments-us-east-1-982ed21f-b716",
-          "S3Key": "serverless/growthhungry-service/dev/1738615298487-2025-02-03T20:41:38.487Z/growthhungry-service.zip"
+          "S3Key": "serverless/growthhungry-service/dev/1738639390185-2025-02-04T03:23:10.185Z/growthhungry-service.zip"
         },
-        "Handler": "handler",
+        "Handler": "dist/index.handler",
         "Runtime": "nodejs18.x",
         "FunctionName": "growthhungry-service-dev-api",
         "MemorySize": 1024,
@@ -114,14 +114,14 @@
         "ApiLogGroup"
       ]
     },
-    "ApiLambdaVersionAY3PCEHAMhuorm5jcLWOho7tfcU0mApPZ5KRjv6suU": {
+    "ApiLambdaVersionA6zm5kZ7pwr1zQIbaCfV3yAiCAXfZZv4LLT9HFORE": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "ApiLambdaFunction"
         },
-        "CodeSha256": "OTz9Npqiil4xN1UBLjrNjhbnRfdbF2RLAWLMsqUBqPA="
+        "CodeSha256": "+hhatb+NtTu4uvIy5ikBqefBlK2wQww5uoq5IY5NY0I="
       }
     },
     "ApiGatewayRestApi": {
@@ -246,7 +246,7 @@
         "ApiLambdaPermissionApiGateway"
       ]
     },
-    "ApiGatewayDeployment1738615291428": {
+    "ApiGatewayDeployment1738639382729": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "RestApiId": {
@@ -307,7 +307,7 @@
     "ApiLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "ApiLambdaVersionAY3PCEHAMhuorm5jcLWOho7tfcU0mApPZ5KRjv6suU"
+        "Ref": "ApiLambdaVersionA6zm5kZ7pwr1zQIbaCfV3yAiCAXfZZv4LLT9HFORE"
       },
       "Export": {
         "Name": "sls-growthhungry-service-dev-ApiLambdaFunctionQualifiedArn"
