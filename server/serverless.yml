@@ -1,0 +1,19 @@
+service: growthhungry-service
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-1
+  environment:
+    CLERK_SECRET_KEY: ${env:CLERK_SECRET_KEY}
+
+functions:
+  api:
+    handler: handler
+    events:
+      - http:
+          path: /
+          method: any
+      - http:
+          path: "{proxy+}"
+          method: any

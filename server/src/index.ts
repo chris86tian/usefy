@@ -27,17 +27,18 @@ dotenv.config();
 const isProduction = process.env.NODE_ENV === "production";
 
 // Local DynamoDB
-// if (!isProduction) {
-//   dynamoose.aws.ddb.local();
-// }
+if (!isProduction) {
+  dynamoose.aws.ddb.local();
+}
 
-AWS.config.update({
-  region: process.env.AWS_REGION,
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-});
+// AWS DynamoDB
+// AWS.config.update({
+//   region: process.env.AWS_REGION,
+//   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+//   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+// });
 
-dynamoose.aws.ddb.set(new DynamoDB());
+// dynamoose.aws.ddb.set(new DynamoDB());
 
 
 export const clerkClient = createClerkClient({
