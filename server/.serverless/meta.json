@@ -107,7 +107,7 @@
               "Properties": {
                 "Code": {
                   "S3Bucket": "serverless-framework-deployments-us-east-1-982ed21f-b716",
-                  "S3Key": "serverless/growthhungry-service/dev/1738808258738-2025-02-06T02:17:38.738Z/growthhungry-service.zip"
+                  "S3Key": "serverless/growthhungry-service/dev/1738849145689-2025-02-06T13:39:05.689Z/growthhungry-service.zip"
                 },
                 "Handler": "dist/index.handler",
                 "Runtime": "nodejs18.x",
@@ -130,14 +130,14 @@
                 "ApiLogGroup"
               ]
             },
-            "ApiLambdaVersionoGcX9d8Qskia763a0prp6tA5ZRUiEqESYqRBRIN00A": {
+            "ApiLambdaVersionHJnmLa0zL4qiHzWUGleqKsAri0CrvYbHJQ2ExJ2ZWlI": {
               "Type": "AWS::Lambda::Version",
               "DeletionPolicy": "Retain",
               "Properties": {
                 "FunctionName": {
                   "Ref": "ApiLambdaFunction"
                 },
-                "CodeSha256": "1gZk+u4Ub+t2dH4ks6rXMXidr7SjOCR/DQI1uvLrrt0="
+                "CodeSha256": "oiTeSb7ShnoOTpSJ7aIeuJB3CIasYjFHI07nfL582Hg="
               }
             },
             "ApiGatewayRestApi": {
@@ -355,7 +355,7 @@
                 "ApiLambdaPermissionApiGateway"
               ]
             },
-            "ApiGatewayDeployment1738808251111": {
+            "ApiGatewayDeployment1738849136874": {
               "Type": "AWS::ApiGateway::Deployment",
               "Properties": {
                 "RestApiId": {
@@ -418,7 +418,7 @@
             "ApiLambdaFunctionQualifiedArn": {
               "Description": "Current Lambda function version",
               "Value": {
-                "Ref": "ApiLambdaVersionoGcX9d8Qskia763a0prp6tA5ZRUiEqESYqRBRIN00A"
+                "Ref": "ApiLambdaVersionHJnmLa0zL4qiHzWUGleqKsAri0CrvYbHJQ2ExJ2ZWlI"
               },
               "Export": {
                 "Name": "sls-growthhungry-service-dev-ApiLambdaFunctionQualifiedArn"
@@ -454,21 +454,6 @@
         },
         "vpc": {}
       },
-      "iamRoleStatements": [
-        {
-          "Effect": "Allow",
-          "Action": [
-            "dynamodb:CreateTable",
-            "dynamodb:PutItem",
-            "dynamodb:GetItem",
-            "dynamodb:UpdateItem",
-            "dynamodb:Query",
-            "dynamodb:Scan",
-            "dynamodb:DeleteItem"
-          ],
-          "Resource": "arn:aws:dynamodb:us-east-1:692859913275:table/Course"
-        }
-      ],
       "functions": {
         "api": {
           "handler": "dist/index.handler",
@@ -528,7 +513,7 @@
           "timeout": 6,
           "runtime": "nodejs18.x",
           "vpc": {},
-          "versionLogicalId": "ApiLambdaVersionoGcX9d8Qskia763a0prp6tA5ZRUiEqESYqRBRIN00A"
+          "versionLogicalId": "ApiLambdaVersionHJnmLa0zL4qiHzWUGleqKsAri0CrvYbHJQ2ExJ2ZWlI"
         }
       }
     },
@@ -634,7 +619,7 @@
             "Properties": {
               "Code": {
                 "S3Bucket": "serverless-framework-deployments-us-east-1-982ed21f-b716",
-                "S3Key": "serverless/growthhungry-service/dev/1738808258738-2025-02-06T02:17:38.738Z/growthhungry-service.zip"
+                "S3Key": "serverless/growthhungry-service/dev/1738849145689-2025-02-06T13:39:05.689Z/growthhungry-service.zip"
               },
               "Handler": "dist/index.handler",
               "Runtime": "nodejs18.x",
@@ -657,14 +642,14 @@
               "ApiLogGroup"
             ]
           },
-          "ApiLambdaVersionoGcX9d8Qskia763a0prp6tA5ZRUiEqESYqRBRIN00A": {
+          "ApiLambdaVersionHJnmLa0zL4qiHzWUGleqKsAri0CrvYbHJQ2ExJ2ZWlI": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "ApiLambdaFunction"
               },
-              "CodeSha256": "1gZk+u4Ub+t2dH4ks6rXMXidr7SjOCR/DQI1uvLrrt0="
+              "CodeSha256": "oiTeSb7ShnoOTpSJ7aIeuJB3CIasYjFHI07nfL582Hg="
             }
           },
           "ApiGatewayRestApi": {
@@ -882,7 +867,7 @@
               "ApiLambdaPermissionApiGateway"
             ]
           },
-          "ApiGatewayDeployment1738808251111": {
+          "ApiGatewayDeployment1738849136874": {
             "Type": "AWS::ApiGateway::Deployment",
             "Properties": {
               "RestApiId": {
@@ -945,7 +930,7 @@
           "ApiLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "ApiLambdaVersionoGcX9d8Qskia763a0prp6tA5ZRUiEqESYqRBRIN00A"
+              "Ref": "ApiLambdaVersionHJnmLa0zL4qiHzWUGleqKsAri0CrvYbHJQ2ExJ2ZWlI"
             },
             "Export": {
               "Name": "sls-growthhungry-service-dev-ApiLambdaFunctionQualifiedArn"
@@ -990,7 +975,7 @@
       "serviceProvider": null,
       "instanceParameters": null
     },
-    "serviceRawFile": "service: growthhungry-service\n\nprovider:\n  name: aws\n  runtime: nodejs18.x\n  region: us-east-1\n  environment:\n    CLERK_SECRET_KEY: ${env:CLERK_SECRET_KEY}\n\niamRoleStatements:\n  - Effect: Allow\n    Action:\n      - dynamodb:CreateTable\n      - dynamodb:PutItem\n      - dynamodb:GetItem\n      - dynamodb:UpdateItem\n      - dynamodb:Query\n      - dynamodb:Scan\n      - dynamodb:DeleteItem\n    Resource: arn:aws:dynamodb:us-east-1:${aws:accountId}:table/Course\n\nfunctions:\n  api:\n    handler: dist/index.handler\n    events:\n      - http:\n          path: /\n          method: any\n          cors: true\n      - http:\n          path: \"{proxy+}\"\n          method: any\n          cors: true\n",
+    "serviceRawFile": "service: growthhungry-service\n\nprovider:\n  name: aws\n  runtime: nodejs18.x\n  region: us-east-1\n  environment:\n    CLERK_SECRET_KEY: ${env:CLERK_SECRET_KEY}\n\nfunctions:\n  api:\n    handler: dist/index.handler\n    events:\n      - http:\n          path: /\n          method: any\n          cors: true\n      - http:\n          path: \"{proxy+}\"\n          method: any\n          cors: true\n",
     "command": [
       "deploy"
     ],
@@ -1117,7 +1102,7 @@
           "Properties": {
             "Code": {
               "S3Bucket": "serverless-framework-deployments-us-east-1-982ed21f-b716",
-              "S3Key": "serverless/growthhungry-service/dev/1738808258738-2025-02-06T02:17:38.738Z/growthhungry-service.zip"
+              "S3Key": "serverless/growthhungry-service/dev/1738849145689-2025-02-06T13:39:05.689Z/growthhungry-service.zip"
             },
             "Handler": "dist/index.handler",
             "Runtime": "nodejs18.x",
@@ -1140,14 +1125,14 @@
             "ApiLogGroup"
           ]
         },
-        "ApiLambdaVersionoGcX9d8Qskia763a0prp6tA5ZRUiEqESYqRBRIN00A": {
+        "ApiLambdaVersionHJnmLa0zL4qiHzWUGleqKsAri0CrvYbHJQ2ExJ2ZWlI": {
           "Type": "AWS::Lambda::Version",
           "DeletionPolicy": "Retain",
           "Properties": {
             "FunctionName": {
               "Ref": "ApiLambdaFunction"
             },
-            "CodeSha256": "1gZk+u4Ub+t2dH4ks6rXMXidr7SjOCR/DQI1uvLrrt0="
+            "CodeSha256": "oiTeSb7ShnoOTpSJ7aIeuJB3CIasYjFHI07nfL582Hg="
           }
         },
         "ApiGatewayRestApi": {
@@ -1365,7 +1350,7 @@
             "ApiLambdaPermissionApiGateway"
           ]
         },
-        "ApiGatewayDeployment1738808251111": {
+        "ApiGatewayDeployment1738849136874": {
           "Type": "AWS::ApiGateway::Deployment",
           "Properties": {
             "RestApiId": {
@@ -1428,7 +1413,7 @@
         "ApiLambdaFunctionQualifiedArn": {
           "Description": "Current Lambda function version",
           "Value": {
-            "Ref": "ApiLambdaVersionoGcX9d8Qskia763a0prp6tA5ZRUiEqESYqRBRIN00A"
+            "Ref": "ApiLambdaVersionHJnmLa0zL4qiHzWUGleqKsAri0CrvYbHJQ2ExJ2ZWlI"
           },
           "Export": {
             "Name": "sls-growthhungry-service-dev-ApiLambdaFunctionQualifiedArn"

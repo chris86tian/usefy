@@ -8,7 +8,6 @@ import { motion } from "framer-motion";
 import CourseCardSearch from "@/components/CourseCardSearch";
 import SelectedCourse from "./SelectedCourse";
 import { useUser } from "@clerk/nextjs";
-import { SquareStack } from "lucide-react";
 
 const Search = () => {
   const searchParams = useSearchParams();
@@ -65,25 +64,14 @@ const Search = () => {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="search__courses-grid"
         >
-          {publishedCourses.length > 0 ? (
-            publishedCourses.map((course) => (
-              <CourseCardSearch
-                key={course.courseId}
-                course={course}
-                isSelected={selectedCourse?.courseId === course.courseId}
-                onClick={() => handleCourseSelect(course)}
-              />
-            ))
-          ) : (
-            <div className="h-96 flex flex-col items-center justify-center gap-4">
-              <SquareStack className="w-24 h-24 text-gray-400" />
-              <p className="text-center text-gray-600">
-                No courses available at the moment.
-                <br />
-                Please check back later.
-              </p>
-            </div>
-          )}
+          {publishedCourses.map((course) => (
+            <CourseCardSearch
+              key={course.courseId}
+              course={course}
+              isSelected={selectedCourse?.courseId === course.courseId}
+              onClick={() => handleCourseSelect(course)}
+            />
+          ))}
         </motion.div>
 
         {selectedCourse && (
