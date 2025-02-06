@@ -108,7 +108,7 @@ export async function POST(request: Request) {
       messages: [
         {
           role: "system",
-          content: "You are a course creator. Create a structured course outline based on the provided transcript. The response must be a valid JSON object."
+          content: "You are a course creator. Create a structured course outline based on the provided transcript. Make sure to process the entire transcript. The response must be a valid JSON object."
         },
         {
           role: "user",
