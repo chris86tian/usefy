@@ -26,8 +26,11 @@ export async function POST(request: Request) {
       );
     }
 
+    console.log(videoUrl, videoId);
+
     try {
       const transcript = await YoutubeTranscript.fetchTranscript(videoId);
+      console.log(transcript);
       const formattedTranscript = transcript
         .map(({ text, offset }) => `[${formatTimestamp(offset)}] ${text}`)
         .join("\n");

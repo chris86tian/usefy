@@ -9,7 +9,7 @@
       "runtime": "nodejs18.x",
       "region": "us-east-1",
       "environment": {
-        "CLERK_SECRET_KEY": "sk_test_0fXIGHB4GTigEx4HqlkFHwmN1KnBYrYcLCcvJwJWEZ"
+        "CLERK_SECRET_KEY": "sk_live_ICXwVIEoMkpDeg6jKJnq13OhHxak6uGw4poYr0Jk4t"
       },
       "stage": "dev",
       "versionFunctions": true,
@@ -106,7 +106,7 @@
             "Properties": {
               "Code": {
                 "S3Bucket": "serverless-framework-deployments-us-east-1-982ed21f-b716",
-                "S3Key": "serverless/growthhungry-service/dev/1738639390185-2025-02-04T03:23:10.185Z/growthhungry-service.zip"
+                "S3Key": "serverless/growthhungry-service/dev/1738808258738-2025-02-06T02:17:38.738Z/growthhungry-service.zip"
               },
               "Handler": "dist/index.handler",
               "Runtime": "nodejs18.x",
@@ -115,7 +115,7 @@
               "Timeout": 6,
               "Environment": {
                 "Variables": {
-                  "CLERK_SECRET_KEY": "sk_test_0fXIGHB4GTigEx4HqlkFHwmN1KnBYrYcLCcvJwJWEZ"
+                  "CLERK_SECRET_KEY": "sk_live_ICXwVIEoMkpDeg6jKJnq13OhHxak6uGw4poYr0Jk4t"
                 }
               },
               "Role": {
@@ -129,14 +129,14 @@
               "ApiLogGroup"
             ]
           },
-          "ApiLambdaVersionA6zm5kZ7pwr1zQIbaCfV3yAiCAXfZZv4LLT9HFORE": {
+          "ApiLambdaVersionoGcX9d8Qskia763a0prp6tA5ZRUiEqESYqRBRIN00A": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "ApiLambdaFunction"
               },
-              "CodeSha256": "+hhatb+NtTu4uvIy5ikBqefBlK2wQww5uoq5IY5NY0I="
+              "CodeSha256": "1gZk+u4Ub+t2dH4ks6rXMXidr7SjOCR/DQI1uvLrrt0="
             }
           },
           "ApiGatewayRestApi": {
@@ -161,6 +161,99 @@
                 ]
               },
               "PathPart": "{proxy+}",
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              }
+            }
+          },
+          "ApiGatewayMethodOptions": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+              "AuthorizationType": "NONE",
+              "HttpMethod": "OPTIONS",
+              "MethodResponses": [
+                {
+                  "StatusCode": "200",
+                  "ResponseParameters": {
+                    "method.response.header.Access-Control-Allow-Origin": true,
+                    "method.response.header.Access-Control-Allow-Headers": true,
+                    "method.response.header.Access-Control-Allow-Methods": true
+                  },
+                  "ResponseModels": {}
+                }
+              ],
+              "RequestParameters": {},
+              "Integration": {
+                "Type": "MOCK",
+                "RequestTemplates": {
+                  "application/json": "{statusCode:200}"
+                },
+                "ContentHandling": "CONVERT_TO_TEXT",
+                "IntegrationResponses": [
+                  {
+                    "StatusCode": "200",
+                    "ResponseParameters": {
+                      "method.response.header.Access-Control-Allow-Origin": "'*'",
+                      "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent,X-Amzn-Trace-Id'",
+                      "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,DELETE,GET,HEAD,PATCH,POST,PUT'"
+                    },
+                    "ResponseTemplates": {
+                      "application/json": ""
+                    }
+                  }
+                ]
+              },
+              "ResourceId": {
+                "Fn::GetAtt": [
+                  "ApiGatewayRestApi",
+                  "RootResourceId"
+                ]
+              },
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              }
+            }
+          },
+          "ApiGatewayMethodProxyVarOptions": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+              "AuthorizationType": "NONE",
+              "HttpMethod": "OPTIONS",
+              "MethodResponses": [
+                {
+                  "StatusCode": "200",
+                  "ResponseParameters": {
+                    "method.response.header.Access-Control-Allow-Origin": true,
+                    "method.response.header.Access-Control-Allow-Headers": true,
+                    "method.response.header.Access-Control-Allow-Methods": true
+                  },
+                  "ResponseModels": {}
+                }
+              ],
+              "RequestParameters": {},
+              "Integration": {
+                "Type": "MOCK",
+                "RequestTemplates": {
+                  "application/json": "{statusCode:200}"
+                },
+                "ContentHandling": "CONVERT_TO_TEXT",
+                "IntegrationResponses": [
+                  {
+                    "StatusCode": "200",
+                    "ResponseParameters": {
+                      "method.response.header.Access-Control-Allow-Origin": "'*'",
+                      "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent,X-Amzn-Trace-Id'",
+                      "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,DELETE,GET,HEAD,PATCH,POST,PUT'"
+                    },
+                    "ResponseTemplates": {
+                      "application/json": ""
+                    }
+                  }
+                ]
+              },
+              "ResourceId": {
+                "Ref": "ApiGatewayResourceProxyVar"
+              },
               "RestApiId": {
                 "Ref": "ApiGatewayRestApi"
               }
@@ -261,7 +354,7 @@
               "ApiLambdaPermissionApiGateway"
             ]
           },
-          "ApiGatewayDeployment1738639382729": {
+          "ApiGatewayDeployment1738808251111": {
             "Type": "AWS::ApiGateway::Deployment",
             "Properties": {
               "RestApiId": {
@@ -270,6 +363,8 @@
               "StageName": "dev"
             },
             "DependsOn": [
+              "ApiGatewayMethodOptions",
+              "ApiGatewayMethodProxyVarOptions",
               "ApiGatewayMethodAny",
               "ApiGatewayMethodProxyVarAny"
             ]
@@ -322,7 +417,7 @@
           "ApiLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "ApiLambdaVersionA6zm5kZ7pwr1zQIbaCfV3yAiCAXfZZv4LLT9HFORE"
+              "Ref": "ApiLambdaVersionoGcX9d8Qskia763a0prp6tA5ZRUiEqESYqRBRIN00A"
             },
             "Export": {
               "Name": "sls-growthhungry-service-dev-ApiLambdaFunctionQualifiedArn"
@@ -367,6 +462,23 @@
             "http": {
               "path": "",
               "method": "any",
+              "cors": {
+                "origin": "*",
+                "methods": [
+                  "OPTIONS",
+                  "ANY"
+                ],
+                "headers": [
+                  "Content-Type",
+                  "X-Amz-Date",
+                  "Authorization",
+                  "X-Api-Key",
+                  "X-Amz-Security-Token",
+                  "X-Amz-User-Agent",
+                  "X-Amzn-Trace-Id"
+                ],
+                "allowCredentials": false
+              },
               "integration": "AWS_PROXY"
             }
           },
@@ -374,6 +486,23 @@
             "http": {
               "path": "{proxy+}",
               "method": "any",
+              "cors": {
+                "origin": "*",
+                "methods": [
+                  "OPTIONS",
+                  "ANY"
+                ],
+                "headers": [
+                  "Content-Type",
+                  "X-Amz-Date",
+                  "Authorization",
+                  "X-Api-Key",
+                  "X-Amz-Security-Token",
+                  "X-Amz-User-Agent",
+                  "X-Amzn-Trace-Id"
+                ],
+                "allowCredentials": false
+              },
               "integration": "AWS_PROXY"
             }
           }
@@ -384,7 +513,7 @@
         "timeout": 6,
         "runtime": "nodejs18.x",
         "vpc": {},
-        "versionLogicalId": "ApiLambdaVersionA6zm5kZ7pwr1zQIbaCfV3yAiCAXfZZv4LLT9HFORE"
+        "versionLogicalId": "ApiLambdaVersionoGcX9d8Qskia763a0prp6tA5ZRUiEqESYqRBRIN00A"
       }
     },
     "configValidationMode": "warn",
@@ -394,6 +523,21 @@
       "provider": {
         "$ref": "$[\"service\"][\"provider\"]"
       },
+      "iamRoleStatements": [
+        {
+          "Effect": "Allow",
+          "Action": [
+            "dynamodb:CreateTable",
+            "dynamodb:PutItem",
+            "dynamodb:GetItem",
+            "dynamodb:UpdateItem",
+            "dynamodb:Query",
+            "dynamodb:Scan",
+            "dynamodb:DeleteItem"
+          ],
+          "Resource": "arn:aws:dynamodb:us-east-1:692859913275:table/Course"
+        }
+      ],
       "functions": {
         "$ref": "$[\"service\"][\"functions\"]"
       }
@@ -404,7 +548,7 @@
     "artifact": "/Users/arslankamchybekov/Desktop/VSCode Projects/expertize/server/.serverless/growthhungry-service.zip"
   },
   "package": {
-    "artifactDirectoryName": "serverless/growthhungry-service/dev/1738639390185-2025-02-04T03:23:10.185Z",
+    "artifactDirectoryName": "serverless/growthhungry-service/dev/1738808258738-2025-02-06T02:17:38.738Z",
     "artifact": "growthhungry-service.zip"
   }
 }
