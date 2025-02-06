@@ -17,9 +17,34 @@ const nextConfig = {
   async rewrites() {
     return [
       {
-        source: "/api/:path*", // This will catch all backend API calls
+        source: "/courses/:path*",
         destination:
-          "https://w10mtexzig.execute-api.us-east-1.amazonaws.com/dev/:path*",
+          "https://w10mtexzig.execute-api.us-east-1.amazonaws.com/dev/courses/:path*",
+      },
+      {
+        source: "/users/clerk/:path*",
+        destination:
+          "https://w10mtexzig.execute-api.us-east-1.amazonaws.com/dev/users/clerk/:path*",
+      },
+      {
+        source: "/transactions/:path*",
+        destination:
+          "https://w10mtexzig.execute-api.us-east-1.amazonaws.com/dev/transactions/:path*",
+      },
+      {
+        source: "/notifications/:path*",
+        destination:
+          "https://w10mtexzig.execute-api.us-east-1.amazonaws.com/dev/notifications/:path*",
+      },
+      {
+        source: "/commits/:path*",
+        destination:
+          "https://w10mtexzig.execute-api.us-east-1.amazonaws.com/dev/commits/:path*",
+      },
+      {
+        source: "/users/course-progress/:path*",
+        destination:
+          "https://w10mtexzig.execute-api.us-east-1.amazonaws.com/dev/users/course-progress/:path*",
       },
     ];
   },
