@@ -19,10 +19,35 @@ const nextConfig = {
       {
         source: "/courses/:path*",
         destination:
-          "https://w10mtexzig.execute-api.us-east-1.amazonaws.com/dev/courses/:path*", // Redirects to your API Gateway
+          "https://w10mtexzig.execute-api.us-east-1.amazonaws.com/dev/courses/:path*",
+      },
+      {
+        source: "/users/clerk/:path*",
+        destination:
+          "https://w10mtexzig.execute-api.us-east-1.amazonaws.com/dev/users/clerk/:path*",
+      },
+      {
+        source: "/transactions/:path*",
+        destination:
+          "https://w10mtexzig.execute-api.us-east-1.amazonaws.com/dev/transactions/:path*",
+      },
+      {
+        source: "/notifications/:path*",
+        destination:
+          "https://w10mtexzig.execute-api.us-east-1.amazonaws.com/dev/notifications/:path*",
+      },
+      {
+        source: "/commits/:path*",
+        destination:
+          "https://w10mtexzig.execute-api.us-east-1.amazonaws.com/dev/commits/:path*",
+      },
+      {
+        source: "/users/course-progress/:path*",
+        destination:
+          "https://w10mtexzig.execute-api.us-east-1.amazonaws.com/dev/users/course-progress/:path*",
       },
     ];
   },
 };
 
-module.exports = nextConfig;
+export default nextConfig;
