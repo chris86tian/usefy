@@ -1,7 +1,7 @@
 "use client";
 
 import Header from "@/components/Header";
-import CoursesSkeleton from "./_components/CoursesSkeleton";
+import CoursesSkeleton from "@/components/CoursesSkeleton";
 import TeacherCourseCard from "@/components/TeacherCourseCard";
 import Toolbar from "@/components/Toolbar";
 import { Button } from "@/components/ui/button";

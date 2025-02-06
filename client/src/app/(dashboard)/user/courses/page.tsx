@@ -7,7 +7,7 @@ import { useGetUserEnrolledCoursesQuery } from "@/state/api";
 import Header from "@/components/Header";
 import Toolbar from "@/components/Toolbar";
 import CourseCard from "@/components/CourseCard";
-import { CoursesSkeleton } from "./_components/CoursesSkeleton";
+import CoursesSkeleton from "@/components/CoursesSkeleton";
 import { CoursesEmpty } from "./_components/CoursesEmpty";
 import { CoursesError } from "./_components/CoursesError";
 import { SignInRequired } from "@/components/SignInRequired";
@@ -78,10 +78,10 @@ const Courses = () => {
     }
   };
 
-  if (!isLoaded || isLoading) return <CoursesSkeleton />;
+  if (!isLoaded || isLoading) return <CoursesSkeleton />
   if (!user) return <SignInRequired />;
   if (isError) return <CoursesError />;
-  if (!courses || courses.length === 0) return <CoursesEmpty />;
+  if (!courses || courses.length === 0) return <CoursesEmpty />
 
   const archivedCount = courses.filter(course => course.status === "Archived").length;
 
