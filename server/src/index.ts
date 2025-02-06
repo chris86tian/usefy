@@ -9,10 +9,8 @@ import serverless from "serverless-http";
 import AWS from "aws-sdk";
 import { DynamoDB } from "@aws-sdk/client-dynamodb";
 import "./utils/scheduledEmail";
-import {
-  createClerkClient,
-  requireAuth,
-} from "@clerk/express";
+import { createClerkClient, requireAuth } from "@clerk/express";
+
 // /* ROUTE IMPORTS */
 import courseRoutes from "./routes/courseRoutes";
 import userClerkRoutes from "./routes/userClerkRoutes";
@@ -46,7 +44,25 @@ app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
 app.use(morgan("common"));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(cors());
+
+// Configure CORS to allow requests from your frontend
+const allowedOrigins = ["https://www.usefy.com"];
+app.use(
+  cors({
+    origin: allowedOrigins,
+    methods: "GET,POST,PUT,DELETE,OPTIONS",
+    allowedHeaders: "Content-Type, Authorization",
+    credentials: true,
+  })
+);
+
+// Middleware to handle CORS preflight requests
+app.options("*", (req, res) => {
+  res.header("Access-Control-Allow-Origin", allowedOrigins[0]);
+  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.sendStatus(200);
+});
 
 /* ROUTES */
 app.get("/", (req, res) => {
@@ -74,5 +90,5 @@ if (process.env.NODE_ENV === "development") {
 const serverlessApp = serverless(app);
 
 export const handler = async (event: any, context: any) => {
-    return serverlessApp(event, context);
+  return serverlessApp(event, context);
 };
