@@ -28,10 +28,10 @@ const nextConfig: NextConfig = {
           "https://w10mtexzig.execute-api.us-east-1.amazonaws.com/dev/users/clerk/:path*",
       },
       {
-        source: "/transactions/:path*",
+        source: "/teacher/transactions",
         destination:
-          "https://w10mtexzig.execute-api.us-east-1.amazonaws.com/dev/transactions/:path*",
-      },
+          "https://w10mtexzig.execute-api.us-east-1.amazonaws.com/dev/teacher/transactions",
+      },      
       {
         source: "/notifications/:path*",
         destination:
