@@ -70,9 +70,7 @@ const PaymentPageContent = () => {
       return;
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_CLIENT_URL
-      || process.env.NEXT_PUBLIC_VERCEL_URL
-      || process.env.NEXT_PUBLIC_LOCAL_URL;
+    const baseUrl = process.env.NEXT_ENV === "production" ? process.env.NEXT_PUBLIC_CLIENT_URL : process.env.NEXT_PUBLIC_LOCAL_URL;
 
     const result = await stripe.confirmPayment({
       elements,
