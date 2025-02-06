@@ -169,7 +169,7 @@ const CourseEditor = () => {
         }))));
       }
     }
-  }, [course, methods]);
+  }, [course, dispatch, methods]);
 
 
   const createCourseFormData = (

@@ -33,7 +33,7 @@ const Footer = () => {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-white">Legal</h3>
             <ul className="space-y-2">
-              {["Terms of Service", "Privacy Policy", "Cookie Policy"].map((item) => (
+              {["Terms of Service", "Privacy Policy"].map((item) => (
                 <li key={item}>
                   <Link
                     href={`/${item.toLowerCase().replace(/\s+/g, "-")}`}
