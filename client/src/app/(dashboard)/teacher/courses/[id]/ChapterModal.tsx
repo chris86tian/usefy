@@ -76,7 +76,6 @@ const ChapterModal = () => {
       ...updatedQuestions[index],
       [field]: value,
     };
-    console.log(updatedQuestions);
     setQuestions(updatedQuestions);
   };
 

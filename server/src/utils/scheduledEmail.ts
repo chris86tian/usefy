@@ -9,7 +9,6 @@ const sendScheduledEmail = async () => {
     const courses = await Course.scan("releaseDate").eq(today).exec();
 
     if (courses.length === 0) {
-      console.log("No courses to send release emails for today.");
       return;
     }
 
@@ -27,8 +26,6 @@ const sendScheduledEmail = async () => {
         await sendEmail(recipient, subject, body);
       }
     }
-
-    console.log("Emails sent for today's course releases.");
   } catch (error) {
     console.error("Error sending release emails:", error);
   }

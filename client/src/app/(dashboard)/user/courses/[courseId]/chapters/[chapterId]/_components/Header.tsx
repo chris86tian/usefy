@@ -19,7 +19,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import axios from "axios";
 
 async function fetchAssignment(courseId: string, sectionId: string, chapterId: string, assignmentId: string) {
-  const url = `${process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_LOCAL_URL}/courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/assignments/${assignmentId}`;
+  const url = `${process.env.NEXT_PUBLIC_API_LOCAL_URL}/courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/assignments/${assignmentId}`;
   const { data } = await axios.get(url);
   return data;
 }
@@ -32,7 +32,6 @@ async function Header({ searchParams }: HeaderProps) {
   const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
   const user = await currentUser();
   const convexUser = await convex.query(api.users.getUser, { userId: user?.id as string });
-  console.log(convexUser);
   
   const { courseId, sectionId, chapterId, assignmentId } = searchParams;
   const assignment = await fetchAssignment(courseId, sectionId, chapterId, assignmentId);

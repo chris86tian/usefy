@@ -19,6 +19,8 @@ const eslintConfig = [
       "no-use-before-define": "off",
       "no-restricted-globals": "off",
       "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/no-explicit-any": "off",
+      "react-hooks/exhaustive-deps": "off",
     },
   },
 ];

@@ -34,7 +34,7 @@ const Navbar = ({ isCoursePage }: { isCoursePage: boolean }) => {
               </Link>
               <BookOpen className="dashboard-navbar__search-icon" size={18} />
             </div>
-            <div className="relative group">
+            {/* <div className="relative group">
               <Link
                 href="/snippets"
                 className={cn("dashboard-navbar__search-input", {
@@ -49,7 +49,7 @@ const Navbar = ({ isCoursePage }: { isCoursePage: boolean }) => {
                 className="nondashboard-navbar__search-icon"
                 size={18}
               />
-            </div>
+            </div> */}
           </div>
           {/* <Link
             href={

@@ -72,7 +72,7 @@ const CourseEditor = () => {
       const { sections: newSections, courseTitle, courseDescription } = data;
   
       // Update course details only if title is "Untitled Course" and description is empty
-      if (course?.title === "Untitled Course" && !course?.description) {
+      if (course?.title === "Untitled Course") {
         methods.setValue("courseTitle", courseTitle);
         methods.setValue("courseDescription", courseDescription);
       }
@@ -169,7 +169,7 @@ const CourseEditor = () => {
         }))));
       }
     }
-  }, [course, methods]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [course, methods]);
 
 
   const createCourseFormData = (
@@ -400,6 +400,14 @@ const CourseEditor = () => {
                   <p className="text-sm text-muted-foreground">
                     This may take a few moments as we analyze the video content.
                   </p>
+
+                  <Button
+                    type="button"
+                    onClick={() => setIsGenerating(false)}
+                    className="bg-primary-700 hover:bg-primary-600"
+                  >
+                    Cancel
+                  </Button>
                 </div>
               ) : sections.length > 0 ? (
                 <DroppableComponent />

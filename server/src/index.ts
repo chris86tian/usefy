@@ -10,7 +10,6 @@ import AWS from "aws-sdk";
 import { DynamoDB } from "@aws-sdk/client-dynamodb";
 import "./utils/scheduledEmail";
 import {
-  clerkMiddleware,
   createClerkClient,
   requireAuth,
 } from "@clerk/express";
@@ -22,27 +21,23 @@ import userCourseProgressRoutes from "./routes/userCourseProgressRoutes";
 import notificationRoutes from "./routes/notificationRoutes";
 import commitRoutes from "./routes/commitRoutes";
 
-/* CONFIGURATIONS */
-dotenv.config();
-const isProduction = process.env.NODE_ENV === "production";
-
-// Local DynamoDB
-// if (!isProduction) {
-//   dynamoose.aws.ddb.local();
-// }
-
-// AWS DynamoDB
-AWS.config.update({
-  region: process.env.AWS_REGION,
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-});
-dynamoose.aws.ddb.set(new DynamoDB());
-
-
 export const clerkClient = createClerkClient({
   secretKey: process.env.CLERK_SECRET_KEY,
 });
+
+/* CONFIGURATIONS */
+dotenv.config();
+
+if (process.env.NODE_ENV === "development") {
+  dynamoose.aws.ddb.local();
+} else {
+  AWS.config.update({
+    region: process.env.AWS_REGION,
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  });
+  dynamoose.aws.ddb.set(new DynamoDB());
+}
 
 const app = express();
 app.use(express.json());
@@ -67,13 +62,13 @@ app.use("/users/course-progress", requireAuth(), userCourseProgressRoutes);
 
 /* SERVER */
 const port = process.env.PORT || 3000;
-if (!isProduction) {
+if (process.env.NODE_ENV === "development") {
   app.listen(port, () => {
     console.log(`Server running on port ${port}`);
   });
 }
 
-// aws production environment
+/* SERVERLESS */
 const serverlessApp = serverless(app);
 
 export const handler = async (event: any, context: any) => {

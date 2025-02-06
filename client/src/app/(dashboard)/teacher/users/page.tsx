@@ -98,7 +98,6 @@ const Users = () => {
           {filteredUsers.map((user) => {
             const userType = user.publicMetadata?.userType ?? "user";
             const email = user.emailAddresses[0].emailAddress;
-            console.log(user)
             const isCurrentUser = user.id === userId;
             const isTeacher = userType === "teacher";
 

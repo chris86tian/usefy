@@ -9,8 +9,6 @@ import { useGetCourseUsersQuery } from '@/state/api'
 export default function UserList({ courseId, selectedUser, onUserSelect }: UserListProps) {
   const { data: users } = useGetCourseUsersQuery(courseId)
 
-  console.log(users)
-
   if (!users || users?.length === 0) {
     return (
       <Card className="bg-zinc-900">

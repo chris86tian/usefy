@@ -33,7 +33,7 @@ const NonDashboardNavbar = () => {
                 size={18}
               />
             </div>
-            <div className="relative group">
+            {/* <div className="relative group">
               <Link
                 href="/snippets"
                 className="nondashboard-navbar__search-input"
@@ -46,7 +46,7 @@ const NonDashboardNavbar = () => {
                 className="nondashboard-navbar__search-icon"
                 size={18}
               />
-            </div>
+            </div> */}
           </div>
         </div>
         <div className="nondashboard-navbar__actions">

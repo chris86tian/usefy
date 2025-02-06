@@ -8,7 +8,7 @@ export const CoursesError: React.FC = () => {
   const router = useRouter();
 
   return (
-    <div className="flex h-[80vh] items-center justify-center bg-[#1e2738]">
+    <div className="flex h-[80vh] items-center justify-center">
       <Card className="w-full max-w-md text-center bg-[#2a3548] border-[#3a4a64]">
         <CardHeader>
           <CardTitle className="text-[#e6e6e6] flex items-center justify-center">
