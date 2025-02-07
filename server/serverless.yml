@@ -14,8 +14,22 @@ functions:
       - http:
           path: /
           method: any
-          cors: true
+          cors:
+            origins:
+              - "*" # Allows all origins (or set to "https://www.usefy.com" for more security)
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Requested-With
+              - Accept
       - http:
           path: "{proxy+}"
           method: any
-          cors: true
+          cors:
+            origins:
+              - "*" # Same as above
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Requested-With
+              - Accept
