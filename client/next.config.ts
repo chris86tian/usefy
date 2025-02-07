@@ -16,6 +16,14 @@ const nextConfig: NextConfig = {
      "w10mtexzig.execute-api.us-east-1.amazonaws.com",
    ],
  },
+ async rewrites() {
+  return [
+    {
+      source: "/api/:path*",
+      destination: "https://w10mtexzig.execute-api.us-east-1.amazonaws.com/dev/:path*",
+    },
+  ];
+},
 };
 
 export default nextConfig;

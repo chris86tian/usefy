@@ -106,7 +106,7 @@
             "Properties": {
               "Code": {
                 "S3Bucket": "serverless-framework-deployments-us-east-1-982ed21f-b716",
-                "S3Key": "serverless/growthhungry-service/dev/1738849145689-2025-02-06T13:39:05.689Z/growthhungry-service.zip"
+                "S3Key": "serverless/growthhungry-service/dev/1738887254585-2025-02-07T00:14:14.585Z/growthhungry-service.zip"
               },
               "Handler": "dist/index.handler",
               "Runtime": "nodejs18.x",
@@ -129,14 +129,14 @@
               "ApiLogGroup"
             ]
           },
-          "ApiLambdaVersionHJnmLa0zL4qiHzWUGleqKsAri0CrvYbHJQ2ExJ2ZWlI": {
+          "ApiLambdaVersionUR07WbpgqiOUyJpuIvwqeQHdI5xroBFcm0UcEMsN4": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "ApiLambdaFunction"
               },
-              "CodeSha256": "oiTeSb7ShnoOTpSJ7aIeuJB3CIasYjFHI07nfL582Hg="
+              "CodeSha256": "E8IaqzoP6RsIG1Tw6EnbV/Pth//SkS/LDfUtYpWst9E="
             }
           },
           "ApiGatewayRestApi": {
@@ -354,7 +354,7 @@
               "ApiLambdaPermissionApiGateway"
             ]
           },
-          "ApiGatewayDeployment1738849136874": {
+          "ApiGatewayDeployment1738887246544": {
             "Type": "AWS::ApiGateway::Deployment",
             "Properties": {
               "RestApiId": {
@@ -417,7 +417,7 @@
           "ApiLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "ApiLambdaVersionHJnmLa0zL4qiHzWUGleqKsAri0CrvYbHJQ2ExJ2ZWlI"
+              "Ref": "ApiLambdaVersionUR07WbpgqiOUyJpuIvwqeQHdI5xroBFcm0UcEMsN4"
             },
             "Export": {
               "Name": "sls-growthhungry-service-dev-ApiLambdaFunctionQualifiedArn"
@@ -513,7 +513,7 @@
         "timeout": 6,
         "runtime": "nodejs18.x",
         "vpc": {},
-        "versionLogicalId": "ApiLambdaVersionHJnmLa0zL4qiHzWUGleqKsAri0CrvYbHJQ2ExJ2ZWlI"
+        "versionLogicalId": "ApiLambdaVersionUR07WbpgqiOUyJpuIvwqeQHdI5xroBFcm0UcEMsN4"
       }
     },
     "configValidationMode": "warn",
@@ -533,7 +533,7 @@
     "artifact": "/Users/arslankamchybekov/Desktop/VSCode Projects/expertize/server/.serverless/growthhungry-service.zip"
   },
   "package": {
-    "artifactDirectoryName": "serverless/growthhungry-service/dev/1738849145689-2025-02-06T13:39:05.689Z",
+    "artifactDirectoryName": "serverless/growthhungry-service/dev/1738887254585-2025-02-07T00:14:14.585Z",
     "artifact": "growthhungry-service.zip"
   }
 }

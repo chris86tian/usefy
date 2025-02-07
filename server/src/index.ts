@@ -46,7 +46,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
 // Configure CORS to allow requests from your frontend
-const allowedOrigins = ["https://www.usefy.com"];
+const allowedOrigins = ["http://localhost:3000", "https://usefy.com"];
 app.use(
   cors({
     origin: allowedOrigins,
@@ -57,8 +57,9 @@ app.use(
 );
 
 // Middleware to handle CORS preflight requests
+
 app.options("*", (req, res) => {
-  res.header("Access-Control-Allow-Origin", allowedOrigins[0]);
+  res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.sendStatus(200);
@@ -78,13 +79,9 @@ app.use("/users/course-progress", requireAuth(), userCourseProgressRoutes);
 
 /* SERVER */
 const port = process.env.PORT || 3000;
-if (process.env.NODE_ENV === "development") {
-  app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
-  });
-} else {
-  console.log("Serverless app");
-}
+if (process.env.NODE_ENV === "development")
+  app.listen(port, () => { console.log(`Server running on port ${port}`) });
+else console.log("Serverless app");
 
 /* SERVERLESS */
 const serverlessApp = serverless(app);
