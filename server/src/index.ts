@@ -46,7 +46,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
 // Configure CORS to allow requests from your frontend
-const allowedOrigins = ["http://localhost:3000", "https://usefy.com"];
+const allowedOrigins = ["http://localhost:3000", "https://www.usefy.com"];
 app.use(
   cors({
     origin: allowedOrigins,
