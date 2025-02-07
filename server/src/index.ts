@@ -11,7 +11,6 @@ import { DynamoDB } from "@aws-sdk/client-dynamodb";
 import "./utils/scheduledEmail";
 import { createClerkClient, requireAuth } from "@clerk/express";
 
-// /* ROUTE IMPORTS */
 import courseRoutes from "./routes/courseRoutes";
 import userClerkRoutes from "./routes/userClerkRoutes";
 import transactionRoutes from "./routes/transactionRoutes";
