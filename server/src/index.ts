@@ -45,25 +45,29 @@ app.use(morgan("common"));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
-// Configure CORS to allow requests from your frontend
-const allowedOrigins = ["http://localhost:3000", "https://www.usefy.com"];
+// Configure CORS middleware
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://usefy.com",
+  "https://www.usefy.com",
+];
+
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: "GET,POST,PUT,DELETE,OPTIONS",
     allowedHeaders: "Content-Type, Authorization",
     credentials: true,
   })
 );
-
-// Middleware to handle CORS preflight requests
-
-app.options("*", (req, res) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  res.sendStatus(200);
-});
 
 /* ROUTES */
 app.get("/", (req, res) => {
@@ -80,23 +84,14 @@ app.use("/users/course-progress", requireAuth(), userCourseProgressRoutes);
 /* SERVER */
 const port = process.env.PORT || 3000;
 if (process.env.NODE_ENV === "development")
-  app.listen(port, () => { console.log(`Server running on port ${port}`) });
+  app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+  });
 else console.log("Serverless app");
 
 /* SERVERLESS */
 const serverlessApp = serverless(app);
 
 export const handler = async (event: any, context: any) => {
-  const response = await serverlessApp(event, context) as any;
-
-  // Ensure CORS headers are present
-  (response as any).headers = {
-    ...response.headers,
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "OPTIONS, GET, POST, PUT, DELETE",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization",
-    "Access-Control-Allow-Credentials": "true",
-  };
-
-  return response;
+  return await serverlessApp(event, context);
 };
