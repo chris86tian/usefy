@@ -87,5 +87,16 @@ else console.log("Serverless app");
 const serverlessApp = serverless(app);
 
 export const handler = async (event: any, context: any) => {
-  return serverlessApp(event, context);
+  const response = await serverlessApp(event, context) as any;
+
+  // Ensure CORS headers are present
+  (response as any).headers = {
+    ...response.headers,
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "OPTIONS, GET, POST, PUT, DELETE",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Allow-Credentials": "true",
+  };
+
+  return response;
 };
