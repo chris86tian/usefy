@@ -107,7 +107,7 @@
               "Properties": {
                 "Code": {
                   "S3Bucket": "serverless-framework-deployments-us-east-1-982ed21f-b716",
-                  "S3Key": "serverless/growthhungry-service/dev/1738887254585-2025-02-07T00:14:14.585Z/growthhungry-service.zip"
+                  "S3Key": "serverless/growthhungry-service/dev/1738891690782-2025-02-07T01:28:10.782Z/growthhungry-service.zip"
                 },
                 "Handler": "dist/index.handler",
                 "Runtime": "nodejs18.x",
@@ -130,14 +130,14 @@
                 "ApiLogGroup"
               ]
             },
-            "ApiLambdaVersionUR07WbpgqiOUyJpuIvwqeQHdI5xroBFcm0UcEMsN4": {
+            "ApiLambdaVersionB88SZl0RsUXwAaXHhyAGiC6OUgjFaeYoc6Bd7QGZq1w": {
               "Type": "AWS::Lambda::Version",
               "DeletionPolicy": "Retain",
               "Properties": {
                 "FunctionName": {
                   "Ref": "ApiLambdaFunction"
                 },
-                "CodeSha256": "E8IaqzoP6RsIG1Tw6EnbV/Pth//SkS/LDfUtYpWst9E="
+                "CodeSha256": "q+5qPFsc9ji4znIpLT7vjqBCEsUTOAEMM/EQGvBcd5M="
               }
             },
             "ApiGatewayRestApi": {
@@ -195,11 +195,11 @@
                       "StatusCode": "200",
                       "ResponseParameters": {
                         "method.response.header.Access-Control-Allow-Origin": "'*'",
-                        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent,X-Amzn-Trace-Id'",
+                        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization,X-Requested-With,Accept'",
                         "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,DELETE,GET,HEAD,PATCH,POST,PUT'"
                       },
                       "ResponseTemplates": {
-                        "application/json": ""
+                        "application/json": "#set($origin = $input.params(\"Origin\"))\n#if($origin == \"\") #set($origin = $input.params(\"origin\")) #end\n#if($origin.matches(\".+\")) #set($context.responseOverride.header.Access-Control-Allow-Origin = $origin) #end"
                       }
                     }
                   ]
@@ -243,11 +243,11 @@
                       "StatusCode": "200",
                       "ResponseParameters": {
                         "method.response.header.Access-Control-Allow-Origin": "'*'",
-                        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent,X-Amzn-Trace-Id'",
+                        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization,X-Requested-With,Accept'",
                         "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,DELETE,GET,HEAD,PATCH,POST,PUT'"
                       },
                       "ResponseTemplates": {
-                        "application/json": ""
+                        "application/json": "#set($origin = $input.params(\"Origin\"))\n#if($origin == \"\") #set($origin = $input.params(\"origin\")) #end\n#if($origin.matches(\".+\")) #set($context.responseOverride.header.Access-Control-Allow-Origin = $origin) #end"
                       }
                     }
                   ]
@@ -355,7 +355,7 @@
                 "ApiLambdaPermissionApiGateway"
               ]
             },
-            "ApiGatewayDeployment1738887246544": {
+            "ApiGatewayDeployment1738891682705": {
               "Type": "AWS::ApiGateway::Deployment",
               "Properties": {
                 "RestApiId": {
@@ -418,7 +418,7 @@
             "ApiLambdaFunctionQualifiedArn": {
               "Description": "Current Lambda function version",
               "Value": {
-                "Ref": "ApiLambdaVersionUR07WbpgqiOUyJpuIvwqeQHdI5xroBFcm0UcEMsN4"
+                "Ref": "ApiLambdaVersionB88SZl0RsUXwAaXHhyAGiC6OUgjFaeYoc6Bd7QGZq1w"
               },
               "Export": {
                 "Name": "sls-growthhungry-service-dev-ApiLambdaFunctionQualifiedArn"
@@ -463,21 +463,20 @@
                 "path": "",
                 "method": "any",
                 "cors": {
-                  "origin": "*",
                   "methods": [
                     "OPTIONS",
                     "ANY"
                   ],
                   "headers": [
                     "Content-Type",
-                    "X-Amz-Date",
                     "Authorization",
-                    "X-Api-Key",
-                    "X-Amz-Security-Token",
-                    "X-Amz-User-Agent",
-                    "X-Amzn-Trace-Id"
+                    "X-Requested-With",
+                    "Accept"
                   ],
-                  "allowCredentials": "<REDACTED>"
+                  "allowCredentials": "<REDACTED>",
+                  "origins": [
+                    "*"
+                  ]
                 },
                 "integration": "AWS_PROXY"
               }
@@ -487,21 +486,20 @@
                 "path": "{proxy+}",
                 "method": "any",
                 "cors": {
-                  "origin": "*",
                   "methods": [
                     "OPTIONS",
                     "ANY"
                   ],
                   "headers": [
                     "Content-Type",
-                    "X-Amz-Date",
                     "Authorization",
-                    "X-Api-Key",
-                    "X-Amz-Security-Token",
-                    "X-Amz-User-Agent",
-                    "X-Amzn-Trace-Id"
+                    "X-Requested-With",
+                    "Accept"
                   ],
-                  "allowCredentials": "<REDACTED>"
+                  "allowCredentials": "<REDACTED>",
+                  "origins": [
+                    "*"
+                  ]
                 },
                 "integration": "AWS_PROXY"
               }
@@ -513,7 +511,7 @@
           "timeout": 6,
           "runtime": "nodejs18.x",
           "vpc": {},
-          "versionLogicalId": "ApiLambdaVersionUR07WbpgqiOUyJpuIvwqeQHdI5xroBFcm0UcEMsN4"
+          "versionLogicalId": "ApiLambdaVersionB88SZl0RsUXwAaXHhyAGiC6OUgjFaeYoc6Bd7QGZq1w"
         }
       }
     },
@@ -619,7 +617,7 @@
             "Properties": {
               "Code": {
                 "S3Bucket": "serverless-framework-deployments-us-east-1-982ed21f-b716",
-                "S3Key": "serverless/growthhungry-service/dev/1738887254585-2025-02-07T00:14:14.585Z/growthhungry-service.zip"
+                "S3Key": "serverless/growthhungry-service/dev/1738891690782-2025-02-07T01:28:10.782Z/growthhungry-service.zip"
               },
               "Handler": "dist/index.handler",
               "Runtime": "nodejs18.x",
@@ -642,14 +640,14 @@
               "ApiLogGroup"
             ]
           },
-          "ApiLambdaVersionUR07WbpgqiOUyJpuIvwqeQHdI5xroBFcm0UcEMsN4": {
+          "ApiLambdaVersionB88SZl0RsUXwAaXHhyAGiC6OUgjFaeYoc6Bd7QGZq1w": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "ApiLambdaFunction"
               },
-              "CodeSha256": "E8IaqzoP6RsIG1Tw6EnbV/Pth//SkS/LDfUtYpWst9E="
+              "CodeSha256": "q+5qPFsc9ji4znIpLT7vjqBCEsUTOAEMM/EQGvBcd5M="
             }
           },
           "ApiGatewayRestApi": {
@@ -707,11 +705,11 @@
                     "StatusCode": "200",
                     "ResponseParameters": {
                       "method.response.header.Access-Control-Allow-Origin": "'*'",
-                      "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent,X-Amzn-Trace-Id'",
+                      "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization,X-Requested-With,Accept'",
                       "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,DELETE,GET,HEAD,PATCH,POST,PUT'"
                     },
                     "ResponseTemplates": {
-                      "application/json": ""
+                      "application/json": "#set($origin = $input.params(\"Origin\"))\n#if($origin == \"\") #set($origin = $input.params(\"origin\")) #end\n#if($origin.matches(\".+\")) #set($context.responseOverride.header.Access-Control-Allow-Origin = $origin) #end"
                     }
                   }
                 ]
@@ -755,11 +753,11 @@
                     "StatusCode": "200",
                     "ResponseParameters": {
                       "method.response.header.Access-Control-Allow-Origin": "'*'",
-                      "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent,X-Amzn-Trace-Id'",
+                      "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization,X-Requested-With,Accept'",
                       "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,DELETE,GET,HEAD,PATCH,POST,PUT'"
                     },
                     "ResponseTemplates": {
-                      "application/json": ""
+                      "application/json": "#set($origin = $input.params(\"Origin\"))\n#if($origin == \"\") #set($origin = $input.params(\"origin\")) #end\n#if($origin.matches(\".+\")) #set($context.responseOverride.header.Access-Control-Allow-Origin = $origin) #end"
                     }
                   }
                 ]
@@ -867,7 +865,7 @@
               "ApiLambdaPermissionApiGateway"
             ]
           },
-          "ApiGatewayDeployment1738887246544": {
+          "ApiGatewayDeployment1738891682705": {
             "Type": "AWS::ApiGateway::Deployment",
             "Properties": {
               "RestApiId": {
@@ -930,7 +928,7 @@
           "ApiLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "ApiLambdaVersionUR07WbpgqiOUyJpuIvwqeQHdI5xroBFcm0UcEMsN4"
+              "Ref": "ApiLambdaVersionB88SZl0RsUXwAaXHhyAGiC6OUgjFaeYoc6Bd7QGZq1w"
             },
             "Export": {
               "Name": "sls-growthhungry-service-dev-ApiLambdaFunctionQualifiedArn"
@@ -975,7 +973,7 @@
       "serviceProvider": null,
       "instanceParameters": null
     },
-    "serviceRawFile": "service: growthhungry-service\n\nprovider:\n  name: aws\n  runtime: nodejs18.x\n  region: us-east-1\n  environment:\n    CLERK_SECRET_KEY: ${env:CLERK_SECRET_KEY}\n\nfunctions:\n  api:\n    handler: dist/index.handler\n    events:\n      - http:\n          path: /\n          method: any\n          cors: true\n      - http:\n          path: \"{proxy+}\"\n          method: any\n          cors: true\n",
+    "serviceRawFile": "service: growthhungry-service\n\nprovider:\n  name: aws\n  runtime: nodejs18.x\n  region: us-east-1\n  environment:\n    CLERK_SECRET_KEY: ${env:CLERK_SECRET_KEY}\n\nfunctions:\n  api:\n    handler: dist/index.handler\n    events:\n      - http:\n          path: /\n          method: any\n          cors:\n            origins:\n              - \"*\" # Allows all origins (or set to \"https://www.usefy.com\" for more security)\n            headers:\n              - Content-Type\n              - Authorization\n              - X-Requested-With\n              - Accept\n      - http:\n          path: \"{proxy+}\"\n          method: any\n          cors:\n            origins:\n              - \"*\" # Same as above\n            headers:\n              - Content-Type\n              - Authorization\n              - X-Requested-With\n              - Accept\n",
     "command": [
       "deploy"
     ],
@@ -986,20 +984,20 @@
     "userName": "arslanorg",
     "serviceProviderAwsAccountId": "692859913275",
     "serviceProviderAwsCfStackName": "growthhungry-service-dev",
-    "serviceProviderAwsCfStackId": "arn:aws:cloudformation:us-east-1:692859913275:stack/growthhungry-service-dev/48d8cdf0-e26f-11ef-9641-0affdbe12e6b",
-    "serviceProviderAwsCfStackCreated": "2025-02-03T20:41:46.435Z",
-    "serviceProviderAwsCfStackUpdated": "2025-02-06T19:55:28.552Z",
-    "serviceProviderAwsCfStackStatus": "UPDATE_COMPLETE",
+    "serviceProviderAwsCfStackId": "arn:aws:cloudformation:us-east-1:692859913275:stack/growthhungry-service-dev/cdf15ae0-e4f2-11ef-9214-0e432dc06d33",
+    "serviceProviderAwsCfStackCreated": "2025-02-07T01:28:16.133Z",
+    "serviceProviderAwsCfStackUpdated": null,
+    "serviceProviderAwsCfStackStatus": "CREATE_COMPLETE",
     "serviceProviderAwsCfStackOutputs": [
       {
         "OutputKey": "ApiLambdaFunctionQualifiedArn",
-        "OutputValue": "arn:aws:lambda:us-east-1:692859913275:function:growthhungry-service-dev-api:7",
+        "OutputValue": "arn:aws:lambda:us-east-1:692859913275:function:growthhungry-service-dev-api:10",
         "Description": "Current Lambda function version",
         "ExportName": "sls-growthhungry-service-dev-ApiLambdaFunctionQualifiedArn"
       },
       {
         "OutputKey": "ServiceEndpoint",
-        "OutputValue": "https://w10mtexzig.execute-api.us-east-1.amazonaws.com/dev",
+        "OutputValue": "https://oo9i2g3jc9.execute-api.us-east-1.amazonaws.com/dev",
         "Description": "URL of the service endpoint",
         "ExportName": "sls-growthhungry-service-dev-ServiceEndpoint"
       },
@@ -1102,7 +1100,7 @@
           "Properties": {
             "Code": {
               "S3Bucket": "serverless-framework-deployments-us-east-1-982ed21f-b716",
-              "S3Key": "serverless/growthhungry-service/dev/1738887254585-2025-02-07T00:14:14.585Z/growthhungry-service.zip"
+              "S3Key": "serverless/growthhungry-service/dev/1738891690782-2025-02-07T01:28:10.782Z/growthhungry-service.zip"
             },
             "Handler": "dist/index.handler",
             "Runtime": "nodejs18.x",
@@ -1125,14 +1123,14 @@
             "ApiLogGroup"
           ]
         },
-        "ApiLambdaVersionUR07WbpgqiOUyJpuIvwqeQHdI5xroBFcm0UcEMsN4": {
+        "ApiLambdaVersionB88SZl0RsUXwAaXHhyAGiC6OUgjFaeYoc6Bd7QGZq1w": {
           "Type": "AWS::Lambda::Version",
           "DeletionPolicy": "Retain",
           "Properties": {
             "FunctionName": {
               "Ref": "ApiLambdaFunction"
             },
-            "CodeSha256": "E8IaqzoP6RsIG1Tw6EnbV/Pth//SkS/LDfUtYpWst9E="
+            "CodeSha256": "q+5qPFsc9ji4znIpLT7vjqBCEsUTOAEMM/EQGvBcd5M="
           }
         },
         "ApiGatewayRestApi": {
@@ -1190,11 +1188,11 @@
                   "StatusCode": "200",
                   "ResponseParameters": {
                     "method.response.header.Access-Control-Allow-Origin": "'*'",
-                    "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent,X-Amzn-Trace-Id'",
+                    "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization,X-Requested-With,Accept'",
                     "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,DELETE,GET,HEAD,PATCH,POST,PUT'"
                   },
                   "ResponseTemplates": {
-                    "application/json": ""
+                    "application/json": "#set($origin = $input.params(\"Origin\"))\n#if($origin == \"\") #set($origin = $input.params(\"origin\")) #end\n#if($origin.matches(\".+\")) #set($context.responseOverride.header.Access-Control-Allow-Origin = $origin) #end"
                   }
                 }
               ]
@@ -1238,11 +1236,11 @@
                   "StatusCode": "200",
                   "ResponseParameters": {
                     "method.response.header.Access-Control-Allow-Origin": "'*'",
-                    "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent,X-Amzn-Trace-Id'",
+                    "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization,X-Requested-With,Accept'",
                     "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,DELETE,GET,HEAD,PATCH,POST,PUT'"
                   },
                   "ResponseTemplates": {
-                    "application/json": ""
+                    "application/json": "#set($origin = $input.params(\"Origin\"))\n#if($origin == \"\") #set($origin = $input.params(\"origin\")) #end\n#if($origin.matches(\".+\")) #set($context.responseOverride.header.Access-Control-Allow-Origin = $origin) #end"
                   }
                 }
               ]
@@ -1350,7 +1348,7 @@
             "ApiLambdaPermissionApiGateway"
           ]
         },
-        "ApiGatewayDeployment1738887246544": {
+        "ApiGatewayDeployment1738891682705": {
           "Type": "AWS::ApiGateway::Deployment",
           "Properties": {
             "RestApiId": {
@@ -1413,7 +1411,7 @@
         "ApiLambdaFunctionQualifiedArn": {
           "Description": "Current Lambda function version",
           "Value": {
-            "Ref": "ApiLambdaVersionUR07WbpgqiOUyJpuIvwqeQHdI5xroBFcm0UcEMsN4"
+            "Ref": "ApiLambdaVersionB88SZl0RsUXwAaXHhyAGiC6OUgjFaeYoc6Bd7QGZq1w"
           },
           "Export": {
             "Name": "sls-growthhungry-service-dev-ApiLambdaFunctionQualifiedArn"
