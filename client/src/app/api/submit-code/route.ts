@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import OpenAI from 'openai';
+import OpenAI from "openai";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -9,7 +9,7 @@ export async function POST(request: Request) {
 
     if (!code || !language || !task) {
       return NextResponse.json(
-        { error: 'Code, language, and task are required' },
+        { error: "Code, language, and task are required" },
         { status: 400 }
       );
     }
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
                 "score": number (0-100),
                 "explanation": string,
             }
-            `
+            `,
           },
           {
             role: "user",
@@ -46,58 +46,59 @@ export async function POST(request: Request) {
             ${code}
             \`\`\`
 
-            Evaluate the code and provide detailed feedback in the specified JSON format.`
-          }
+            Evaluate the code and provide detailed feedback in the specified JSON format.`,
+          },
         ],
         temperature: 0.7,
-        max_tokens: 2000
+        max_tokens: 2000,
       });
 
       // Parse the response content, with error handling
       let evaluation;
       try {
-        evaluation = JSON.parse(completion.choices[0].message.content || '{}');
+        evaluation = JSON.parse(completion.choices[0].message.content || "{}");
       } catch (error) {
-        console.error('Error parsing GPT response:', error);
+        console.error("Error parsing GPT response:", error);
         return NextResponse.json(
-          { error: 'Invalid response format from evaluation service' },
+          { error: "Invalid response format from evaluation service" },
           { status: 500 }
         );
       }
 
       // Add runtime validation if code is executable
-      if (['javascript', 'python', 'typescript'].includes(language.toLowerCase())) {
+      if (
+        ["javascript", "python", "typescript"].includes(language.toLowerCase())
+      ) {
         try {
           // You can add actual code execution here if needed
           evaluation.runtime = {
             executed: true,
-            error: null
+            error: null,
           };
         } catch (error) {
           evaluation.runtime = {
             executed: false,
-            error: error instanceof Error ? error.message : String(error)
+            error: error instanceof Error ? error.message : String(error),
           };
         }
       }
       return NextResponse.json({ evaluation });
-
     } catch (error) {
-      console.error('Error evaluating code:', error);
+      console.error("Error evaluating code:", error);
       return NextResponse.json(
-        { 
-          error: 'Failed to evaluate code submission',
-          details: error instanceof Error ? error.message : String(error)
+        {
+          error: "Failed to evaluate code submission",
+          details: error instanceof Error ? error.message : String(error),
         },
         { status: 500 }
       );
     }
   } catch (error) {
-    console.error('Route error:', error);
+    console.error("Route error:", error);
     return NextResponse.json(
-      { 
-        error: 'Internal server error',
-        details: error instanceof Error ? error.message : String(error)
+      {
+        error: "Internal server error",
+        details: error instanceof Error ? error.message : String(error),
       },
       { status: 500 }
     );
@@ -107,8 +108,8 @@ export async function POST(request: Request) {
 export const config = {
   api: {
     bodyParser: {
-      sizeLimit: '1mb',
+      sizeLimit: "1mb",
     },
   },
-  runtime: 'edge',
+  runtime: "nodejs",
 };

@@ -34,18 +34,26 @@ interface Chapter {
   };
 }
 
-function findKeyMoments(transcript: TranscriptSegment[], targetSegments: number): number[] {
+function findKeyMoments(
+  transcript: TranscriptSegment[],
+  targetSegments: number
+): number[] {
   // Calculate total duration and word count
-  const totalDuration = transcript.reduce((sum, segment) => sum + (segment.duration || 0), 0);
-  const allWords = transcript.map(segment => segment.text.split(/\s+/).length);
+  const totalDuration = transcript.reduce(
+    (sum, segment) => sum + (segment.duration || 0),
+    0
+  );
+  const allWords = transcript.map(
+    (segment) => segment.text.split(/\s+/).length
+  );
   const totalWords = allWords.reduce((sum, count) => sum + count, 0);
-  
+
   // Initialize timestamp array with start time
   const keyTimestamps: number[] = [0];
-  
+
   // Calculate target word count per segment
   const targetWordsPerSegment = totalWords / targetSegments;
-  
+
   let currentWordCount = 0;
   let segmentCount = 1;
 
@@ -53,18 +61,25 @@ function findKeyMoments(transcript: TranscriptSegment[], targetSegments: number)
   for (let i = 0; i < transcript.length; i++) {
     const wordCount = allWords[i];
     currentWordCount += wordCount;
-    
+
     // Check if we've reached target word count for a segment
-    if (currentWordCount >= targetWordsPerSegment * segmentCount && segmentCount < targetSegments) {
+    if (
+      currentWordCount >= targetWordsPerSegment * segmentCount &&
+      segmentCount < targetSegments
+    ) {
       // Look for a natural break (end of sentence)
       let breakPoint = i;
-      for (let j = Math.max(0, i - 2); j <= Math.min(transcript.length - 1, i + 2); j++) {
+      for (
+        let j = Math.max(0, i - 2);
+        j <= Math.min(transcript.length - 1, i + 2);
+        j++
+      ) {
         if (transcript[j].text.match(/[.!?]$/)) {
           breakPoint = j;
           break;
         }
       }
-      
+
       keyTimestamps.push(transcript[breakPoint].offset);
       segmentCount++;
     }
@@ -85,12 +100,18 @@ export async function POST(request: Request) {
   try {
     const { videoUrl } = await request.json();
     if (!videoUrl) {
-      return NextResponse.json({ error: "Video URL is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Video URL is required" },
+        { status: 400 }
+      );
     }
 
     const videoId = extractVideoId(videoUrl);
     if (!videoId) {
-      return NextResponse.json({ error: "Invalid YouTube URL" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid YouTube URL" },
+        { status: 400 }
+      );
     }
 
     const transcript = await YoutubeTranscript.fetchTranscript(videoId);
@@ -108,7 +129,8 @@ export async function POST(request: Request) {
       messages: [
         {
           role: "system",
-          content: "You are a course creator. Create a structured course outline based on the provided transcript. Make sure to process the entire transcript. The response must be a valid JSON object."
+          content:
+            "You are a course creator. Create a structured course outline based on the provided transcript. Make sure to process the entire transcript. The response must be a valid JSON object.",
         },
         {
           role: "user",
@@ -146,19 +168,22 @@ export async function POST(request: Request) {
             ]
           }
     
-          Transcript: ${formattedTranscript}`
-        }
+          Transcript: ${formattedTranscript}`,
+        },
       ],
       temperature: 0.7,
       max_tokens: 5000,
-      response_format: { type: "json_object" }
+      response_format: { type: "json_object" },
     });
 
     const content = completion?.choices[0]?.message?.content;
-    
+
     if (!content) {
       console.error("Empty response from OpenAI");
-      return NextResponse.json({ error: "Empty response from OpenAI" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Empty response from OpenAI" },
+        { status: 500 }
+      );
     }
 
     let courseStructure;
@@ -167,33 +192,44 @@ export async function POST(request: Request) {
     } catch (parseError) {
       try {
         const cleanedContent = content
-          .replace(/```json\n?|```\n?/g, '')
+          .replace(/```json\n?|```\n?/g, "")
           .trim()
-          .replace(/^\s*[\r\n]/gm, '');
+          .replace(/^\s*[\r\n]/gm, "");
         courseStructure = JSON.parse(cleanedContent);
       } catch (secondParseError) {
         console.error("JSON parsing error:", secondParseError);
         console.error("Raw content:", content);
-        return NextResponse.json({ 
-          error: "Invalid JSON response from OpenAI",
-          details: secondParseError instanceof Error ? secondParseError.message : "Unknown error"
-        }, { status: 500 });
+        return NextResponse.json(
+          {
+            error: "Invalid JSON response from OpenAI",
+            details:
+              secondParseError instanceof Error
+                ? secondParseError.message
+                : "Unknown error",
+          },
+          { status: 500 }
+        );
       }
     }
 
     if (!courseStructure.sections || !Array.isArray(courseStructure.sections)) {
-      return NextResponse.json({ 
-        error: "Invalid course structure: missing or invalid sections array" 
-      }, { status: 500 });
+      return NextResponse.json(
+        {
+          error: "Invalid course structure: missing or invalid sections array",
+        },
+        { status: 500 }
+      );
     }
 
     // Update video timestamps using the key moments
     let timestampIndex = 0;
     courseStructure.sections.forEach((section: Section) => {
       if (!section.chapters || !Array.isArray(section.chapters)) {
-        throw new Error(`Invalid section structure: missing or invalid chapters array`);
+        throw new Error(
+          `Invalid section structure: missing or invalid chapters array`
+        );
       }
-      
+
       section.chapters.forEach((chapter) => {
         const timestamp = keyTimestamps[timestampIndex] || 0;
         chapter.video = `https://www.youtube.com/watch?v=${videoId}&t=${timestamp}s`;
@@ -204,10 +240,13 @@ export async function POST(request: Request) {
     return NextResponse.json(courseStructure);
   } catch (error) {
     console.error("Route error:", error);
-    return NextResponse.json({ 
-      error: "Internal server error", 
-      details: error instanceof Error ? error.message : "Unknown error"
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: "Internal server error",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 }
+    );
   }
 }
 
@@ -219,5 +258,5 @@ function formatTimestamp(seconds: number) {
 
 export const config = {
   api: { bodyParser: { sizeLimit: "1mb" } },
-  runtime: "edge",
+  runtime: "nodejs",
 };
