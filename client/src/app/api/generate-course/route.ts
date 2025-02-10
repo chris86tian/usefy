@@ -38,7 +38,6 @@ function findKeyMoments(
   transcript: TranscriptSegment[],
   targetSegments: number
 ): number[] {
-  // Calculate total duration and word count
   const totalDuration = transcript.reduce(
     (sum, segment) => sum + (segment.duration || 0),
     0
@@ -48,26 +47,21 @@ function findKeyMoments(
   );
   const totalWords = allWords.reduce((sum, count) => sum + count, 0);
 
-  // Initialize timestamp array with start time
   const keyTimestamps: number[] = [0];
 
-  // Calculate target word count per segment
   const targetWordsPerSegment = totalWords / targetSegments;
 
   let currentWordCount = 0;
   let segmentCount = 1;
 
-  // Iterate through transcript to find natural breaking points
   for (let i = 0; i < transcript.length; i++) {
     const wordCount = allWords[i];
     currentWordCount += wordCount;
 
-    // Check if we've reached target word count for a segment
     if (
       currentWordCount >= targetWordsPerSegment * segmentCount &&
       segmentCount < targetSegments
     ) {
-      // Look for a natural break (end of sentence)
       let breakPoint = i;
       for (
         let j = Math.max(0, i - 2);
@@ -85,15 +79,41 @@ function findKeyMoments(
     }
   }
 
-  // Ensure we have exactly the target number of segments
   while (keyTimestamps.length < targetSegments) {
     const segmentSize = Math.floor(totalDuration / targetSegments);
     const nextTimestamp = segmentSize * keyTimestamps.length;
     keyTimestamps.push(nextTimestamp);
   }
 
-  // Sort timestamps and remove duplicates
   return Array.from(new Set(keyTimestamps)).sort((a, b) => a - b);
+}
+
+async function getTranscriptWithRetries(
+  videoId: string,
+  maxRetries = 3
+): Promise<any[]> {
+  let lastError;
+
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const options = i === 0 ? undefined : { lang: "en" };
+      const transcript = await YoutubeTranscript.fetchTranscript(
+        videoId,
+        options
+      );
+
+      if (transcript && transcript.length > 0) {
+        return transcript;
+      }
+    } catch (error) {
+      console.error(`Attempt ${i + 1} failed:`, error);
+      lastError = error;
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+  }
+  throw new Error(
+    `Failed to fetch transcript after ${maxRetries} attempts: ${lastError instanceof Error ? lastError.message : String(lastError)}`
+  );
 }
 
 export async function POST(request: Request) {
@@ -114,16 +134,27 @@ export async function POST(request: Request) {
       );
     }
 
-    const transcript = await YoutubeTranscript.fetchTranscript(videoId);
+    let transcript;
+    try {
+      transcript = await getTranscriptWithRetries(videoId);
+    } catch (error) {
+      return NextResponse.json(
+        {
+          error: "Could not get video transcript",
+          details:
+            "This video might have disabled captions or requires authentication. Please try another video with public captions enabled.",
+        },
+        { status: 400 }
+      );
+    }
+
     const formattedTranscript = transcript
       .map(({ text, offset }) => `[${formatTimestamp(offset)}] ${text}`)
       .join("\n");
 
-    // Get timestamps for each major segment of the video
-    const targetSegments = 6; // Assuming 2 sections with 3 chapters each
+    const targetSegments = 6;
     const keyTimestamps = findKeyMoments(transcript, targetSegments);
 
-    // OpenAI Course Generation with error handling
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
@@ -221,7 +252,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Update video timestamps using the key moments
     let timestampIndex = 0;
     courseStructure.sections.forEach((section: Section) => {
       if (!section.chapters || !Array.isArray(section.chapters)) {

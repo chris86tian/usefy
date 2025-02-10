@@ -10,10 +10,7 @@ import {
   uploadAllVideos,
   uploadThumbnail,
 } from "@/lib/utils";
-import {
-  openSectionModal,
-  setSections,
-} from "@/state";
+import { openSectionModal, setSections } from "@/state";
 import {
   useGetCourseQuery,
   useUpdateCourseMutation,
@@ -33,7 +30,7 @@ import { toast } from "sonner";
 import { courseSchema } from "@/lib/schemas";
 import Image from "next/image";
 import YouTubeDialog from "@/components/YouTubeDialog";
-import { v4 as uuid} from "uuid";
+import { v4 as uuid } from "uuid";
 
 const CourseEditor = () => {
   const params = useParams();
@@ -52,7 +49,7 @@ const CourseEditor = () => {
   const handleURLSubmit = async (videoUrl: string) => {
     setIsDialogOpen(false);
     setIsGenerating(true);
-  
+
     try {
       const response = await fetch("/api/generate-course", {
         method: "POST",
@@ -61,51 +58,55 @@ const CourseEditor = () => {
         },
         body: JSON.stringify({ videoUrl }),
       });
-  
+
       const data = await response.json();
-  
+
+      console.log("<<<<<<<>>>>>>> data", data);
+
       if (data.error) {
         toast.error(data.error);
         return;
       }
-  
+
       const { sections: newSections, courseTitle, courseDescription } = data;
-  
+
       // Update course details only if title is "Untitled Course" and description is empty
       if (course?.title === "Untitled Course") {
         methods.setValue("courseTitle", courseTitle);
         methods.setValue("courseDescription", courseDescription);
       }
-  
+
       // Merge new sections with existing sections
       const updatedSections = [...sections];
-  
+
       newSections.forEach((newSection: Section) => {
         const existingSectionIndex = updatedSections.findIndex(
           (section) => section.sectionTitle === newSection.sectionTitle
         );
-  
+
         if (existingSectionIndex !== -1) {
           // Merge chapters into the existing section
           const existingSection = updatedSections[existingSectionIndex];
-          const mergedChapters = newSection.chapters.map((newChapter: Chapter) => {
-            const existingChapter = existingSection.chapters.find(
-              (chapter) => chapter.title === newChapter.title
-            );
-  
-            return existingChapter
-              ? {
-                  ...existingChapter,
-                  content: newChapter.content || existingChapter.content,
-                  video: newChapter.video || existingChapter.video,
-                  quiz: newChapter.quiz || existingChapter.quiz,
-                }
-              : {
-                  ...newChapter,
-                  chapterId: newChapter.chapterId || uuid(),
-                };
-          });
-  
+          const mergedChapters = newSection.chapters.map(
+            (newChapter: Chapter) => {
+              const existingChapter = existingSection.chapters.find(
+                (chapter) => chapter.title === newChapter.title
+              );
+
+              return existingChapter
+                ? {
+                    ...existingChapter,
+                    content: newChapter.content || existingChapter.content,
+                    video: newChapter.video || existingChapter.video,
+                    quiz: newChapter.quiz || existingChapter.quiz,
+                  }
+                : {
+                    ...newChapter,
+                    chapterId: newChapter.chapterId || uuid(),
+                  };
+            }
+          );
+
           updatedSections[existingSectionIndex] = {
             ...existingSection,
             chapters: [...existingSection.chapters, ...mergedChapters],
@@ -122,7 +123,7 @@ const CourseEditor = () => {
           });
         }
       });
-  
+
       dispatch(setSections(updatedSections));
       toast.success("Sections and chapters generated successfully!");
     } catch (error) {
@@ -158,19 +159,22 @@ const CourseEditor = () => {
         courseStatus: course.status === "Published",
         courseImage: course.image || "",
       });
-      
+
       if (course.sections?.length) {
-        dispatch(setSections(course.sections.map(section => ({
-          ...section,
-          chapters: section.chapters.map(chapter => ({
-            ...chapter,
-            assignments: chapter.assignments || [],
-          }))
-        }))));
+        dispatch(
+          setSections(
+            course.sections.map((section) => ({
+              ...section,
+              chapters: section.chapters.map((chapter) => ({
+                ...chapter,
+                assignments: chapter.assignments || [],
+              })),
+            }))
+          )
+        );
       }
     }
   }, [course, dispatch, methods]);
-
 
   const createCourseFormData = (
     data: CourseFormData,
@@ -184,22 +188,23 @@ const CourseEditor = () => {
     formData.append("price", dollarsToCents(data.coursePrice).toString());
     formData.append("status", data.courseStatus ? "Published" : "Draft");
     formData.append("image", thumbnailUrl);
-  
+
     const sectionsWithPreservedData = sections.map((section) => ({
       ...section,
-      chapters: section.chapters.map(chapter => ({
+      chapters: section.chapters.map((chapter) => ({
         ...chapter,
-        assignments: chapter.assignments?.map((assignment: { submissions: Submission[]; }) => ({
-          ...assignment,
-          submissions: assignment.submissions || [],
-        })),
+        assignments: chapter.assignments?.map(
+          (assignment: { submissions: Submission[] }) => ({
+            ...assignment,
+            submissions: assignment.submissions || [],
+          })
+        ),
       })),
     }));
-  
+
     formData.append("sections", JSON.stringify(sectionsWithPreservedData));
     return formData;
   };
-  
 
   const onSubmit = async (data: CourseFormData) => {
     setIsUploading(true);
@@ -218,7 +223,11 @@ const CourseEditor = () => {
         thumbnailUrl = await uploadThumbnail(id, getUploadImageUrl, image);
       }
 
-      const formData = createCourseFormData(data, updatedSections, thumbnailUrl || "");
+      const formData = createCourseFormData(
+        data,
+        updatedSections,
+        thumbnailUrl || ""
+      );
 
       await updateCourse({ courseId: id, formData }).unwrap();
 
@@ -237,9 +246,7 @@ const CourseEditor = () => {
       <div className="flex items-center gap-5 mb-5">
         <button
           className="flex items-center border border-customgreys-dirtyGrey rounded-lg p-2 gap-2 cursor-pointer hover:bg-customgreys-dirtyGrey hover:text-white-100 text-customgreys-dirtyGrey"
-          onClick={() => 
-            window.location.href = "/teacher/courses"
-          }
+          onClick={() => (window.location.href = "/teacher/courses")}
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to Courses</span>
@@ -314,7 +321,10 @@ const CourseEditor = () => {
                     { value: "technology", label: "Technology" },
                     { value: "science", label: "Science" },
                     { value: "mathematics", label: "Mathematics" },
-                    { value: "Artificial Intelligence", label: "Artificial Intelligence" },
+                    {
+                      value: "Artificial Intelligence",
+                      label: "Artificial Intelligence",
+                    },
                   ]}
                   initialValue={course?.category}
                 />
@@ -332,11 +342,11 @@ const CourseEditor = () => {
                     <label className="text-sm font-medium text-customgreys-dirtyGrey mb-2">
                       Upload Thumbnail
                     </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setImage(e.target.files?.[0] || null)}
-                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border file:border-gray-300 file:bg-gray-100"
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setImage(e.target.files?.[0] || null)}
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border file:border-gray-300 file:bg-gray-100"
                     />
                   </div>
                 </div>
@@ -354,7 +364,9 @@ const CourseEditor = () => {
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => dispatch(openSectionModal({ sectionIndex: null }))}
+                    onClick={() =>
+                      dispatch(openSectionModal({ sectionIndex: null }))
+                    }
                     className="border-none text-primary-700 group"
                     disabled={isGenerating}
                   >
@@ -373,7 +385,7 @@ const CourseEditor = () => {
                   >
                     <Sparkles className="h-4 w-4 text-primary-700 group-hover:white-100" />
                     <span className="text-primary-700 group-hover:white-100">
-                      {isGenerating ? 'Generating...' : 'Generate'}
+                      {isGenerating ? "Generating..." : "Generate"}
                     </span>
                   </Button>
                   <YouTubeDialog
