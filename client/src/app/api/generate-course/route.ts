@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { YoutubeTranscript } from "youtube-transcript";
 import OpenAI from "openai";
 import { extractVideoId } from "@/lib/utils";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
 
 interface TranscriptSegment {
   text: string;
@@ -34,6 +34,77 @@ interface Chapter {
   };
 }
 
+async function fetchCaptionsAndTranscript(videoId: string) {
+  try {
+    const videoResponse = await fetch(
+      `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${YOUTUBE_API_KEY}`
+    );
+    const videoData = await videoResponse.json();
+
+    if (!videoData.items?.length) {
+      throw new Error("Video not found or is private");
+    }
+
+    const captionsResponse = await fetch(
+      `https://www.googleapis.com/youtube/v3/captions?part=snippet&videoId=${videoId}&key=${YOUTUBE_API_KEY}`
+    );
+    const captionsData = await captionsResponse.json();
+
+    if (!captionsResponse.ok) {
+      throw new Error(
+        captionsData.error?.message || "Failed to fetch captions"
+      );
+    }
+
+    const captionTrack =
+      captionsData.items?.find((item: any) => item.snippet.language === "en") ||
+      captionsData.items?.[0];
+    if (captionTrack) {
+    } else {
+      console.log("⚠️ No caption track found");
+    }
+
+    if (!captionTrack) {
+      throw new Error("No captions available for this video");
+    }
+
+    const transcriptResponse = await fetch(
+      `https://www.youtube.com/watch?v=${videoId}`
+    );
+    const html = await transcriptResponse.text();
+
+    const transcriptMatches = html.match(/"text":"([^"]+)"/g) || [];
+    const timestampMatches = html.match(/"start":"([^"]+)"/g) || [];
+    console.log("📊 Found matches:", {
+      transcriptMatchesCount: transcriptMatches.length,
+      timestampMatchesCount: timestampMatches.length,
+    });
+
+    const transcript: TranscriptSegment[] = transcriptMatches.map(
+      (match, index) => {
+        const text = match.match(/"text":"([^"]+)"/)?.[1] || "";
+        const offset = parseInt(
+          timestampMatches[index]?.match(/"start":"(\d+)"/)?.[1] || "0"
+        );
+
+        return {
+          text: text.replace(/\\n/g, " ").replace(/\\"/g, '"'),
+          offset,
+          duration: 5000,
+        };
+      }
+    );
+
+    if (transcript.length === 0) {
+      throw new Error("Could not extract transcript from video");
+    }
+
+    return transcript;
+  } catch (error) {
+    throw error;
+  }
+}
+
 function findKeyMoments(
   transcript: TranscriptSegment[],
   targetSegments: number
@@ -48,7 +119,6 @@ function findKeyMoments(
   const totalWords = allWords.reduce((sum, count) => sum + count, 0);
 
   const keyTimestamps: number[] = [0];
-
   const targetWordsPerSegment = totalWords / targetSegments;
 
   let currentWordCount = 0;
@@ -88,37 +158,10 @@ function findKeyMoments(
   return Array.from(new Set(keyTimestamps)).sort((a, b) => a - b);
 }
 
-async function getTranscriptWithRetries(
-  videoId: string,
-  maxRetries = 3
-): Promise<any[]> {
-  let lastError;
-
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      const options = i === 0 ? undefined : { lang: "en" };
-      const transcript = await YoutubeTranscript.fetchTranscript(
-        videoId,
-        options
-      );
-
-      if (transcript && transcript.length > 0) {
-        return transcript;
-      }
-    } catch (error) {
-      console.error(`Attempt ${i + 1} failed:`, error);
-      lastError = error;
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-    }
-  }
-  throw new Error(
-    `Failed to fetch transcript after ${maxRetries} attempts: ${lastError instanceof Error ? lastError.message : String(lastError)}`
-  );
-}
-
 export async function POST(request: Request) {
   try {
     const { videoUrl } = await request.json();
+
     if (!videoUrl) {
       return NextResponse.json(
         { error: "Video URL is required" },
@@ -127,6 +170,7 @@ export async function POST(request: Request) {
     }
 
     const videoId = extractVideoId(videoUrl);
+
     if (!videoId) {
       return NextResponse.json(
         { error: "Invalid YouTube URL" },
@@ -136,7 +180,7 @@ export async function POST(request: Request) {
 
     let transcript;
     try {
-      transcript = await getTranscriptWithRetries(videoId);
+      transcript = await fetchCaptionsAndTranscript(videoId);
     } catch (error) {
       return NextResponse.json(
         {
@@ -154,7 +198,6 @@ export async function POST(request: Request) {
 
     const targetSegments = 6;
     const keyTimestamps = findKeyMoments(transcript, targetSegments);
-
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
@@ -206,11 +249,8 @@ export async function POST(request: Request) {
       max_tokens: 5000,
       response_format: { type: "json_object" },
     });
-
     const content = completion?.choices[0]?.message?.content;
-
     if (!content) {
-      console.error("Empty response from OpenAI");
       return NextResponse.json(
         { error: "Empty response from OpenAI" },
         { status: 500 }
@@ -220,27 +260,17 @@ export async function POST(request: Request) {
     let courseStructure;
     try {
       courseStructure = JSON.parse(content);
+
+      courseStructure = JSON.parse(content);
     } catch (parseError) {
-      try {
-        const cleanedContent = content
-          .replace(/```json\n?|```\n?/g, "")
-          .trim()
-          .replace(/^\s*[\r\n]/gm, "");
-        courseStructure = JSON.parse(cleanedContent);
-      } catch (secondParseError) {
-        console.error("JSON parsing error:", secondParseError);
-        console.error("Raw content:", content);
-        return NextResponse.json(
-          {
-            error: "Invalid JSON response from OpenAI",
-            details:
-              secondParseError instanceof Error
-                ? secondParseError.message
-                : "Unknown error",
-          },
-          { status: 500 }
-        );
-      }
+      return NextResponse.json(
+        {
+          error: "Invalid JSON response from OpenAI",
+          details:
+            parseError instanceof Error ? parseError.message : "Unknown error",
+        },
+        { status: 500 }
+      );
     }
 
     if (!courseStructure.sections || !Array.isArray(courseStructure.sections)) {
@@ -269,7 +299,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json(courseStructure);
   } catch (error) {
-    console.error("Route error:", error);
     return NextResponse.json(
       {
         error: "Internal server error",
