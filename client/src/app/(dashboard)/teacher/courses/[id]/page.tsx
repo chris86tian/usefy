@@ -182,27 +182,37 @@ const CourseEditor = () => {
     thumbnailUrl: string
   ): FormData => {
     const formData = new FormData();
+
     formData.append("title", data.courseTitle);
     formData.append("description", data.courseDescription);
     formData.append("category", data.courseCategory);
     formData.append("price", dollarsToCents(data.coursePrice).toString());
     formData.append("status", data.courseStatus ? "Published" : "Draft");
-    formData.append("image", thumbnailUrl);
+
+    if (thumbnailUrl) {
+      formData.append("image", thumbnailUrl);
+    }
 
     const sectionsWithPreservedData = sections.map((section) => ({
       ...section,
       chapters: section.chapters.map((chapter) => ({
         ...chapter,
-        assignments: chapter.assignments?.map(
-          (assignment: { submissions: Submission[] }) => ({
-            ...assignment,
-            submissions: assignment.submissions || [],
-          })
-        ),
+        assignments: chapter.assignments || [],
+        quiz: chapter.quiz || null,
+        video: chapter.video || "",
       })),
     }));
 
     formData.append("sections", JSON.stringify(sectionsWithPreservedData));
+
+    console.log("Form Data Contents:");
+    for (const [key, value] of formData.entries()) {
+      console.log(
+        `${key}:`,
+        key === "sections" ? JSON.parse(value as string) : value
+      );
+    }
+
     return formData;
   };
 
@@ -211,6 +221,8 @@ const CourseEditor = () => {
     setProgress(0);
 
     try {
+      console.log("Starting course update...");
+
       const updatedSections = await uploadAllVideos(
         sections,
         id,
@@ -218,7 +230,7 @@ const CourseEditor = () => {
         (currentProgress) => setProgress(currentProgress)
       );
 
-      let thumbnailUrl = course?.image;
+      let thumbnailUrl = course?.image || "";
       if (image) {
         thumbnailUrl = await uploadThumbnail(id, getUploadImageUrl, image);
       }
@@ -226,16 +238,20 @@ const CourseEditor = () => {
       const formData = createCourseFormData(
         data,
         updatedSections,
-        thumbnailUrl || ""
+        thumbnailUrl
       );
 
-      await updateCourse({ courseId: id, formData }).unwrap();
+      console.log("Sending update request...");
+      const result = await updateCourse({ courseId: id, formData }).unwrap();
+      console.log("Update response:", result);
 
       toast.success("Course updated successfully!");
       refetch();
     } catch (error) {
       console.error("Failed to update course:", error);
-      toast.error("An error occurred while updating the course." + error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+      toast.error(`Failed to update course: ${errorMessage}`);
     } finally {
       setIsUploading(false);
     }

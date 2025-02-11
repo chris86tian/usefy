@@ -9,6 +9,7 @@ import AWS from "aws-sdk";
 import { DynamoDB } from "@aws-sdk/client-dynamodb";
 import "./utils/scheduledEmail";
 import { createClerkClient, requireAuth } from "@clerk/express";
+import cors from "cors";
 
 import courseRoutes from "./routes/courseRoutes";
 import userClerkRoutes from "./routes/userClerkRoutes";
@@ -17,22 +18,31 @@ import userCourseProgressRoutes from "./routes/userCourseProgressRoutes";
 import notificationRoutes from "./routes/notificationRoutes";
 import commitRoutes from "./routes/commitRoutes";
 
-export const clerkClient = createClerkClient({
-  secretKey: process.env.CLERK_SECRET_KEY,
-});
-
 dotenv.config();
 
-if (process.env.NODE_ENV === "development") {
-  dynamoose.aws.ddb.local();
-} else {
+export const clerkClient = createClerkClient({
+  secretKey: process.env.CLERK_SECRET_KEY,
+  publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
+});
+
+if (!process.env.CLERK_SECRET_KEY || !process.env.CLERK_PUBLISHABLE_KEY) {
+  console.error("❌ Clerk keys are not properly configured!");
+  process.exit(1);
+}
+
+if (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "dev") {
+  console.log("🔧 Using AWS configuration for development");
   AWS.config.update({
-    region: process.env.AWS_REGION,
+    region: process.env.AWS_REGION || "us-east-1",
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   });
-  dynamoose.aws.ddb.set(new DynamoDB());
+} else {
+  console.log("🔧 Using AWS configuration for production");
+  AWS.config.update({ region: "us-east-1" });
 }
+
+dynamoose.aws.ddb.set(new DynamoDB());
 
 const app = express();
 app.use(express.json());
@@ -47,6 +57,41 @@ const allowedOrigins = [
   "https://usefy.com",
   "https://www.usefy.com",
 ];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+    exposedHeaders: ["Access-Control-Allow-Origin"],
+    maxAge: 86400,
+  })
+);
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, OPTIONS"
+  );
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization, X-Requested-With"
+  );
+  next();
+});
 
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.originalUrl}`);
@@ -103,13 +148,15 @@ app.use(
 );
 
 /* SERVER */
-const port = process.env.PORT || 3000;
-if (process.env.NODE_ENV === "development") {
+if (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "dev") {
+  const port = process.env.PORT || 8001;
   app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
+    console.log(
+      `🚀 Server is running in development mode on http://localhost:${port}`
+    );
   });
 } else {
-  console.log("Serverless app");
+  console.log("🚀 Serverless mode activated");
 }
 
 /* SERVERLESS */

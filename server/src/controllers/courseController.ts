@@ -102,16 +102,12 @@ export const updateCourse = async (
   const { userId } = getAuth(req);
 
   try {
-    if (updateData.price !== undefined) {
-      const price = Number(updateData.price);
-      if (isNaN(price) || price < 0) {
-        res.status(400).json({
-          message: "Invalid price format",
-          error: "Price must be a non-negative number",
-        });
-        return;
-      }
-      updateData.price = price * 100;
+    console.log("Received update request for course:", courseId);
+    console.log("Update data:", updateData);
+
+    if (!userId) {
+      res.status(401).json({ message: "User not authenticated" });
+      return;
     }
 
     const course = await Course.get(courseId);
@@ -125,6 +121,18 @@ export const updateCourse = async (
       return;
     }
 
+    if (updateData.price !== undefined) {
+      const price = Number(updateData.price);
+      if (isNaN(price) || price < 0) {
+        res.status(400).json({
+          message: "Invalid price format",
+          error: "Price must be a non-negative number",
+        });
+        return;
+      }
+      updateData.price = price;
+    }
+
     if (updateData.thumbnail) {
       updateData.image = updateData.thumbnail;
       delete updateData.thumbnail;
@@ -132,6 +140,7 @@ export const updateCourse = async (
 
     if (updateData.sections) {
       try {
+        console.log("Processing sections data:", updateData.sections);
         const sectionsData =
           typeof updateData.sections === "string"
             ? JSON.parse(updateData.sections)
@@ -141,62 +150,52 @@ export const updateCourse = async (
           throw new Error("Sections must be an array");
         }
 
-        updateData.sections = sectionsData.map((section) => ({
+        updateData.sections = sectionsData.map((section: any) => ({
           ...section,
           sectionId: section.sectionId || uuidv4(),
           chapters: Array.isArray(section.chapters)
-            ? section.chapters.map(
-                (chapter: { chapterId: any; assignments: any[] }) => ({
-                  ...chapter,
-                  chapterId: chapter.chapterId || uuidv4(),
-                  assignments: Array.isArray(chapter.assignments)
-                    ? chapter.assignments.map((assignment) => ({
-                        ...assignment,
-                        assignmentId: assignment.assignmentId || uuidv4(),
-                        submissions: Array.isArray(assignment.submissions)
-                          ? assignment.submissions.map(
-                              (submission: { submissionId: any }) => ({
-                                ...submission,
-                                submissionId:
-                                  submission.submissionId || uuidv4(),
-                              })
-                            )
-                          : [],
-                      }))
-                    : [],
-                })
-              )
+            ? section.chapters.map((chapter: any) => ({
+                ...chapter,
+                chapterId: chapter.chapterId || uuidv4(),
+                assignments: Array.isArray(chapter.assignments)
+                  ? chapter.assignments
+                  : [],
+                quiz: chapter.quiz || null,
+                video: chapter.video || "",
+              }))
             : [],
         }));
+
+        console.log("Processed sections:", updateData.sections);
       } catch (error) {
+        console.error("Error processing sections data:", error);
         res.status(400).json({
           message: "Invalid sections data format",
-          error: "Please provide valid JSON for sections",
+          error: error instanceof Error ? error.message : "Unknown error",
         });
         return;
       }
     }
 
+    console.log("Updating course with data:", updateData);
     const updatedCourse = await Course.update(courseId, updateData);
 
-    if (!userId) {
-      res.status(400).json({ message: "User ID is required" });
-      return;
+    if (updateData.sections) {
+      const progressList = await UserCourseProgress.query("courseId")
+        .eq(courseId)
+        .using("CourseIdIndex")
+        .exec();
+
+      for (const progress of progressList) {
+        progress.sections = mergeSections(
+          progress.sections,
+          updateData.sections
+        );
+        progress.lastAccessedTimestamp = new Date().toISOString();
+        progress.overallProgress = calculateOverallProgress(progress.sections);
+        await progress.save();
+      }
     }
-    const progressList = await UserCourseProgress.query("courseId")
-      .eq(courseId)
-      .using("CourseIdIndex")
-      .exec();
-
-    for (const progress of progressList) {
-      progress.sections = mergeSections(progress.sections, updateData.sections);
-
-      progress.lastAccessedTimestamp = new Date().toISOString();
-      progress.overallProgress = calculateOverallProgress(progress.sections);
-
-      await progress.save();
-    }
-
 
     res.json({
       message: "Course updated successfully",
@@ -206,11 +205,11 @@ export const updateCourse = async (
     console.error("Error updating course:", error);
     res.status(500).json({
       message: "Failed to update course",
-      error: "An unexpected error occurred",
+      error: error instanceof Error ? error.message : "Unknown error",
+      stack: process.env.NODE_ENV === "development" ? error : undefined,
     });
   }
 };
-
 
 export const archiveCourse = async (
   req: Request,
@@ -240,7 +239,7 @@ export const archiveCourse = async (
   } catch (error) {
     res.status(500).json({ message: "Error archiving course", error });
   }
-}
+};
 
 export const deleteCourse = async (
   req: Request,
@@ -271,7 +270,10 @@ export const deleteCourse = async (
   }
 };
 
-export const unarchiveCourse = async (req: Request, res: Response): Promise<void> => {
+export const unarchiveCourse = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   const { courseId } = req.params;
   const { userId } = getAuth(req);
 
@@ -296,7 +298,7 @@ export const unarchiveCourse = async (req: Request, res: Response): Promise<void
   } catch (error) {
     res.status(500).json({ message: "Error unarchiving course", error });
   }
-}
+};
 
 export const getUploadVideoUrl = async (
   req: Request,
@@ -345,9 +347,9 @@ export const getUploadImageUrl = async (
 
   try {
     const uniqueId = uuidv4();
-    
+
     const s3Key = `images/${uniqueId}/${fileName}`;
-    
+
     const s3Params = {
       Bucket: process.env.S3_BUCKET_NAME || "",
       Key: s3Key,
@@ -356,7 +358,7 @@ export const getUploadImageUrl = async (
     };
 
     const uploadUrl = s3.getSignedUrl("putObject", s3Params);
-    
+
     const imageUrl = `${process.env.CLOUDFRONT_DOMAIN}/images/${uniqueId}/${fileName}`;
 
     res.json({
@@ -401,9 +403,9 @@ export const createAssignment = async (
     }
 
     if (course.teacherId !== userId) {
-      res
-        .status(403)
-        .json({ message: "Not authorized to create assignment for this course" });
+      res.status(403).json({
+        message: "Not authorized to create assignment for this course",
+      });
       return;
     }
 
@@ -479,7 +481,10 @@ export const getAssignment = async (
       return;
     }
 
-    res.json({ message: "Assignment retrieved successfully", data: assignment });
+    res.json({
+      message: "Assignment retrieved successfully",
+      data: assignment,
+    });
   } catch (error) {
     res.status(500).json({ message: "Error retrieving assignment", error });
   }
@@ -519,11 +524,14 @@ export const getAssignments = async (
       return;
     }
 
-    res.json({ message: "Assignments retrieved successfully", data: chapter.assignments });
+    res.json({
+      message: "Assignments retrieved successfully",
+      data: chapter.assignments,
+    });
   } catch (error) {
     res.status(500).json({ message: "Error retrieving assignments", error });
   }
-}
+};
 
 export const deleteAssignment = async (
   req: Request,
@@ -540,9 +548,9 @@ export const deleteAssignment = async (
     }
 
     if (course.teacherId !== userId) {
-      res
-        .status(403)
-        .json({ message: "Not authorized to delete assignments for this course" });
+      res.status(403).json({
+        message: "Not authorized to delete assignments for this course",
+      });
       return;
     }
 
@@ -577,7 +585,7 @@ export const deleteAssignment = async (
   } catch (error) {
     res.status(500).json({ message: "Error deleting assignment", error });
   }
-}
+};
 
 export const updateAssignment = async (
   req: Request,
@@ -595,9 +603,9 @@ export const updateAssignment = async (
     }
 
     if (course.teacherId !== userId) {
-      res
-        .status(403)
-        .json({ message: "Not authorized to update assignments for this course" });
+      res.status(403).json({
+        message: "Not authorized to update assignments for this course",
+      });
       return;
     }
 
@@ -647,7 +655,7 @@ export const updateAssignment = async (
   } catch (error) {
     res.status(500).json({ message: "Error updating assignment", error });
   }
-}
+};
 
 export const createSubmission = async (
   req: Request,
@@ -712,14 +720,14 @@ export const createSubmission = async (
 
     try {
       const today = new Date().toISOString().split("T")[0];
-    
+
       let commit = await Commit.query("userId")
         .eq(userId)
         .where("date")
         .eq(today)
         .using("userId-date-index")
         .exec();
-    
+
       if (commit.length > 0) {
         await Commit.update(
           { commitId: commit[0].commitId },
@@ -736,15 +744,17 @@ export const createSubmission = async (
       }
     } catch (commitError) {
       console.error("Error handling commit:", commitError);
-    }       
+    }
 
     await course.save();
-    res.json({ message: "Assignment submitted successfully", data: submission });
+    res.json({
+      message: "Assignment submitted successfully",
+      data: submission,
+    });
   } catch (error) {
     res.status(500).json({ message: "Error submitting assignment", error });
   }
 };
-
 
 export const getUserCourseSubmissions = async (
   req: Request,
@@ -799,14 +809,14 @@ export const getUserCourseSubmissions = async (
   }
 };
 
-
 export const createComment = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   const { courseId, sectionId, chapterId } = req.params;
   const { userId } = getAuth(req);
-  const { id, username, content, upvotes, downvotes, createdAt, replies } = req.body;
+  const { id, username, content, upvotes, downvotes, createdAt, replies } =
+    req.body;
 
   try {
     const course = await Course.get(courseId);
@@ -847,13 +857,13 @@ export const createComment = async (
     }
 
     chapter.comments.push(newComment);
-  
+
     await course.save();
     res.json({ message: "Comment created successfully", data: newComment });
   } catch (error) {
     res.status(500).json({ message: "Error creating comment", error });
   }
-}
+};
 
 export const upvoteComment = async (
   req: Request,
@@ -909,7 +919,7 @@ export const upvoteComment = async (
   } catch (error) {
     res.status(500).json({ message: "Error upvoting comment", error });
   }
-}
+};
 
 export const downvoteComment = async (
   req: Request,
@@ -965,7 +975,7 @@ export const downvoteComment = async (
   } catch (error) {
     res.status(500).json({ message: "Error downvoting comment", error });
   }
-}
+};
 
 export const createReply = async (
   req: Request,
@@ -1025,7 +1035,7 @@ export const createReply = async (
   } catch (error) {
     res.status(500).json({ message: "Error creating reply", error });
   }
-}
+};
 
 export const getComments = async (
   req: Request,
@@ -1061,11 +1071,14 @@ export const getComments = async (
       return;
     }
 
-    res.json({ message: "Comments retrieved successfully", data: chapter.comments });
+    res.json({
+      message: "Comments retrieved successfully",
+      data: chapter.comments,
+    });
   } catch (error) {
     res.status(500).json({ message: "Error retrieving comments", error });
   }
-}
+};
 
 export const likeChapter = async (
   req: Request,
@@ -1107,7 +1120,7 @@ export const likeChapter = async (
   } catch (error) {
     res.status(500).json({ message: "Error liking chapter", error });
   }
-}
+};
 
 export const dislikeChapter = async (
   req: Request,
@@ -1141,7 +1154,7 @@ export const dislikeChapter = async (
     if (!chapter.dislikes) {
       chapter.dislikes = 0;
     }
-    
+
     chapter.dislikes += 1;
 
     await course.save();
@@ -1149,4 +1162,4 @@ export const dislikeChapter = async (
   } catch (error) {
     res.status(500).json({ message: "Error disliking chapter", error });
   }
-}
+};

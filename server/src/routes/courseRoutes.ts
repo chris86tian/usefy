@@ -34,32 +34,95 @@ router.get("/", listCourses);
 router.post("/", requireAuth(), createCourse);
 
 router.get("/:courseId", getCourse);
-router.put("/:courseId", requireAuth(), upload.single("image"), updateCourse);
+router.put("/:courseId", requireAuth(), upload.none(), updateCourse);
 router.put("/:courseId/archive", requireAuth(), archiveCourse);
 router.put("/:courseId/unarchive", requireAuth(), unarchiveCourse);
 router.delete("/:courseId", requireAuth(), deleteCourse);
 
-router.post("/:courseId/sections/:sectionId/chapters/:chapterId/get-upload-url", requireAuth(), getUploadVideoUrl);
+router.post(
+  "/:courseId/sections/:sectionId/chapters/:chapterId/get-upload-url",
+  requireAuth(),
+  getUploadVideoUrl
+);
 
-router.post("/:courseId/get-upload-image-url", requireAuth(), getUploadImageUrl);
+router.post(
+  "/:courseId/get-upload-image-url",
+  requireAuth(),
+  getUploadImageUrl
+);
 
-router.get("/:courseId/sections/:sectionId/chapters/:chapterId/assignments/:assignmentId", getAssignment); // requireAuth(),
-router.post("/:courseId/sections/:sectionId/chapters/:chapterId/assignments", requireAuth(), createAssignment);
-router.get("/:courseId/sections/:sectionId/chapters/:chapterId/assignments", requireAuth(), getAssignments);
-router.delete("/:courseId/sections/:sectionId/chapters/:chapterId/assignments/:assignmentId", requireAuth(), deleteAssignment);
-router.put("/:courseId/sections/:sectionId/chapters/:chapterId/assignments/:assignmentId", requireAuth(), updateAssignment);
+router.get(
+  "/:courseId/sections/:sectionId/chapters/:chapterId/assignments/:assignmentId",
+  getAssignment
+); // requireAuth(),
+router.post(
+  "/:courseId/sections/:sectionId/chapters/:chapterId/assignments",
+  requireAuth(),
+  createAssignment
+);
+router.get(
+  "/:courseId/sections/:sectionId/chapters/:chapterId/assignments",
+  requireAuth(),
+  getAssignments
+);
+router.delete(
+  "/:courseId/sections/:sectionId/chapters/:chapterId/assignments/:assignmentId",
+  requireAuth(),
+  deleteAssignment
+);
+router.put(
+  "/:courseId/sections/:sectionId/chapters/:chapterId/assignments/:assignmentId",
+  requireAuth(),
+  updateAssignment
+);
 
-router.post("/:courseId/sections/:sectionId/chapters/:chapterId/assignments/:assignmentId/submit", requireAuth(), createSubmission);
+router.post(
+  "/:courseId/sections/:sectionId/chapters/:chapterId/assignments/:assignmentId/submit",
+  requireAuth(),
+  createSubmission
+);
 
-router.post("/:courseId/sections/:sectionId/chapters/:chapterId/comments", requireAuth(), createComment);
-router.post("/:courseId/sections/:sectionId/chapters/:chapterId/comments/:commentId/upvote", requireAuth(), upvoteComment);
-router.post("/:courseId/sections/:sectionId/chapters/:chapterId/comments/:commentId/downvote", requireAuth(), downvoteComment);
-router.get("/:courseId/sections/:sectionId/chapters/:chapterId/comments", requireAuth(), getComments);
-router.post("/:courseId/sections/:sectionId/chapters/:chapterId/comments/:commentId/replies", requireAuth(), createReply);
+router.post(
+  "/:courseId/sections/:sectionId/chapters/:chapterId/comments",
+  requireAuth(),
+  createComment
+);
+router.post(
+  "/:courseId/sections/:sectionId/chapters/:chapterId/comments/:commentId/upvote",
+  requireAuth(),
+  upvoteComment
+);
+router.post(
+  "/:courseId/sections/:sectionId/chapters/:chapterId/comments/:commentId/downvote",
+  requireAuth(),
+  downvoteComment
+);
+router.get(
+  "/:courseId/sections/:sectionId/chapters/:chapterId/comments",
+  requireAuth(),
+  getComments
+);
+router.post(
+  "/:courseId/sections/:sectionId/chapters/:chapterId/comments/:commentId/replies",
+  requireAuth(),
+  createReply
+);
 
-router.post("/:courseId/sections/:sectionId/chapters/:chapterId/like", requireAuth(), likeChapter);
-router.post("/:courseId/sections/:sectionId/chapters/:chapterId/dislike", requireAuth(), dislikeChapter);
+router.post(
+  "/:courseId/sections/:sectionId/chapters/:chapterId/like",
+  requireAuth(),
+  likeChapter
+);
+router.post(
+  "/:courseId/sections/:sectionId/chapters/:chapterId/dislike",
+  requireAuth(),
+  dislikeChapter
+);
 
-router.get("/:courseId/submissions/:userId", requireAuth(), getUserCourseSubmissions);
+router.get(
+  "/:courseId/submissions/:userId",
+  requireAuth(),
+  getUserCourseSubmissions
+);
 
 export default router;

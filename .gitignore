@@ -6,6 +6,9 @@ client/.env.local
 client/.env.development
 client/.env.production
 server/.env
+server/.env.prod
+server/.env.dev
+server/.env.local
 
 client/.next/
 
@@ -16,4 +19,5 @@ Thumbs.db
 
 server/shared-local-instance.db
 server/dynamodb-local-metadata.json
+server/deployment
 shared-local-instance.db

@@ -4,8 +4,38 @@ provider:
   name: aws
   runtime: nodejs18.x
   region: us-east-1
+  stage: ${opt:stage, 'dev'}
+  iam:
+    role:
+      name: ${self:service}-${opt:stage, self:provider.stage}-role-${opt:region, self:provider.region}
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:*
+            - s3:*
+            - ses:*
+          Resource: "*"
   environment:
+    NODE_ENV: ${opt:stage, 'dev'}
     CLERK_SECRET_KEY: ${env:CLERK_SECRET_KEY}
+    CLERK_PUBLISHABLE_KEY: ${env:CLERK_PUBLISHABLE_KEY}
+    STRIPE_SECRET_KEY: ${env:STRIPE_SECRET_KEY}
+    S3_BUCKET_NAME: ${self:custom.s3BucketName.${opt:stage, 'dev'}}
+    CLOUDFRONT_DOMAIN: ${env:CLOUDFRONT_DOMAIN}
+    SMTP_USER: ${env:SMTP_USER}
+    SMTP_PASSWORD: ${env:SMTP_PASSWORD}
+    API_URL: ${env:API_URL}
+
+custom:
+  s3BucketName:
+    dev: expertize-bucket-dev
+    prod: expertize-bucket-prod
+  corsOrigins:
+    dev:
+      - http://localhost:3000
+    prod:
+      - https://usefy.com
+      - https://www.usefy.com
 
 functions:
   api:
@@ -15,21 +45,23 @@ functions:
           path: /
           method: any
           cors:
-            origins:
-              - "*" # Allows all origins (or set to "https://www.usefy.com" for more security)
+            origins: ${self:custom.corsOrigins.${opt:stage, 'dev'}}
             headers:
               - Content-Type
               - Authorization
               - X-Requested-With
               - Accept
+            allowCredentials: true
+            maxAge: 86400
       - http:
           path: "{proxy+}"
           method: any
           cors:
-            origins:
-              - "*" # Same as above
+            origins: ${self:custom.corsOrigins.${opt:stage, 'dev'}}
             headers:
               - Content-Type
               - Authorization
               - X-Requested-With
               - Accept
+            allowCredentials: true
+            maxAge: 86400

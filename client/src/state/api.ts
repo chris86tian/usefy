@@ -10,18 +10,25 @@ const customBaseQuery = async (
   extraOptions: any
 ) => {
   const baseQuery = fetchBaseQuery({
-    baseUrl: process.env.NEXT_ENV === "development" ? process.env.NEXT_PUBLIC_API_LOCAL_URL : process.env.NEXT_PUBLIC_API_URL,  
+    baseUrl: process.env.NEXT_PUBLIC_API_URL,
+    credentials: "include",
     prepareHeaders: async (headers) => {
       const token = await window.Clerk?.session?.getToken();
       if (token) {
         headers.set("Authorization", `Bearer ${token}`);
+      }
+      const body = (args as FetchArgs).body;
+      if (!body || !(body instanceof FormData)) {
+        headers.set("Content-Type", "application/json");
       }
       return headers;
     },
   });
 
   try {
+    console.log("Making request with args:", args);
     const result: any = await baseQuery(args, api, extraOptions);
+    console.log("Received response:", result);
 
     if (result.error) {
       const errorData = result.error.data;
@@ -51,6 +58,7 @@ const customBaseQuery = async (
 
     return result;
   } catch (error) {
+    console.error("API request error:", error);
     return { error: { status: "FETCH_ERROR", error } };
   }
 };
@@ -142,11 +150,23 @@ export const api = createApi({
       Course,
       { courseId: string; formData: FormData }
     >({
-      query: ({ courseId, formData }) => ({
-        url: `courses/${courseId}`,
-        method: "PUT",
-        body: formData,
-      }),
+      query: ({ courseId, formData }) => {
+        console.log("Preparing update course request:", { courseId });
+        console.log("FormData contents:");
+        for (const [key, value] of formData.entries()) {
+          console.log(
+            `${key}:`,
+            key === "sections" ? JSON.parse(value as string) : value
+          );
+        }
+
+        return {
+          url: `courses/${courseId}`,
+          method: "PUT",
+          body: formData,
+          formData: true,
+        };
+      },
       invalidatesTags: (result, error, { courseId }) => [
         { type: "Courses", id: courseId },
       ],
@@ -214,7 +234,12 @@ export const api = createApi({
     */
     createAssignment: build.mutation<
       { message: string },
-      { courseId: string; sectionId: string; chapterId: string; assignment: Assignment }
+      {
+        courseId: string;
+        sectionId: string;
+        chapterId: string;
+        assignment: Assignment;
+      }
     >({
       query: ({ courseId, sectionId, chapterId, assignment }) => ({
         url: `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/assignments`,
@@ -223,27 +248,63 @@ export const api = createApi({
       }),
     }),
 
-    getAssignments: build.query<Assignment[], { courseId: string; sectionId: string; chapterId: string }>({
-      query: ({ courseId, sectionId, chapterId }) => `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/assignments`,
+    getAssignments: build.query<
+      Assignment[],
+      { courseId: string; sectionId: string; chapterId: string }
+    >({
+      query: ({ courseId, sectionId, chapterId }) =>
+        `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/assignments`,
     }),
 
-    deleteAssignment: build.mutation<{ message: string }, { courseId: string; sectionId: string; chapterId: string; assignmentId: string }>({
+    deleteAssignment: build.mutation<
+      { message: string },
+      {
+        courseId: string;
+        sectionId: string;
+        chapterId: string;
+        assignmentId: string;
+      }
+    >({
       query: ({ courseId, sectionId, chapterId, assignmentId }) => ({
         url: `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/assignments/${assignmentId}`,
         method: "DELETE",
       }),
     }),
 
-    updateAssignment: build.mutation<Assignment, { courseId: string; sectionId: string; chapterId: string; assignmentId: string; assignment: Assignment }>({
-      query: ({ courseId, sectionId, chapterId, assignmentId, assignment }) => ({
+    updateAssignment: build.mutation<
+      Assignment,
+      {
+        courseId: string;
+        sectionId: string;
+        chapterId: string;
+        assignmentId: string;
+        assignment: Assignment;
+      }
+    >({
+      query: ({
+        courseId,
+        sectionId,
+        chapterId,
+        assignmentId,
+        assignment,
+      }) => ({
         url: `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/assignments/${assignmentId}`,
         method: "PUT",
         body: assignment,
       }),
     }),
 
-    getAssignment: build.query<Assignment, { courseId: string; sectionId: string; chapterId: string; assignmentId: string }>({
-      query: ({ courseId, sectionId, chapterId, assignmentId }) => `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/assignments/${assignmentId}`,
+    getAssignment: build.query<
+      Assignment,
+      {
+        courseId: string;
+        sectionId: string;
+        chapterId: string;
+        assignmentId: string;
+      }
+    >({
+      query: ({ courseId, sectionId, chapterId, assignmentId }) =>
+        `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/assignments/${assignmentId}`,
     }),
     /*
     ===============
@@ -252,9 +313,21 @@ export const api = createApi({
     */
     createSubmission: build.mutation<
       { message: string },
-      { courseId: string; sectionId: string; chapterId: string; assignmentId: string; submission: Submission }
+      {
+        courseId: string;
+        sectionId: string;
+        chapterId: string;
+        assignmentId: string;
+        submission: Submission;
+      }
     >({
-      query: ({ courseId, sectionId, chapterId, assignmentId, submission }) => ({
+      query: ({
+        courseId,
+        sectionId,
+        chapterId,
+        assignmentId,
+        submission,
+      }) => ({
         url: `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/assignments/${assignmentId}/submit`,
         method: "POST",
         body: submission,
@@ -359,7 +432,13 @@ export const api = createApi({
 
     updateQuizProgress: build.mutation<
       ChapterProgress,
-      { userId: string; courseId: string; sectionId: string; chapterId: string; completed: boolean }
+      {
+        userId: string;
+        courseId: string;
+        sectionId: string;
+        chapterId: string;
+        completed: boolean;
+      }
     >({
       query: ({ userId, courseId, sectionId, chapterId, completed }) => ({
         url: `users/course-progress/${userId}/courses/${courseId}/quiz`,
@@ -368,8 +447,12 @@ export const api = createApi({
       }),
     }),
 
-    getUserCourseSubmissions: build.query<any[], { userId: string; courseId: string }>({
-      query: ({ userId, courseId }) => `courses/${courseId}/submissions/${userId}`,
+    getUserCourseSubmissions: build.query<
+      any[],
+      { userId: string; courseId: string }
+    >({
+      query: ({ userId, courseId }) =>
+        `courses/${courseId}/submissions/${userId}`,
     }),
 
     /*
@@ -388,7 +471,12 @@ export const api = createApi({
     */
     createComment: build.mutation<
       { message: string },
-      { courseId: string; sectionId: string; chapterId: string; comment: ChapterComment }
+      {
+        courseId: string;
+        sectionId: string;
+        chapterId: string;
+        comment: ChapterComment;
+      }
     >({
       query: ({ courseId, sectionId, chapterId, comment }) => ({
         url: `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/comments`,
@@ -399,7 +487,12 @@ export const api = createApi({
 
     upvoteComment: build.mutation<
       { message: string },
-      { courseId: string; sectionId: string; chapterId: string; commentId: string }
+      {
+        courseId: string;
+        sectionId: string;
+        chapterId: string;
+        commentId: string;
+      }
     >({
       query: ({ courseId, sectionId, chapterId, commentId }) => ({
         url: `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/comments/${commentId}/upvote`,
@@ -409,7 +502,12 @@ export const api = createApi({
 
     downvoteComment: build.mutation<
       { message: string },
-      { courseId: string; sectionId: string; chapterId: string; commentId: string }
+      {
+        courseId: string;
+        sectionId: string;
+        chapterId: string;
+        commentId: string;
+      }
     >({
       query: ({ courseId, sectionId, chapterId, commentId }) => ({
         url: `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/comments/${commentId}/downvote`,
@@ -419,7 +517,13 @@ export const api = createApi({
 
     createReply: build.mutation<
       { message: string },
-      { courseId: string; sectionId: string; chapterId: string; commentId: string; reply: Reply }
+      {
+        courseId: string;
+        sectionId: string;
+        chapterId: string;
+        commentId: string;
+        reply: Reply;
+      }
     >({
       query: ({ courseId, sectionId, chapterId, commentId, reply }) => ({
         url: `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/comments/${commentId}/replies`,
@@ -428,8 +532,12 @@ export const api = createApi({
       }),
     }),
 
-    getChapterComments: build.query<ChapterComment[], { courseId: string; sectionId: string; chapterId: string }>({
-      query: ({ courseId, sectionId, chapterId }) => `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/comments`,
+    getChapterComments: build.query<
+      ChapterComment[],
+      { courseId: string; sectionId: string; chapterId: string }
+    >({
+      query: ({ courseId, sectionId, chapterId }) =>
+        `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/comments`,
     }),
 
     /*

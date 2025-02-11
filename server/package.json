@@ -5,11 +5,13 @@
   "scripts": {
     "build": "rimraf dist && npx tsc",
     "start": "npm run build && node dist/index.js",
-    "dev": "npx tsc -w & nodemon --exec ts-node src/index.ts",
+    "dev": "env-cmd -f .env.dev concurrently \"npx tsc -w\" \"nodemon --exec ts-node src/index.ts\"",
+    "deploy:dev": "env-cmd -f .env.dev npm run build && serverless deploy --stage dev",
+    "deploy:prod": "env-cmd -f .env.prod npm run build && serverless deploy --stage prod",
     "deploy": "npm run build && serverless deploy",
     "remove": "serverless remove",
     "logs": "serverless logs -f api",
-    "offline": "serverless offline"
+    "offline": "env-cmd -f .env.dev serverless offline --httpPort 8001"
   },
   "keywords": [],
   "author": "",
@@ -48,6 +50,7 @@
     "@types/uuid": "^10.0.0",
     "concurrently": "^9.1.0",
     "cpx": "^1.5.0",
+    "env-cmd": "^10.1.0",
     "nodemon": "^3.1.9",
     "rimraf": "^5.0.10",
     "ts-node": "^10.9.2",
