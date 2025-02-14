@@ -6,11 +6,11 @@ export const getUser = async (req: Request, res: Response): Promise<void> => {
   const { userId } = req.params;
   try {
     const user = await clerkClient.users.getUser(userId);
-    res.json({ message: "User retrieved successfully", data: user });
+    res.json({ message: "User retrieved successfully!", data: user });
   } catch (error) {
     res.status(500).json({ message: "Error retrieving user", error });
   }
-}
+};
 
 export const updateUser = async (
   req: Request,
@@ -45,9 +45,12 @@ export const getUsers = async (req: Request, res: Response): Promise<void> => {
   } catch (error) {
     res.status(500).json({ message: "Error retrieving users", error });
   }
-}
+};
 
-export const getCourseUsers = async (req: Request, res: Response): Promise<void> => {
+export const getCourseUsers = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   const { courseId } = req.params;
   try {
     const course = await Course.get(courseId);
@@ -58,17 +61,27 @@ export const getCourseUsers = async (req: Request, res: Response): Promise<void>
 
     const courseUsers = await clerkClient.users.getUserList();
 
-    const courseUserIds = course.enrollments.map((enrollment: { userId: any; }) => enrollment.userId);
+    const courseUserIds = course.enrollments.map(
+      (enrollment: { userId: any }) => enrollment.userId
+    );
 
-    courseUsers.data = courseUsers.data.filter((user: any) => courseUserIds.includes(user.id));
+    courseUsers.data = courseUsers.data.filter((user: any) =>
+      courseUserIds.includes(user.id)
+    );
 
-    res.json({ message: "Course users retrieved successfully", data: Array.isArray(courseUsers.data) ? courseUsers.data : [] });
+    res.json({
+      message: "Course users retrieved successfully",
+      data: Array.isArray(courseUsers.data) ? courseUsers.data : [],
+    });
   } catch (error) {
     res.status(500).json({ message: "Error retrieving course users", error });
   }
-}
+};
 
-export const promoteUser = async (req: Request, res: Response): Promise<void> => {
+export const promoteUser = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   const { userId } = req.params;
   try {
     const user = await clerkClient.users.getUser(userId);
@@ -81,9 +94,12 @@ export const promoteUser = async (req: Request, res: Response): Promise<void> =>
   } catch (error) {
     res.status(500).json({ message: "Error promoting user", error });
   }
-}
+};
 
-export const demoteUser = async (req: Request, res: Response): Promise<void> => {
+export const demoteUser = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   const { userId } = req.params;
   try {
     const user = await clerkClient.users.getUser(userId);
@@ -96,9 +112,12 @@ export const demoteUser = async (req: Request, res: Response): Promise<void> => 
   } catch (error) {
     res.status(500).json({ message: "Error demoting user", error });
   }
-}
+};
 
-export const deleteUser = async (req: Request, res: Response): Promise<void> => {
+export const deleteUser = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   const { userId } = req.params;
   try {
     await clerkClient.users.deleteUser(userId);
@@ -106,4 +125,4 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
   } catch (error) {
     res.status(500).json({ message: "Error deleting user", error });
   }
-}
+};
