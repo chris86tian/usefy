@@ -1,6 +1,6 @@
-# GrowthHungry
+# Usefy
 
-GrowthHungry is a cutting-edge platform designed to empower individuals by enhancing their learning experiences, tracking progress, and fostering personal growth. This repository encapsulates the backend architecture and data flow for GrowthHungry, making it a one-stop solution for modern educational needs.
+Usefy is a cutting-edge platform designed to empower individuals by enhancing their learning experiences, tracking progress, and fostering personal growth. This repository encapsulates the backend architecture and data flow for Usefy, making it a one-stop solution for modern educational needs.
 
 ---
 
@@ -21,7 +21,7 @@ GrowthHungry is a cutting-edge platform designed to empower individuals by enhan
 
 ## Introduction
 
-GrowthHungry provides a seamless way to manage courses, track user progress, handle transactions, and deliver notifications. It enables users to:
+Usefy provides a seamless way to manage courses, track user progress, handle transactions, and deliver notifications. It enables users to:
 - Enroll in courses.
 - Monitor their learning journey with detailed progress tracking.
 - Manage financial transactions related to course enrollments.
@@ -53,7 +53,7 @@ GrowthHungry provides a seamless way to manage courses, track user progress, han
 
 ## Schema Diagrams  
 
-The following diagrams illustrate the key data models used in GrowthHungry:  
+The following diagrams illustrate the key data models used:  
 
 ### Course Schema  
 ![Course Schema](assets/course.png)  

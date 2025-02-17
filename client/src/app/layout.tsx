@@ -15,8 +15,8 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "GrowthHungry",
-  description: "GrowthHungry is an AI Virtual Learning Environment",
+  title: "Usefy",
+  description: "Usefy is an AI Virtual Learning Environment",
 };
 
 export default function RootLayout({

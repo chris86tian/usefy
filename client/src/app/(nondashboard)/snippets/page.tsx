@@ -50,7 +50,7 @@ function SnippetsPage() {
              from-blue-500/10 to-purple-500/10 text-sm text-gray-400 mb-6"
           >
             <BookOpen className="w-4 h-4" />
-            GrowthHungry Code Library
+            Usefy Code Library
           </motion.div>
           <motion.h1
             initial={{ opacity: 0, y: 20 }}

@@ -19,10 +19,10 @@ export async function POST(req: Request) {
       from: process.env.SMTP_USER,
       to: email,
       subject: "Course Enrollment Confirmation",
-      text: `Hi ${name},\n\nThank you for enrolling in the "${courseName}" course. Your transaction ID is ${transactionId || "Free Course"}. Enjoy learning!\n\nBest regards,\nGrowthHungry Team`,
+      text: `Hi ${name},\n\nThank you for enrolling in the "${courseName}" course. Your transaction ID is ${transactionId || "Free Course"}. Enjoy learning!\n\nBest regards,\Usefy Team`,
       html: `<p>Hi ${name},</p>
              <p>Thank you for enrolling in the <strong>${courseName}</strong> course. Your transaction ID is <strong>${transactionId || "Free Course"}</strong>. Enjoy learning!</p>
-             <p>Best regards,<br>GrowthHungry Team</p>`,
+             <p>Best regards,<br>Usefy Team</p>`,
     });
 
     return NextResponse.json({ message: "Email sent successfully", info });

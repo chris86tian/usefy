@@ -98,7 +98,7 @@ const Footer = () => {
           </div>
         </div>
         <div className="mt-12 pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-sm">&copy; {currentYear} GrowthHungry. All rights reserved.</p>
+          <p className="text-sm">&copy; {currentYear} Usefy. All rights reserved.</p>
           <div className="mt-4 md:mt-0 flex items-center space-x-4">
             <Link
               href="https://www.linkedin.com/in/arslankamchybekov/"
@@ -107,7 +107,7 @@ const Footer = () => {
               Arslan Kamchybekov
             </Link>
             <Link href="https://growthhungry.life" className="text-sm hover:text-white transition-colors">
-              GrowthHungry
+              Usefy
             </Link>
           </div>
         </div>
