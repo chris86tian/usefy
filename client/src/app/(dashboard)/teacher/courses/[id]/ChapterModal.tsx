@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
-import { X, Trash2, Brain } from "lucide-react";
+import { X, Trash2, Brain, BookOpen } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
@@ -25,6 +25,7 @@ const ChapterModal = () => {
 
   const [videoType, setVideoType] = useState<"file" | "link">("file");
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
 
   const methods = useForm<ChapterFormData>({
     resolver: zodResolver(chapterSchema),
@@ -44,6 +45,7 @@ const ChapterModal = () => {
       });
       setVideoType(typeof chapter.video === 'string' && chapter.video.startsWith("http") ? "link" : "file");
       setQuestions(chapter.quiz?.questions || []);
+      setAssignments(chapter.assignments || []);
     } else {
       methods.reset({
         title: "",
@@ -51,9 +53,11 @@ const ChapterModal = () => {
         video: "",
       });
       setQuestions([]);
+      setAssignments([]);
     }
   }, [chapter, methods]);
 
+  // Quiz operations
   const addQuestion = () => {
     setQuestions([
       ...questions,
@@ -93,6 +97,55 @@ const ChapterModal = () => {
       return updatedQuestions;
     });
   };  
+
+  // Assignments operations
+  const addAssignment = () => {
+    setAssignments([
+      ...assignments,
+      {
+        assignmentId: uuidv4(),
+        title: "",
+        description: "",
+        submissions: [],
+        hints: [""],
+      },
+    ]);
+  };
+
+  const removeAssignment = (index: number) => {
+    setAssignments(assignments.filter((_, i) => i !== index));
+  };
+
+  const updateAssignment = (index: number, field: keyof Assignment, value: string) => {
+    const updatedAssignments = [...assignments];
+    updatedAssignments[index] = {
+      ...updatedAssignments[index],
+      [field]: value,
+    };
+    setAssignments(updatedAssignments);
+  };
+
+  const addHint = (assignmentIndex: number) => {
+    const updatedAssignments = [...assignments];
+    updatedAssignments[assignmentIndex].hints?.push("");
+    setAssignments(updatedAssignments);
+  };
+
+  const removeHint = (assignmentIndex: number, hintIndex: number) => {
+    const updatedAssignments = [...assignments];
+    updatedAssignments[assignmentIndex].hints = updatedAssignments[assignmentIndex].hints?.filter(
+      (_, i) => i !== hintIndex
+    );
+    setAssignments(updatedAssignments);
+  };
+
+  const updateHint = (assignmentIndex: number, hintIndex: number, value: string) => {
+    const updatedAssignments = [...assignments];
+    if (updatedAssignments[assignmentIndex].hints) {
+      updatedAssignments[assignmentIndex].hints[hintIndex] = value;
+    }
+    setAssignments(updatedAssignments);
+  };
 
   const onClose = () => {
     dispatch(closeChapterModal());
@@ -300,6 +353,94 @@ const ChapterModal = () => {
                       />
                     </div>
                   ))}
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6">
+              <div className="flex items-center justify-between mb-4">
+                <FormLabel className="text-customgreys-dirtyGrey text-sm">
+                  Assignments
+                </FormLabel>
+                <Button
+                  type="button"
+                  onClick={addAssignment}
+                  className="bg-blue-500 hover:bg-blue-600"
+                >
+                  <BookOpen className="w-4 h-4 mr-2" />
+                  Add Assignment
+                </Button>
+              </div>
+
+              {assignments.map((assignment, assignmentIndex) => (
+                <div key={assignment.assignmentId} className="mb-6 p-4 rounded-lg bg-customgreys-darkGrey">
+                  <div className="flex items-center justify-between mb-2">
+                    <FormLabel className="text-customgreys-dirtyGrey text-sm">
+                      Assignment {assignmentIndex + 1}
+                    </FormLabel>
+                    <Button
+                      type="button"
+                      onClick={() => removeAssignment(assignmentIndex)}
+                      variant="destructive"
+                      size="sm"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+
+                  <Input
+                    value={assignment.title}
+                    onChange={(e) =>
+                      updateAssignment(assignmentIndex, "title", e.target.value)
+                    }
+                    placeholder="Assignment Title"
+                    className="mb-2"
+                  />
+
+                  <textarea
+                    value={assignment.description}
+                    onChange={(e) =>
+                      updateAssignment(assignmentIndex, "description", e.target.value)
+                    }
+                    placeholder="Assignment Description"
+                    className="w-full min-h-[100px] mb-4 p-2 bg-zinc-800 text-white rounded-sm"
+                  />
+
+                  <div className="mt-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <FormLabel className="text-customgreys-dirtyGrey text-sm">
+                        Hints
+                      </FormLabel>
+                      <Button
+                        type="button"
+                        onClick={() => addHint(assignmentIndex)}
+                        size="sm"
+                        variant="outline"
+                      >
+                        Add Hint
+                      </Button>
+                    </div>
+
+                    {assignment.hints?.map((hint, hintIndex) => (
+                      <div key={hintIndex} className="flex items-center gap-2 mb-2">
+                        <Input
+                          value={hint}
+                          onChange={(e) =>
+                            updateHint(assignmentIndex, hintIndex, e.target.value)
+                          }
+                          placeholder={`Hint ${hintIndex + 1}`}
+                        />
+                        <Button
+                          type="button"
+                          onClick={() => removeHint(assignmentIndex, hintIndex)}
+                          variant="destructive"
+                          size="sm"
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>

@@ -4,13 +4,15 @@ import { User } from "@clerk/nextjs/server";
 import { Clerk } from "@clerk/clerk-js";
 import { toast } from "sonner";
 
+const server_url = process.env.NEXT_ENV === "production" ? process.env.NEXT_PUBLIC_API_URL : process.env.NEXT_PUBLIC_API_LOCAL_URL;
+
 const customBaseQuery = async (
   args: string | FetchArgs,
   api: BaseQueryApi,
   extraOptions: any
 ) => {
   const baseQuery = fetchBaseQuery({
-    baseUrl: process.env.NEXT_PUBLIC_API_URL,
+    baseUrl: server_url,
     credentials: "include",
     prepareHeaders: async (headers) => {
       const token = await window.Clerk?.session?.getToken();
@@ -26,9 +28,7 @@ const customBaseQuery = async (
   });
 
   try {
-    console.log("Making request with args:", args);
     const result: any = await baseQuery(args, api, extraOptions);
-    console.log("Received response:", result);
 
     if (result.error) {
       const errorData = result.error.data;

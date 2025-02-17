@@ -60,8 +60,7 @@ const CourseEditor = () => {
       });
 
       const data = await response.json();
-
-      console.log("<<<<<<<>>>>>>> data", data);
+      console.log("Generate course response:", data);
 
       if (data.error) {
         toast.error(data.error);
@@ -76,7 +75,6 @@ const CourseEditor = () => {
         methods.setValue("courseDescription", courseDescription);
       }
 
-      // Merge new sections with existing sections
       const updatedSections = [...sections];
 
       newSections.forEach((newSection: Section) => {
@@ -85,12 +83,11 @@ const CourseEditor = () => {
         );
 
         if (existingSectionIndex !== -1) {
-          // Merge chapters into the existing section
           const existingSection = updatedSections[existingSectionIndex];
           const mergedChapters = newSection.chapters.map(
             (newChapter: Chapter) => {
               const existingChapter = existingSection.chapters.find(
-                (chapter) => chapter.title === newChapter.title
+                (chapter: Chapter) => chapter.title === newChapter.title
               );
 
               return existingChapter
@@ -99,6 +96,7 @@ const CourseEditor = () => {
                     content: newChapter.content || existingChapter.content,
                     video: newChapter.video || existingChapter.video,
                     quiz: newChapter.quiz || existingChapter.quiz,
+                    assignments: newChapter.assignments || existingChapter.assignments,
                   }
                 : {
                     ...newChapter,
@@ -112,7 +110,6 @@ const CourseEditor = () => {
             chapters: [...existingSection.chapters, ...mergedChapters],
           };
         } else {
-          // Add a new section with unique IDs for sections and chapters
           updatedSections.push({
             ...newSection,
             sectionId: uuid(),

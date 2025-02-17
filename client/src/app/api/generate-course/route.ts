@@ -11,29 +11,6 @@ interface TranscriptSegment {
   duration: number;
 }
 
-interface Section {
-  sectionId: string;
-  sectionTitle: string;
-  sectionDescription: string;
-  chapters: Chapter[];
-}
-
-interface Chapter {
-  chapterId: string;
-  title: string;
-  content: string;
-  type: string;
-  video: string;
-  quiz: {
-    questions: {
-      question: string;
-      difficulty: string;
-      options: string[];
-      correctAnswer: number;
-    }[];
-  };
-}
-
 async function fetchCaptionsAndTranscript(videoId: string) {
   try {
     const videoResponse = await fetch(
@@ -235,7 +212,16 @@ export async function POST(request: Request) {
                           "correctAnswer": 0
                         }
                       ]
-                    }
+                    },
+                    "assignments": [
+                      {
+                        "assignmentId": "a1",
+                        "title": "string",
+                        "description": "string",
+                        "submissions": [],
+                        "hints": ["string"],
+                      }
+                    ]
                   }
                 ]
               }
@@ -296,6 +282,8 @@ export async function POST(request: Request) {
         timestampIndex++;
       });
     });
+
+    console.log("📚 Generated course structure ROUTE:", courseStructure);
 
     return NextResponse.json(courseStructure);
   } catch (error) {
