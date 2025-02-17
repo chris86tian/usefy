@@ -1,7 +1,7 @@
 {
-  "/Users/arslankamchybekov/Desktop/VSCode Projects/expertize/server/serverless.yml": {
+  "/Users/bakytdzhumabaev/gh_lms/ghai-lms/server/serverless.yml": {
     "versionFramework": "4.6.2",
-    "servicePath": "/Users/arslankamchybekov/Desktop/VSCode Projects/expertize/server/serverless.yml",
+    "servicePath": "/Users/bakytdzhumabaev/gh_lms/ghai-lms/server/serverless.yml",
     "serviceConfigFileName": "serverless.yml",
     "service": {
       "service": "growthhungry-service",
@@ -9,10 +9,34 @@
         "name": "aws",
         "runtime": "nodejs18.x",
         "region": "us-east-1",
-        "environment": {
-          "CLERK_SECRET_KEY": "<REDACTED>"
+        "stage": "prod",
+        "iam": {
+          "role": {
+            "name": "growthhungry-service-prod-role-us-east-1",
+            "statements": [
+              {
+                "Effect": "Allow",
+                "Action": [
+                  "dynamodb:*",
+                  "s3:*",
+                  "ses:*"
+                ],
+                "Resource": "*"
+              }
+            ]
+          }
         },
-        "stage": "dev",
+        "environment": {
+          "NODE_ENV": "prod",
+          "CLERK_SECRET_KEY": "<REDACTED>",
+          "CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsudXNlZnkuY29tJA",
+          "STRIPE_SECRET_KEY": "<REDACTED>",
+          "S3_BUCKET_NAME": "expertize-bucket-prod",
+          "CLOUDFRONT_DOMAIN": "https://d2d2uxovkp6xho.cloudfront.net",
+          "SMTP_USER": "arslankamcybekov7@gmail.com",
+          "SMTP_PASSWORD": "<REDACTED>",
+          "API_URL": "https://api.usefy.com"
+        },
         "versionFunctions": true,
         "compiledCloudFormationTemplate": {
           "AWSTemplateFormatVersion": "2010-09-09",
@@ -21,7 +45,7 @@
             "ApiLogGroup": {
               "Type": "AWS::Logs::LogGroup",
               "Properties": {
-                "LogGroupName": "/aws/lambda/growthhungry-service-dev-api"
+                "LogGroupName": "/aws/lambda/growthhungry-service-prod-api"
               }
             },
             "IamRoleLambdaExecution": {
@@ -50,7 +74,7 @@
                         "-",
                         [
                           "growthhungry-service",
-                          "dev",
+                          "prod",
                           "lambda"
                         ]
                       ]
@@ -67,7 +91,7 @@
                           ],
                           "Resource": [
                             {
-                              "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/growthhungry-service-dev*:*"
+                              "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/growthhungry-service-prod*:*"
                             }
                           ]
                         },
@@ -78,28 +102,25 @@
                           ],
                           "Resource": [
                             {
-                              "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/growthhungry-service-dev*:*:*"
+                              "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/growthhungry-service-prod*:*:*"
                             }
                           ]
+                        },
+                        {
+                          "Effect": "Allow",
+                          "Action": [
+                            "dynamodb:*",
+                            "s3:*",
+                            "ses:*"
+                          ],
+                          "Resource": "*"
                         }
                       ]
                     }
                   }
                 ],
                 "Path": "/",
-                "RoleName": {
-                  "Fn::Join": [
-                    "-",
-                    [
-                      "growthhungry-service",
-                      "dev",
-                      {
-                        "Ref": "AWS::Region"
-                      },
-                      "lambdaRole"
-                    ]
-                  ]
-                }
+                "RoleName": "growthhungry-service-prod-role-us-east-1"
               }
             },
             "ApiLambdaFunction": {
@@ -107,16 +128,24 @@
               "Properties": {
                 "Code": {
                   "S3Bucket": "serverless-framework-deployments-us-east-1-982ed21f-b716",
-                  "S3Key": "serverless/growthhungry-service/dev/1738893251238-2025-02-07T01:54:11.238Z/growthhungry-service.zip"
+                  "S3Key": "serverless/growthhungry-service/prod/1739264248842-2025-02-11T08:57:28.842Z/growthhungry-service.zip"
                 },
                 "Handler": "dist/index.handler",
                 "Runtime": "nodejs18.x",
-                "FunctionName": "growthhungry-service-dev-api",
+                "FunctionName": "growthhungry-service-prod-api",
                 "MemorySize": 1024,
                 "Timeout": 6,
                 "Environment": {
                   "Variables": {
-                    "CLERK_SECRET_KEY": "<REDACTED>"
+                    "NODE_ENV": "prod",
+                    "CLERK_SECRET_KEY": "<REDACTED>",
+                    "CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsudXNlZnkuY29tJA",
+                    "STRIPE_SECRET_KEY": "<REDACTED>",
+                    "S3_BUCKET_NAME": "expertize-bucket-prod",
+                    "CLOUDFRONT_DOMAIN": "https://d2d2uxovkp6xho.cloudfront.net",
+                    "SMTP_USER": "arslankamcybekov7@gmail.com",
+                    "SMTP_PASSWORD": "<REDACTED>",
+                    "API_URL": "https://api.usefy.com"
                   }
                 },
                 "Role": {
@@ -130,20 +159,20 @@
                 "ApiLogGroup"
               ]
             },
-            "ApiLambdaVersion2N9VjpxAHvLv54BbqwJbFH221sGzitiA4LRp2StQgk": {
+            "ApiLambdaVersionLGcHxIAbuh4bYlUWPn0cfwBFAkPERbzkI0CYBivyo": {
               "Type": "AWS::Lambda::Version",
               "DeletionPolicy": "Retain",
               "Properties": {
                 "FunctionName": {
                   "Ref": "ApiLambdaFunction"
                 },
-                "CodeSha256": "KXPf4f6DVJrCENUm4dd/c8+BxGkksxvzV+B78FfEDGk="
+                "CodeSha256": "8ofWIAdpu+JCNV/gyaEhT2nRressZKVRfLmpdpAayGk="
               }
             },
             "ApiGatewayRestApi": {
               "Type": "AWS::ApiGateway::RestApi",
               "Properties": {
-                "Name": "dev-growthhungry-service",
+                "Name": "prod-growthhungry-service",
                 "EndpointConfiguration": {
                   "Types": [
                     "EDGE"
@@ -178,7 +207,9 @@
                     "ResponseParameters": {
                       "method.response.header.Access-Control-Allow-Origin": true,
                       "method.response.header.Access-Control-Allow-Headers": true,
-                      "method.response.header.Access-Control-Allow-Methods": true
+                      "method.response.header.Access-Control-Allow-Methods": true,
+                      "method.response.header.Access-Control-Allow-Credentials": "<REDACTED>",
+                      "method.response.header.Access-Control-Max-Age": true
                     },
                     "ResponseModels": {}
                   }
@@ -194,12 +225,14 @@
                     {
                       "StatusCode": "200",
                       "ResponseParameters": {
-                        "method.response.header.Access-Control-Allow-Origin": "'*'",
+                        "method.response.header.Access-Control-Allow-Origin": "'https://usefy.com'",
                         "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization,X-Requested-With,Accept'",
-                        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,DELETE,GET,HEAD,PATCH,POST,PUT'"
+                        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,DELETE,GET,HEAD,PATCH,POST,PUT'",
+                        "method.response.header.Access-Control-Allow-Credentials": "<REDACTED>",
+                        "method.response.header.Access-Control-Max-Age": "'86400'"
                       },
                       "ResponseTemplates": {
-                        "application/json": "#set($origin = $input.params(\"Origin\"))\n#if($origin == \"\") #set($origin = $input.params(\"origin\")) #end\n#if($origin.matches(\".+\")) #set($context.responseOverride.header.Access-Control-Allow-Origin = $origin) #end"
+                        "application/json": "#set($origin = $input.params(\"Origin\"))\n#if($origin == \"\") #set($origin = $input.params(\"origin\")) #end\n#if($origin.matches(\"https://usefy[.]com\") || $origin.matches(\"https://www[.]usefy[.]com\")) #set($context.responseOverride.header.Access-Control-Allow-Origin = $origin) #end"
                       }
                     }
                   ]
@@ -226,7 +259,9 @@
                     "ResponseParameters": {
                       "method.response.header.Access-Control-Allow-Origin": true,
                       "method.response.header.Access-Control-Allow-Headers": true,
-                      "method.response.header.Access-Control-Allow-Methods": true
+                      "method.response.header.Access-Control-Allow-Methods": true,
+                      "method.response.header.Access-Control-Allow-Credentials": "<REDACTED>",
+                      "method.response.header.Access-Control-Max-Age": true
                     },
                     "ResponseModels": {}
                   }
@@ -242,12 +277,14 @@
                     {
                       "StatusCode": "200",
                       "ResponseParameters": {
-                        "method.response.header.Access-Control-Allow-Origin": "'*'",
+                        "method.response.header.Access-Control-Allow-Origin": "'https://usefy.com'",
                         "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization,X-Requested-With,Accept'",
-                        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,DELETE,GET,HEAD,PATCH,POST,PUT'"
+                        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,DELETE,GET,HEAD,PATCH,POST,PUT'",
+                        "method.response.header.Access-Control-Allow-Credentials": "<REDACTED>",
+                        "method.response.header.Access-Control-Max-Age": "'86400'"
                       },
                       "ResponseTemplates": {
-                        "application/json": "#set($origin = $input.params(\"Origin\"))\n#if($origin == \"\") #set($origin = $input.params(\"origin\")) #end\n#if($origin.matches(\".+\")) #set($context.responseOverride.header.Access-Control-Allow-Origin = $origin) #end"
+                        "application/json": "#set($origin = $input.params(\"Origin\"))\n#if($origin == \"\") #set($origin = $input.params(\"origin\")) #end\n#if($origin.matches(\"https://usefy[.]com\") || $origin.matches(\"https://www[.]usefy[.]com\")) #set($context.responseOverride.header.Access-Control-Allow-Origin = $origin) #end"
                       }
                     }
                   ]
@@ -355,13 +392,13 @@
                 "ApiLambdaPermissionApiGateway"
               ]
             },
-            "ApiGatewayDeployment1738893243536": {
+            "ApiGatewayDeployment1739264236326": {
               "Type": "AWS::ApiGateway::Deployment",
               "Properties": {
                 "RestApiId": {
                   "Ref": "ApiGatewayRestApi"
                 },
-                "StageName": "dev"
+                "StageName": "prod"
               },
               "DependsOn": [
                 "ApiGatewayMethodOptions",
@@ -412,16 +449,16 @@
             "ServerlessDeploymentBucketName": {
               "Value": "serverless-framework-deployments-us-east-1-982ed21f-b716",
               "Export": {
-                "Name": "sls-growthhungry-service-dev-ServerlessDeploymentBucketName"
+                "Name": "sls-growthhungry-service-prod-ServerlessDeploymentBucketName"
               }
             },
             "ApiLambdaFunctionQualifiedArn": {
               "Description": "Current Lambda function version",
               "Value": {
-                "Ref": "ApiLambdaVersion2N9VjpxAHvLv54BbqwJbFH221sGzitiA4LRp2StQgk"
+                "Ref": "ApiLambdaVersionLGcHxIAbuh4bYlUWPn0cfwBFAkPERbzkI0CYBivyo"
               },
               "Export": {
-                "Name": "sls-growthhungry-service-dev-ApiLambdaFunctionQualifiedArn"
+                "Name": "sls-growthhungry-service-prod-ApiLambdaFunctionQualifiedArn"
               }
             },
             "ServiceEndpoint": {
@@ -442,17 +479,32 @@
                     {
                       "Ref": "AWS::URLSuffix"
                     },
-                    "/dev"
+                    "/prod"
                   ]
                 ]
               },
               "Export": {
-                "Name": "sls-growthhungry-service-dev-ServiceEndpoint"
+                "Name": "sls-growthhungry-service-prod-ServiceEndpoint"
               }
             }
           }
         },
         "vpc": {}
+      },
+      "custom": {
+        "s3BucketName": {
+          "dev": "expertize-bucket-dev",
+          "prod": "expertize-bucket-prod"
+        },
+        "corsOrigins": {
+          "dev": [
+            "http://localhost:3000"
+          ],
+          "prod": [
+            "https://usefy.com",
+            "https://www.usefy.com"
+          ]
+        }
       },
       "functions": {
         "api": {
@@ -475,8 +527,10 @@
                   ],
                   "allowCredentials": "<REDACTED>",
                   "origins": [
-                    "*"
-                  ]
+                    "https://usefy.com",
+                    "https://www.usefy.com"
+                  ],
+                  "maxAge": 86400
                 },
                 "integration": "AWS_PROXY"
               }
@@ -498,20 +552,22 @@
                   ],
                   "allowCredentials": "<REDACTED>",
                   "origins": [
-                    "*"
-                  ]
+                    "https://usefy.com",
+                    "https://www.usefy.com"
+                  ],
+                  "maxAge": 86400
                 },
                 "integration": "AWS_PROXY"
               }
             }
           ],
-          "name": "growthhungry-service-dev-api",
+          "name": "growthhungry-service-prod-api",
           "package": {},
           "memory": 1024,
           "timeout": 6,
           "runtime": "nodejs18.x",
           "vpc": {},
-          "versionLogicalId": "ApiLambdaVersion2N9VjpxAHvLv54BbqwJbFH221sGzitiA4LRp2StQgk"
+          "versionLogicalId": "ApiLambdaVersionLGcHxIAbuh4bYlUWPn0cfwBFAkPERbzkI0CYBivyo"
         }
       }
     },
@@ -519,10 +575,34 @@
       "name": "aws",
       "runtime": "nodejs18.x",
       "region": "us-east-1",
-      "environment": {
-        "CLERK_SECRET_KEY": "<REDACTED>"
+      "stage": "prod",
+      "iam": {
+        "role": {
+          "name": "growthhungry-service-prod-role-us-east-1",
+          "statements": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "dynamodb:*",
+                "s3:*",
+                "ses:*"
+              ],
+              "Resource": "*"
+            }
+          ]
+        }
       },
-      "stage": "dev",
+      "environment": {
+        "NODE_ENV": "prod",
+        "CLERK_SECRET_KEY": "<REDACTED>",
+        "CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsudXNlZnkuY29tJA",
+        "STRIPE_SECRET_KEY": "<REDACTED>",
+        "S3_BUCKET_NAME": "expertize-bucket-prod",
+        "CLOUDFRONT_DOMAIN": "https://d2d2uxovkp6xho.cloudfront.net",
+        "SMTP_USER": "arslankamcybekov7@gmail.com",
+        "SMTP_PASSWORD": "<REDACTED>",
+        "API_URL": "https://api.usefy.com"
+      },
       "versionFunctions": true,
       "compiledCloudFormationTemplate": {
         "AWSTemplateFormatVersion": "2010-09-09",
@@ -531,7 +611,7 @@
           "ApiLogGroup": {
             "Type": "AWS::Logs::LogGroup",
             "Properties": {
-              "LogGroupName": "/aws/lambda/growthhungry-service-dev-api"
+              "LogGroupName": "/aws/lambda/growthhungry-service-prod-api"
             }
           },
           "IamRoleLambdaExecution": {
@@ -560,7 +640,7 @@
                       "-",
                       [
                         "growthhungry-service",
-                        "dev",
+                        "prod",
                         "lambda"
                       ]
                     ]
@@ -577,7 +657,7 @@
                         ],
                         "Resource": [
                           {
-                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/growthhungry-service-dev*:*"
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/growthhungry-service-prod*:*"
                           }
                         ]
                       },
@@ -588,28 +668,25 @@
                         ],
                         "Resource": [
                           {
-                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/growthhungry-service-dev*:*:*"
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/growthhungry-service-prod*:*:*"
                           }
                         ]
+                      },
+                      {
+                        "Effect": "Allow",
+                        "Action": [
+                          "dynamodb:*",
+                          "s3:*",
+                          "ses:*"
+                        ],
+                        "Resource": "*"
                       }
                     ]
                   }
                 }
               ],
               "Path": "/",
-              "RoleName": {
-                "Fn::Join": [
-                  "-",
-                  [
-                    "growthhungry-service",
-                    "dev",
-                    {
-                      "Ref": "AWS::Region"
-                    },
-                    "lambdaRole"
-                  ]
-                ]
-              }
+              "RoleName": "growthhungry-service-prod-role-us-east-1"
             }
           },
           "ApiLambdaFunction": {
@@ -617,16 +694,24 @@
             "Properties": {
               "Code": {
                 "S3Bucket": "serverless-framework-deployments-us-east-1-982ed21f-b716",
-                "S3Key": "serverless/growthhungry-service/dev/1738893251238-2025-02-07T01:54:11.238Z/growthhungry-service.zip"
+                "S3Key": "serverless/growthhungry-service/prod/1739264248842-2025-02-11T08:57:28.842Z/growthhungry-service.zip"
               },
               "Handler": "dist/index.handler",
               "Runtime": "nodejs18.x",
-              "FunctionName": "growthhungry-service-dev-api",
+              "FunctionName": "growthhungry-service-prod-api",
               "MemorySize": 1024,
               "Timeout": 6,
               "Environment": {
                 "Variables": {
-                  "CLERK_SECRET_KEY": "<REDACTED>"
+                  "NODE_ENV": "prod",
+                  "CLERK_SECRET_KEY": "<REDACTED>",
+                  "CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsudXNlZnkuY29tJA",
+                  "STRIPE_SECRET_KEY": "<REDACTED>",
+                  "S3_BUCKET_NAME": "expertize-bucket-prod",
+                  "CLOUDFRONT_DOMAIN": "https://d2d2uxovkp6xho.cloudfront.net",
+                  "SMTP_USER": "arslankamcybekov7@gmail.com",
+                  "SMTP_PASSWORD": "<REDACTED>",
+                  "API_URL": "https://api.usefy.com"
                 }
               },
               "Role": {
@@ -640,20 +725,20 @@
               "ApiLogGroup"
             ]
           },
-          "ApiLambdaVersion2N9VjpxAHvLv54BbqwJbFH221sGzitiA4LRp2StQgk": {
+          "ApiLambdaVersionLGcHxIAbuh4bYlUWPn0cfwBFAkPERbzkI0CYBivyo": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "ApiLambdaFunction"
               },
-              "CodeSha256": "KXPf4f6DVJrCENUm4dd/c8+BxGkksxvzV+B78FfEDGk="
+              "CodeSha256": "8ofWIAdpu+JCNV/gyaEhT2nRressZKVRfLmpdpAayGk="
             }
           },
           "ApiGatewayRestApi": {
             "Type": "AWS::ApiGateway::RestApi",
             "Properties": {
-              "Name": "dev-growthhungry-service",
+              "Name": "prod-growthhungry-service",
               "EndpointConfiguration": {
                 "Types": [
                   "EDGE"
@@ -688,7 +773,9 @@
                   "ResponseParameters": {
                     "method.response.header.Access-Control-Allow-Origin": true,
                     "method.response.header.Access-Control-Allow-Headers": true,
-                    "method.response.header.Access-Control-Allow-Methods": true
+                    "method.response.header.Access-Control-Allow-Methods": true,
+                    "method.response.header.Access-Control-Allow-Credentials": "<REDACTED>",
+                    "method.response.header.Access-Control-Max-Age": true
                   },
                   "ResponseModels": {}
                 }
@@ -704,12 +791,14 @@
                   {
                     "StatusCode": "200",
                     "ResponseParameters": {
-                      "method.response.header.Access-Control-Allow-Origin": "'*'",
+                      "method.response.header.Access-Control-Allow-Origin": "'https://usefy.com'",
                       "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization,X-Requested-With,Accept'",
-                      "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,DELETE,GET,HEAD,PATCH,POST,PUT'"
+                      "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,DELETE,GET,HEAD,PATCH,POST,PUT'",
+                      "method.response.header.Access-Control-Allow-Credentials": "<REDACTED>",
+                      "method.response.header.Access-Control-Max-Age": "'86400'"
                     },
                     "ResponseTemplates": {
-                      "application/json": "#set($origin = $input.params(\"Origin\"))\n#if($origin == \"\") #set($origin = $input.params(\"origin\")) #end\n#if($origin.matches(\".+\")) #set($context.responseOverride.header.Access-Control-Allow-Origin = $origin) #end"
+                      "application/json": "#set($origin = $input.params(\"Origin\"))\n#if($origin == \"\") #set($origin = $input.params(\"origin\")) #end\n#if($origin.matches(\"https://usefy[.]com\") || $origin.matches(\"https://www[.]usefy[.]com\")) #set($context.responseOverride.header.Access-Control-Allow-Origin = $origin) #end"
                     }
                   }
                 ]
@@ -736,7 +825,9 @@
                   "ResponseParameters": {
                     "method.response.header.Access-Control-Allow-Origin": true,
                     "method.response.header.Access-Control-Allow-Headers": true,
-                    "method.response.header.Access-Control-Allow-Methods": true
+                    "method.response.header.Access-Control-Allow-Methods": true,
+                    "method.response.header.Access-Control-Allow-Credentials": "<REDACTED>",
+                    "method.response.header.Access-Control-Max-Age": true
                   },
                   "ResponseModels": {}
                 }
@@ -752,12 +843,14 @@
                   {
                     "StatusCode": "200",
                     "ResponseParameters": {
-                      "method.response.header.Access-Control-Allow-Origin": "'*'",
+                      "method.response.header.Access-Control-Allow-Origin": "'https://usefy.com'",
                       "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization,X-Requested-With,Accept'",
-                      "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,DELETE,GET,HEAD,PATCH,POST,PUT'"
+                      "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,DELETE,GET,HEAD,PATCH,POST,PUT'",
+                      "method.response.header.Access-Control-Allow-Credentials": "<REDACTED>",
+                      "method.response.header.Access-Control-Max-Age": "'86400'"
                     },
                     "ResponseTemplates": {
-                      "application/json": "#set($origin = $input.params(\"Origin\"))\n#if($origin == \"\") #set($origin = $input.params(\"origin\")) #end\n#if($origin.matches(\".+\")) #set($context.responseOverride.header.Access-Control-Allow-Origin = $origin) #end"
+                      "application/json": "#set($origin = $input.params(\"Origin\"))\n#if($origin == \"\") #set($origin = $input.params(\"origin\")) #end\n#if($origin.matches(\"https://usefy[.]com\") || $origin.matches(\"https://www[.]usefy[.]com\")) #set($context.responseOverride.header.Access-Control-Allow-Origin = $origin) #end"
                     }
                   }
                 ]
@@ -865,13 +958,13 @@
               "ApiLambdaPermissionApiGateway"
             ]
           },
-          "ApiGatewayDeployment1738893243536": {
+          "ApiGatewayDeployment1739264236326": {
             "Type": "AWS::ApiGateway::Deployment",
             "Properties": {
               "RestApiId": {
                 "Ref": "ApiGatewayRestApi"
               },
-              "StageName": "dev"
+              "StageName": "prod"
             },
             "DependsOn": [
               "ApiGatewayMethodOptions",
@@ -922,16 +1015,16 @@
           "ServerlessDeploymentBucketName": {
             "Value": "serverless-framework-deployments-us-east-1-982ed21f-b716",
             "Export": {
-              "Name": "sls-growthhungry-service-dev-ServerlessDeploymentBucketName"
+              "Name": "sls-growthhungry-service-prod-ServerlessDeploymentBucketName"
             }
           },
           "ApiLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "ApiLambdaVersion2N9VjpxAHvLv54BbqwJbFH221sGzitiA4LRp2StQgk"
+              "Ref": "ApiLambdaVersionLGcHxIAbuh4bYlUWPn0cfwBFAkPERbzkI0CYBivyo"
             },
             "Export": {
-              "Name": "sls-growthhungry-service-dev-ApiLambdaFunctionQualifiedArn"
+              "Name": "sls-growthhungry-service-prod-ApiLambdaFunctionQualifiedArn"
             }
           },
           "ServiceEndpoint": {
@@ -952,12 +1045,12 @@
                   {
                     "Ref": "AWS::URLSuffix"
                   },
-                  "/dev"
+                  "/prod"
                 ]
               ]
             },
             "Export": {
-              "Name": "sls-growthhungry-service-dev-ServiceEndpoint"
+              "Name": "sls-growthhungry-service-prod-ServiceEndpoint"
             }
           }
         }
@@ -973,38 +1066,40 @@
       "serviceProvider": null,
       "instanceParameters": null
     },
-    "serviceRawFile": "service: growthhungry-service\n\nprovider:\n  name: aws\n  runtime: nodejs18.x\n  region: us-east-1\n  environment:\n    CLERK_SECRET_KEY: ${env:CLERK_SECRET_KEY}\n\nfunctions:\n  api:\n    handler: dist/index.handler\n    events:\n      - http:\n          path: /\n          method: any\n          cors:\n            origins:\n              - \"*\" # Allows all origins (or set to \"https://www.usefy.com\" for more security)\n            headers:\n              - Content-Type\n              - Authorization\n              - X-Requested-With\n              - Accept\n      - http:\n          path: \"{proxy+}\"\n          method: any\n          cors:\n            origins:\n              - \"*\" # Same as above\n            headers:\n              - Content-Type\n              - Authorization\n              - X-Requested-With\n              - Accept\n",
+    "serviceRawFile": "service: growthhungry-service\n\nprovider:\n  name: aws\n  runtime: nodejs18.x\n  region: us-east-1\n  stage: ${opt:stage, 'dev'}\n  iam:\n    role:\n      name: ${self:service}-${opt:stage, self:provider.stage}-role-${opt:region, self:provider.region}\n      statements:\n        - Effect: Allow\n          Action:\n            - dynamodb:*\n            - s3:*\n            - ses:*\n          Resource: \"*\"\n  environment:\n    NODE_ENV: ${opt:stage, 'dev'}\n    CLERK_SECRET_KEY: ${env:CLERK_SECRET_KEY}\n    CLERK_PUBLISHABLE_KEY: ${env:CLERK_PUBLISHABLE_KEY}\n    STRIPE_SECRET_KEY: ${env:STRIPE_SECRET_KEY}\n    S3_BUCKET_NAME: ${self:custom.s3BucketName.${opt:stage, 'dev'}}\n    CLOUDFRONT_DOMAIN: ${env:CLOUDFRONT_DOMAIN}\n    SMTP_USER: ${env:SMTP_USER}\n    SMTP_PASSWORD: ${env:SMTP_PASSWORD}\n    API_URL: ${env:API_URL}\n\ncustom:\n  s3BucketName:\n    dev: expertize-bucket-dev\n    prod: expertize-bucket-prod\n  corsOrigins:\n    dev:\n      - http://localhost:3000\n    prod:\n      - https://usefy.com\n      - https://www.usefy.com\n\nfunctions:\n  api:\n    handler: dist/index.handler\n    events:\n      - http:\n          path: /\n          method: any\n          cors:\n            origins: ${self:custom.corsOrigins.${opt:stage, 'dev'}}\n            headers:\n              - Content-Type\n              - Authorization\n              - X-Requested-With\n              - Accept\n            allowCredentials: true\n            maxAge: 86400\n      - http:\n          path: \"{proxy+}\"\n          method: any\n          cors:\n            origins: ${self:custom.corsOrigins.${opt:stage, 'dev'}}\n            headers:\n              - Content-Type\n              - Authorization\n              - X-Requested-With\n              - Accept\n            allowCredentials: true\n            maxAge: 86400\n",
     "command": [
       "deploy"
     ],
-    "options": {},
-    "orgId": "903be841-819b-4bd6-a468-363dab7cfe43",
-    "orgName": "arslanorg",
-    "userId": "grNhshnzFxfcF1lDC3",
-    "userName": "arslanorg",
+    "options": {
+      "stage": "prod"
+    },
+    "orgId": "c2b6d02d-aa3a-42d2-8959-207c0e4079d8",
+    "orgName": "lmlml",
+    "userId": "cZbvWHZ17TmZXZVR4Q",
+    "userName": "lmlml",
     "serviceProviderAwsAccountId": "692859913275",
-    "serviceProviderAwsCfStackName": "growthhungry-service-dev",
-    "serviceProviderAwsCfStackId": "arn:aws:cloudformation:us-east-1:692859913275:stack/growthhungry-service-dev/cdf15ae0-e4f2-11ef-9214-0e432dc06d33",
-    "serviceProviderAwsCfStackCreated": "2025-02-07T01:28:16.133Z",
-    "serviceProviderAwsCfStackUpdated": "2025-02-07T01:49:38.478Z",
-    "serviceProviderAwsCfStackStatus": "UPDATE_COMPLETE",
+    "serviceProviderAwsCfStackName": "growthhungry-service-prod",
+    "serviceProviderAwsCfStackId": "arn:aws:cloudformation:us-east-1:692859913275:stack/growthhungry-service-prod/2d2fdfa0-e84e-11ef-aab5-12544328f8df",
+    "serviceProviderAwsCfStackCreated": "2025-02-11T07:59:53.640Z",
+    "serviceProviderAwsCfStackUpdated": null,
+    "serviceProviderAwsCfStackStatus": "CREATE_COMPLETE",
     "serviceProviderAwsCfStackOutputs": [
       {
         "OutputKey": "ApiLambdaFunctionQualifiedArn",
-        "OutputValue": "arn:aws:lambda:us-east-1:692859913275:function:growthhungry-service-dev-api:11",
+        "OutputValue": "arn:aws:lambda:us-east-1:692859913275:function:growthhungry-service-prod-api:1",
         "Description": "Current Lambda function version",
-        "ExportName": "sls-growthhungry-service-dev-ApiLambdaFunctionQualifiedArn"
+        "ExportName": "sls-growthhungry-service-prod-ApiLambdaFunctionQualifiedArn"
       },
       {
         "OutputKey": "ServiceEndpoint",
-        "OutputValue": "https://oo9i2g3jc9.execute-api.us-east-1.amazonaws.com/dev",
+        "OutputValue": "https://khbciw4vke.execute-api.us-east-1.amazonaws.com/prod",
         "Description": "URL of the service endpoint",
-        "ExportName": "sls-growthhungry-service-dev-ServiceEndpoint"
+        "ExportName": "sls-growthhungry-service-prod-ServiceEndpoint"
       },
       {
         "OutputKey": "ServerlessDeploymentBucketName",
         "OutputValue": "serverless-framework-deployments-us-east-1-982ed21f-b716",
-        "ExportName": "sls-growthhungry-service-dev-ServerlessDeploymentBucketName"
+        "ExportName": "sls-growthhungry-service-prod-ServerlessDeploymentBucketName"
       }
     ],
     "compiledCloudFormationTemplate": {
@@ -1014,7 +1109,7 @@
         "ApiLogGroup": {
           "Type": "AWS::Logs::LogGroup",
           "Properties": {
-            "LogGroupName": "/aws/lambda/growthhungry-service-dev-api"
+            "LogGroupName": "/aws/lambda/growthhungry-service-prod-api"
           }
         },
         "IamRoleLambdaExecution": {
@@ -1043,7 +1138,7 @@
                     "-",
                     [
                       "growthhungry-service",
-                      "dev",
+                      "prod",
                       "lambda"
                     ]
                   ]
@@ -1060,7 +1155,7 @@
                       ],
                       "Resource": [
                         {
-                          "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/growthhungry-service-dev*:*"
+                          "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/growthhungry-service-prod*:*"
                         }
                       ]
                     },
@@ -1071,28 +1166,25 @@
                       ],
                       "Resource": [
                         {
-                          "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/growthhungry-service-dev*:*:*"
+                          "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/growthhungry-service-prod*:*:*"
                         }
                       ]
+                    },
+                    {
+                      "Effect": "Allow",
+                      "Action": [
+                        "dynamodb:*",
+                        "s3:*",
+                        "ses:*"
+                      ],
+                      "Resource": "*"
                     }
                   ]
                 }
               }
             ],
             "Path": "/",
-            "RoleName": {
-              "Fn::Join": [
-                "-",
-                [
-                  "growthhungry-service",
-                  "dev",
-                  {
-                    "Ref": "AWS::Region"
-                  },
-                  "lambdaRole"
-                ]
-              ]
-            }
+            "RoleName": "growthhungry-service-prod-role-us-east-1"
           }
         },
         "ApiLambdaFunction": {
@@ -1100,16 +1192,24 @@
           "Properties": {
             "Code": {
               "S3Bucket": "serverless-framework-deployments-us-east-1-982ed21f-b716",
-              "S3Key": "serverless/growthhungry-service/dev/1738893251238-2025-02-07T01:54:11.238Z/growthhungry-service.zip"
+              "S3Key": "serverless/growthhungry-service/prod/1739264248842-2025-02-11T08:57:28.842Z/growthhungry-service.zip"
             },
             "Handler": "dist/index.handler",
             "Runtime": "nodejs18.x",
-            "FunctionName": "growthhungry-service-dev-api",
+            "FunctionName": "growthhungry-service-prod-api",
             "MemorySize": 1024,
             "Timeout": 6,
             "Environment": {
               "Variables": {
-                "CLERK_SECRET_KEY": "<REDACTED>"
+                "NODE_ENV": "prod",
+                "CLERK_SECRET_KEY": "<REDACTED>",
+                "CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsudXNlZnkuY29tJA",
+                "STRIPE_SECRET_KEY": "<REDACTED>",
+                "S3_BUCKET_NAME": "expertize-bucket-prod",
+                "CLOUDFRONT_DOMAIN": "https://d2d2uxovkp6xho.cloudfront.net",
+                "SMTP_USER": "arslankamcybekov7@gmail.com",
+                "SMTP_PASSWORD": "<REDACTED>",
+                "API_URL": "https://api.usefy.com"
               }
             },
             "Role": {
@@ -1123,20 +1223,20 @@
             "ApiLogGroup"
           ]
         },
-        "ApiLambdaVersion2N9VjpxAHvLv54BbqwJbFH221sGzitiA4LRp2StQgk": {
+        "ApiLambdaVersionLGcHxIAbuh4bYlUWPn0cfwBFAkPERbzkI0CYBivyo": {
           "Type": "AWS::Lambda::Version",
           "DeletionPolicy": "Retain",
           "Properties": {
             "FunctionName": {
               "Ref": "ApiLambdaFunction"
             },
-            "CodeSha256": "KXPf4f6DVJrCENUm4dd/c8+BxGkksxvzV+B78FfEDGk="
+            "CodeSha256": "8ofWIAdpu+JCNV/gyaEhT2nRressZKVRfLmpdpAayGk="
           }
         },
         "ApiGatewayRestApi": {
           "Type": "AWS::ApiGateway::RestApi",
           "Properties": {
-            "Name": "dev-growthhungry-service",
+            "Name": "prod-growthhungry-service",
             "EndpointConfiguration": {
               "Types": [
                 "EDGE"
@@ -1171,7 +1271,9 @@
                 "ResponseParameters": {
                   "method.response.header.Access-Control-Allow-Origin": true,
                   "method.response.header.Access-Control-Allow-Headers": true,
-                  "method.response.header.Access-Control-Allow-Methods": true
+                  "method.response.header.Access-Control-Allow-Methods": true,
+                  "method.response.header.Access-Control-Allow-Credentials": "<REDACTED>",
+                  "method.response.header.Access-Control-Max-Age": true
                 },
                 "ResponseModels": {}
               }
@@ -1187,12 +1289,14 @@
                 {
                   "StatusCode": "200",
                   "ResponseParameters": {
-                    "method.response.header.Access-Control-Allow-Origin": "'*'",
+                    "method.response.header.Access-Control-Allow-Origin": "'https://usefy.com'",
                     "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization,X-Requested-With,Accept'",
-                    "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,DELETE,GET,HEAD,PATCH,POST,PUT'"
+                    "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,DELETE,GET,HEAD,PATCH,POST,PUT'",
+                    "method.response.header.Access-Control-Allow-Credentials": "<REDACTED>",
+                    "method.response.header.Access-Control-Max-Age": "'86400'"
                   },
                   "ResponseTemplates": {
-                    "application/json": "#set($origin = $input.params(\"Origin\"))\n#if($origin == \"\") #set($origin = $input.params(\"origin\")) #end\n#if($origin.matches(\".+\")) #set($context.responseOverride.header.Access-Control-Allow-Origin = $origin) #end"
+                    "application/json": "#set($origin = $input.params(\"Origin\"))\n#if($origin == \"\") #set($origin = $input.params(\"origin\")) #end\n#if($origin.matches(\"https://usefy[.]com\") || $origin.matches(\"https://www[.]usefy[.]com\")) #set($context.responseOverride.header.Access-Control-Allow-Origin = $origin) #end"
                   }
                 }
               ]
@@ -1219,7 +1323,9 @@
                 "ResponseParameters": {
                   "method.response.header.Access-Control-Allow-Origin": true,
                   "method.response.header.Access-Control-Allow-Headers": true,
-                  "method.response.header.Access-Control-Allow-Methods": true
+                  "method.response.header.Access-Control-Allow-Methods": true,
+                  "method.response.header.Access-Control-Allow-Credentials": "<REDACTED>",
+                  "method.response.header.Access-Control-Max-Age": true
                 },
                 "ResponseModels": {}
               }
@@ -1235,12 +1341,14 @@
                 {
                   "StatusCode": "200",
                   "ResponseParameters": {
-                    "method.response.header.Access-Control-Allow-Origin": "'*'",
+                    "method.response.header.Access-Control-Allow-Origin": "'https://usefy.com'",
                     "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization,X-Requested-With,Accept'",
-                    "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,DELETE,GET,HEAD,PATCH,POST,PUT'"
+                    "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,DELETE,GET,HEAD,PATCH,POST,PUT'",
+                    "method.response.header.Access-Control-Allow-Credentials": "<REDACTED>",
+                    "method.response.header.Access-Control-Max-Age": "'86400'"
                   },
                   "ResponseTemplates": {
-                    "application/json": "#set($origin = $input.params(\"Origin\"))\n#if($origin == \"\") #set($origin = $input.params(\"origin\")) #end\n#if($origin.matches(\".+\")) #set($context.responseOverride.header.Access-Control-Allow-Origin = $origin) #end"
+                    "application/json": "#set($origin = $input.params(\"Origin\"))\n#if($origin == \"\") #set($origin = $input.params(\"origin\")) #end\n#if($origin.matches(\"https://usefy[.]com\") || $origin.matches(\"https://www[.]usefy[.]com\")) #set($context.responseOverride.header.Access-Control-Allow-Origin = $origin) #end"
                   }
                 }
               ]
@@ -1348,13 +1456,13 @@
             "ApiLambdaPermissionApiGateway"
           ]
         },
-        "ApiGatewayDeployment1738893243536": {
+        "ApiGatewayDeployment1739264236326": {
           "Type": "AWS::ApiGateway::Deployment",
           "Properties": {
             "RestApiId": {
               "Ref": "ApiGatewayRestApi"
             },
-            "StageName": "dev"
+            "StageName": "prod"
           },
           "DependsOn": [
             "ApiGatewayMethodOptions",
@@ -1405,16 +1513,16 @@
         "ServerlessDeploymentBucketName": {
           "Value": "serverless-framework-deployments-us-east-1-982ed21f-b716",
           "Export": {
-            "Name": "sls-growthhungry-service-dev-ServerlessDeploymentBucketName"
+            "Name": "sls-growthhungry-service-prod-ServerlessDeploymentBucketName"
           }
         },
         "ApiLambdaFunctionQualifiedArn": {
           "Description": "Current Lambda function version",
           "Value": {
-            "Ref": "ApiLambdaVersion2N9VjpxAHvLv54BbqwJbFH221sGzitiA4LRp2StQgk"
+            "Ref": "ApiLambdaVersionLGcHxIAbuh4bYlUWPn0cfwBFAkPERbzkI0CYBivyo"
           },
           "Export": {
-            "Name": "sls-growthhungry-service-dev-ApiLambdaFunctionQualifiedArn"
+            "Name": "sls-growthhungry-service-prod-ApiLambdaFunctionQualifiedArn"
           }
         },
         "ServiceEndpoint": {
@@ -1435,12 +1543,12 @@
                 {
                   "Ref": "AWS::URLSuffix"
                 },
-                "/dev"
+                "/prod"
               ]
             ]
           },
           "Export": {
-            "Name": "sls-growthhungry-service-dev-ServiceEndpoint"
+            "Name": "sls-growthhungry-service-prod-ServiceEndpoint"
           }
         }
       }
