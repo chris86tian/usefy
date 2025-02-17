@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
-import { X, Trash2, Brain, BookOpen } from "lucide-react";
+import { X, Trash2, Brain, BookOpen, ChevronUp, ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
@@ -27,6 +27,11 @@ const ChapterModal = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
 
+  const [isQuizSectionOpen, setIsQuizSectionOpen] = useState(true);
+  const [isAssignmentSectionOpen, setIsAssignmentSectionOpen] = useState(true);
+  const [expandedAssignments, setExpandedAssignments] = useState<string[]>([]);
+  const [expandedQuestions, setExpandedQuestions] = useState<number[]>([]);
+
   const methods = useForm<ChapterFormData>({
     resolver: zodResolver(chapterSchema),
     defaultValues: {
@@ -35,6 +40,23 @@ const ChapterModal = () => {
       video: "",
     },
   });
+
+  const toggleAssignment = (assignmentId: string) => {
+    setExpandedAssignments(prev => 
+      prev.includes(assignmentId) 
+        ? prev.filter(id => id !== assignmentId)
+        : [...prev, assignmentId]
+    );
+  };
+
+  const toggleQuestion = (questionIndex: number) => {
+    setExpandedQuestions(prev => 
+      prev.includes(questionIndex)
+        ? prev.filter(idx => idx !== questionIndex)
+        : [...prev, questionIndex]
+    );
+  };
+
 
   useEffect(() => {
     if (chapter) {
@@ -277,175 +299,223 @@ const ChapterModal = () => {
               />
             )}
 
-            <div className="mt-6">
-              <div className="flex items-center justify-between mb-4">
-                <FormLabel className="text-customgreys-dirtyGrey text-sm">
-                  Quiz Questions
-                </FormLabel>
-                <Button
-                  type="button"
-                  onClick={addQuestion}
-                  className="bg-blue-500 hover:bg-blue-600"
-                >
-                  <Brain className="w-4 h-4" />
-                  Add Question
-                </Button>
+<div className="mt-6 border rounded-lg">
+              <div 
+                className="flex items-center justify-between p-4 cursor-pointer bg-customgreys-darkGrey rounded-t-lg"
+                onClick={() => setIsQuizSectionOpen(!isQuizSectionOpen)}
+              >
+                <div className="flex items-center gap-2">
+                  <Brain className="w-5 h-5" />
+                  <FormLabel className="text-customgreys-dirtyGrey text-sm mb-0">
+                    Quiz Questions ({questions.length})
+                  </FormLabel>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      addQuestion();
+                    }}
+                    className="bg-blue-500 hover:bg-blue-600"
+                  >
+                    Add Question
+                  </Button>
+                  {isQuizSectionOpen ? <ChevronUp /> : <ChevronDown />}
+                </div>
               </div>
 
-              {questions.map((question, questionIndex) => (
-                <div key={questionIndex} className="mb-6 p-4 rounded-lg bg-customgreys-darkGrey">
-                  <div className="flex items-center justify-between mb-2">
-                    <FormLabel className="text-customgreys-dirtyGrey text-sm">
-                      Question {questionIndex + 1}
-                    </FormLabel>
-                    <Button
-                      type="button"
-                      onClick={() => removeQuestion(questionIndex)}
-                      variant="destructive"
-                      size="sm"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
+              {isQuizSectionOpen && (
+                <div className="p-4">
+                  {questions.map((question, questionIndex) => (
+                    <div key={questionIndex} className="mb-4 border rounded-lg">
+                      <div 
+                        className="flex items-center justify-between p-3 cursor-pointer bg-zinc-800 rounded-t-lg"
+                        onClick={() => toggleQuestion(questionIndex)}
+                      >
+                        <span className="font-medium">Question {questionIndex + 1}</span>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeQuestion(questionIndex);
+                            }}
+                            variant="destructive"
+                            size="sm"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                          {expandedQuestions.includes(questionIndex) ? <ChevronUp /> : <ChevronDown />}
+                        </div>
+                      </div>
 
-                  <Input
-                    value={question.question}
-                    onChange={(e) =>
-                      updateQuestion(questionIndex, "question", e.target.value)
-                    }
-                    placeholder="Enter your question"
-                    className="mb-2"
-                  />
+                      {expandedQuestions.includes(questionIndex) && (
+                        <div className="p-4">
+                          <Input
+                            value={question.question}
+                            onChange={(e) => updateQuestion(questionIndex, "question", e.target.value)}
+                            placeholder="Enter your question"
+                            className="mb-2"
+                          />
 
-                  <div className="my-2">
-                    <FormLabel className="text-customgreys-dirtyGrey text-sm">
-                      Difficulty
-                    </FormLabel>
-                    <select
-                      value={question.difficulty}
-                      onChange={(e) =>
-                        updateQuestion(questionIndex, "difficulty", e.target.value)
-                      }
-                      className="w-full my-1 py-2 px-4 bg-zinc-800 text-white rounded-sm"
-                    >
-                      <option value="easy">Easy</option>
-                      <option value="medium">Medium</option>
-                      <option value="hard">Hard</option>
-                    </select>
-                  </div>
+                          <div className="my-2">
+                            <FormLabel className="text-customgreys-dirtyGrey text-sm">
+                              Difficulty
+                            </FormLabel>
+                            <select
+                              value={question.difficulty}
+                              onChange={(e) =>
+                                updateQuestion(questionIndex, "difficulty", e.target.value)
+                              }
+                              className="w-full my-1 py-2 px-4 bg-zinc-800 text-white rounded-sm"
+                            >
+                              <option value="easy">Easy</option>
+                              <option value="medium">Medium</option>
+                              <option value="hard">Hard</option>
+                            </select>
+                          </div>
 
-                  {question.options.map((option, optionIndex) => (
-                    <div key={optionIndex} className="flex items-center gap-2 mb-2">
-                      <input
-                        type="radio"
-                        name={`correct-answer-${questionIndex}`}
-                        checked={question.correctAnswer === optionIndex}
-                        onChange={() =>
-                          updateQuestion(questionIndex, "correctAnswer", optionIndex)
-                        }
-                      />
-                      <Input
-                        value={option}
-                        onChange={(e) =>
-                          updateOption(questionIndex, optionIndex, e.target.value)
-                        }
-                        placeholder={`Option ${optionIndex + 1}`}
-                      />
+                          {question.options.map((option, optionIndex) => (
+                            <div key={optionIndex} className="flex items-center gap-2 mb-2">
+                              <input
+                                type="radio"
+                                name={`correct-answer-${questionIndex}`}
+                                checked={question.correctAnswer === optionIndex}
+                                onChange={() =>
+                                  updateQuestion(questionIndex, "correctAnswer", optionIndex)
+                                }
+                              />
+                              <Input
+                                value={option}
+                                onChange={(e) =>
+                                  updateOption(questionIndex, optionIndex, e.target.value)
+                                }
+                                placeholder={`Option ${optionIndex + 1}`}
+                                className="flex-1"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
-              ))}
+              )}
             </div>
 
-            <div className="mt-6">
-              <div className="flex items-center justify-between mb-4">
-                <FormLabel className="text-customgreys-dirtyGrey text-sm">
-                  Assignments
-                </FormLabel>
-                <Button
-                  type="button"
-                  onClick={addAssignment}
-                  className="bg-blue-500 hover:bg-blue-600"
-                >
-                  <BookOpen className="w-4 h-4 mr-2" />
-                  Add Assignment
-                </Button>
+            {/* Assignments Section */}
+            <div className="mt-6 border rounded-lg">
+              <div 
+                className="flex items-center justify-between p-4 cursor-pointer bg-customgreys-darkGrey rounded-t-lg"
+                onClick={() => setIsAssignmentSectionOpen(!isAssignmentSectionOpen)}
+              >
+                <div className="flex items-center gap-2">
+                  <BookOpen className="w-5 h-5" />
+                  <FormLabel className="text-customgreys-dirtyGrey text-sm mb-0">
+                    Assignments ({assignments.length})
+                  </FormLabel>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      addAssignment();
+                    }}
+                    className="bg-blue-500 hover:bg-blue-600"
+                  >
+                    Add Assignment
+                  </Button>
+                  {isAssignmentSectionOpen ? <ChevronUp /> : <ChevronDown />}
+                </div>
               </div>
 
-              {assignments.map((assignment, assignmentIndex) => (
-                <div key={assignment.assignmentId} className="mb-6 p-4 rounded-lg bg-customgreys-darkGrey">
-                  <div className="flex items-center justify-between mb-2">
-                    <FormLabel className="text-customgreys-dirtyGrey text-sm">
-                      Assignment {assignmentIndex + 1}
-                    </FormLabel>
-                    <Button
-                      type="button"
-                      onClick={() => removeAssignment(assignmentIndex)}
-                      variant="destructive"
-                      size="sm"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-
-                  <Input
-                    value={assignment.title}
-                    onChange={(e) =>
-                      updateAssignment(assignmentIndex, "title", e.target.value)
-                    }
-                    placeholder="Assignment Title"
-                    className="mb-2"
-                  />
-
-                  <textarea
-                    value={assignment.description}
-                    onChange={(e) =>
-                      updateAssignment(assignmentIndex, "description", e.target.value)
-                    }
-                    placeholder="Assignment Description"
-                    className="w-full min-h-[100px] mb-4 p-2 bg-zinc-800 text-white rounded-sm"
-                  />
-
-                  <div className="mt-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <FormLabel className="text-customgreys-dirtyGrey text-sm">
-                        Hints
-                      </FormLabel>
-                      <Button
-                        type="button"
-                        onClick={() => addHint(assignmentIndex)}
-                        size="sm"
-                        variant="outline"
+              {isAssignmentSectionOpen && (
+                <div className="p-4">
+                  {assignments.map((assignment, assignmentIndex) => (
+                    <div key={assignment.assignmentId} className="mb-4 border rounded-lg">
+                      <div 
+                        className="flex items-center justify-between p-3 cursor-pointer bg-zinc-800 rounded-t-lg"
+                        onClick={() => toggleAssignment(assignment.assignmentId)}
                       >
-                        Add Hint
-                      </Button>
-                    </div>
-
-                    {assignment.hints?.map((hint, hintIndex) => (
-                      <div key={hintIndex} className="flex items-center gap-2 mb-2">
-                        <Input
-                          value={hint}
-                          onChange={(e) =>
-                            updateHint(assignmentIndex, hintIndex, e.target.value)
-                          }
-                          placeholder={`Hint ${hintIndex + 1}`}
-                        />
-                        <Button
-                          type="button"
-                          onClick={() => removeHint(assignmentIndex, hintIndex)}
-                          variant="destructive"
-                          size="sm"
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
+                        <span className="font-medium">
+                          {assignment.title || `Assignment ${assignmentIndex + 1}`}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeAssignment(assignmentIndex);
+                            }}
+                            variant="destructive"
+                            size="sm"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                          {expandedAssignments.includes(assignment.assignmentId) ? <ChevronUp /> : <ChevronDown />}
+                        </div>
                       </div>
-                    ))}
-                  </div>
+
+                      {expandedAssignments.includes(assignment.assignmentId) && (
+                        <div className="p-4">
+                          <Input
+                            value={assignment.title}
+                            onChange={(e) => updateAssignment(assignmentIndex, "title", e.target.value)}
+                            placeholder="Assignment Title"
+                            className="mb-2"
+                          />
+                          <textarea
+                            value={assignment.description}
+                            onChange={(e) => updateAssignment(assignmentIndex, "description", e.target.value)}
+                            placeholder="Assignment Description"
+                            className="w-full min-h-[100px] mb-4 p-2 bg-zinc-800 text-white rounded-sm"
+                          />
+
+                          {/* Hints Section */}
+                          <div className="mt-4">
+                            <div className="flex items-center justify-between mb-2">
+                              <FormLabel className="text-customgreys-dirtyGrey text-sm">
+                                Hints
+                              </FormLabel>
+                              <Button
+                                type="button"
+                                onClick={() => addHint(assignmentIndex)}
+                                size="sm"
+                                variant="outline"
+                              >
+                                Add Hint
+                              </Button>
+                            </div>
+
+                            {assignment.hints?.map((hint, hintIndex) => (
+                              <div key={hintIndex} className="flex items-center gap-2 mb-2">
+                                <Input
+                                  value={hint}
+                                  onChange={(e) => updateHint(assignmentIndex, hintIndex, e.target.value)}
+                                  placeholder={`Hint ${hintIndex + 1}`}
+                                />
+                                <Button
+                                  type="button"
+                                  onClick={() => removeHint(assignmentIndex, hintIndex)}
+                                  variant="destructive"
+                                  size="sm"
+                                >
+                                  <X className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
 
-            <div className="chapter-modal__actions">
+            <div className="chapter-modal__actions mt-6">
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancel
               </Button>
