@@ -412,6 +412,17 @@ declare global {
     assignmentId: string;
     assignment: string;
   }
+
+  interface Feedback {
+    feedbackId: string;
+    userId: string;
+    username: string;
+    courseId: string;
+    sectionId: string;
+    chapterId: string;
+    feedback: string;
+    createdAt: string;
+  }
 }
 
 export {};

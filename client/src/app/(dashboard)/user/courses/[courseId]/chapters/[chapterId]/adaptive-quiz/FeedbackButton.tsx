@@ -44,7 +44,7 @@ const FeedbackButton = ({ courseId, sectionId, chapterId }: FeedbackButtonProps)
     setIsSubmitting(true)
     try {
       await createFeedback(feedbackData).unwrap()
-      
+    
       toast.success("Thank you for your feedback!")
       setIsOpen(false)
       setFeedback("")
@@ -65,13 +65,13 @@ const FeedbackButton = ({ courseId, sectionId, chapterId }: FeedbackButtonProps)
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Question Feedback</DialogTitle>
+          <DialogTitle>Submit Feedback</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <Textarea
             value={feedback}
             onChange={(e) => setFeedback(e.target.value)}
-            placeholder="Please describe the issue with this question..."
+            placeholder="Please describe the issue with this assignment..."
             disabled={isSubmitting}
             className="min-h-[120px]"
           />

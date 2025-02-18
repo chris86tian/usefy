@@ -66,7 +66,7 @@ const customBaseQuery = async (
 export const api = createApi({
   baseQuery: customBaseQuery,
   reducerPath: "api",
-  tagTypes: ["Courses", "Users", "UserCourseProgress"],
+  tagTypes: ["Courses", "Users", "UserCourseProgress", "Feedback"],
   endpoints: (build) => ({
     /* 
     ===============
@@ -586,7 +586,13 @@ export const api = createApi({
       method: "POST",
       body,
     }),
+    invalidatesTags: ['Feedback'],
   }),
+
+    getFeedback: build.query<Feedback[], string>({
+      query: (userId) => `feedback/user/${userId}`,
+      providesTags: ['Feedback'],
+    }),
   }),
 });
 
@@ -632,4 +638,5 @@ export const {
   useLikeChapterMutation,
   useDislikeChapterMutation,
   useCreateFeedbackMutation,
+  useGetFeedbackQuery,
 } = api;

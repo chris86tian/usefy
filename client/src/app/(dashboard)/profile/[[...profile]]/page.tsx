@@ -5,6 +5,7 @@ import { UserProfile } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import React from "react";
 import CommitGraph from "@/components/CommitGraph";
+import FeedbackList from "../../user/courses/[courseId]/chapters/[chapterId]/adaptive-quiz/FeedbackList";
 
 const Profile = () => {
   return (
@@ -26,8 +27,12 @@ const Profile = () => {
             },
           }}
         />
-        <CommitGraph />
+        <div className="flex flex-col gap-4">
+          <CommitGraph />
+          <FeedbackList />
+        </div>
       </div>
+          
     </>
   );
 };
