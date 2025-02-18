@@ -17,6 +17,7 @@ import transactionRoutes from "./routes/transactionRoutes";
 import userCourseProgressRoutes from "./routes/userCourseProgressRoutes";
 import notificationRoutes from "./routes/notificationRoutes";
 import commitRoutes from "./routes/commitRoutes";
+import feedbackRoutes from './routes/feedbackRoutes';
 
 dotenv.config();
 
@@ -116,6 +117,7 @@ app.use("/transactions", requireAuth(), transactionRoutes);
 app.use("/notifications", requireAuth(), notificationRoutes);
 app.use("/commits", requireAuth(), commitRoutes);
 app.use("/users/course-progress", requireAuth(), userCourseProgressRoutes);
+app.use('/feedback', requireAuth(), feedbackRoutes);
 
 app.use(
   (

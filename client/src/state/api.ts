@@ -564,6 +564,29 @@ export const api = createApi({
         method: "POST",
       }),
     }),
+
+
+    /*
+    ===============
+    FEEDBACK
+    ===============
+    */
+    createFeedback: build.mutation<
+    { message: string },
+    {
+      userId: string;
+      courseId: string;
+      sectionId: string;
+      chapterId: string;
+      feedback: string;
+    }
+  >({
+    query: (body) => ({
+      url: `feedback`,
+      method: "POST",
+      body,
+    }),
+  }),
   }),
 });
 
@@ -608,4 +631,5 @@ export const {
   useGetChapterCommentsQuery,
   useLikeChapterMutation,
   useDislikeChapterMutation,
+  useCreateFeedbackMutation,
 } = api;
