@@ -9,6 +9,7 @@ import { useGetUsersQuery, useUnenrollUserMutation } from "@/state/api"
 import { User } from "@clerk/nextjs/server"
 import { toast } from "sonner"
 import { useCreateTransactionMutation } from "@/state/api";
+import { useUser } from "@clerk/nextjs"
 
 interface EnrollmentModalProps {
   isOpen: boolean
@@ -21,6 +22,9 @@ const EnrollmentModal: React.FC<EnrollmentModalProps> = ({ isOpen, onClose, cour
   const { data: users } = useGetUsersQuery()
   const [ unenrollUser ] = useUnenrollUserMutation()
   const [ createTransaction ] = useCreateTransactionMutation()
+  const { user: currentUser } = useUser()
+
+  const filteredUsers = users?.filter((user: User) => user.id !== currentUser?.id)
 
   const handleEnroll = async (userId: string) => {
     try {
@@ -55,7 +59,7 @@ const EnrollmentModal: React.FC<EnrollmentModalProps> = ({ isOpen, onClose, cour
           <DialogTitle>Manage Course Enrollment</DialogTitle>
         </DialogHeader>
         <ScrollArea className="h-[300px] w-full rounded-md border p-4">
-          {users?.map((user: User) => {
+          {filteredUsers?.map((user: User) => {
             const isEnrolled = enrolledUsers.some((enrolledUser) => enrolledUser.id === user.id)
             return (
               <div key={user.id} className="flex items-center justify-between mb-4 last:mb-0">

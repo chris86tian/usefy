@@ -102,9 +102,6 @@ export const updateCourse = async (
   const { userId } = getAuth(req);
 
   try {
-    console.log("Received update request for course:", courseId);
-    console.log("Update data:", updateData);
-
     if (!userId) {
       res.status(401).json({ message: "User not authenticated" });
       return;
@@ -140,7 +137,6 @@ export const updateCourse = async (
 
     if (updateData.sections) {
       try {
-        console.log("Processing sections data:", updateData.sections);
         const sectionsData =
           typeof updateData.sections === "string"
             ? JSON.parse(updateData.sections)
@@ -150,7 +146,7 @@ export const updateCourse = async (
           throw new Error("Sections must be an array");
         }
 
-        updateData.sections = sectionsData.map((section: any) => ({
+        updateData.sections = sectionsData.map((section) => ({
           ...section,
           sectionId: section.sectionId || uuidv4(),
           chapters: Array.isArray(section.chapters)
@@ -158,15 +154,31 @@ export const updateCourse = async (
                 ...chapter,
                 chapterId: chapter.chapterId || uuidv4(),
                 assignments: Array.isArray(chapter.assignments)
-                  ? chapter.assignments
+                  ? chapter.assignments.map((assignment: any) => ({
+                      ...assignment,
+                      assignmentId: assignment.assignmentId || uuidv4(),
+                      submissions: Array.isArray(assignment.submissions)
+                        ? assignment.submissions
+                        : [],
+                    }))
                   : [],
-                quiz: chapter.quiz || null,
+                quiz: chapter.quiz 
+                  ? {
+                      ...chapter.quiz,
+                      quizId: chapter.quiz.quizId || uuidv4(),
+                      questions: Array.isArray(chapter.quiz.questions)
+                        ? chapter.quiz.questions.map((question: any) => ({
+                            ...question,
+                            questionId: question.questionId || uuidv4()
+                          }))
+                        : []
+                    }
+                  : undefined,
                 video: chapter.video || "",
               }))
             : [],
         }));
 
-        console.log("Processed sections:", updateData.sections);
       } catch (error) {
         console.error("Error processing sections data:", error);
         res.status(400).json({
@@ -177,7 +189,6 @@ export const updateCourse = async (
       }
     }
 
-    console.log("Updating course with data:", updateData);
     const updatedCourse = await Course.update(courseId, updateData);
 
     if (updateData.sections) {
@@ -187,8 +198,10 @@ export const updateCourse = async (
         .exec();
 
       for (const progress of progressList) {
+        // Create a deep copy of the existing progress sections to avoid mutations
+        const existingSections = JSON.parse(JSON.stringify(progress.sections || []));
         progress.sections = mergeSections(
-          progress.sections,
+          existingSections,
           updateData.sections
         );
         progress.lastAccessedTimestamp = new Date().toISOString();
@@ -377,7 +390,7 @@ export const createAssignment = async (
 ): Promise<void> => {
   const { courseId, sectionId, chapterId } = req.params;
   const { userId } = getAuth(req);
-  const { title, description, resources, hints } = req.body;
+  const { title, description, resources, hints, fileUrl, isCoding, language, starterCode } = req.body;
 
   try {
     const course = await Course.get(courseId);
@@ -420,9 +433,13 @@ export const createAssignment = async (
       assignmentId: uuidv4(),
       title,
       description,
-      resources: resources || [],
+      fileUrl,
+      isCoding,
+      language,
+      starterCode,
+      resources,
       submissions: [],
-      hints: hints || [],
+      hints,
     };
 
     if (!chapter.assignments) {

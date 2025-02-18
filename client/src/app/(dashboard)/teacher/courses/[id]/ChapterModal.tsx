@@ -84,6 +84,7 @@ const ChapterModal = () => {
     setQuestions([
       ...questions,
       {
+        questionId: uuidv4(),
         question: "",
         difficulty: "easy",
         options: ["", "", "", ""],
@@ -182,7 +183,7 @@ const ChapterModal = () => {
       content: data.content,
       type: questions.length > 0 ? "Quiz" : (data.video ? "Video" : "Text"),
       video: data.video,
-      quiz: questions.length > 0 ? { questions } : undefined,
+      quiz: questions.length > 0 ? { quizId: chapter?.quiz?.quizId || uuidv4(), questions } : undefined,
       assignments: chapter?.assignments || [],
     };
 

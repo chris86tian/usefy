@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { extractVideoId } from "@/lib/utils";
+import { console } from "inspector";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
@@ -137,27 +138,21 @@ function findKeyMoments(
 
 export async function POST(request: Request) {
   try {
-    const { videoUrl } = await request.json();
+    const { videoUrl, generateQuizzes, generateAssignments, codingAssignments, language } = await request.json()
 
     if (!videoUrl) {
-      return NextResponse.json(
-        { error: "Video URL is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Video URL is required" }, { status: 400 })
     }
 
-    const videoId = extractVideoId(videoUrl);
+    const videoId = extractVideoId(videoUrl)
 
     if (!videoId) {
-      return NextResponse.json(
-        { error: "Invalid YouTube URL" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid YouTube URL" }, { status: 400 })
     }
 
-    let transcript;
+    let transcript
     try {
-      transcript = await fetchCaptionsAndTranscript(videoId);
+      transcript = await fetchCaptionsAndTranscript(videoId)
     } catch (error) {
       return NextResponse.json(
         {
@@ -165,98 +160,117 @@ export async function POST(request: Request) {
           details:
             "This video might have disabled captions or requires authentication. Please try another video with public captions enabled.",
         },
-        { status: 400 }
-      );
+        { status: 400 },
+      )
     }
 
-    const formattedTranscript = transcript
-      .map(({ text, offset }) => `[${formatTimestamp(offset)}] ${text}`)
-      .join("\n");
+    const formattedTranscript = transcript.map(({ text, offset }) => `[${formatTimestamp(offset)}] ${text}`).join("\n")
 
-    const targetSegments = 6;
-    const keyTimestamps = findKeyMoments(transcript, targetSegments);
+    const targetSegments = 6
+    const keyTimestamps = findKeyMoments(transcript, targetSegments)
+
+    const systemPrompt = `You are a course creator. Create a structured course outline based on the provided transcript. Make sure to process the entire transcript. The response must be a valid JSON object. The transcript for the video is as follows:
+    ${formattedTranscript}
+    ${generateQuizzes ? "Include quiz questions for each chapter." : "Do not include quiz questions."}
+    ${generateAssignments ? `Include assignments for each chapter. ${codingAssignments ? `Make sure the assignments are coding-related and use ${language}.` : ""}` : "Do not include assignments."}`
+
+    const userPrompt = `Create a well-structured course outline with at least 2 sections and at least 2 chapters each. Every chapter must have a video timestamp.
+    ${generateQuizzes ? "Include 5 quiz questions per chapter." : ""}
+    ${generateAssignments ? `Include 1 assignment per chapter. ${codingAssignments ? `Make it a coding assignment in ${language}.` : ""}` : ""}
+
+    Format:
+    {
+      "courseTitle": "string",
+      "courseDescription": "string",
+      "sections": [
+        {
+          "sectionId": "s1",
+          "sectionTitle": "string",
+          "sectionDescription": "string",
+          "chapters": [
+            {
+              "chapterId": "c1",
+              "title": "string",
+              "content": "string",
+              "type": "Video",
+              "video": "${videoUrl}",
+              ${
+                generateQuizzes
+                  ? `
+              "quiz": {
+                "quizId": "q1",
+                "questions": [
+                  {
+                    "questionId": "q1",
+                    "question": "string",
+                    "difficulty": "easy",
+                    "options": ["string", "string", "string", "string"],
+                    "correctAnswer": 0
+                  }
+                ]
+              },
+              `
+                  : ""
+              }
+              ${
+                generateAssignments
+                  ? `
+              "assignments": [
+                {
+                  "assignmentId": "a1",
+                  "title": "string",
+                  "description": "string",
+                  "submissions": [],
+                  ${
+                    codingAssignments
+                      ? `
+                  "isCoding": true,
+                  "language": "${language}",
+                  "starterCode": "# Your ${language} starter code here",
+                  `
+                      : ""
+                  }
+                  "hints": ["string"],
+                }
+              ],
+              `
+                  : ""
+              }
+            }
+          ]
+        }
+      ]
+    }`
+
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
-        {
-          role: "system",
-          content:
-            "You are a course creator. Create a structured course outline based on the provided transcript. Make sure to process the entire transcript. The response must be a valid JSON object.",
-        },
-        {
-          role: "user",
-          content: `Create a well-structured course outline with at least 2 sections and at least 2 chapters each. Every chapter must have a video timestamp and 10 quiz questions.
-    
-          Format:
-          {
-            "courseTitle": "string",
-            "courseDescription": "string",
-            "sections": [
-              {
-                "sectionId": "s1",
-                "sectionTitle": "string",
-                "sectionDescription": "string",
-                "chapters": [
-                  {
-                    "chapterId": "c1",
-                    "title": "string",
-                    "content": "string",
-                    "type": "Video",
-                    "video": "${videoUrl}",
-                    "quiz": {
-                      "questions": [
-                        {
-                          "question": "string",
-                          "difficulty": "easy",
-                          "options": ["string", "string", "string", "string"],
-                          "correctAnswer": 0
-                        }
-                      ]
-                    },
-                    "assignments": [
-                      {
-                        "assignmentId": "a1",
-                        "title": "string",
-                        "description": "string",
-                        "submissions": [],
-                        "hints": ["string"],
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
-    
-          Transcript: ${formattedTranscript}`,
-        },
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
       ],
       temperature: 0.7,
       max_tokens: 5000,
       response_format: { type: "json_object" },
-    });
-    const content = completion?.choices[0]?.message?.content;
+    })
+
+    const content = completion?.choices[0]?.message?.content
     if (!content) {
-      return NextResponse.json(
-        { error: "Empty response from OpenAI" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Empty response from OpenAI" }, { status: 500 })
     }
 
-    let courseStructure;
-    try {
-      courseStructure = JSON.parse(content);
+    console.log("📚 Generated course structure:", content)
 
-      courseStructure = JSON.parse(content);
+    let courseStructure
+    try {
+      courseStructure = JSON.parse(content)
     } catch (parseError) {
       return NextResponse.json(
         {
           error: "Invalid JSON response from OpenAI",
-          details:
-            parseError instanceof Error ? parseError.message : "Unknown error",
+          details: parseError instanceof Error ? parseError.message : "Unknown error",
         },
-        { status: 500 }
-      );
+        { status: 500 },
+      )
     }
 
     if (!courseStructure.sections || !Array.isArray(courseStructure.sections)) {
@@ -264,38 +278,47 @@ export async function POST(request: Request) {
         {
           error: "Invalid course structure: missing or invalid sections array",
         },
-        { status: 500 }
-      );
+        { status: 500 },
+      )
     }
 
-    let timestampIndex = 0;
+    let timestampIndex = 0
     courseStructure.sections.forEach((section: Section) => {
       if (!section.chapters || !Array.isArray(section.chapters)) {
-        throw new Error(
-          `Invalid section structure: missing or invalid chapters array`
-        );
+        throw new Error(`Invalid section structure: missing or invalid chapters array`)
       }
 
-      section.chapters.forEach((chapter) => {
-        const timestamp = keyTimestamps[timestampIndex] || 0;
-        chapter.video = `https://www.youtube.com/watch?v=${videoId}&t=${timestamp}s`;
-        timestampIndex++;
-      });
-    });
+      section.chapters.forEach((chapter: Chapter) => {
+        const timestamp = keyTimestamps[timestampIndex] || 0
+        chapter.video = `https://www.youtube.com/watch?v=${videoId}&t=${timestamp}s`
+        timestampIndex++
 
-    console.log("📚 Generated course structure ROUTE:", courseStructure);
-
-    return NextResponse.json(courseStructure);
+        if (chapter.assignments) {
+          chapter.assignments.forEach((assignment: Assignment) => {
+            if (codingAssignments) {
+              assignment.isCoding = true
+              assignment.language = language
+              assignment.starterCode = assignment.starterCode || `# Your ${language} code here`
+            } else {
+              assignment.isCoding = false
+            }
+          })
+        }
+      })
+    })
+    
+    return NextResponse.json(courseStructure)
   } catch (error) {
     return NextResponse.json(
       {
         error: "Internal server error",
         details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
-    );
+      { status: 500 },
+    )
   }
 }
+
 
 function formatTimestamp(seconds: number) {
   const minutes = Math.floor(seconds / 60);

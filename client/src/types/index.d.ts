@@ -115,14 +115,6 @@ declare global {
     }>;
   }
 
-  interface Module {
-    moduleId: string;
-    title: string;
-    description?: string;
-    video?: string | File;
-    sections: Section[];
-  }
-
   interface Section {
     sectionId: string;
     sectionTitle: string;
@@ -141,9 +133,7 @@ declare global {
     comments?: ChapterComment[];
     likes?: number;
     dislikes?: number;
-    quiz?: {
-      questions: Question[];
-    };
+    quiz?: Quiz;
   }
 
   interface ChapterComment {
@@ -211,6 +201,10 @@ declare global {
     description: string;
     submissions: Submission[];
     resources?: Resource[];
+    fileUrl?: string;
+    isCoding?: boolean;
+    language?: string;
+    starterCode?: string;
     hints?: string[];
   }
 
@@ -234,10 +228,12 @@ declare global {
   }
 
   interface Quiz {
+    quizId: string;
     questions: Question[];
   }
 
   interface Question {
+    questionId: string
     question: string
     difficulty?: "easy" | "medium" | "hard"
     options: string[]
@@ -395,6 +391,13 @@ declare global {
     isOpen: boolean
     onClose: () => void
     notifications: UserNotification[]
+  }
+
+  type ProcessOptions = {
+    generateQuizzes: boolean
+    generateAssignments: boolean
+    codingAssignments: boolean
+    language: string
   }
   
 }

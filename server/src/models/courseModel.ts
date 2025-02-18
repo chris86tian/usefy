@@ -87,35 +87,40 @@ const chapterSchema = new Schema({
       }),
     ],
   },
-  quiz: {
-    type: Object,
-    schema: new Schema({
-      questions: {
-        type: Array,
-        schema: [
-          new Schema({
-            question: {
-              type: String,
-              required: true,
-            },
-            difficulty: {
-              type: String,
-              enum: ["easy", "medium", "hard"],
-            },
-            options: {
-              type: Array,
-              required: true,
-              schema: [String],
-            },
-            correctAnswer: {
-              type: Number,
-              required: true,
-            },
-          }),
-        ],
-      },
-    }),
-  },
+  quiz: new Schema({
+    quizId: {
+      type: String,
+      required: true,
+    },
+    questions: {
+      type: Array,
+      schema: [
+        new Schema({
+          questionId: {
+            type: String,
+            required: true,
+          },
+          question: {
+            type: String,
+            required: true,
+          },
+          difficulty: {
+            type: String,
+            enum: ["easy", "medium", "hard"],
+          },
+          options: {
+            type: Array,
+            required: true,
+            schema: [String],
+          },
+          correctAnswer: {
+            type: Number,
+            required: true,
+          },
+        }),
+      ],
+    },
+  }),
   assignments: {
     type: Array,
     schema: [
@@ -131,6 +136,18 @@ const chapterSchema = new Schema({
         description: {
           type: String,
           required: true,
+        },
+        fileUrl: {
+          type: String,
+        },
+        isCoding: {
+          type: Boolean,
+        },
+        language: {
+          type: String,
+        },
+        starterCode: {
+          type: String,
         },
         resources : {
           type: Array,

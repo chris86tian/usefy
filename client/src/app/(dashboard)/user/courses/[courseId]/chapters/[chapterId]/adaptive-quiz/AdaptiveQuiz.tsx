@@ -44,7 +44,7 @@ const AdaptiveQuiz = ({ quiz, courseId, sectionId, chapterId, onQuizComplete }: 
     return remainingQuestions[Math.floor(Math.random() * remainingQuestions.length)]
   }
 
-  if (!quiz || !quiz.questions.length) {
+  if (!quiz) {
     return (
       <Card className="mt-4 bg-gray-900">
         <CardContent className="pt-6">
