@@ -1175,28 +1175,23 @@ export const unenrollUser = async (
       res.status(400).json({ message: "Missing courseId or userId" });
     }
 
-    // Fetch course
     const course = await Course.get(courseId);
     if (!course) {
       res.status(404).json({ message: "Course not found" });
     }
 
-    // Ensure enrollments exist before filtering
     if (!Array.isArray(course.enrollments)) {
       res.status(404).json({ message: "No enrollments found for this course" });
     }
 
-    // Remove user from enrollments
     course.enrollments = course.enrollments.filter(
       (enrollment: any) => enrollment.userId !== userId
     );
 
     await course.save();
 
-    // Remove UserCourseProgress
     await UserCourseProgress.delete({ userId, courseId });
 
-    // Send user notification
     try {
       const notification = new UserNotification({
         notificationId: uuidv4(),

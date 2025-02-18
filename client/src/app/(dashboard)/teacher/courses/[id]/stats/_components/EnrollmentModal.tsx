@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useGetUsersQuery, useUnenrollUserMutation } from "@/state/api"
 import { User } from "@clerk/nextjs/server"
+import { toast } from "sonner"
+import { useCreateTransactionMutation } from "@/state/api";
 
 interface EnrollmentModalProps {
   isOpen: boolean
@@ -18,12 +20,23 @@ interface EnrollmentModalProps {
 const EnrollmentModal: React.FC<EnrollmentModalProps> = ({ isOpen, onClose, courseId, enrolledUsers }) => {
   const { data: users } = useGetUsersQuery()
   const [ unenrollUser ] = useUnenrollUserMutation()
+  const [ createTransaction ] = useCreateTransactionMutation()
 
   const handleEnroll = async (userId: string) => {
     try {
-    //   await enrollUser({ courseId, userId })
+        const transactionData: Partial<Transaction> = {
+            transactionId: "free-enrollment",
+            userId: userId,
+            courseId: courseId,
+            paymentProvider: undefined,
+            amount: 0,
+        };
+    
+        await createTransaction(transactionData);
+        toast.success("Enrolled user successfully!");
     } catch (error) {
-      console.error("Failed to enroll user:", error)
+        console.error("Failed to send email:", error);
+        toast.error("Enrolled successfully, but failed to send email.");
     }
   }
 

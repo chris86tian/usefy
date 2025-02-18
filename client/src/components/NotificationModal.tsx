@@ -4,13 +4,7 @@ import type React from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
-interface NotificationModalProps {
-  isOpen: boolean
-  onClose: () => void
-  notifications: UserNotification[]
-}
-
-const NotificationModal: React.FC<NotificationModalProps> = ({ isOpen, onClose, notifications }) => {
+const NotificationModal = ({ isOpen, onClose, notifications } : NotificationModalProps) => {
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="sm:max-w-[425px]">

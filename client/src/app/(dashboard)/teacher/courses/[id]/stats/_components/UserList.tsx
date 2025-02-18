@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { useGetCourseUsersQuery } from "@/state/api"
 import EnrollmentModal from "./EnrollmentModal"
 import { User } from "@clerk/nextjs/server"
+import { UserPlus2 } from "lucide-react"
 
 interface UserListProps {
   courseId: string
@@ -22,7 +23,11 @@ export default function UserList({ courseId, selectedUser, onUserSelect }: UserL
   return (
     <Card className="bg-zinc-900">
       <CardHeader className="flex flex-row items-center justify-between">
-        <Button onClick={() => setIsEnrollmentModalOpen(true)}>Manage Enrollment</Button>
+        <Button variant={"outline"}
+          onClick={() => setIsEnrollmentModalOpen(true)}>
+            <UserPlus2 className="mr-2 h-4 w-4" />
+            Manage Enrollment
+        </Button>
       </CardHeader>
       <CardContent className="p-0">
         <ScrollArea className="h-[calc(100vh-12rem)] w-full rounded-md">

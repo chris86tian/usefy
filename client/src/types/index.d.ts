@@ -98,35 +98,6 @@ declare global {
     breakInterval?: number;
   }
 
-  // TODO: update interface to match clerk user
-  // interface User {
-  //   id: string;
-  //   firstName?: string;
-  //   lastName?: string;
-  //   fullName?: string;
-  //   username?: string;
-  //   hasImage: boolean;
-  //   imageUrl: string;
-  //   emailAddresses: Array<{
-  //     emailAddress: string;
-  //   }>;
-  //   publicMetadata: {
-  //     userType: "teacher" | "user";
-  //   };
-  //   privateMetadata: {
-  //     settings?: UserSettings;
-  //     paymentMethods?: Array<PaymentMethod>;
-  //     defaultPaymentMethodId?: string;
-  //     stripeCustomerId?: string;
-  //   };
-  //   unsafeMetadata: {
-  //     bio?: string;
-  //     urls?: string[];
-  //   };
-  //   lastSignInAt: Date | null
-  //   createdAt: Date
-  // }
-
   interface Course {
     courseId: string;
     teacherId: string;
@@ -418,6 +389,12 @@ declare global {
     title: string
     message: string
     timestamp: string
+  }
+
+  interface NotificationModalProps {
+    isOpen: boolean
+    onClose: () => void
+    notifications: UserNotification[]
   }
   
 }
