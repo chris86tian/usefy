@@ -1,16 +1,20 @@
-"use client";
+"use client"
 
-import { UserButton } from "@clerk/nextjs";
-import { dark } from "@clerk/themes";
-import { BookOpen, Code2Icon } from "lucide-react";
-import Link from "next/link";
-import React from "react";
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { cn } from "@/lib/utils";
+import { UserButton } from "@clerk/nextjs"
+import { dark } from "@clerk/themes"
+import { Bell, BookOpen } from "lucide-react"
+import Link from "next/link"
+import { useState } from "react"
+import { SidebarTrigger } from "@/components/ui/sidebar"
+import { cn } from "@/lib/utils"
+import NotificationModal from "./NotificationModal"
+import { useGetNotificationsQuery } from "@/state/api"
+import { useUser } from "@clerk/nextjs"
 
 const Navbar = ({ isCoursePage }: { isCoursePage: boolean }) => {
-  // const { user } = useUser();
-  // const userRole = user?.publicMetadata?.userType as "user" | "teacher";
+  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false)
+  const { user } = useUser()
+  const { data: notifications } = useGetNotificationsQuery(user?.id || "")
 
   return (
     <nav className="dashboard-navbar">
@@ -34,34 +38,11 @@ const Navbar = ({ isCoursePage }: { isCoursePage: boolean }) => {
               </Link>
               <BookOpen className="dashboard-navbar__search-icon" size={18} />
             </div>
-            {/* <div className="relative group">
-              <Link
-                href="/snippets"
-                className={cn("dashboard-navbar__search-input", {
-                  "!bg-customgreys-secondarybg": isCoursePage,
-                })}
-                scroll={false}
-              >
-                <span className="hidden sm:inline">Explore Snippets</span>
-                <span className="sm:hidden">Search</span>
-              </Link>
-              <Code2Icon
-                className="nondashboard-navbar__search-icon"
-                size={18}
-              />
-            </div> */}
           </div>
-          {/* <Link
-            href={
-              userRole === "teacher"
-                ? "/teacher/notifications"
-                : "/user/notifications"
-            }
-            className="nondashboard-navbar__notification-button"
-          >
+          <button onClick={() => setIsNotificationModalOpen(true)} className="nondashboard-navbar__notification-button">
             <span className="nondashboard-navbar__notification-indicator"></span>
             <Bell className="nondashboard-navbar__notification-icon" />
-          </Link> */}
+          </button>
         </div>
 
         <div className="dashboard-navbar__actions">
@@ -79,8 +60,15 @@ const Navbar = ({ isCoursePage }: { isCoursePage: boolean }) => {
           />
         </div>
       </div>
-    </nav>
-  );
-};
 
-export default Navbar;
+      <NotificationModal
+        isOpen={isNotificationModalOpen}
+        onClose={() => setIsNotificationModalOpen(false)}
+        notifications={notifications || []}
+      />
+    </nav>
+  )
+}
+
+export default Navbar
+

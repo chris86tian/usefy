@@ -1,65 +1,70 @@
-'use client'
+"use client"
 
+import { useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { useGetCourseUsersQuery } from '@/state/api'
+import { Button } from "@/components/ui/button"
+import { useGetCourseUsersQuery } from "@/state/api"
+import EnrollmentModal from "./EnrollmentModal"
+import { User } from "@clerk/nextjs/server"
 
+interface UserListProps {
+  courseId: string
+  selectedUser: User | undefined
+  onUserSelect: (user: User) => void
+}
 
 export default function UserList({ courseId, selectedUser, onUserSelect }: UserListProps) {
   const { data: users } = useGetCourseUsersQuery(courseId)
-
-  if (!users || users?.length === 0) {
-    return (
-      <Card className="bg-zinc-900">
-        <CardHeader>
-            <CardTitle>Course Users</CardTitle>
-        </CardHeader>
-        <CardContent>No users found for this course</CardContent>
-      </Card>
-    )
-  }
+  const [isEnrollmentModalOpen, setIsEnrollmentModalOpen] = useState(false)
 
   return (
     <Card className="bg-zinc-900">
-      <CardHeader>
-        <CardTitle>Course Users</CardTitle>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <Button onClick={() => setIsEnrollmentModalOpen(true)}>Manage Enrollment</Button>
       </CardHeader>
       <CardContent className="p-0">
         <ScrollArea className="h-[calc(100vh-12rem)] w-full rounded-md">
           <div className="px-4">
-            <ul className="space-y-4">
-              {users.map((user) => (
-                <li 
-                  key={user.id} 
-                  className={`flex items-center space-x-4 p-4 rounded-md cursor-pointer border border-transparent hover:border-accent ${
-                    selectedUser?.id === user.id ? 'bg-accent text-accent-foreground' : ''
-                  }`}
-                  onClick={() => onUserSelect(user as unknown as User)}
-                >
-                  <Avatar>
-                    <AvatarImage src={user.imageUrl || undefined} alt={`${user.firstName} ${user.lastName}`} />
-                    <AvatarFallback>{`${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`}</AvatarFallback>
-                  </Avatar>
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      {user.firstName} {user.lastName}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {user.publicMetadata.userType === 'teacher' ? 'Teacher' : 'Student'}
-                    </p>
-                  </div>
-                  {user.banned && (
-                    <span className="ml-auto text-xs bg-destructive text-destructive-foreground px-2 py-1 rounded">
-                      Banned
-                    </span>
-                  )}
-                </li>
-              ))}
-            </ul>
+            {!users || users.length === 0 ? (
+              <p className="text-center py-4">No users found for this course</p>
+            ) : (
+              <ul className="space-y-4">
+                {users.map((user) => (
+                  <li
+                    key={user.id}
+                    className={`flex items-center space-x-4 p-4 rounded-md cursor-pointer border border-transparent hover:border-accent ${
+                      selectedUser?.id === user.id ? "bg-accent text-accent-foreground" : ""
+                    }`}
+                    onClick={() => onUserSelect(user as unknown as User)}
+                  >
+                    <Avatar>
+                      <AvatarImage src={user.imageUrl || undefined} alt={`${user.firstName} ${user.lastName}`} />
+                      <AvatarFallback>{`${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`}</AvatarFallback>
+                    </Avatar>
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium leading-none">
+                        {user.firstName} {user.lastName}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {user.publicMetadata.userType === "teacher" ? "Teacher" : "Student"}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </ScrollArea>
       </CardContent>
+      <EnrollmentModal
+        isOpen={isEnrollmentModalOpen}
+        onClose={() => setIsEnrollmentModalOpen(false)}
+        courseId={courseId}
+        enrolledUsers={users || []}
+      />
     </Card>
   )
 }
+

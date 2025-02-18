@@ -2,7 +2,7 @@
 
 import { SignedIn, SignedOut, UserButton, useUser } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
-import { BookOpen, Code2Icon } from "lucide-react";
+import { Bell, BookOpen, Code2Icon } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 import { Button } from "./ui/button";

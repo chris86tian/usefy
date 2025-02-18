@@ -6,7 +6,7 @@ import { getAuth } from "@clerk/express";
 import UserCourseProgress from "../models/userCourseProgressModel";
 import Commit from "../models/commitModel";
 import { mergeSections, calculateOverallProgress } from "../utils/utils";
-import { count } from "console";
+import UserNotification from "../models/notificationModel";
 
 const s3 = new AWS.S3();
 
@@ -1161,5 +1161,60 @@ export const dislikeChapter = async (
     res.json({ data: chapter });
   } catch (error) {
     res.status(500).json({ message: "Error disliking chapter", error });
+  }
+};
+
+export const unenrollUser = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { courseId, userId } = req.params;
+
+    if (!courseId || !userId) {
+      res.status(400).json({ message: "Missing courseId or userId" });
+    }
+
+    // Fetch course
+    const course = await Course.get(courseId);
+    if (!course) {
+      res.status(404).json({ message: "Course not found" });
+    }
+
+    // Ensure enrollments exist before filtering
+    if (!Array.isArray(course.enrollments)) {
+      res.status(404).json({ message: "No enrollments found for this course" });
+    }
+
+    // Remove user from enrollments
+    course.enrollments = course.enrollments.filter(
+      (enrollment: any) => enrollment.userId !== userId
+    );
+
+    await course.save();
+
+    // Remove UserCourseProgress
+    await UserCourseProgress.delete({ userId, courseId });
+
+    // Send user notification
+    try {
+      const notification = new UserNotification({
+        notificationId: uuidv4(),
+        userId,
+        title: "Unenrollment",
+        message: "You have been unenrolled from the course: " + course.title,
+        timestamp: new Date().toISOString(),
+      });
+      await notification.save();
+    } catch (err) {
+      console.error("Error sending notification:", err);
+      res.status(500).json({ message: "Error sending notification", error: err });
+    }
+
+    res.json({ message: "User unenrolled successfully" });
+
+  } catch (error) {
+    console.error("Unhandled server error:", error);
+    res.status(500).json({ message: "Internal server error", error });
   }
 };

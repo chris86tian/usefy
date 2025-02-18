@@ -24,6 +24,7 @@ import {
   likeChapter,
   dislikeChapter,
   getUserCourseSubmissions,
+  unenrollUser
 } from "../controllers/courseController";
 import { requireAuth } from "@clerk/express";
 
@@ -123,6 +124,11 @@ router.get(
   "/:courseId/submissions/:userId",
   requireAuth(),
   getUserCourseSubmissions
+);
+
+router.post("/:courseId/unenroll/:userId",
+  requireAuth(), 
+  unenrollUser
 );
 
 export default router;

@@ -4,6 +4,8 @@ import { Request, Response } from "express";
 import Course from "../models/courseModel";
 import Transaction from "../models/transactionModel";
 import UserCourseProgress from "../models/userCourseProgressModel";
+import UserNotification from "../models/notificationModel";
+import { v4 as uuidv4 } from 'uuid';
 
 dotenv.config();
 
@@ -97,14 +99,20 @@ export const createTransaction = async (
       });
       await initialProgress.save();
 
-      await Course.update(
-        { courseId },
-        {
-          $ADD: {
-            enrollments: [{ userId }],
-          },
-        }
-      );
+      await Course.update({ courseId }, {$ADD: { enrollments: [{ userId }] } } );
+
+      try {
+        const notification = new UserNotification({
+          notificationId: uuidv4(),
+          userId,
+          title: "Free Course Enrolled",
+          message: "You have enrolled in a free course: " + course.title,
+          timestamp: new Date().toISOString(),
+        });
+        await notification.save();
+      } catch (error) {
+        console.log(error);
+      }
 
       res.json({ message: "Enrolled in free course successfully", data: { courseProgress: initialProgress } });
       return;
@@ -177,3 +185,4 @@ export const getTransactionStats = async ( req: Request, res: Response): Promise
     throw new Error("Error getting transaction stats");
   }
 };
+
