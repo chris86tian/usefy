@@ -39,9 +39,15 @@ const Navbar = ({ isCoursePage }: { isCoursePage: boolean }) => {
               <BookOpen className="dashboard-navbar__search-icon" size={18} />
             </div>
           </div>
-          <button onClick={() => setIsNotificationModalOpen(true)} className="nondashboard-navbar__notification-button">
-            <span className="nondashboard-navbar__notification-indicator"></span>
-            <Bell className="nondashboard-navbar__notification-icon" />
+          <button 
+            onClick={() => setIsNotificationModalOpen(true)} 
+            className="nondashboard-navbar__notification-button">
+              {notifications && notifications.length > 0 && (
+                <span className="nondashboard-navbar__notification-indicator">
+                  {notifications.length}
+                </span>
+              )}
+              <Bell className="nondashboard-navbar__notification-icon" />
           </button>
         </div>
 
