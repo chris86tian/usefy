@@ -12,7 +12,11 @@ import { EditorPanelSkeleton } from "./EditorPanelSkeleton";
 import useMounted from "@/hooks/useMounted";
 import ShareSnippetDialog from "./ShareSnippetDialog";
 
-function EditorPanel() {
+interface EditorPanelProps {
+  assignment: Assignment;
+}
+
+function EditorPanel({ assignment }: EditorPanelProps) {
   const clerk = useClerk();
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const { language, theme, fontSize, editor, setFontSize, setEditor } = useCodeEditorStore();
@@ -21,9 +25,9 @@ function EditorPanel() {
 
   useEffect(() => {
     const savedCode = localStorage.getItem(`editor-code-${language}`);
-    const newCode = savedCode || LANGUAGE_CONFIG[language].defaultCode;
+    const newCode = savedCode || assignment.starterCode || LANGUAGE_CONFIG[language].defaultCode;
     if (editor) editor.setValue(newCode);
-  }, [language, editor]);
+  }, [language, editor, assignment.starterCode]);  
 
   useEffect(() => {
     const savedFontSize = localStorage.getItem("editor-font-size");

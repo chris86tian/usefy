@@ -3,6 +3,7 @@ import { BaseQueryApi, FetchArgs } from "@reduxjs/toolkit/query";
 import { User } from "@clerk/nextjs/server";
 import { Clerk } from "@clerk/clerk-js";
 import { toast } from "sonner";
+import { get } from "http";
 
 const server_url = process.env.NEXT_ENV === "production" ? process.env.NEXT_PUBLIC_API_URL : process.env.NEXT_PUBLIC_API_LOCAL_URL;
 
@@ -257,6 +258,14 @@ export const api = createApi({
         `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/assignments`,
     }),
 
+    getAssignment: build.query<
+      Assignment,
+      { courseId: string; sectionId: string; chapterId: string; assignmentId: string }
+    >({
+      query: ({ courseId, sectionId, chapterId, assignmentId }) =>
+        `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/assignments/${assignmentId}`,
+    }),
+
     deleteAssignment: build.mutation<
       { message: string },
       {
@@ -293,19 +302,6 @@ export const api = createApi({
         method: "PUT",
         body: assignment,
       }),
-    }),
-
-    getAssignment: build.query<
-      Assignment,
-      {
-        courseId: string;
-        sectionId: string;
-        chapterId: string;
-        assignmentId: string;
-      }
-    >({
-      query: ({ courseId, sectionId, chapterId, assignmentId }) =>
-        `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/assignments/${assignmentId}`,
     }),
     /*
     ===============

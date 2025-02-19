@@ -91,14 +91,13 @@ function SubmitButton({ courseId, sectionId, chapterId, assignmentId, assignment
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       className={`
-        group relative inline-flex items-center gap-2.5 px-5 py-2.5
-        disabled:cursor-not-allowed
-        focus:outline-none
+        group relative flex items-center gap-3 px-4 py-2.5 bg-[#1e1e2e]/80 hover:bg-[#262637]
+        rounded-lg transition-all duration-200 border border-gray-800/50 hover:border-gray-700
       `}
     >
-      <div className="absolute inset-0 bg-gradient-to-r from-green-600 to-green-500 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-500 blur-xl" />
+      <div className="absolute inset-0 blur animate-pulse" />
 
-      <div className="relative flex items-center gap-2.5 px-5 py-2.5 bg-gradient-to-r from-green-800 to-green-700 rounded-lg text-white font-semibold shadow-lg transition-all duration-300">
+      <div className="flex items-center gap-2.5">
         {(isSubmitting || editorIsSubmitting) ? (
           <>
             <div className="relative">

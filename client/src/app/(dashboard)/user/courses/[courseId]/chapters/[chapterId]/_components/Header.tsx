@@ -16,25 +16,16 @@ import {
 } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import axios from "axios";
-
-async function fetchAssignment(courseId: string, sectionId: string, chapterId: string, assignmentId: string) {
-  const url = `${process.env.NEXT_ENV ===  "development" ? process.env.NEXT_PUBLIC_API_LOCAL_URL : process.env.NEXT_PUBLIC_API_URL}/courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/assignments/${assignmentId}`;
-  const { data } = await axios.get(url);
-  return data;
-}
 
 interface HeaderProps {
-  searchParams: { courseId: string; sectionId: string; chapterId: string; assignmentId: string };
+  assignment: Assignment;
+  courseId: string;
+  sectionId: string;
+  chapterId: string;
 }
 
-async function Header({ searchParams }: HeaderProps) {
-  const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-  const user = await currentUser();
-  const convexUser = await convex.query(api.users.getUser, { userId: user?.id as string });
-  
-  const { courseId, sectionId, chapterId, assignmentId } = searchParams;
-  const assignment = await fetchAssignment(courseId, sectionId, chapterId, assignmentId);
+async function Header({ assignment, courseId, sectionId, chapterId }: HeaderProps) {
+  console.log(assignment);
 
   return (
     <div className="relative z-10">
@@ -73,7 +64,7 @@ async function Header({ searchParams }: HeaderProps) {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3">
               <ThemeSelector />
-              <LanguageSelector />
+              <LanguageSelector assignment={assignment} />
             </div>
 
             <SignedIn>
@@ -82,8 +73,8 @@ async function Header({ searchParams }: HeaderProps) {
                 courseId={courseId}
                 sectionId={sectionId}
                 chapterId={chapterId}
-                assignmentId={assignmentId}
-                assignment={assignment.data.description} 
+                assignmentId={assignment.assignmentId}
+                assignment={assignment.description} 
               />
             </SignedIn>
 
@@ -96,11 +87,11 @@ async function Header({ searchParams }: HeaderProps) {
         <div className="mt-4 border-t border-gray-800 pt-4">
           <div className="flex items-center gap-2 mb-2">
             <BookOpen className="w-5 h-5 text-blue-400" />
-            <h1 className="text-xl font-semibold text-white">{assignment.data.title}</h1>
+            <h1 className="text-xl font-semibold text-white">{assignment.title}</h1>
           </div>
-          <p className="text-sm text-gray-400 line-clamp-2">{assignment.data.description}</p>
+          <p className="text-sm text-gray-400 line-clamp-2">{assignment.description}</p>
           
-          {assignment.data.hints && assignment.data.hints.length > 0 && (
+          {assignment.hints && assignment.hints.length > 0 && (
             <Collapsible className="mt-4">
               <CollapsibleTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-2">
@@ -109,7 +100,7 @@ async function Header({ searchParams }: HeaderProps) {
                 </Button>
               </CollapsibleTrigger>
               <CollapsibleContent className="mt-4 space-y-2 animate-fade-in">
-                {assignment.data.hints.map((hint: string, index: number) => (
+                {assignment.hints.map((hint: string, index: number) => (
                   <Alert key={index} className="bg-blue-500/10 border-blue-500/20">
                     <AlertDescription className="text-sm text-blue-200">
                       <span className="ml-2">{hint}</span>
