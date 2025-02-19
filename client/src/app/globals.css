@@ -1305,15 +1305,15 @@ input[type="color"] {
 }
 
 .nondashboard-navbar__notification-button {
-  @apply relative w-7 h-7 sm:w-8 sm:h-8 bg-gray-800 rounded-full flex items-center justify-center;
+  @apply relative w-10 h-10 sm:w-10 sm:h-10 bg-gray-800 rounded-full flex items-center justify-center;
 }
 
 .nondashboard-navbar__notification-indicator {
-  @apply absolute top-0 right-0 bg-blue-500 h-1.5 sm:h-2 w-1.5 sm:w-2 rounded-full;
+  @apply absolute top-0 right-0 bg-blue-500 h-4 w-4 sm:h-4 sm:w-4 rounded-full;
 }
 
 .nondashboard-navbar__notification-icon {
-  @apply text-gray-400 w-4 h-4 sm:w-5 sm:h-5;
+  @apply text-gray-400 w-10 h-10 sm:w-5 sm:h-5;
 }
 
 /* Add these classes for group hover effects */

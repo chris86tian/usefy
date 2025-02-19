@@ -6,6 +6,7 @@ import UserList from './_components/UserList';
 import UserDetails from './_components/UserDetails';
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
+import { User } from '@clerk/nextjs/server';
 
 export default function CourseStatsPage() {
     const pathname = usePathname();

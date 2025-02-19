@@ -405,22 +405,23 @@ const Course = () => {
             </ScrollArea>
           </CardContent>
         </Card>       
-        {isQuizCompleted() ? (
-          <Assignments 
-            chapterId={currentChapter.chapterId} 
-            sectionId={currentSection?.sectionId as string} 
-            courseId={course.courseId}
-            teacherId={course.teacherId}
-          />
-        ) : (
+
+        {currentChapter.quiz ? (
           <div ref={quizRef}>
             <AdaptiveQuiz 
               quiz={currentChapter.quiz as Quiz}
               courseId={course.courseId}
               chapterId={currentChapter.chapterId}
-              sectionId={currentSection?.sectionId as string}
-            />
+              sectionId={currentSection?.sectionId}
+            />  
           </div>
+        ) : (
+          <Assignments 
+            chapterId={currentChapter.chapterId} 
+            sectionId={currentSection?.sectionId} 
+            courseId={course.courseId}
+            teacherId={course.teacherId}
+          />
         )}
 
         <CourseComments 

@@ -46,9 +46,11 @@ const CourseEditor = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const handleURLSubmit = async (videoUrl: string) => {
+  const handleURLSubmit = async (videoUrl: string, options: ProcessOptions) => {
     setIsDialogOpen(false);
     setIsGenerating(true);
+
+    console.log("Options:", options);
 
     try {
       const response = await fetch("/api/generate-course", {
@@ -56,21 +58,27 @@ const CourseEditor = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ videoUrl }),
+        body: JSON.stringify({
+          videoUrl: videoUrl,
+          generateQuizzes: options.generateQuizzes,
+          generateAssignments: options.generateAssignments,
+          codingAssignments: options.codingAssignments,
+          language: options.language,
+        }),
       });
 
       const data = await response.json();
-      console.log("Generate course response:", data);
 
       if (data.error) {
         toast.error(data.error);
         return;
       }
 
+      console.log("Data:", data);
+
       const { sections: newSections, courseTitle, courseDescription } = data;
 
-      // Update course details only if title is "Untitled Course" and description is empty
-      if (course?.title === "Untitled Course") {
+      if (course?.title === "Untitled Course" || course?.title === "") {
         methods.setValue("courseTitle", courseTitle);
         methods.setValue("courseDescription", courseDescription);
       }
@@ -84,26 +92,51 @@ const CourseEditor = () => {
 
         if (existingSectionIndex !== -1) {
           const existingSection = updatedSections[existingSectionIndex];
-          const mergedChapters = newSection.chapters.map(
-            (newChapter: Chapter) => {
-              const existingChapter = existingSection.chapters.find(
-                (chapter: Chapter) => chapter.title === newChapter.title
-              );
 
-              return existingChapter
-                ? {
-                    ...existingChapter,
-                    content: newChapter.content || existingChapter.content,
-                    video: newChapter.video || existingChapter.video,
-                    quiz: newChapter.quiz || existingChapter.quiz,
-                    assignments: newChapter.assignments || existingChapter.assignments,
-                  }
-                : {
-                    ...newChapter,
-                    chapterId: newChapter.chapterId || uuid(),
-                  };
-            }
-          );
+          const mergedChapters = newSection.chapters.map((newChapter) => {
+            const existingChapter = existingSection.chapters.find(
+              (chapter) => chapter.title === newChapter.title
+            );
+
+            return existingChapter
+              ? {
+                  ...existingChapter,
+                  content: newChapter.content || existingChapter.content,
+                  video: newChapter.video || existingChapter.video,
+                  quiz: newChapter.quiz 
+                    ? {
+                        quizId: existingChapter.quiz?.quizId || uuid(),
+                        questions: newChapter.quiz.questions.map((question) => ({
+                          ...question,
+                          questionId: uuid(),
+                        })),
+                      }
+                    : existingChapter.quiz || undefined,
+                  assignments: newChapter.assignments?.map(assignment => ({
+                    ...assignment,
+                    assignmentId: assignment.assignmentId || uuid(),
+                    submissions: assignment.submissions || []
+                  })) || existingChapter.assignments || [],
+                }
+              : {
+                  ...newChapter,
+                  chapterId: newChapter.chapterId || uuid(),
+                  quiz: newChapter.quiz
+                    ? {
+                        quizId: uuid(),
+                        questions: newChapter.quiz.questions.map((question) => ({
+                          ...question,
+                          questionId: uuid(),
+                        })),
+                      }
+                    : undefined,
+                  assignments: newChapter.assignments?.map(assignment => ({
+                    ...assignment,
+                    assignmentId: assignment.assignmentId || uuid(),
+                    submissions: []
+                  })) || [],
+                };
+          });
 
           updatedSections[existingSectionIndex] = {
             ...existingSection,
@@ -113,9 +146,23 @@ const CourseEditor = () => {
           updatedSections.push({
             ...newSection,
             sectionId: uuid(),
-            chapters: newSection.chapters.map((chapter: Chapter) => ({
+            chapters: newSection.chapters.map((chapter) => ({
               ...chapter,
               chapterId: uuid(),
+              quiz: chapter.quiz
+                ? {
+                    quizId: uuid(),
+                    questions: chapter.quiz.questions.map((question) => ({
+                      ...question,
+                      questionId: uuid(),
+                    })),
+                  }
+                : undefined,
+              assignments: chapter.assignments?.map(assignment => ({
+                ...assignment,
+                assignmentId: assignment.assignmentId || uuid(),
+                submissions: []
+              })) || [],
             })),
           });
         }
@@ -129,7 +176,7 @@ const CourseEditor = () => {
     } finally {
       setIsGenerating(false);
     }
-  };
+  }; 
 
   const dispatch = useAppDispatch();
   const { sections } = useAppSelector((state) => state.global.courseEditor);
@@ -202,7 +249,6 @@ const CourseEditor = () => {
 
     formData.append("sections", JSON.stringify(sectionsWithPreservedData));
 
-    console.log("Form Data Contents:");
     for (const [key, value] of formData.entries()) {
       console.log(
         `${key}:`,
@@ -218,8 +264,6 @@ const CourseEditor = () => {
     setProgress(0);
 
     try {
-      console.log("Starting course update...");
-
       const updatedSections = await uploadAllVideos(
         sections,
         id,
@@ -237,10 +281,8 @@ const CourseEditor = () => {
         updatedSections,
         thumbnailUrl
       );
-
-      console.log("Sending update request...");
+      
       const result = await updateCourse({ courseId: id, formData }).unwrap();
-      console.log("Update response:", result);
 
       toast.success("Course updated successfully!");
       refetch();

@@ -98,35 +98,6 @@ declare global {
     breakInterval?: number;
   }
 
-  // TODO: update interface to match clerk user
-  interface User {
-    id: string;
-    firstName?: string;
-    lastName?: string;
-    fullName?: string;
-    username?: string;
-    hasImage: boolean;
-    imageUrl: string;
-    emailAddresses: Array<{
-      emailAddress: string;
-    }>;
-    publicMetadata: {
-      userType: "teacher" | "user";
-    };
-    privateMetadata: {
-      settings?: UserSettings;
-      paymentMethods?: Array<PaymentMethod>;
-      defaultPaymentMethodId?: string;
-      stripeCustomerId?: string;
-    };
-    unsafeMetadata: {
-      bio?: string;
-      urls?: string[];
-    };
-    lastSignInAt: Date | null
-    createdAt: Date
-  }
-
   interface Course {
     courseId: string;
     teacherId: string;
@@ -142,14 +113,6 @@ declare global {
     enrollments?: Array<{
       userId: string;
     }>;
-  }
-
-  interface Module {
-    moduleId: string;
-    title: string;
-    description?: string;
-    video?: string | File;
-    sections: Section[];
   }
 
   interface Section {
@@ -170,9 +133,7 @@ declare global {
     comments?: ChapterComment[];
     likes?: number;
     dislikes?: number;
-    quiz?: {
-      questions: Question[];
-    };
+    quiz?: Quiz;
   }
 
   interface ChapterComment {
@@ -240,6 +201,10 @@ declare global {
     description: string;
     submissions: Submission[];
     resources?: Resource[];
+    fileUrl?: string;
+    isCoding?: boolean;
+    language?: string;
+    starterCode?: string;
     hints?: string[];
   }
 
@@ -263,10 +228,12 @@ declare global {
   }
 
   interface Quiz {
+    quizId: string;
     questions: Question[];
   }
 
   interface Question {
+    questionId: string
     question: string
     difficulty?: "easy" | "medium" | "hard"
     options: string[]
@@ -423,6 +390,27 @@ declare global {
     feedback: string;
     createdAt: string;
   }
+
+  interface UserNotification {
+    id: string
+    title: string
+    message: string
+    timestamp: string
+  }
+
+  interface NotificationModalProps {
+    isOpen: boolean
+    onClose: () => void
+    notifications: UserNotification[]
+  }
+
+  type ProcessOptions = {
+    generateQuizzes: boolean
+    generateAssignments: boolean
+    codingAssignments: boolean
+    language: string
+  }
+  
 }
 
 export {};

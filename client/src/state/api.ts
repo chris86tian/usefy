@@ -3,6 +3,7 @@ import { BaseQueryApi, FetchArgs } from "@reduxjs/toolkit/query";
 import { User } from "@clerk/nextjs/server";
 import { Clerk } from "@clerk/clerk-js";
 import { toast } from "sonner";
+import { get } from "http";
 
 const server_url = process.env.NEXT_ENV === "production" ? process.env.NEXT_PUBLIC_API_URL : process.env.NEXT_PUBLIC_API_LOCAL_URL;
 
@@ -85,8 +86,9 @@ export const api = createApi({
       invalidatesTags: ["Users"],
     }),
 
-    getUsers: build.query<User, void>({
+    getUsers: build.query<User[], void>({
       query: () => "users/clerk",
+      providesTags: ["Users"],
     }),
 
     getCourseUsers: build.query<User[], string>({
@@ -256,6 +258,14 @@ export const api = createApi({
         `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/assignments`,
     }),
 
+    getAssignment: build.query<
+      Assignment,
+      { courseId: string; sectionId: string; chapterId: string; assignmentId: string }
+    >({
+      query: ({ courseId, sectionId, chapterId, assignmentId }) =>
+        `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/assignments/${assignmentId}`,
+    }),
+
     deleteAssignment: build.mutation<
       { message: string },
       {
@@ -292,19 +302,6 @@ export const api = createApi({
         method: "PUT",
         body: assignment,
       }),
-    }),
-
-    getAssignment: build.query<
-      Assignment,
-      {
-        courseId: string;
-        sectionId: string;
-        chapterId: string;
-        assignmentId: string;
-      }
-    >({
-      query: ({ courseId, sectionId, chapterId, assignmentId }) =>
-        `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/assignments/${assignmentId}`,
     }),
     /*
     ===============
@@ -367,8 +364,8 @@ export const api = createApi({
     NOTIFICATIONS
     =============== 
     */
-    getNotifications: build.query<Notification[], Partial<Notification>>({
-      query: (userId) => `notifications?userId=${userId}`,
+    getNotifications: build.query<UserNotification[], string>({
+      query: (userId) => `notifications/${userId}`,
     }),
 
     /* 
@@ -593,6 +590,31 @@ export const api = createApi({
       query: (userId) => `feedback/user/${userId}`,
       providesTags: ['Feedback'],
     }),
+
+    /*
+    ===============
+    ENROLLMENTS
+    ===============
+    */
+    // enrollUser: build.mutation<
+    //   { message: string },
+    //   { courseId: string; userId: string }
+    // >({
+    //   query: ({ courseId, userId }) => ({
+    //     url: `courses/${courseId}/enroll/${userId}`,
+    //     method: "POST",
+    //   }),
+    // }),
+
+    unenrollUser: build.mutation<
+      { message: string },
+      { courseId: string; userId: string }
+    >({
+      query: ({ courseId, userId }) => ({
+        url: `courses/${courseId}/unenroll/${userId}`,
+        method: "POST",
+      }),
+    }),
   }),
 });
 
@@ -636,7 +658,9 @@ export const {
   useCreateReplyMutation,
   useGetChapterCommentsQuery,
   useLikeChapterMutation,
-  useDislikeChapterMutation,
+  useDislikeChapterMutation,  
   useCreateFeedbackMutation,
   useGetFeedbackQuery,
+  // useEnrollUserMutation,
+  useUnenrollUserMutation,
 } = api;

@@ -6,7 +6,7 @@ import { getAuth } from "@clerk/express";
 import UserCourseProgress from "../models/userCourseProgressModel";
 import Commit from "../models/commitModel";
 import { mergeSections, calculateOverallProgress } from "../utils/utils";
-import { count } from "console";
+import UserNotification from "../models/notificationModel";
 
 const s3 = new AWS.S3();
 
@@ -102,9 +102,6 @@ export const updateCourse = async (
   const { userId } = getAuth(req);
 
   try {
-    console.log("Received update request for course:", courseId);
-    console.log("Update data:", updateData);
-
     if (!userId) {
       res.status(401).json({ message: "User not authenticated" });
       return;
@@ -140,7 +137,6 @@ export const updateCourse = async (
 
     if (updateData.sections) {
       try {
-        console.log("Processing sections data:", updateData.sections);
         const sectionsData =
           typeof updateData.sections === "string"
             ? JSON.parse(updateData.sections)
@@ -150,7 +146,7 @@ export const updateCourse = async (
           throw new Error("Sections must be an array");
         }
 
-        updateData.sections = sectionsData.map((section: any) => ({
+        updateData.sections = sectionsData.map((section) => ({
           ...section,
           sectionId: section.sectionId || uuidv4(),
           chapters: Array.isArray(section.chapters)
@@ -158,15 +154,31 @@ export const updateCourse = async (
                 ...chapter,
                 chapterId: chapter.chapterId || uuidv4(),
                 assignments: Array.isArray(chapter.assignments)
-                  ? chapter.assignments
+                  ? chapter.assignments.map((assignment: any) => ({
+                      ...assignment,
+                      assignmentId: assignment.assignmentId || uuidv4(),
+                      submissions: Array.isArray(assignment.submissions)
+                        ? assignment.submissions
+                        : [],
+                    }))
                   : [],
-                quiz: chapter.quiz || null,
+                quiz: chapter.quiz 
+                  ? {
+                      ...chapter.quiz,
+                      quizId: chapter.quiz.quizId || uuidv4(),
+                      questions: Array.isArray(chapter.quiz.questions)
+                        ? chapter.quiz.questions.map((question: any) => ({
+                            ...question,
+                            questionId: question.questionId || uuidv4()
+                          }))
+                        : []
+                    }
+                  : undefined,
                 video: chapter.video || "",
               }))
             : [],
         }));
 
-        console.log("Processed sections:", updateData.sections);
       } catch (error) {
         console.error("Error processing sections data:", error);
         res.status(400).json({
@@ -177,7 +189,6 @@ export const updateCourse = async (
       }
     }
 
-    console.log("Updating course with data:", updateData);
     const updatedCourse = await Course.update(courseId, updateData);
 
     if (updateData.sections) {
@@ -187,8 +198,10 @@ export const updateCourse = async (
         .exec();
 
       for (const progress of progressList) {
+        // Create a deep copy of the existing progress sections to avoid mutations
+        const existingSections = JSON.parse(JSON.stringify(progress.sections || []));
         progress.sections = mergeSections(
-          progress.sections,
+          existingSections,
           updateData.sections
         );
         progress.lastAccessedTimestamp = new Date().toISOString();
@@ -377,7 +390,7 @@ export const createAssignment = async (
 ): Promise<void> => {
   const { courseId, sectionId, chapterId } = req.params;
   const { userId } = getAuth(req);
-  const { title, description, resources, hints } = req.body;
+  const { title, description, resources, hints, fileUrl, isCoding, language, starterCode } = req.body;
 
   try {
     const course = await Course.get(courseId);
@@ -420,9 +433,13 @@ export const createAssignment = async (
       assignmentId: uuidv4(),
       title,
       description,
-      resources: resources || [],
+      fileUrl,
+      isCoding,
+      language,
+      starterCode,
+      resources,
       submissions: [],
-      hints: hints || [],
+      hints,
     };
 
     if (!chapter.assignments) {
@@ -1161,5 +1178,55 @@ export const dislikeChapter = async (
     res.json({ data: chapter });
   } catch (error) {
     res.status(500).json({ message: "Error disliking chapter", error });
+  }
+};
+
+export const unenrollUser = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { courseId, userId } = req.params;
+
+    if (!courseId || !userId) {
+      res.status(400).json({ message: "Missing courseId or userId" });
+    }
+
+    const course = await Course.get(courseId);
+    if (!course) {
+      res.status(404).json({ message: "Course not found" });
+    }
+
+    if (!Array.isArray(course.enrollments)) {
+      res.status(404).json({ message: "No enrollments found for this course" });
+    }
+
+    course.enrollments = course.enrollments.filter(
+      (enrollment: any) => enrollment.userId !== userId
+    );
+
+    await course.save();
+
+    await UserCourseProgress.delete({ userId, courseId });
+
+    try {
+      const notification = new UserNotification({
+        notificationId: uuidv4(),
+        userId,
+        title: "Unenrollment",
+        message: "You have been unenrolled from the course: " + course.title,
+        timestamp: new Date().toISOString(),
+      });
+      await notification.save();
+    } catch (err) {
+      console.error("Error sending notification:", err);
+      res.status(500).json({ message: "Error sending notification", error: err });
+    }
+
+    res.json({ message: "User unenrolled successfully" });
+
+  } catch (error) {
+    console.error("Unhandled server error:", error);
+    res.status(500).json({ message: "Internal server error", error });
   }
 };

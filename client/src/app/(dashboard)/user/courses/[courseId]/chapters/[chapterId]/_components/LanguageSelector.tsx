@@ -7,13 +7,24 @@ import Image from "next/image";
 import { ChevronDownIcon } from "lucide-react";
 import useMounted from "@/hooks/useMounted";
 
-function LanguageSelector() {
+interface LanguageSelectorProps {
+  assignment: Assignment;
+}
+
+function LanguageSelector({ assignment }: LanguageSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const mounted = useMounted();
 
   const { language, setLanguage } = useCodeEditorStore();
   const dropdownRef = useRef<HTMLDivElement>(null);
   const currentLanguageObj = LANGUAGE_CONFIG[language];
+
+  // Set the language from assignment when component mounts
+  useEffect(() => {
+    if (assignment.language) {
+      setLanguage(assignment.language);
+    }
+  }, [assignment.language, setLanguage]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -27,8 +38,10 @@ function LanguageSelector() {
   }, []);
 
   const handleLanguageSelect = (langId: string) => {
-    setLanguage(langId);
-    setIsOpen(false);
+    if (langId === assignment.language) {
+      setLanguage(langId);
+      setIsOpen(false);
+    }
   };
 
   if (!mounted) return null;
@@ -86,6 +99,7 @@ function LanguageSelector() {
 
             <div className="max-h-[280px] overflow-y-auto overflow-x-hidden">
               {Object.values(LANGUAGE_CONFIG).map((lang, index) => {
+                const isDisabled = lang.id !== assignment.language;
 
                 return (
                   <motion.div
@@ -96,27 +110,30 @@ function LanguageSelector() {
                     className="relative group px-2"
                   >
                     <button
+                      disabled={isDisabled}
                       className={`
                       relative w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
                       ${language === lang.id ? "bg-blue-500/10 text-blue-400" : "text-gray-300"}
+                      ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}
                     `}
                       onClick={() => handleLanguageSelect(lang.id)}
                     >
                       {/* decorator */}
                       <div
-                        className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 rounded-lg 
-                      opacity-0 group-hover:opacity-100 transition-opacity"
+                        className={`absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 rounded-lg 
+                      opacity-0 group-hover:opacity-100 transition-opacity ${isDisabled ? "!opacity-0" : ""}`}
                       />
 
                       <div
                         className={`
                          relative size-8 rounded-lg p-1.5 group-hover:scale-110 transition-transform
                          ${language === lang.id ? "bg-blue-500/10" : "bg-gray-800/50"}
+                         ${isDisabled ? "!scale-100" : ""}
                        `}
                       >
                         <div
-                          className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-lg 
-                        opacity-0 group-hover:opacity-100 transition-opacity"
+                          className={`absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-lg 
+                        opacity-0 group-hover:opacity-100 transition-opacity ${isDisabled ? "!opacity-0" : ""}`}
                         />
                         <Image
                           width={24}
@@ -153,4 +170,5 @@ function LanguageSelector() {
     </div>
   );
 }
+
 export default LanguageSelector;

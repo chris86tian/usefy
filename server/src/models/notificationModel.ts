@@ -19,7 +19,13 @@ const notificationSchema = new Schema(
       type: String,
       required: true,
     },
+    timestamp: {
+      type: String,
+      required: true,
+    },
   }
 );
 
-export default model("Notification", notificationSchema);
+const UserNotification = model("UserNotification", notificationSchema);
+
+export default UserNotification;
