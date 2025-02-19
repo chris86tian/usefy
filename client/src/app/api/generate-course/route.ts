@@ -176,7 +176,7 @@ export async function POST(request: Request) {
 
     const userPrompt = `Create a well-structured course outline with at least 2 sections and at least 2 chapters each. Every chapter must have a video timestamp.
     ${generateQuizzes ? "Include 5 quiz questions per chapter." : ""}
-    ${generateAssignments ? `Include 1 assignment per chapter. ${codingAssignments ? `Make it a coding assignment in ${language}.` : ""}` : ""}
+    ${generateAssignments ? `Include 1 assignment per chapter. ${codingAssignments ? `Make it a coding assignment in ${language}. Make sure to provide starter code with the main function and sample test cases.` : ""}` : ""}
 
     Format:
     {

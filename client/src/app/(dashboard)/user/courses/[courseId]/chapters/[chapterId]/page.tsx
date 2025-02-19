@@ -399,7 +399,7 @@ const Course = () => {
           </CardContent>
         </Card>       
 
-        {currentChapter.quiz ? (
+        {currentChapter.quiz && !isQuizCompleted() ? (
           <div ref={quizRef}>
             <AdaptiveQuiz 
               quiz={currentChapter.quiz as Quiz}

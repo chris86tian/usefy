@@ -31,7 +31,7 @@ const YouTubeDialog = ({ isOpen, onClose, onSubmit }: YouTubeDialogProps) => {
   const [generateQuizzes, setGenerateQuizzes] = useState(false)
   const [generateAssignments, setGenerateAssignments] = useState(false)
   const [codingAssignments, setCodingAssignments] = useState(false)
-  const [language, setLanguage] = useState("Python")
+  const [language, setLanguage] = useState(LANGUAGE_CONFIG.python.label)
 
   const handleSubmit = async () => {
     if (!isValidYouTubeUrl(youtubeURL)) {

@@ -25,7 +25,7 @@ function EditorPanel({ assignment }: EditorPanelProps) {
 
   useEffect(() => {
     const savedCode = localStorage.getItem(`editor-code-${language}`);
-    const newCode = savedCode || assignment.starterCode || LANGUAGE_CONFIG[language].defaultCode;
+    const newCode = savedCode || assignment.starterCode || LANGUAGE_CONFIG[language.toLowerCase()].defaultCode;
     if (editor) editor.setValue(newCode);
   }, [language, editor, assignment.starterCode]);  
 
@@ -112,7 +112,7 @@ function EditorPanel({ assignment }: EditorPanelProps) {
           {clerk.loaded && (
             <Editor
               height="600px"
-              language={LANGUAGE_CONFIG[language].monacoLanguage}
+              language={LANGUAGE_CONFIG[language.toLowerCase()].monacoLanguage}
               onChange={handleEditorChange}
               theme={theme}
               beforeMount={defineMonacoThemes}
