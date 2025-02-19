@@ -348,6 +348,7 @@ const Course = () => {
                   sectionId={currentSection?.sectionId as string}
                   chapterId={currentChapter.chapterId}
                 />
+
               </div>
             </div>
             <div className="flex space-x-3">
