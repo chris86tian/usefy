@@ -382,9 +382,11 @@ declare global {
 
   interface Feedback {
     feedbackId: string;
+    feedbackType: string;
+    questionId: string;
+    assignmentId: string;
     userId: string;
     username: string;
-    questionId: string;
     courseId: string;
     sectionId: string;
     chapterId: string;

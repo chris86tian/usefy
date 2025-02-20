@@ -6,6 +6,19 @@ const feedbackSchema = new Schema({
     hashKey: true,
     required: true,
   },
+  feedbackType: {
+    type: String,
+    enum: ['question', 'assignment'],
+    required: true,
+  },
+  questionId: {
+    type: String,
+    required: false, //optional
+  },
+  assignmentId: {
+    type: String,
+    required: false, //optional
+  },
   userId: {
     type: String,
     required: true,
@@ -14,12 +27,6 @@ const feedbackSchema = new Schema({
     type: String,
     required: true,
   },
-
-  questionId: {
-    type: String,
-    required: true,
-  },
-  
   courseId: {
     type: String,
     required: true,

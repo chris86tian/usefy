@@ -274,12 +274,13 @@ const AdaptiveQuiz = ({ quiz, courseId, sectionId, chapterId, onQuizComplete }: 
         </CardContent>
 
         <CardFooter className="flex justify-end space-x-2">
-          <FeedbackButton
-            questionId={currentQuestion.questionId}
-            courseId={courseId}
-            sectionId={sectionId}
-            chapterId={chapterId}
-          />
+        <FeedbackButton
+          feedbackType="question"
+          itemId={currentQuestion.questionId}
+          courseId={courseId}
+          sectionId={sectionId}
+          chapterId={chapterId}
+        />
           {!showResult ? (
             <Button
               onClick={handleCheckAnswer}
