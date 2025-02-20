@@ -27,10 +27,7 @@ const Profile = () => {
             },
           }}
         />
-        <div className="flex flex-col gap-4">
-          <CommitGraph />
-          <FeedbackList />
-        </div>
+        <CommitGraph />
       </div>
           
     </>

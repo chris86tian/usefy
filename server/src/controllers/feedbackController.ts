@@ -37,11 +37,17 @@ export const createFeedback = async (req: Request, res: Response): Promise<void>
 };
 
 export const getFeedbacks = async (req: Request, res: Response): Promise<void> => {
-  const { userId } = req.params;
+  const { courseId } = req.params
   try {
-    const feedbacks = await Feedback.scan("userId").eq(userId).exec();
-    res.json({ message: "Feedbacks retrieved successfully", data: feedbacks });
+    const feedbacks = await Feedback.scan("courseId").eq(courseId).exec()
+    res.json({ 
+      message: "Feedbacks retrieved successfully", 
+      data: feedbacks 
+    })
   } catch (error) {
-    res.status(500).json({ message: "Error retrieving feedbacks", error });
+    res.status(500).json({ 
+      message: "Error retrieving feedbacks", 
+      error 
+    })
   }
 }

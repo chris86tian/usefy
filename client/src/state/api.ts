@@ -587,10 +587,10 @@ export const api = createApi({
     invalidatesTags: ['Feedback'],
   }),
 
-    getFeedback: build.query<Feedback[], string>({
-      query: (userId) => `feedback/user/${userId}`,
-      providesTags: ['Feedback'],
-    }),
+  getFeedback: build.query<Feedback[], string>({
+    query: (courseId) => `feedback/course/${courseId}`,
+    providesTags: ['Feedback'],
+  }),
 
     /*
     ===============

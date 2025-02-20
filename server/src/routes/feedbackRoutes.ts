@@ -1,10 +1,9 @@
-import express from 'express';
-import { createFeedback, getFeedbacks } from '../controllers/feedbackController';
-import { requireAuth } from "@clerk/express";
+import express from 'express'
+import { createFeedback, getFeedbacks } from '../controllers/feedbackController'
 
-const router = express.Router();
+const router = express.Router()
 
-router.post('/', requireAuth(), createFeedback);
-router.get('/user/:userId', requireAuth(), getFeedbacks);
+router.post('/', createFeedback)
+router.get('/course/:courseId', getFeedbacks)
 
-export default router;
+export default router
