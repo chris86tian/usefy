@@ -11,6 +11,7 @@ import { Clock, Book, Trophy } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Input } from "@/components/ui/input"
+import { User } from "@clerk/nextjs/server"
 
 interface UserDetailsProps {
   user: User
