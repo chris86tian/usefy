@@ -50,8 +50,6 @@ const CourseEditor = () => {
     setIsDialogOpen(false);
     setIsGenerating(true);
 
-    console.log("Options:", options);
-
     try {
       const response = await fetch("/api/generate-course", {
         method: "POST",
@@ -73,8 +71,6 @@ const CourseEditor = () => {
         toast.error(data.error);
         return;
       }
-
-      console.log("Data:", data);
 
       const { sections: newSections, courseTitle, courseDescription } = data;
 
