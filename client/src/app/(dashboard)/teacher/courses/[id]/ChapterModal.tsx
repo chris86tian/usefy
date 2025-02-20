@@ -139,7 +139,7 @@ const ChapterModal = () => {
     setAssignments(assignments.filter((_, i) => i !== index));
   };
 
-  const updateAssignment = (index: number, field: keyof Assignment, value: string) => {
+  const updateAssignment = (index: number, field: keyof Assignment, value: string | string[]) => {
     const updatedAssignments = [...assignments];
     updatedAssignments[index] = {
       ...updatedAssignments[index],
@@ -149,26 +149,51 @@ const ChapterModal = () => {
   };
 
   const addHint = (assignmentIndex: number) => {
-    const updatedAssignments = [...assignments];
-    updatedAssignments[assignmentIndex].hints?.push("");
-    setAssignments(updatedAssignments);
+    setAssignments(prevAssignments => {
+      const updatedAssignments = [...prevAssignments];
+      const currentAssignment = { ...updatedAssignments[assignmentIndex] };
+      
+      if (!currentAssignment.hints) {
+        currentAssignment.hints = [];
+      }
+      
+      currentAssignment.hints = [...currentAssignment.hints, ""];
+      updatedAssignments[assignmentIndex] = currentAssignment;
+      
+      return updatedAssignments;
+    });
   };
 
   const removeHint = (assignmentIndex: number, hintIndex: number) => {
-    const updatedAssignments = [...assignments];
-    updatedAssignments[assignmentIndex].hints = updatedAssignments[assignmentIndex].hints?.filter(
-      (_, i) => i !== hintIndex
-    );
-    setAssignments(updatedAssignments);
+    setAssignments(prevAssignments => {
+      const updatedAssignments = [...prevAssignments];
+      const currentAssignment = { ...updatedAssignments[assignmentIndex] };
+      
+      if (currentAssignment.hints) {
+        currentAssignment.hints = currentAssignment.hints.filter((_, i) => i !== hintIndex);
+        updatedAssignments[assignmentIndex] = currentAssignment;
+      }
+      
+      return updatedAssignments;
+    });
   };
 
   const updateHint = (assignmentIndex: number, hintIndex: number, value: string) => {
-    const updatedAssignments = [...assignments];
-    if (updatedAssignments[assignmentIndex].hints) {
-      updatedAssignments[assignmentIndex].hints[hintIndex] = value;
-    }
-    setAssignments(updatedAssignments);
+    setAssignments(prevAssignments => {
+      const updatedAssignments = [...prevAssignments];
+      const currentAssignment = { ...updatedAssignments[assignmentIndex] };
+      
+      if (currentAssignment.hints) {
+        const updatedHints = [...currentAssignment.hints];
+        updatedHints[hintIndex] = value;
+        currentAssignment.hints = updatedHints;
+        updatedAssignments[assignmentIndex] = currentAssignment;
+      }
+      
+      return updatedAssignments;
+    });
   };
+
 
   const onClose = () => {
     dispatch(closeChapterModal());
@@ -176,17 +201,22 @@ const ChapterModal = () => {
 
   const onSubmit = (data: ChapterFormData) => {
     if (selectedSectionIndex === null) return;
-
+  
     const newChapter: Chapter = {
       chapterId: chapter?.chapterId || uuidv4(),
       title: data.title,
       content: data.content,
       type: questions.length > 0 ? "Quiz" : (data.video ? "Video" : "Text"),
       video: data.video,
-      quiz: questions.length > 0 ? { quizId: chapter?.quiz?.quizId || uuidv4(), questions } : undefined,
-      assignments: chapter?.assignments || [],
+      quiz: questions.length > 0 
+        ? { 
+            quizId: chapter?.quiz?.quizId || uuidv4(), 
+            questions 
+          } 
+        : undefined,
+      assignments: assignments,
     };
-
+  
     if (selectedChapterIndex === null) {
       dispatch(
         addChapter({
@@ -203,7 +233,7 @@ const ChapterModal = () => {
         })
       );
     }
-
+  
     toast.success(
       `Chapter updated successfully but you need to save the course to apply the changes`
     );
@@ -300,7 +330,7 @@ const ChapterModal = () => {
               />
             )}
 
-<div className="mt-6 border rounded-lg">
+            <div className="mt-6 border rounded-lg">
               <div 
                 className="flex items-center justify-between p-4 cursor-pointer bg-customgreys-darkGrey rounded-t-lg"
                 onClick={() => setIsQuizSectionOpen(!isQuizSectionOpen)}
@@ -471,7 +501,7 @@ const ChapterModal = () => {
                             value={assignment.description}
                             onChange={(e) => updateAssignment(assignmentIndex, "description", e.target.value)}
                             placeholder="Assignment Description"
-                            className="w-full min-h-[100px] mb-4 p-2 bg-zinc-800 text-white rounded-sm"
+                            className="w-full min-h-[100px] mb-4 p-2 bg-zinc-900 text-white rounded-sm"
                           />
 
                           {/* Hints Section */}
@@ -482,7 +512,10 @@ const ChapterModal = () => {
                               </FormLabel>
                               <Button
                                 type="button"
-                                onClick={() => addHint(assignmentIndex)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  addHint(assignmentIndex);
+                                }}
                                 size="sm"
                                 variant="outline"
                               >

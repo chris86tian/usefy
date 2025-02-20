@@ -412,6 +412,13 @@ declare global {
     language: string
   }
   
+  interface AssignmentCardProps {
+    assignment: Assignment
+    teacherId: string
+    courseId: string
+    sectionId: string
+    chapterId: string
+  }
 }
 
 export {};

@@ -169,14 +169,39 @@ export async function POST(request: Request) {
     const targetSegments = 6
     const keyTimestamps = findKeyMoments(transcript, targetSegments)
 
-    const systemPrompt = `You are a course creator. Create a structured course outline based on the provided transcript. Make sure to process the entire transcript. The response must be a valid JSON object. The transcript for the video is as follows:
-    ${formattedTranscript}
-    ${generateQuizzes ? "Include quiz questions for each chapter." : "Do not include quiz questions."}
-    ${generateAssignments ? `Include assignments for each chapter. ${codingAssignments ? `Make sure the assignments are coding-related and use ${language}.` : ""}` : "Do not include assignments."}`
+    const systemPrompt = `You are an expert course creator specializing in structured learning experiences. Based on the provided transcript, generate a detailed and structured course outline in JSON format. The response must be a valid JSON object. 
+    Instructions:
+    - Process the entire transcript carefully.
+    - Create a well-structured course outline with at least two sections, each containing multiple chapters.
+    - Each chapter must include a relevant video timestamp.
 
-    const userPrompt = `Create a well-structured course outline with at least 2 sections and at least 2 chapters each. Every chapter must have a video timestamp.
-    ${generateQuizzes ? "Include 5 quiz questions per chapter." : ""}
-    ${generateAssignments ? `Include 1 assignment per chapter. ${codingAssignments ? `Make it a coding assignment in ${language}.` : ""}` : ""}
+    Additional Content:
+    - ${generateQuizzes ? "Include 5 well-thought-out quiz questions per chapter." : "Do not include quiz questions."}
+    - ${generateAssignments ? `Include at least one assignment per chapter.${codingAssignments ? ` Ensure that assignments are coding-related and written in ${language}. Each coding assignment must include:` : ""}` : "Do not include assignments."}
+
+    For coding assignments, ensure:
+    - The problem statement is clear and relevant to the chapter.
+    - Provide starter code with a function signature and TODO comments.
+    - Include sample test cases for correctness.
+
+    The final response must be a valid JSON object.
+    `
+
+    const userPrompt = `Generate a well-structured course outline with at least 2 sections, each containing at least 2 chapters. Each chapter must have a video timestamp.
+    Additional Requirements:
+    - ${generateQuizzes ? "Include exactly 5 quiz questions per chapter, ensuring they align with the chapter content." : ""}
+    - ${generateAssignments ? `Each chapter must include at least 1 assignment. ${codingAssignments ? `Ensure coding assignments are written in ${language}. Each coding assignment must:` : ""}` : ""}
+
+    For coding assignments:
+    1. Clearly define the problem statement.
+    2. Provide starter code that includes:
+      - A function signature.
+      - The main function structure with TODO comments.
+      - At least 3 sample test cases.
+    3. Ensure that the problem difficulty increases gradually.
+    4. The assignment must align with the course content.
+
+    Ensure that the response is formatted as a **valid JSON object**.
 
     Format:
     {
@@ -240,7 +265,11 @@ export async function POST(request: Request) {
           ]
         }
       ]
-    }`
+    }
+    
+    Transcription:
+    ${formattedTranscript}
+    `
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",

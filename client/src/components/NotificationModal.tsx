@@ -21,7 +21,7 @@ const NotificationModal = ({ isOpen, onClose, notifications } : NotificationModa
                     </div>
                     ))
                     ) : (
-                    <p className="flex justify-center items-center h-full">No notifications</p>
+                    <p className="text-gray-500 text-center">You haven&apos;t received any notifications yet.</p>
                 )}
             </ScrollArea>
         </DialogContent>

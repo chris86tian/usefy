@@ -24,7 +24,6 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
 const Description = ({ text }: { text: string }) => {
-  // Split text by code block markers (```)
   const parts = text.split(/```([\s\S]*?)```/);
   const [openSections, setOpenSections] = useState<{ [key: number]: boolean }>({});
 
@@ -35,14 +34,12 @@ const Description = ({ text }: { text: string }) => {
     }));
   };
 
-  // Calculate if the text is long enough to warrant collapsing
   const shouldCollapse = (text: string | string[]) => text.length > 100;
   
   return (
     <div className="space-y-4">
       {parts.map((part, index) => {
         if (index % 2 === 1) {
-          // This is a code block
           const isOpen = openSections[index] ?? false;
           return (
             <div key={index} className="relative group">
@@ -67,8 +64,7 @@ const Description = ({ text }: { text: string }) => {
             </div>
           );
         } else if (part.trim()) {
-          // This is regular text
-          const isOpen = openSections[index] ?? true;
+          const isOpen = openSections[index] ?? false;
           const shouldCollapseText = shouldCollapse(part);
           
           if (!shouldCollapseText) {
@@ -108,13 +104,6 @@ const Description = ({ text }: { text: string }) => {
   );
 };
 
-interface AssignmentCardProps {
-  assignment: Assignment
-  teacherId: string
-  courseId: string
-  sectionId: string
-  chapterId: string
-}
 
 export function AssignmentCard({ 
   assignment, 
@@ -128,7 +117,6 @@ export function AssignmentCard({
   const [deleteAssignment, { isLoading: isDeleting }] = useDeleteAssignmentMutation()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isResourcesOpen, setIsResourcesOpen] = useState(false)
-  const [isHintsOpen, setIsHintsOpen] = useState(false) // State to toggle viewing hints
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -187,86 +175,65 @@ export function AssignmentCard({
         <CardContent className="p-4 pt-2">
           <Description text={assignment.description} />
           
-          <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground mt-4">
+          <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground my-4">
             <div className="flex items-center space-x-2">
               <Users className="h-4 w-4" />
               <span>{assignment.submissions.length} Submissions</span>
             </div>
           </div>
 
-          <Collapsible
-            open={isResourcesOpen}
-            onOpenChange={setIsResourcesOpen}
-            className="mt-4"
-          >
-            <CollapsibleTrigger asChild>
-              <Button variant="outline" className="w-full justify-between">
-                Resources & Materials
-                <ChevronDown className={`h-4 w-4 transition-transform ${isResourcesOpen ? 'transform rotate-180' : ''}`} />
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="mt-4 space-y-3">
-              {assignment.resources && assignment.resources.length > 0 ? (
-                assignment.resources.map((resource, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 rounded-lg bg-gray-700">
-                    <div className="flex items-center space-x-2">
-                      <LinkIcon className="h-4 w-4 text-blue-400" />
-                      <span className="text-sm">{resource.title}</span>
+          {assignment.resources && assignment.resources.length > 0 ? (
+            <Collapsible
+              open={isResourcesOpen}
+              onOpenChange={setIsResourcesOpen}
+              className="mt-4"
+            >
+              <CollapsibleTrigger asChild>
+                <Button variant="outline" className="w-full justify-between">
+                  Resources & Materials
+                  <ChevronDown className={`h-4 w-4 transition-transform ${isResourcesOpen ? 'transform rotate-180' : ''}`} />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-4 space-y-3">
+                {assignment.resources && assignment.resources.length > 0 ? (
+                  assignment.resources.map((resource, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 rounded-lg bg-gray-700">
+                      <div className="flex items-center space-x-2">
+                        <LinkIcon className="h-4 w-4 text-blue-400" />
+                        <span className="text-sm">{resource.title}</span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8"
+                        onClick={() => window.open(resource.url, '_blank')}
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </Button>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8"
-                      onClick={() => window.open(resource.url, '_blank')}
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))
-              ) : (
-                <Alert>
-                  <AlertDescription>
-                    No additional resources provided for this assignment.
-                  </AlertDescription>
-                </Alert>
-              )}
-            </CollapsibleContent>
-          </Collapsible>
-
-          <Collapsible
-            open={isHintsOpen}
-            onOpenChange={setIsHintsOpen}
-            className="mt-4"
-          >
-            <CollapsibleTrigger asChild>
-              <Button variant="outline" className="w-full justify-between">
-                Hints
-                <ChevronDown className={`h-4 w-4 transition-transform ${isHintsOpen ? 'transform rotate-180' : ''}`} />
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="mt-4 space-y-3">
-              {assignment.hints && assignment.hints.length > 0 ? (
-                assignment.hints.map((hint, index) => (
-                  <div key={index} className="flex items-start space-x-2 p-2 rounded-lg bg-gray-700">
-                    <Info className="h-4 w-4 mr-1 text-green-400" />
-                    <span className="text-sm">{hint}</span>
-                  </div>
-                ))
-              ) : (
-                <Alert>
-                  <AlertDescription>
-                    No hints provided for this assignment.
-                  </AlertDescription>
-                </Alert>
-              )}
-            </CollapsibleContent>
-          </Collapsible>
+                  ))
+                ) : (
+                  <Alert>
+                    <AlertDescription>
+                      No additional resources provided for this assignment.
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </CollapsibleContent>
+            </Collapsible>
+          ) : (
+            <Alert>
+              <AlertDescription>
+                No additional resources provided for this assignment.
+              </AlertDescription>
+            </Alert>
+          )}
         </CardContent>
 
         <CardFooter className="p-4 pt-0">
           <Button 
             onClick={handleStartAssignment}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            className="w-full bg-cyan-700 hover:bg-cyan-900"
           >
             <CodeIcon className="h-4 w-4 mr-2" />
             Start Assignment

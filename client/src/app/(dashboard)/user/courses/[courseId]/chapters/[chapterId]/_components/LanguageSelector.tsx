@@ -17,9 +17,8 @@ function LanguageSelector({ assignment }: LanguageSelectorProps) {
 
   const { language, setLanguage } = useCodeEditorStore();
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const currentLanguageObj = LANGUAGE_CONFIG[language];
+  const currentLanguageObj = LANGUAGE_CONFIG[language.toLowerCase()];
 
-  // Set the language from assignment when component mounts
   useEffect(() => {
     if (assignment.language) {
       setLanguage(assignment.language);

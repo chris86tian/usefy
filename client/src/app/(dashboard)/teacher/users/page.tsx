@@ -68,8 +68,8 @@ const Users = () => {
   })
 
   const filteredUsers = sortedUsers.filter((user) =>
-    user.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    user.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    user.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.emailAddresses[0].emailAddress.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -118,7 +118,7 @@ const Users = () => {
                     <Avatar className="h-12 w-12 border-2 border-zinc-800">
                       <AvatarImage src={user.imageUrl} alt={`${user.firstName} ${user.lastName}`} />
                       <AvatarFallback className="bg-zinc-950 text-zinc-400">
-                        {user.firstName[0]}
+                        {user.firstName?.charAt(0)}{user.lastName?.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
                     
