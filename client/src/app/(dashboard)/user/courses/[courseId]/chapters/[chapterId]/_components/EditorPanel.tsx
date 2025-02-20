@@ -25,7 +25,7 @@ function EditorPanel({ assignment }: EditorPanelProps) {
 
   useEffect(() => {
     const savedCode = localStorage.getItem(`editor-code-${language}`);
-    const newCode = savedCode || assignment.starterCode || LANGUAGE_CONFIG[language.toLowerCase()].defaultCode;
+    const newCode = assignment.starterCode || savedCode || LANGUAGE_CONFIG[language.toLowerCase()].defaultCode;
     if (editor) editor.setValue(newCode);
   }, [language, editor, assignment.starterCode]);  
 
