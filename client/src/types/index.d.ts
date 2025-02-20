@@ -384,6 +384,7 @@ declare global {
     feedbackId: string;
     userId: string;
     username: string;
+    questionId: string;
     courseId: string;
     sectionId: string;
     chapterId: string;

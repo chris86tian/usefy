@@ -4,10 +4,10 @@ import { v4 as uuidv4 } from 'uuid';
 
 export const createFeedback = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { userId, username, courseId, sectionId, chapterId, feedback, createdAt } = req.body;
+    const { userId, username, questionId, courseId, sectionId, chapterId, feedback, createdAt } = req.body;
 
     // Validate required fields
-    if (!userId || !username || !courseId || !sectionId || !chapterId || !feedback || !createdAt) {
+    if (!userId || !username || !questionId || !courseId || !sectionId || !chapterId || !feedback || !createdAt) {
       res.status(400).json({ message: "Missing required fields" });
       return;
     }
@@ -16,6 +16,7 @@ export const createFeedback = async (req: Request, res: Response): Promise<void>
       feedbackId: uuidv4(),
       userId,
       username,
+      questionId,
       courseId,
       sectionId,
       chapterId,

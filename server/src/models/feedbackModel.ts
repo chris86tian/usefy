@@ -14,6 +14,12 @@ const feedbackSchema = new Schema({
     type: String,
     required: true,
   },
+
+  questionId: {
+    type: String,
+    required: true,
+  },
+  
   courseId: {
     type: String,
     required: true,

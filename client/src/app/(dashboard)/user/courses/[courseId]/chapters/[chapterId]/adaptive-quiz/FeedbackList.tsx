@@ -35,6 +35,9 @@ const FeedbackList = () => {
                     <span className="text-sm text-blue-400">
                     Course: {feedback.courseId}
                     </span>
+                    <span className="text-sm text-blue-400">
+                    Question: {feedback.questionId}
+                    </span>
                 </div>
                 <p className="text-gray-300">{feedback.feedback}</p>
                 </div>

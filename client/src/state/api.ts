@@ -572,6 +572,7 @@ export const api = createApi({
     { message: string },
     {
       userId: string;
+      questionId: string;
       courseId: string;
       sectionId: string;
       chapterId: string;

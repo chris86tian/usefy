@@ -10,12 +10,13 @@ import toast from "react-hot-toast"
 import { useCreateFeedbackMutation } from "@/state/api"
 
 interface FeedbackButtonProps {
+  questionId: string
   courseId: string
   sectionId: string
   chapterId: string
 }
 
-const FeedbackButton = ({ courseId, sectionId, chapterId }: FeedbackButtonProps) => {
+const FeedbackButton = ({ questionId, courseId, sectionId, chapterId }: FeedbackButtonProps) => {
   const [isOpen, setIsOpen] = useState(false)
   const [feedback, setFeedback] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -30,10 +31,10 @@ const FeedbackButton = ({ courseId, sectionId, chapterId }: FeedbackButtonProps)
     e.preventDefault()
     if (!feedback.trim()) return
   
-    // Add missing required fields
     const feedbackData = {
       userId: user?.id as string,
       username: getUsername(),
+      questionId: questionId,
       courseId,
       sectionId,
       chapterId,
