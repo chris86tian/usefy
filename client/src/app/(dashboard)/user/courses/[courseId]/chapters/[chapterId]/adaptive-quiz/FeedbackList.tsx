@@ -26,28 +26,25 @@ const FeedbackList = ({ courseId }: FeedbackListProps) => {
             <div className="space-y-4">
               {feedbacks?.map((feedback) => (
                 <div key={feedback.feedbackId} className="p-4 bg-gray-800 rounded-lg">
-                  <div className="flex justify-between items-start mb-2">
+                    <div className="flex justify-between items-start mb-2">
                     <div>
-                      <h3 className="font-medium">{feedback.username}</h3>
-                      <p className="text-sm text-gray-400">
+                        <h3 className="font-medium">{feedback.username}</h3>
+                        <p className="text-sm text-gray-400">
                         {new Date(feedback.createdAt).toLocaleDateString()}
-                      </p>
+                        </p>
+                        <span className="text-sm text-blue-400">
+                        Type: {feedback.feedbackType}
+                        </span>
                     </div>
-                    <div className="flex flex-col items-end">
-                      <span className="text-sm text-blue-400">
-                        Section: {feedback.sectionId}
-                      </span>
-                      <span className="text-sm text-blue-400">
-                        Chapter: {feedback.chapterId}
-                      </span>
-                      <span className="text-sm text-blue-400">
-                        Question: {feedback.questionId}
-                      </span>
+                    <span className="text-sm text-blue-400">
+                        {feedback.feedbackType === 'question' 
+                        ? `Question: ${feedback.questionId}`
+                        : `Assignment: ${feedback.assignmentId}`}
+                    </span>
                     </div>
-                  </div>
-                  <p className="text-gray-300">{feedback.feedback}</p>
+                    <p className="text-gray-300">{feedback.feedback}</p>
                 </div>
-              ))}
+                ))}
             </div>
           )}
         </div>

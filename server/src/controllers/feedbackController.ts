@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 export const createFeedback = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { userId, username, questionId, courseId, sectionId, chapterId, feedback, createdAt } = req.body;
+    const { userId, username, feedbackType, questionId, assignmentId, courseId, sectionId, chapterId, feedback, createdAt } = req.body;
 
     // Validate required fields
     if (!userId || !username || !questionId || !courseId || !sectionId || !chapterId || !feedback || !createdAt) {
@@ -12,11 +12,22 @@ export const createFeedback = async (req: Request, res: Response): Promise<void>
       return;
     }
 
+    if (feedbackType === 'question' && !questionId) {
+      res.status(400).json({ message: "Question ID required for question feedback" });
+      return;
+    }
+    if (feedbackType === 'assignment' && !assignmentId) {
+      res.status(400).json({ message: "Assignment ID required for assignment feedback" });
+      return;
+    }
+
     const newFeedback = new Feedback({
       feedbackId: uuidv4(),
+      feedbackType,
+      questionId,
+      assignmentId,
       userId,
       username,
-      questionId,
       courseId,
       sectionId,
       chapterId,

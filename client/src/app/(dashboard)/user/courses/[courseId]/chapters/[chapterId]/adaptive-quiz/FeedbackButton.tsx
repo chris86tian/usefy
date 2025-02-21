@@ -10,13 +10,14 @@ import toast from "react-hot-toast"
 import { useCreateFeedbackMutation } from "@/state/api"
 
 interface FeedbackButtonProps {
-  questionId: string
-  courseId: string
-  sectionId: string
-  chapterId: string
+  feedbackType: 'question' | 'assignment';
+  itemId: string;
+  courseId: string;
+  sectionId: string;
+  chapterId: string;
 }
 
-const FeedbackButton = ({ questionId, courseId, sectionId, chapterId }: FeedbackButtonProps) => {
+const FeedbackButton = ({ feedbackType, itemId, courseId, sectionId, chapterId }: FeedbackButtonProps) => {
   const [isOpen, setIsOpen] = useState(false)
   const [feedback, setFeedback] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -30,16 +31,17 @@ const FeedbackButton = ({ questionId, courseId, sectionId, chapterId }: Feedback
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!feedback.trim()) return
-  
+
     const feedbackData = {
+      feedbackType,
+      [feedbackType === 'question' ? 'questionId' : 'assignmentId']: itemId,
       userId: user?.id as string,
       username: getUsername(),
-      questionId: questionId,
       courseId,
       sectionId,
       chapterId,
       feedback,
-      createdAt: new Date().toISOString(), // Add ISO string timestamp
+      createdAt: new Date().toISOString(),
     }
 
     setIsSubmitting(true)

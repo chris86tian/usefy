@@ -568,24 +568,25 @@ export const api = createApi({
     FEEDBACK
     ===============
     */
-    createFeedback: build.mutation<
-    { message: string },
-    {
+    createFeedback: build.mutation<{ message: string }, {
+      feedbackType: 'question' | 'assignment';
+      questionId?: string;
+      assignmentId?: string;
       userId: string;
-      questionId: string;
       courseId: string;
       sectionId: string;
       chapterId: string;
       feedback: string;
-    }
-  >({
-    query: (body) => ({
-      url: `feedback`,
-      method: "POST",
-      body,
+      username: string;
+      createdAt: string;
+    }>({
+      query: (body) => ({
+        url: 'feedback',
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ['Feedback'],
     }),
-    invalidatesTags: ['Feedback'],
-  }),
 
   getFeedback: build.query<Feedback[], string>({
     query: (courseId) => `feedback/course/${courseId}`,
