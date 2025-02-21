@@ -53,18 +53,7 @@ Usefy provides a seamless way to manage courses, track user progress, handle tra
 
 ## Schema Diagrams  
 
-The following diagrams illustrate the key data models used:  
-
-### Course Schema  
-![Course Schema](assets/course.png)  
-
-### User Progress Schema  
-![User Progress Schema](assets/user-progress.png)  
-
-### Transaction, Notification, Commit Schema  
-![Notification-Transaction-Commit Schema](assets/notifications-transactions-commits.png)  
-
-For an interactive version of these diagrams, visit [this workspace](https://app.eraser.io/workspace/cdYkToriyno1VkoxYAop?origin=share).  
+For an interactive view of the diagrams, visit [this workspace](https://app.eraser.io/workspace/cdYkToriyno1VkoxYAop?origin=share).  
 
 ---
 
