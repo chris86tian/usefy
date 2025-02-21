@@ -17,6 +17,7 @@ import transactionRoutes from "./routes/transactionRoutes";
 import userCourseProgressRoutes from "./routes/userCourseProgressRoutes";
 import notificationRoutes from "./routes/notificationRoutes";
 import commitRoutes from "./routes/commitRoutes";
+import organizationRoutes from "./routes/organizationRoutes";
 
 dotenv.config();
 
@@ -110,12 +111,13 @@ app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
+app.use("/organizations", organizationRoutes);
 app.use("/courses", courseRoutes);
+app.use("/users/course-progress", requireAuth(), userCourseProgressRoutes);
 app.use("/users/clerk", requireAuth(), userClerkRoutes);
 app.use("/transactions", requireAuth(), transactionRoutes);
 app.use("/notifications", requireAuth(), notificationRoutes);
 app.use("/commits", requireAuth(), commitRoutes);
-app.use("/users/course-progress", requireAuth(), userCourseProgressRoutes);
 
 app.use(
   (
