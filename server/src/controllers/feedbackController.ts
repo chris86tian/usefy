@@ -7,7 +7,7 @@ export const createFeedback = async (req: Request, res: Response): Promise<void>
     const { userId, username, feedbackType, questionId, assignmentId, courseId, sectionId, chapterId, feedback, createdAt } = req.body;
 
     // Validate required fields
-    if (!userId || !username || !questionId || !courseId || !sectionId || !chapterId || !feedback || !createdAt) {
+    if (!userId || !username || !feedbackType || !courseId || !sectionId || !chapterId || !feedback || !createdAt) {
       res.status(400).json({ message: "Missing required fields" });
       return;
     }
