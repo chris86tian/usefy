@@ -143,8 +143,8 @@ The backend is deployed using AWS Lambda and API Gateway with the Serverless Fra
    Service deployed to stack growthhungry-service-dev (60s)
 
    endpoints:
-     ANY - https://w10mtexzig.execute-api.us-east-1.amazonaws.com/dev/
-     ANY - https://w10mtexzig.execute-api.us-east-1.amazonaws.com/dev/{proxy+}
+     ANY - https://khbciw4vke.execute-api.us-east-1.amazonaws.com/prod/
+     ANY - https://khbciw4vke.execute-api.us-east-1.amazonaws.com/prod/{proxy+}
    ```
 
 ---
