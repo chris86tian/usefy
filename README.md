@@ -22,6 +22,7 @@ Usefy is a cutting-edge platform designed to empower individuals by enhancing th
 ## Introduction
 
 Usefy provides a seamless way to manage courses, track user progress, handle transactions, and deliver notifications. It enables users to:
+
 - Enroll in courses.
 - Monitor their learning journey with detailed progress tracking.
 - Manage financial transactions related to course enrollments.
@@ -32,18 +33,22 @@ Usefy provides a seamless way to manage courses, track user progress, handle tra
 ## Features
 
 1. **Course Management**
+
    - Create and manage course content with associated metadata.
    - Track enrollments and course completion statuses.
 
 2. **User Progress Tracking**
+
    - Monitor section- and chapter-wise progress.
    - Mark quizzes and chapters as completed.
 
 3. **Transaction Management**
+
    - Securely handle course payments.
    - Generate transaction histories for users.
 
 4. **Notifications**
+
    - Send real-time updates to users about course events and reminders.
 
 5. **Commit Tracking**
@@ -51,9 +56,9 @@ Usefy provides a seamless way to manage courses, track user progress, handle tra
 
 ---
 
-## Schema Diagrams  
+## Schema Diagrams
 
-For an interactive view of the diagrams, visit [this workspace](https://app.eraser.io/workspace/cdYkToriyno1VkoxYAop?origin=share).  
+For an interactive view of the diagrams, visit [this workspace](https://app.eraser.io/workspace/cdYkToriyno1VkoxYAop?origin=share).
 
 ---
 
@@ -74,16 +79,19 @@ For an interactive view of the diagrams, visit [this workspace](https://app.eras
 Follow these steps to set up the project locally:
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/growthhungrylife/usefy.git
    ```
 
 2. Navigate to the project directory:
+
    ```bash
    cd usefy
    ```
 
 3. Install dependencies:
+
    ```bash
    npm install
    ```
@@ -110,6 +118,7 @@ Follow these steps to set up the project locally:
 The backend is deployed using AWS Lambda and API Gateway with the Serverless Framework.
 
 ### Deploying to AWS
+
 1. Install the Serverless Framework globally:
    ```bash
    npm install -g serverless
@@ -119,9 +128,10 @@ The backend is deployed using AWS Lambda and API Gateway with the Serverless Fra
    serverless deploy
    ```
 3. The deployment will provide an API Gateway URL, e.g.:
+
    ```
    Service deployed to stack growthhungry-service-dev (60s)
-   
+
    endpoints:
      ANY - https://w10mtexzig.execute-api.us-east-1.amazonaws.com/dev/
      ANY - https://w10mtexzig.execute-api.us-east-1.amazonaws.com/dev/{proxy+}
@@ -131,13 +141,15 @@ The backend is deployed using AWS Lambda and API Gateway with the Serverless Fra
 
 ## OAuth Configuration
 
-To enable Google OAuth, configure the following settings in the Google Cloud Console:
+To enable Google OAuth, configure the following settings in the Google Cloud Console :
 
 ### **Authorized JavaScript Origins (Frontend)**
+
 - ✅ `https://growthhungry.vercel.app`
 - ✅ `http://localhost:3000`
 
 ### **Authorized Redirect URIs (Backend)**
+
 - ✅ `https://w10mtexzig.execute-api.us-east-1.amazonaws.com/dev/auth/google/callback`
 - ✅ `http://localhost:8001/auth/google/callback`
 
