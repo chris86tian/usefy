@@ -1,6 +1,6 @@
 # Usefy
 
-Usefy is a cutting-edge platform designed to empower individuals by enhancing their learning experiences, tracking progress, and fostering personal growth. This repository encapsulates the backend architecture and data flow for Usefy, making it a one-stop solution for modern educational needs.
+Usefy is a cutting-edge platform designed to empower individuals by enhancing their learning experiences, tracking progress, and fostering personal growth. This repository encapsulates the backend & client architecture and data flow for Usefy, making it a one-stop solution for modern educational needs.
 
 ---
 
@@ -88,15 +88,25 @@ Follow these steps to set up the project locally:
 
    ```bash
    cd usefy
+
+   // Client application
+   cd client
+
+   // Server application
+   cs server
    ```
 
 3. Install dependencies:
 
    ```bash
+   // Client application
+   npm install --legacy-peer-deps
+
+   // Server application
    npm install
    ```
 
-4. Configure environment variables by creating a `.env` file.
+4. Configure environment variables by creating a `.env` file and adding environment variables
 
 5. Start the server:
    ```bash
@@ -145,12 +155,12 @@ To enable Google OAuth, configure the following settings in the Google Cloud Con
 
 ### **Authorized JavaScript Origins (Frontend)**
 
-- ✅ `https://growthhungry.vercel.app`
+- ✅ `https://usefy.com`
 - ✅ `http://localhost:3000`
 
 ### **Authorized Redirect URIs (Backend)**
 
-- ✅ `https://w10mtexzig.execute-api.us-east-1.amazonaws.com/dev/auth/google/callback`
+- ✅ `https://khbciw4vke.execute-api.us-east-1.amazonaws.com/prod/auth/google/callback`
 - ✅ `http://localhost:8001/auth/google/callback`
 
 Ensure that your backend has an `/auth/google/callback` route to handle authentication responses.
