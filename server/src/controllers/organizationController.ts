@@ -21,11 +21,12 @@ export const listOrganizations = async (req: Request, res: Response): Promise<vo
 }
 
 export const createOrganization = async (req: Request, res: Response): Promise<void> => {
-    const { organizationId, name, admins, instructors, learners } = req.body;
+    const { organizationId, name, description, admins, instructors, learners } = req.body;
     try {
         const organization = new Organization({
             organizationId,
             name,
+            description,
             admins,
             instructors,
             learners,

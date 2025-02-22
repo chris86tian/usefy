@@ -407,6 +407,15 @@ declare global {
     sectionId: string
     chapterId: string
   }
+
+  interface Oraganization {
+    id: string
+    name: string
+    description: string
+    admins: string[]
+    instructors: string[]
+    learners: string[]
+  }
 }
 
 export {};
