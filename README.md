@@ -15,7 +15,6 @@ Usefy is a cutting-edge platform designed to empower individuals by enhancing th
 - [Deployment](#deployment)
 - [OAuth Configuration](#oauth-configuration)
 - [Contributing](#contributing)
-- [License](#license)
 
 ---
 
@@ -182,12 +181,6 @@ We welcome contributions from the community! To contribute:
    git push origin feature/your-feature-name
    ```
 4. Open a pull request on GitHub.
-
----
-
-## License
-
-This project is licensed under the MIT License. See the `LICENSE` file for details.
 
 ---
 
