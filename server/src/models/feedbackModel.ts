@@ -54,8 +54,8 @@ const feedbackSchema = new Schema({
     required: true
   },
   updatedAt: {
-    type: Date,
-    default: Date.now
+    type: String,
+    required: true
   }
 });
 
