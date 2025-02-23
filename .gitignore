@@ -21,3 +21,4 @@ server/shared-local-instance.db
 server/dynamodb-local-metadata.json
 server/deployment
 shared-local-instance.db
+server/.serverless/
