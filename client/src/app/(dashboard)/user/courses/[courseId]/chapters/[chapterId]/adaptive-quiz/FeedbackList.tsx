@@ -29,7 +29,7 @@ const FeedbackList = ({ courseId }: FeedbackListProps) => {
       status === 'resolved' ? 'bg-green-500/20 text-green-500' :
       'bg-red-500/20 text-red-500'
     }`}>
-      {status?.replace(/_/g, ' ') || 'Unknown Status'}
+      {status?.replace(/_/g, ' ') || 'undefined'}
     </span>
   )
 
@@ -81,8 +81,8 @@ const FeedbackList = ({ courseId }: FeedbackListProps) => {
                     <div className="flex items-center gap-4">
                       <span className="text-sm text-blue-400">
                         {feedback.feedbackType === 'question' 
-                          ? `Question: ${feedback.questionId?.slice(0, 6)}...`
-                          : `Assignment: ${feedback.assignmentId?.slice(0, 6)}...`}
+                          ? `Question: ${feedback.questionId}`
+                          : `Assignment: ${feedback.assignmentId}`}
                       </span>
                       {user?.publicMetadata.userType === 'teacher' && (
                         <Select
@@ -94,13 +94,13 @@ const FeedbackList = ({ courseId }: FeedbackListProps) => {
                           </SelectTrigger>
                           <SelectContent className="bg-gray-800 border-gray-600">
                             <SelectItem value="new" className="hover:bg-gray-700">
-                              New
+                              new
                             </SelectItem>
                             <SelectItem value="resolved" className="hover:bg-gray-700">
-                              Resolved
+                              resolved
                             </SelectItem>
                             <SelectItem value="no_fault_found" className="hover:bg-gray-700">
-                              No Fault Found
+                              no fault found
                             </SelectItem>
                           </SelectContent>
                         </Select>
