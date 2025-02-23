@@ -9,6 +9,8 @@ import { useUser } from "@clerk/nextjs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useRouter } from "next/navigation"
 import toast from "react-hot-toast"
+import FeedbackButton from "./FeedbackButton"
+import { useCourseProgressData } from "@/hooks/useCourseProgressData";
 
 const AdaptiveQuiz = ({ quiz, courseId, sectionId, chapterId, onQuizComplete }: AdaptiveQuizProps) => {
   const user = useUser()
@@ -272,6 +274,13 @@ const AdaptiveQuiz = ({ quiz, courseId, sectionId, chapterId, onQuizComplete }: 
         </CardContent>
 
         <CardFooter className="flex justify-end space-x-2">
+        <FeedbackButton
+          feedbackType="question"
+          itemId={currentQuestion.questionId}
+          courseId={courseId}
+          sectionId={sectionId}
+          chapterId={chapterId}
+        />
           {!showResult ? (
             <Button
               onClick={handleCheckAnswer}

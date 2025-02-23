@@ -66,7 +66,7 @@ const customBaseQuery = async (
 export const api = createApi({
   baseQuery: customBaseQuery,
   reducerPath: "api",
-  tagTypes: ["Courses", "Users", "UserCourseProgress"],
+  tagTypes: ["Courses", "Users", "UserCourseProgress", "Feedback"],
   endpoints: (build) => ({
     /* 
     ===============
@@ -561,6 +561,46 @@ export const api = createApi({
       }),
     }),
 
+
+    /*
+    ===============
+    FEEDBACK
+    ===============
+    */
+    createFeedback: build.mutation<{ message: string }, {
+      feedbackType: 'question' | 'assignment';
+      questionId?: string;
+      assignmentId?: string;
+      userId: string;
+      courseId: string;
+      sectionId: string;
+      chapterId: string;
+      feedback: string;
+      username: string;
+      createdAt: string;
+    }>({
+      query: (body) => ({
+        url: 'feedback',
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ['Feedback'],
+    }),
+
+  getFeedback: build.query<Feedback[], string>({
+    query: (courseId) => `feedback/course/${courseId}`,
+    providesTags: ['Feedback'],
+  }),
+
+  updateFeedbackStatus: build.mutation<Feedback, { feedbackId: string; status: string }>({
+    query: ({ feedbackId, status }) => ({
+      url: `feedback/${feedbackId}/status`,
+      method: "PATCH",
+      body: { status },
+    }),
+    invalidatesTags: ['Feedback'],
+  }),
+
     /*
     ===============
     ENROLLMENTS
@@ -629,6 +669,9 @@ export const {
   useGetChapterCommentsQuery,
   useLikeChapterMutation,
   useDislikeChapterMutation,  
+  useCreateFeedbackMutation,
+  useGetFeedbackQuery,
+  useUpdateFeedbackStatusMutation,
   // useEnrollUserMutation,
   useUnenrollUserMutation,
 } = api;

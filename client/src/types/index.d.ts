@@ -380,6 +380,22 @@ declare global {
     assignment: string;
   }
 
+  interface Feedback {
+    feedbackId: string;
+    feedbackType: string;
+    questionId: string;
+    assignmentId: string;
+    userId: string;
+    username: string;
+    courseId: string;
+    sectionId: string;
+    chapterId: string;
+    feedback: string;
+    createdAt: string;
+    status: string;
+    updatedAt: string;
+  }
+
   interface UserNotification {
     id: string
     title: string
