@@ -47,6 +47,16 @@ const feedbackSchema = new Schema({
     type: String,  // Change from Date to String
     required: true,
   },
+  status: {
+    type: String,
+    enum: ['new', 'resolved', 'no_fault_found'],
+    default: 'new',
+    required: true
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
+  }
 });
 
 const Feedback = model("Feedback", feedbackSchema);

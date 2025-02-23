@@ -42,6 +42,8 @@ const FeedbackButton = ({ feedbackType, itemId, courseId, sectionId, chapterId }
       chapterId,
       feedback,
       createdAt: new Date().toISOString(),
+      status: "new",
+      updatedAt: new Date().toISOString(),
     }
 
     setIsSubmitting(true)

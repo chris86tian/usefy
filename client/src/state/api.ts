@@ -593,6 +593,15 @@ export const api = createApi({
     providesTags: ['Feedback'],
   }),
 
+  updateFeedbackStatus: build.mutation<Feedback, { feedbackId: string; status: string }>({
+    query: ({ feedbackId, status }) => ({
+      url: `feedback/${feedbackId}/status`,
+      method: "PATCH",
+      body: { status },
+    }),
+    invalidatesTags: ['Feedback'],
+  }),
+
     /*
     ===============
     ENROLLMENTS
@@ -663,6 +672,7 @@ export const {
   useDislikeChapterMutation,  
   useCreateFeedbackMutation,
   useGetFeedbackQuery,
+  useUpdateFeedbackStatusMutation,
   // useEnrollUserMutation,
   useUnenrollUserMutation,
 } = api;

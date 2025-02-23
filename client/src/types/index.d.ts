@@ -392,6 +392,8 @@ declare global {
     chapterId: string;
     feedback: string;
     createdAt: string;
+    status: string;
+    updatedAt: string;
   }
 
   interface UserNotification {
