@@ -36,7 +36,7 @@ const FeedbackList = ({ courseId }: FeedbackListProps) => {
     </span>
   )
 
-  // Link to Assignment/Question
+  // Link to Assignment/Question:
 
   const dispatch = useAppDispatch()
   const router = useRouter()
@@ -45,7 +45,7 @@ const FeedbackList = ({ courseId }: FeedbackListProps) => {
   const handleFeedbackClick = (
     courseId: string,
     sectionId: string,
-    chapterId: string
+    chapterId: string,
   ) => {
     // Find the section and chapter indices
     const sectionIndex = course?.sections.findIndex(s => s.sectionId === sectionId) ?? -1
@@ -58,6 +58,16 @@ const FeedbackList = ({ courseId }: FeedbackListProps) => {
       }))
       
       router.push(`/teacher/courses/${courseId}`)
+    }
+
+    if (!course) {
+      console.error("Course data not available")
+      return
+    }
+      
+    if (sectionIndex === -1 || chapterIndex === -1) {
+      console.error("Could not find section/chapter for feedback")
+      return
     }
   }
 
