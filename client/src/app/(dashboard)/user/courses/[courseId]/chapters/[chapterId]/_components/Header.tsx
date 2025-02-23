@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import FeedbackButton from "../adaptive-quiz/FeedbackButton";
 
 interface HeaderProps {
   assignment: Assignment;
@@ -60,6 +61,13 @@ async function Header({ assignment, courseId, sectionId, chapterId }: HeaderProp
 
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3">
+              <FeedbackButton
+                feedbackType="assignment"
+                itemId={assignment.assignmentId}
+                courseId={courseId}
+                sectionId={sectionId}
+                chapterId={chapterId}
+              />
               <ThemeSelector />
               <LanguageSelector assignment={assignment} />
             </div>

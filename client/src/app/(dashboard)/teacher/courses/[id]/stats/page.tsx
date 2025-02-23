@@ -7,6 +7,7 @@ import UserDetails from './_components/UserDetails';
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { User } from '@clerk/nextjs/server';
+import FeedbackList from '@/app/(dashboard)/user/courses/[courseId]/chapters/[chapterId]/adaptive-quiz/FeedbackList';
 
 export default function CourseStatsPage() {
     const pathname = usePathname();
@@ -34,6 +35,9 @@ export default function CourseStatsPage() {
                     )}
                 </div>
             </div>
+            <div className='mt-12'></div>
+            <Header title="Feedback Submissions" subtitle="View feedback submissions for your course" />
+            <FeedbackList courseId={courseId} />
         </div>
     );
 }

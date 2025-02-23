@@ -28,6 +28,7 @@ const Profile = () => {
         />
         <CommitGraph />
       </div>
+          
     </>
   );
 };

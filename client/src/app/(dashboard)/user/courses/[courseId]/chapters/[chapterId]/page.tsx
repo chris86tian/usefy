@@ -18,6 +18,8 @@ import { parseYouTubeTime } from "@/lib/utils";
 import { CourseComments } from "./_components/CourseComments";
 import { useLikeChapterMutation, useDislikeChapterMutation } from "@/state/api";
 import AdaptiveQuiz from "./adaptive-quiz/AdaptiveQuiz";
+import FeedbackButton from "./adaptive-quiz/FeedbackButton";
+import { chapterSchema } from "@/lib/schemas";
 
 const isSectionReleased = (section: Section) => {
   if (!section.releaseDate) return false;
@@ -342,6 +344,7 @@ const Course = () => {
                   <span className="text-sm text-gray-300">{dislikes}</span>
                   <ThumbsDown className="h-4 w-4" />
                 </Button>
+
               </div>
             </div>
             <div className="flex space-x-3">
