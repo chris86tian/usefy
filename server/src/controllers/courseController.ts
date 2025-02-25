@@ -162,23 +162,22 @@ export const updateCourse = async (
                         : [],
                     }))
                   : [],
-                quiz: chapter.quiz 
+                quiz: chapter.quiz
                   ? {
                       ...chapter.quiz,
                       quizId: chapter.quiz.quizId || uuidv4(),
                       questions: Array.isArray(chapter.quiz.questions)
                         ? chapter.quiz.questions.map((question: any) => ({
                             ...question,
-                            questionId: question.questionId || uuidv4()
+                            questionId: question.questionId || uuidv4(),
                           }))
-                        : []
+                        : [],
                     }
                   : undefined,
                 video: chapter.video || "",
               }))
             : [],
         }));
-
       } catch (error) {
         console.error("Error processing sections data:", error);
         res.status(400).json({
@@ -199,7 +198,9 @@ export const updateCourse = async (
 
       for (const progress of progressList) {
         // Create a deep copy of the existing progress sections to avoid mutations
-        const existingSections = JSON.parse(JSON.stringify(progress.sections || []));
+        const existingSections = JSON.parse(
+          JSON.stringify(progress.sections || [])
+        );
         progress.sections = mergeSections(
           existingSections,
           updateData.sections
@@ -327,16 +328,17 @@ export const getUploadVideoUrl = async (
   try {
     const uniqueId = uuidv4();
     const s3Key = `videos/${uniqueId}/${fileName}`;
+    const bucketName = process.env.S3_BUCKET_NAME || "expertize-bucket";
 
     const s3Params = {
-      Bucket: process.env.S3_BUCKET_NAME || "",
+      Bucket: bucketName,
       Key: s3Key,
       Expires: 60,
       ContentType: fileType,
     };
 
     const uploadUrl = s3.getSignedUrl("putObject", s3Params);
-    const videoUrl = `${process.env.CLOUDFRONT_DOMAIN}/videos/${uniqueId}/${fileName}`;
+    const videoUrl = `https://${bucketName}.s3.amazonaws.com/${s3Key}`;
 
     res.json({
       message: "Upload URL generated successfully",
@@ -360,19 +362,18 @@ export const getUploadImageUrl = async (
 
   try {
     const uniqueId = uuidv4();
-
     const s3Key = `images/${uniqueId}/${fileName}`;
+    const bucketName = process.env.S3_BUCKET_NAME || "expertize-bucket";
 
     const s3Params = {
-      Bucket: process.env.S3_BUCKET_NAME || "",
+      Bucket: bucketName,
       Key: s3Key,
-      Expires: 60,
+      Expires: 300,
       ContentType: fileType,
     };
 
     const uploadUrl = s3.getSignedUrl("putObject", s3Params);
-
-    const imageUrl = `${process.env.CLOUDFRONT_DOMAIN}/images/${uniqueId}/${fileName}`;
+    const imageUrl = `https://${bucketName}.s3.amazonaws.com/${s3Key}`;
 
     res.json({
       message: "Upload URL generated successfully",
@@ -390,7 +391,16 @@ export const createAssignment = async (
 ): Promise<void> => {
   const { courseId, sectionId, chapterId } = req.params;
   const { userId } = getAuth(req);
-  const { title, description, resources, hints, fileUrl, isCoding, language, starterCode } = req.body;
+  const {
+    title,
+    description,
+    resources,
+    hints,
+    fileUrl,
+    isCoding,
+    language,
+    starterCode,
+  } = req.body;
 
   try {
     const course = await Course.get(courseId);
@@ -1220,13 +1230,47 @@ export const unenrollUser = async (
       await notification.save();
     } catch (err) {
       console.error("Error sending notification:", err);
-      res.status(500).json({ message: "Error sending notification", error: err });
+      res
+        .status(500)
+        .json({ message: "Error sending notification", error: err });
     }
 
     res.json({ message: "User unenrolled successfully" });
-
   } catch (error) {
     console.error("Unhandled server error:", error);
     res.status(500).json({ message: "Internal server error", error });
+  }
+};
+
+export const fixCourseImageUrls = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const courses = await Course.scan().exec();
+    const bucketName = process.env.S3_BUCKET_NAME || "expertize-bucket";
+
+    for (const course of courses) {
+      if (
+        course.image &&
+        course.image.includes("your-cloudfront-domain.cloudfront.net")
+      ) {
+        // Extract the image path from the incorrect URL
+        const imagePath = course.image.split("/images/")[1];
+        if (imagePath) {
+          // Construct the correct S3 URL
+          const correctImageUrl = `https://${bucketName}.s3.amazonaws.com/images/${imagePath}`;
+          await Course.update(
+            { courseId: course.courseId },
+            { image: correctImageUrl }
+          );
+        }
+      }
+    }
+
+    res.json({ message: "Course image URLs fixed successfully" });
+  } catch (error) {
+    console.error("Error fixing course image URLs:", error);
+    res.status(500).json({ message: "Error fixing course image URLs", error });
   }
 };

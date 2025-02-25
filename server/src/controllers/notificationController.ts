@@ -8,7 +8,9 @@ export const listNotifications = async (
 ): Promise<void> => {
   const { userId } = req.params;
   try {
-    const notifications = await UserNotification.scan("userId").eq(userId).exec();
+    const notifications = await UserNotification.scan("userId")
+      .eq(userId)
+      .exec();
     res.json({
       message: "Notifications retrieved successfully",
       data: notifications,

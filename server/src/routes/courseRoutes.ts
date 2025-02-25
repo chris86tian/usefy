@@ -24,7 +24,8 @@ import {
   likeChapter,
   dislikeChapter,
   getUserCourseSubmissions,
-  unenrollUser
+  unenrollUser,
+  fixCourseImageUrls,
 } from "../controllers/courseController";
 import { requireAuth } from "@clerk/express";
 
@@ -33,6 +34,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 router.get("/", listCourses);
 router.post("/", requireAuth(), createCourse);
+router.post("/fix-image-urls", requireAuth(), fixCourseImageUrls);
 
 router.get("/:courseId", getCourse);
 router.put("/:courseId", requireAuth(), upload.none(), updateCourse);
@@ -126,9 +128,6 @@ router.get(
   getUserCourseSubmissions
 );
 
-router.post("/:courseId/unenroll/:userId",
-  requireAuth(), 
-  unenrollUser
-);
+router.post("/:courseId/unenroll/:userId", requireAuth(), unenrollUser);
 
 export default router;
