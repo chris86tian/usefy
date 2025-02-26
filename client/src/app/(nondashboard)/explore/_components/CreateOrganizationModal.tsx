@@ -1,11 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { toast } from "sonner"
-
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -20,6 +19,8 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { PlusCircle } from "lucide-react"
 import { useCreateOrganizationMutation } from "@/state/api"
+import { useUser } from "@clerk/nextjs"
+import { useRouter } from "next/navigation"
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -37,6 +38,8 @@ interface CreateOrganizationModalProps {
 export function CreateOrganizationModal({ onOrganizationCreated }: CreateOrganizationModalProps) {
   const [open, setOpen] = useState(false)
   const [createOrganization, { isLoading }] = useCreateOrganizationMutation()
+  const { user } = useUser()
+  const router = useRouter()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -61,10 +64,12 @@ export function CreateOrganizationModal({ onOrganizationCreated }: CreateOrganiz
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-blue-500 hover:bg-blue-600">
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Create Organization
-        </Button>
+        {user ? (
+          <Button className="bg-blue-500 hover:bg-blue-600">
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Create Organization
+          </Button>
+        ) : null}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
@@ -115,4 +120,3 @@ export function CreateOrganizationModal({ onOrganizationCreated }: CreateOrganiz
     </Dialog>
   )
 }
-

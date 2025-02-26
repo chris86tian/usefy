@@ -37,9 +37,13 @@ export default function Explore() {
   }
 
   const handleJoinOrg = (orgId: string) => {
-    router.push(`/organizations/${orgId}/join`, {
-      scroll: false,
-    })
+    if (!user.user) {
+      router.push("/signin")
+    } else {
+      router.push(`/organizations/${orgId}/join`, {
+        scroll: false,
+      })
+    }
   }
 
   const handleOrganizationCreated = () => {
@@ -48,6 +52,7 @@ export default function Explore() {
 
   return (
     <motion.div
+      key={selectedOrg?.id}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
@@ -62,20 +67,26 @@ export default function Explore() {
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <motion.div
+          key={selectedOrg?.id}
           initial={{ y: 40, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
           className="lg:col-span-1 space-y-4"
         >
           {organizations.map((org: Organization) => (
-            <div key={org.id} onClick={() => handleOrgSelect(org)} className="cursor-pointer transition-all">
-              <OrganizationCard organization={org} isSelected={selectedOrg?.id === org.id} />
-            </div>
+            <OrganizationCard 
+              key={org.id} 
+              organization={org} 
+              isSelected={selectedOrg?.id === org.id} 
+              onClick={() => handleOrgSelect(org)}
+            />
           ))}
+
         </motion.div>
 
         {selectedOrg && (
           <motion.div
+            key={selectedOrg.id}
             initial={{ y: 40, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.5 }}

@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils"
 interface OrganizationCardProps {
   organization: Organization
   isSelected?: boolean
+  onClick?: () => void
 }
 
 export function OrganizationCard({ organization, isSelected }: OrganizationCardProps) {
