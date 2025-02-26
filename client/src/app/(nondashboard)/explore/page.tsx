@@ -3,7 +3,7 @@
 import Loading from "@/components/Loading"
 import { useGetOrganizationsQuery } from "@/state/api"
 import { useRouter, useSearchParams } from "next/navigation"
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState, useMemo } from "react"
 import { motion } from "framer-motion"
 import { useUser } from "@clerk/nextjs"
 import { OrganizationCard } from "@/components/OrganizationCard"
@@ -18,20 +18,16 @@ export default function Explore() {
   const router = useRouter()
   const user = useUser()
 
-  const activeOrganizations = React.useMemo(() => {
-    return organizations || []
-  }, [organizations])
-
   useEffect(() => {
-    if (activeOrganizations.length > 0) {
-      if (id) {
-        const org = activeOrganizations.find((o) => o.id === id)
-        setSelectedOrg(org || activeOrganizations[0])
-      } else {
-        setSelectedOrg(activeOrganizations[0])
-      }
+    if (!organizations || organizations.length === 0) return
+  
+    if (id) {
+      const org = organizations.find((o) => o.id === id)
+      setSelectedOrg(org || organizations[0])
+    } else {
+      setSelectedOrg(organizations[0])
     }
-  }, [activeOrganizations, id])
+  }, [organizations, id])  
 
   if (isLoading) return <Loading />
   if (isError || !organizations) return <div>Failed to fetch organizations</div>
@@ -60,7 +56,7 @@ export default function Explore() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold mb-2">Explore Organizations</h1>
-          <h2 className="text-xl text-muted-foreground">{activeOrganizations.length} organizations available</h2>
+          <h2 className="text-xl text-muted-foreground">{organizations.length} organizations available</h2>
         </div>
         <CreateOrganizationModal onOrganizationCreated={handleOrganizationCreated} />
       </div>
@@ -71,7 +67,7 @@ export default function Explore() {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="lg:col-span-1 space-y-4"
         >
-          {activeOrganizations.map((org: Organization) => (
+          {organizations.map((org: Organization) => (
             <div key={org.id} onClick={() => handleOrgSelect(org)} className="cursor-pointer transition-all">
               <OrganizationCard organization={org} isSelected={selectedOrg?.id === org.id} />
             </div>
