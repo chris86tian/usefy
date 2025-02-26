@@ -4,15 +4,34 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "https",
+        hostname: "expertize-bucket.s3.amazonaws.com",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "expertize-bucket-dev.s3.amazonaws.com",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "expertize-bucket-prod.s3.amazonaws.com",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
         hostname: "images.pexels.com",
         port: "",
         pathname: "/**",
       },
-    ],
-    domains: [
-      "expertize-bucket.s3.us-east-1.amazonaws.com",
-      "d2d2uxovkp6xho.cloudfront.net",
-      "oo9i2g3jc9.execute-api.us-east-1.amazonaws.com", // Removed "https://"
+      {
+        protocol: "https",
+        hostname: "khbciw4vke.execute-api.us-east-1.amazonaws.com",
+        port: "",
+        pathname: "/prod/**",
+      },
     ],
   },
   async rewrites() {
@@ -20,7 +39,7 @@ const nextConfig = {
       {
         source: "/api/:path*",
         destination:
-          "https://oo9i2g3jc9.execute-api.us-east-1.amazonaws.com/dev/:path*",
+          "https://khbciw4vke.execute-api.us-east-1.amazonaws.com/prod/:path*",
       },
     ];
   },

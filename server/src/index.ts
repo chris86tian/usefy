@@ -17,7 +17,7 @@ import transactionRoutes from "./routes/transactionRoutes";
 import userCourseProgressRoutes from "./routes/userCourseProgressRoutes";
 import notificationRoutes from "./routes/notificationRoutes";
 import commitRoutes from "./routes/commitRoutes";
-import feedbackRoutes from './routes/feedbackRoutes';
+import feedbackRoutes from "./routes/feedbackRoutes";
 import organizationRoutes from "./routes/organizationRoutes";
 
 dotenv.config();
@@ -72,7 +72,21 @@ app.use(
     },
     credentials: true,
     methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "X-Requested-With",
+      "x-amz-acl",
+      "x-amz-date",
+      "x-amz-security-token",
+      "x-amz-user-agent",
+      "x-amz-target",
+      "x-amz-signedheaders",
+      "x-amz-expires",
+      "x-amz-algorithm",
+      "x-amz-credential",
+      "x-amz-signature",
+    ],
     exposedHeaders: ["Access-Control-Allow-Origin"],
     maxAge: 86400,
   })
@@ -119,7 +133,7 @@ app.use("/users/clerk", requireAuth(), userClerkRoutes);
 app.use("/transactions", requireAuth(), transactionRoutes);
 app.use("/notifications", requireAuth(), notificationRoutes);
 app.use("/commits", requireAuth(), commitRoutes);
-app.use('/feedback', requireAuth(), feedbackRoutes);
+app.use("/feedback", requireAuth(), feedbackRoutes);
 
 app.use(
   (

@@ -3,7 +3,6 @@ import { twMerge } from "tailwind-merge";
 import * as z from "zod";
 import { toast } from "sonner";
 
-
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -43,7 +42,7 @@ export function convertToSubCurrency(amount: number, factor = 100) {
 export function extractVideoId(url: string): string | null {
   const patterns = [
     /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
-    /^[a-zA-Z0-9_-]{11}$/
+    /^[a-zA-Z0-9_-]{11}$/,
   ];
 
   for (const pattern of patterns) {
@@ -57,7 +56,7 @@ export function extractVideoId(url: string): string | null {
 }
 
 export const parseYouTubeTime = (url: string) => {
-  const timeParam = url.split('t=')[1];
+  const timeParam = url.split("t=")[1];
   if (!timeParam) return 0;
 
   let seconds = 0;
@@ -164,7 +163,8 @@ export const uploadAllVideos = async (
     (count, section) =>
       count +
       section.chapters.filter(
-        (chapter) => chapter.video instanceof File && chapter.video.type === "video/mp4"
+        (chapter) =>
+          chapter.video instanceof File && chapter.video.type === "video/mp4"
       ).length,
     0
   );
@@ -226,11 +226,16 @@ async function uploadVideo(
       body: file,
     });
 
-    toast.success(`Video uploaded successfully for chapter ${chapter.chapterId}`);
+    toast.success(
+      `Video uploaded successfully for chapter ${chapter.chapterId}`
+    );
 
     return { ...chapter, video: videoUrl };
   } catch (error) {
-    console.error(`Failed to upload video for chapter ${chapter.chapterId}:`, error);
+    console.error(
+      `Failed to upload video for chapter ${chapter.chapterId}:`,
+      error
+    );
     toast.error(`Failed to upload video for chapter ${chapter.chapterId}`);
     throw error;
   }
@@ -248,14 +253,25 @@ export async function uploadThumbnail(
       fileType: file.type,
     }).unwrap();
 
-    await fetch(uploadUrl, {
+    const response = await fetch(uploadUrl, {
       method: "PUT",
-      headers: { "Content-Type": file.type },
+      headers: {
+        "Content-Type": file.type,
+      },
       body: file,
+      credentials: "omit",
+      mode: "cors",
     });
 
-    toast.success("Thumbnail uploaded successfully!");
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Upload failed:", errorText);
+      throw new Error(
+        `Upload failed with status ${response.status}: ${errorText}`
+      );
+    }
 
+    toast.success("Thumbnail uploaded successfully!");
     return imageUrl;
   } catch (error) {
     console.error("Failed to upload thumbnail:", error);
@@ -278,14 +294,14 @@ export const uploadAssignmentFile = async (
     await new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
 
-      xhr.upload.addEventListener('progress', (event) => {
+      xhr.upload.addEventListener("progress", (event) => {
         if (event.lengthComputable) {
           const progress = event.loaded / event.total;
           onProgress?.(progress);
         }
       });
 
-      xhr.addEventListener('load', () => {
+      xhr.addEventListener("load", () => {
         if (xhr.status >= 200 && xhr.status < 300) {
           resolve(xhr.response);
         } else {
@@ -293,12 +309,12 @@ export const uploadAssignmentFile = async (
         }
       });
 
-      xhr.addEventListener('error', () => {
-        reject(new Error('Upload failed'));
+      xhr.addEventListener("error", () => {
+        reject(new Error("Upload failed"));
       });
 
-      xhr.open('PUT', uploadUrl);
-      xhr.setRequestHeader('Content-Type', file.type);
+      xhr.open("PUT", uploadUrl);
+      xhr.setRequestHeader("Content-Type", file.type);
       xhr.send(file);
     });
 
@@ -310,7 +326,6 @@ export const uploadAssignmentFile = async (
     throw error;
   }
 };
-
 
 export const countries = [
   "Afghanistan",

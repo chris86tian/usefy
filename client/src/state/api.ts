@@ -4,7 +4,10 @@ import { User } from "@clerk/nextjs/server";
 import { Clerk } from "@clerk/clerk-js";
 import { toast } from "sonner";
 
-const server_url = process.env.NEXT_ENV === "production" ? process.env.NEXT_PUBLIC_API_URL : process.env.NEXT_PUBLIC_API_LOCAL_URL;
+const server_url =
+  process.env.NEXT_ENV === "production"
+    ? process.env.NEXT_PUBLIC_API_URL
+    : process.env.NEXT_PUBLIC_API_LOCAL_URL;
 
 const customBaseQuery = async (
   args: string | FetchArgs,
@@ -27,6 +30,10 @@ const customBaseQuery = async (
     },
   });
 
+  // Check if this is an S3 upload URL request
+  const isS3UrlRequest =
+    typeof args === "object" && args.url?.includes("get-upload");
+
   try {
     const result: any = await baseQuery(args, api, extraOptions);
 
@@ -42,7 +49,7 @@ const customBaseQuery = async (
     const isMutationRequest =
       (args as FetchArgs).method && (args as FetchArgs).method !== "GET";
 
-    if (isMutationRequest) {
+    if (isMutationRequest && !isS3UrlRequest) {
       const successMessage = result.data?.message;
       if (successMessage) toast.success(successMessage);
     }
@@ -259,7 +266,12 @@ export const api = createApi({
 
     getAssignment: build.query<
       Assignment,
-      { courseId: string; sectionId: string; chapterId: string; assignmentId: string }
+      {
+        courseId: string;
+        sectionId: string;
+        chapterId: string;
+        assignmentId: string;
+      }
     >({
       query: ({ courseId, sectionId, chapterId, assignmentId }) =>
         `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/assignments/${assignmentId}`,
@@ -561,45 +573,50 @@ export const api = createApi({
       }),
     }),
 
-
     /*
     ===============
     FEEDBACK
     ===============
     */
-    createFeedback: build.mutation<{ message: string }, {
-      feedbackType: 'question' | 'assignment';
-      questionId?: string;
-      assignmentId?: string;
-      userId: string;
-      courseId: string;
-      sectionId: string;
-      chapterId: string;
-      feedback: string;
-      username: string;
-      createdAt: string;
-    }>({
+    createFeedback: build.mutation<
+      { message: string },
+      {
+        feedbackType: "question" | "assignment";
+        questionId?: string;
+        assignmentId?: string;
+        userId: string;
+        courseId: string;
+        sectionId: string;
+        chapterId: string;
+        feedback: string;
+        username: string;
+        createdAt: string;
+      }
+    >({
       query: (body) => ({
-        url: 'feedback',
+        url: "feedback",
         method: "POST",
         body,
       }),
-      invalidatesTags: ['Feedback'],
+      invalidatesTags: ["Feedback"],
     }),
 
-  getFeedback: build.query<Feedback[], string>({
-    query: (courseId) => `feedback/course/${courseId}`,
-    providesTags: ['Feedback'],
-  }),
-
-  updateFeedbackStatus: build.mutation<Feedback, { feedbackId: string; status: string }>({
-    query: ({ feedbackId, status }) => ({
-      url: `feedback/${feedbackId}/status`,
-      method: "PATCH",
-      body: { status },
+    getFeedback: build.query<Feedback[], string>({
+      query: (courseId) => `feedback/course/${courseId}`,
+      providesTags: ["Feedback"],
     }),
-    invalidatesTags: ['Feedback'],
-  }),
+
+    updateFeedbackStatus: build.mutation<
+      Feedback,
+      { feedbackId: string; status: string }
+    >({
+      query: ({ feedbackId, status }) => ({
+        url: `feedback/${feedbackId}/status`,
+        method: "PATCH",
+        body: { status },
+      }),
+      invalidatesTags: ["Feedback"],
+    }),
 
     /*
     ===============
@@ -668,7 +685,7 @@ export const {
   useCreateReplyMutation,
   useGetChapterCommentsQuery,
   useLikeChapterMutation,
-  useDislikeChapterMutation,  
+  useDislikeChapterMutation,
   useCreateFeedbackMutation,
   useGetFeedbackQuery,
   useUpdateFeedbackStatusMutation,

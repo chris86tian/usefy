@@ -56,6 +56,7 @@ const PaymentPageContent = () => {
       }
 
       router.push(`/user/courses`);
+      router.refresh();
     } catch (error) {
       console.error("Failed to enroll in free course:", error);
       toast.error("Failed to enroll. Please try again.");

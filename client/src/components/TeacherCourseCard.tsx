@@ -10,6 +10,7 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Archive, BarChartBig, Pencil, Trash2 } from "lucide-react";
+import { useUser } from "@clerk/nextjs";
 
 const TeacherCourseCard = ({
   course,
@@ -21,11 +22,21 @@ const TeacherCourseCard = ({
   onStats,
   isOwner,
 }: TeacherCourseCardProps) => {
+  const { user } = useUser();
+  
+  // Check if the current user is enrolled in the course
+  const isUserEnrolled = course.enrollments?.some(
+    enrollment => enrollment.userId === user?.id
+  );
+  
+  // Show "View Only" only if user is not the owner AND not enrolled
+  const showViewOnly = !isOwner && !isUserEnrolled;
+  
   return (
     <Card className="course-card-teacher group">
       <CardHeader
         className="course-card-teacher__header"
-        onClick={isOwner ? () => onView(course) : undefined}
+        onClick={() => onView(course)} // Allow everyone to view the course
       >
         <Image
           src={course.image || "/placeholder.png"}
@@ -114,7 +125,7 @@ const TeacherCourseCard = ({
               </Button>
             </>
           ) : (
-            <p className="text-sm text-gray-500 italic">View Only</p>
+            showViewOnly && <p className="text-sm text-gray-500 italic">View Only</p>
           )}
         </div>
       </CardContent>
