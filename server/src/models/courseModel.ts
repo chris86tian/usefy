@@ -240,8 +240,7 @@ const sectionSchema = new Schema({
   },
 });
 
-
-const courseSchema = new Schema(
+export const courseSchema = new Schema(
   {
     courseId: {
       type: String,

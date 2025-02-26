@@ -1,10 +1,12 @@
 import { Request, Response } from "express";
 import Organization from "../models/organizationModel";
+import{ v4 as uuidv4 }from "uuid";
+import { getAuth } from "@clerk/express";
 
 export const getOrganization = async (req: Request, res: Response): Promise<void> => {
     const { organizationId } = req.params;
     try {
-        const organization = await Organization.scan("organizationId").eq(organizationId).exec();
+        const organization = await Organization.query("organizationId").eq(organizationId).exec();
         res.json({ message: "Organization retrieved successfully", data: organization });
     } catch (error) {
         res.status(500).json({ message: "Error retrieving organization", error });
@@ -21,19 +23,26 @@ export const listOrganizations = async (req: Request, res: Response): Promise<vo
 }
 
 export const createOrganization = async (req: Request, res: Response): Promise<void> => {
-    const { organizationId, name, description, admins, instructors, learners } = req.body;
+    const { name, description } = req.body;
+    const auth = getAuth(req);
+
+    console.log("auth", auth);
+    console.log("req.body", req.body);
+
     try {
         const organization = new Organization({
-            organizationId,
+            organizationId: uuidv4(),
             name,
             description,
-            admins,
-            instructors,
-            learners,
+            admins: [{ userId: auth.userId }],
+            instructors: [],
+            learners: [],
+            courses: [],
         });
         await organization.save();
         res.json({ message: "Organization created successfully", data: organization });
     } catch (error) {
+        console.log("error", error);
         res.status(500).json({ message: "Error creating organization", error });
     }
 }

@@ -49,6 +49,11 @@ const Landing = () => {
               Explore Courses <ArrowRightCircle className="ml-2 h-5 w-5" />
             </Button>
           </Link>
+          <Link href="/explore" scroll={false}>
+            <Button size="lg" className="ml-4 bg-gray-100 text-gray-800 rounded-full hover:bg-gray-500">
+              Explore Organizations <ArrowRightCircle className="ml-2 h-5 w-5" />
+            </Button>
+          </Link>
         </motion.div>
 
         <motion.div

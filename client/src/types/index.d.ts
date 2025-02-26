@@ -424,13 +424,14 @@ declare global {
     chapterId: string
   }
 
-  interface Oraganization {
+  interface Organization {
     id: string
     name: string
     description: string
     admins: string[]
     instructors: string[]
     learners: string[]
+    courses: string[]
   }
 }
 

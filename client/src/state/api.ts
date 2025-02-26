@@ -73,7 +73,7 @@ const customBaseQuery = async (
 export const api = createApi({
   baseQuery: customBaseQuery,
   reducerPath: "api",
-  tagTypes: ["Courses", "Users", "UserCourseProgress", "Feedback"],
+  tagTypes: ["Organizations", "Courses", "Users", "UserCourseProgress", "Feedback"],
   endpoints: (build) => ({
     /* 
     ===============
@@ -124,6 +124,52 @@ export const api = createApi({
       }),
       invalidatesTags: ["Users"],
     }),
+
+    /* 
+    ===============
+    ORGANIZATIONS
+    =============== 
+    */
+    getOrganizations: build.query<Organization[], void>({
+      query: () => "organizations",
+      providesTags: ["Organizations"],
+    }),
+
+    getOrganization: build.query<Organization, string>({
+      query: (id) => `organizations/${id}`,
+      providesTags: (result, error, id) => [{ type: "Organizations", id }],
+    }),
+
+    createOrganization: build.mutation<Organization, Partial<Organization>>({
+      query: (body) => ({
+        url: "organizations",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Organizations"],
+    }),
+
+    updateOrganization: build.mutation<
+      Organization,
+      { organizationId: string; formData: FormData }
+    >({
+      query: ({ organizationId, formData }) => ({
+        url: `organizations/${organizationId}`,
+        method: "PUT",
+        body: formData,
+        formData: true,
+      }),
+      invalidatesTags: ["Organizations"],
+    }),
+
+    deleteOrganization: build.mutation<{ message: string }, string>({
+      query: (id) => ({
+        url: `organizations/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Organizations"],
+    }),
+
     /* 
     ===============
     COURSES
@@ -623,16 +669,6 @@ export const api = createApi({
     ENROLLMENTS
     ===============
     */
-    // enrollUser: build.mutation<
-    //   { message: string },
-    //   { courseId: string; userId: string }
-    // >({
-    //   query: ({ courseId, userId }) => ({
-    //     url: `courses/${courseId}/enroll/${userId}`,
-    //     method: "POST",
-    //   }),
-    // }),
-
     unenrollUser: build.mutation<
       { message: string },
       { courseId: string; userId: string }
@@ -653,6 +689,11 @@ export const {
   useDemoteUserFromAdminMutation,
   useDeleteUserMutation,
   useUpdateUserMutation,
+  useGetOrganizationsQuery,
+  useGetOrganizationQuery,
+  useCreateOrganizationMutation,
+  useUpdateOrganizationMutation,
+  useDeleteOrganizationMutation,
   useCreateCourseMutation,
   useUpdateCourseMutation,
   useDeleteCourseMutation,
@@ -689,6 +730,5 @@ export const {
   useCreateFeedbackMutation,
   useGetFeedbackQuery,
   useUpdateFeedbackStatusMutation,
-  // useEnrollUserMutation,
   useUnenrollUserMutation,
 } = api;
