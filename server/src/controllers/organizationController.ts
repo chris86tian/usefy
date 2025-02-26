@@ -56,3 +56,34 @@ export const deleteOrganization = async (req: Request, res: Response): Promise<v
         res.status(500).json({ message: "Error deleting organization", error });
     }
 }
+
+export const getCoursesByOrganization = async (req: Request, res: Response): Promise<void> => {
+    const { organizationId } = req.params;
+    try {
+        const organization = await Organization.query("organizationId").eq(organizationId).exec();
+        if (!organization || organization.length === 0) {
+            res.status(404).json({ message: "Organization not found" });
+            return;
+        }
+        res.json({ message: "Courses retrieved successfully", data: organization[0].courses });
+    } catch (error) {
+        res.status(500).json({ message: "Error retrieving courses", error });
+    }
+};
+
+export const joinOrganization = async (req: Request, res: Response): Promise<void> => {
+    const { organizationId } = req.params;
+    const auth = getAuth(req);
+    try {
+        const organization = await Organization.query("organizationId").eq(organizationId).exec();
+        if (!organization || organization.length === 0) {
+            res.status(404).json({ message: "Organization not found" });
+            return;
+        }
+        organization[0].learners.push({ userId: auth.userId });
+        await organization[0].save();
+        res.json({ message: "Organization joined successfully", data: organization[0] });
+    } catch (error) {
+        res.status(500).json({ message: "Error joining organization", error });
+    }
+}

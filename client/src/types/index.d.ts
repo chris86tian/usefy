@@ -428,9 +428,9 @@ declare global {
     organizationId: string
     name: string
     description: string
-    admins: string[]
-    instructors: string[]
-    learners: string[]
+    admins: { userId: string }[]
+    instructors: { userId: string }[]
+    learners: { userId: string }[]
     courses: string[]
   }
 }

@@ -39,7 +39,6 @@ export function CreateOrganizationModal({ onOrganizationCreated }: CreateOrganiz
   const [open, setOpen] = useState(false)
   const [createOrganization, { isLoading }] = useCreateOrganizationMutation()
   const { user } = useUser()
-  const router = useRouter()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -65,7 +64,7 @@ export function CreateOrganizationModal({ onOrganizationCreated }: CreateOrganiz
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {user ? (
-          <Button className="bg-blue-500 hover:bg-blue-600">
+          <Button variant={"outline"} className="mb-4">
             <PlusCircle className="mr-2 h-4 w-4" />
             Create Organization
           </Button>
@@ -110,8 +109,8 @@ export function CreateOrganizationModal({ onOrganizationCreated }: CreateOrganiz
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? "Creating..." : "Create Organization"}
+              <Button type="submit" variant="outline" disabled={isLoading}>
+                {isLoading ? "Creating..." : "Create"}
               </Button>
             </div>
           </form>

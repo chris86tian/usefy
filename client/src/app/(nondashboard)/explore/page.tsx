@@ -1,7 +1,6 @@
 "use client"
-
 import Loading from "@/components/Loading"
-import { useGetOrganizationsQuery } from "@/state/api"
+import { useGetOrganizationsQuery, useJoinOrganizationMutation } from "@/state/api"
 import { useRouter, useSearchParams } from "next/navigation"
 import React, { useEffect, useState, useMemo } from "react"
 import { motion } from "framer-motion"
@@ -14,39 +13,36 @@ export default function Explore() {
   const searchParams = useSearchParams()
   const id = searchParams.get("id")
   const { data: organizations, isLoading, isError, refetch } = useGetOrganizationsQuery()
+  const [joinOrganization] = useJoinOrganizationMutation()
   const [selectedOrg, setSelectedOrg] = useState<Organization>()
   const router = useRouter()
   const user = useUser()
 
   useEffect(() => {
     if (!organizations || organizations.length === 0) return
-  
     if (id) {
       const org = organizations.find((o) => o.organizationId === id)
       setSelectedOrg(org || organizations[0])
     } else {
       setSelectedOrg(organizations[0])
     }
-  }, [organizations, id])  
+  }, [organizations, id])
 
   if (isLoading) return <Loading />
   if (isError || !organizations) return <div>Failed to fetch organizations</div>
 
   const handleOrgSelect = (org: Organization) => {
     setSelectedOrg(org)
-    router.push(`/explore?id=${org.organizationId}`, {
-      scroll: false,
-    })
+    router.push(`/explore?id=${org.organizationId}`, { scroll: false, })
   }
 
-  const handleJoinOrg = (orgId: string) => {
-    if (!user.user) {
+  const handleJoinOrg = async (orgId: string) => {
+    if (!user.isSignedIn) {
       router.push("/signin")
-    } else {
-      router.push(`/organizations/${orgId}/join`, {
-        scroll: false,
-      })
+      return
     }
+    await joinOrganization(orgId).unwrap()
+    refetch()
   }
 
   const handleOrganizationCreated = () => {
@@ -54,11 +50,11 @@ export default function Explore() {
   }
 
   return (
-    <motion.div
-      key={selectedOrg?.organizationId}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
+    <motion.div 
+      key="main-container" 
+      initial={{ opacity: 0 }} 
+      animate={{ opacity: 1 }} 
+      transition={{ duration: 0.5 }} 
       className="container mx-auto px-4 py-8"
     >
       <div>
@@ -67,11 +63,11 @@ export default function Explore() {
       </div>
       <CreateOrganizationModal onOrganizationCreated={handleOrganizationCreated} />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <motion.div
-          key={selectedOrg?.organizationId}
-          initial={{ y: 40, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
+        <motion.div 
+          key="org-list-container" 
+          initial={{ y: 40, opacity: 0 }} 
+          animate={{ y: 0, opacity: 1 }} 
+          transition={{ duration: 0.5, delay: 0.2 }} 
           className="lg:col-span-1 space-y-4"
         >
           {organizations.map((org: Organization) => (
@@ -79,24 +75,21 @@ export default function Explore() {
               key={org.organizationId} 
               organization={org} 
               isSelected={selectedOrg?.organizationId === org.organizationId} 
-              onClick={() => handleOrgSelect(org)}
+              onClick={() => handleOrgSelect(org)} 
             />
           ))}
-
         </motion.div>
-
         {selectedOrg && (
-          <motion.div
-            key={selectedOrg.organizationId}
-            initial={{ y: 40, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.5 }}
+          <motion.div 
+            key="selected-org-container" 
+            initial={{ y: 40, opacity: 0 }} 
+            animate={{ y: 0, opacity: 1 }} 
+            transition={{ duration: 0.5, delay: 0.5 }} 
             className="lg:col-span-2"
           >
-            <SelectedOrganization
-              organization={selectedOrg}
-              handleJoinOrg={handleJoinOrg}
-              userId={user.user?.id || ""}
+            <SelectedOrganization 
+              organization={selectedOrg} 
+              handleJoinOrg={handleJoinOrg} 
             />
           </motion.div>
         )}
@@ -104,4 +97,3 @@ export default function Explore() {
     </motion.div>
   )
 }
-

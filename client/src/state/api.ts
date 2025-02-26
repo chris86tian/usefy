@@ -170,6 +170,18 @@ export const api = createApi({
       invalidatesTags: ["Organizations"],
     }),
 
+    getCoursesByOrg: build.query<Course[], string>({
+      query: (organizationId) => `organizations/${organizationId}/courses`,
+      providesTags: (result, error, organizationId) => [{ type: "Courses", id: organizationId }],
+    }),    
+
+    joinOrganization: build.mutation<Organization, string>({
+      query: (organizationId) => ({
+        url: `organizations/${organizationId}/join`,
+        method: "POST",
+      }),
+      invalidatesTags: ["Organizations"],
+    }),
     /* 
     ===============
     COURSES
@@ -694,6 +706,8 @@ export const {
   useCreateOrganizationMutation,
   useUpdateOrganizationMutation,
   useDeleteOrganizationMutation,
+  useGetCoursesByOrgQuery,
+  useJoinOrganizationMutation,
   useCreateCourseMutation,
   useUpdateCourseMutation,
   useDeleteCourseMutation,
