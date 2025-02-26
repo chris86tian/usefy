@@ -187,7 +187,7 @@ export async function POST(request: Request) {
     The final response must be a valid JSON object.
     `
 
-    const userPrompt = `Generate a well-structured course outline with at least 2 sections, each containing at least 2 chapters. Each chapter must have a video timestamp.
+    const userPrompt = `Generate a well-structured course outline with at least one section per major topic of the video, each section containing at least 2 chapters. Each chapter must have a video timestamp.
     Additional Requirements:
     - ${generateQuizzes ? "Include exactly 5 quiz questions per chapter, ensuring they align with the chapter content." : ""}
     - ${generateAssignments ? `Each chapter must include at least 1 assignment. ${codingAssignments ? `Ensure coding assignments are written in ${language}. Each coding assignment must:` : ""}` : ""}
