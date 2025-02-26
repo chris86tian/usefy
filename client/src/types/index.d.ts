@@ -425,7 +425,7 @@ declare global {
   }
 
   interface Organization {
-    id: string
+    organizationId: string
     name: string
     description: string
     admins: string[]

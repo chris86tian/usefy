@@ -4,8 +4,15 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Users, BookOpen, Calendar } from "lucide-react"
-// import { CourseCard } from "@/components/course-card"
+import { Users, BookOpen } from "lucide-react"
+import CourseCard from "@/components/CourseCard"
+
+interface Course {
+  id: string
+  title: string
+  description: string
+  imageUrl: string
+}
 
 interface SelectedOrganizationProps {
   organization: Organization
@@ -38,13 +45,14 @@ export function SelectedOrganization({ organization, handleJoinOrg, userId }: Se
               <CardDescription className="text-base">{organization.description}</CardDescription>
             </div>
           </div>
-          {!isUserMember && 
-            <Button 
+          {!isUserMember && (
+            <Button
               className="bg-blue-500 hover:bg-blue-600"
-              onClick={() => handleJoinOrg(organization.id)}>
-                Join Organization
+              onClick={() => handleJoinOrg(organization.organizationId)}
+            >
+              Join Organization
             </Button>
-          }
+          )}
         </div>
         <div className="flex gap-6 mt-4">
           <div className="flex items-center gap-2">
@@ -63,57 +71,12 @@ export function SelectedOrganization({ organization, handleJoinOrg, userId }: Se
         <Tabs defaultValue="courses" className="w-full">
           <TabsList>
             <TabsTrigger value="courses">Courses</TabsTrigger>
-            <TabsTrigger value="members">Members</TabsTrigger>
-            <TabsTrigger value="about">About</TabsTrigger>
           </TabsList>
           <TabsContent value="courses" className="mt-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* {organization.courses.map((course) => (
-                <CourseCard key={course} course={course} />
+                <CourseCard key={course} course={} />
               ))} */}
-            </div>
-          </TabsContent>
-          <TabsContent value="members" className="mt-4">
-            <div className="space-y-6">
-              <div>
-                <h3 className="font-semibold mb-2">Admins</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  {organization.admins.map((admin) => (
-                    <Card key={admin}>
-                      <CardContent className="p-4">
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-8 w-8">
-                            <AvatarFallback>AD</AvatarFallback>
-                          </Avatar>
-                          <div className="text-sm">{admin}</div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <h3 className="font-semibold mb-2">Instructors</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  {organization.instructors.map((instructor) => (
-                    <Card key={instructor}>
-                      <CardContent className="p-4">
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-8 w-8">
-                            <AvatarFallback>IN</AvatarFallback>
-                          </Avatar>
-                          <div className="text-sm">{instructor}</div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-          <TabsContent value="about" className="mt-4">
-            <div className="prose prose-sm dark:prose-invert">
-              <p>{organization.description}</p>
             </div>
           </TabsContent>
         </Tabs>

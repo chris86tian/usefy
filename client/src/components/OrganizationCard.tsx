@@ -9,9 +9,11 @@ interface OrganizationCardProps {
   onClick?: () => void
 }
 
-export function OrganizationCard({ organization, isSelected }: OrganizationCardProps) {
+export function OrganizationCard({ organization, isSelected, onClick }: OrganizationCardProps) {
   return (
-    <Card className={cn("cursor-pointer", isSelected ? "bg-gray-800" : "bg-gray-900")}>
+    <Card className={cn("cursor-pointer", isSelected ? "bg-gray-700" : "bg-gray-800")}
+      onClick={onClick}
+    >
       <CardHeader>
         <div className="flex items-center gap-4">
           <Avatar className="h-12 w-12">

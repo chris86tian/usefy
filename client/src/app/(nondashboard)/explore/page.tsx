@@ -14,7 +14,7 @@ export default function Explore() {
   const searchParams = useSearchParams()
   const id = searchParams.get("id")
   const { data: organizations, isLoading, isError, refetch } = useGetOrganizationsQuery()
-  const [selectedOrg, setSelectedOrg] = useState<Organization | null>(null)
+  const [selectedOrg, setSelectedOrg] = useState<Organization>()
   const router = useRouter()
   const user = useUser()
 
@@ -22,7 +22,7 @@ export default function Explore() {
     if (!organizations || organizations.length === 0) return
   
     if (id) {
-      const org = organizations.find((o) => o.id === id)
+      const org = organizations.find((o) => o.organizationId === id)
       setSelectedOrg(org || organizations[0])
     } else {
       setSelectedOrg(organizations[0])
@@ -34,6 +34,9 @@ export default function Explore() {
 
   const handleOrgSelect = (org: Organization) => {
     setSelectedOrg(org)
+    router.push(`/explore?id=${org.organizationId}`, {
+      scroll: false,
+    })
   }
 
   const handleJoinOrg = (orgId: string) => {
@@ -52,22 +55,20 @@ export default function Explore() {
 
   return (
     <motion.div
-      key={selectedOrg?.id}
+      key={selectedOrg?.organizationId}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
       className="container mx-auto px-4 py-8"
     >
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Explore Organizations</h1>
-          <h2 className="text-xl text-muted-foreground">{organizations.length} organizations available</h2>
-        </div>
-        <CreateOrganizationModal onOrganizationCreated={handleOrganizationCreated} />
+      <div>
+        <h1 className="search__title">Explore Organizations</h1>
+        <h2 className="search__subtitle">{organizations.length} organizations available</h2>
       </div>
+      <CreateOrganizationModal onOrganizationCreated={handleOrganizationCreated} />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <motion.div
-          key={selectedOrg?.id}
+          key={selectedOrg?.organizationId}
           initial={{ y: 40, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
@@ -75,9 +76,9 @@ export default function Explore() {
         >
           {organizations.map((org: Organization) => (
             <OrganizationCard 
-              key={org.id} 
+              key={org.organizationId} 
               organization={org} 
-              isSelected={selectedOrg?.id === org.id} 
+              isSelected={selectedOrg?.organizationId === org.organizationId} 
               onClick={() => handleOrgSelect(org)}
             />
           ))}
@@ -86,7 +87,7 @@ export default function Explore() {
 
         {selectedOrg && (
           <motion.div
-            key={selectedOrg.id}
+            key={selectedOrg.organizationId}
             initial={{ y: 40, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.5 }}
