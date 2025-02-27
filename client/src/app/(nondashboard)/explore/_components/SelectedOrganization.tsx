@@ -9,6 +9,7 @@ import CourseCard from "@/components/CourseCard"
 import Loading from "@/components/Loading"
 import { BadgeCheck, Users, BookOpen } from "lucide-react"
 import { useUser } from "@clerk/nextjs"
+import AdminCard from "./AdminCard"
 
 interface SelectedOrganizationProps {
   organization: Organization
@@ -35,8 +36,8 @@ export function SelectedOrganization({ organization, handleJoinOrg }: SelectedOr
       <CardHeader className="relative z-10">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div className="flex items-center gap-4">
-            <Avatar className="h-20 w-20 m-4 ring-2 ring-blue-500 ring-offset-2 ring-offset-gray-900">
-              {/* {organization.imageUrl ? (
+            {/* <Avatar className="h-20 w-20 m-4 ring-2 ring-blue-500 ring-offset-2 ring-offset-gray-900">
+              {organization.imageUrl ? (
                 <AvatarImage src={organization.imageUrl} alt={organization.name} />
               ) : (
                 <AvatarFallback className="bg-blue-600 text-white text-xl">
@@ -46,8 +47,8 @@ export function SelectedOrganization({ organization, handleJoinOrg }: SelectedOr
                     .join("")
                     .toUpperCase()}
                 </AvatarFallback>
-              )} */}
-            </Avatar>
+              )}
+            </Avatar> */}
             <div>
               <CardTitle className="text-2xl font-bold text-white">
                 {organization.name}
@@ -123,17 +124,7 @@ export function SelectedOrganization({ organization, handleJoinOrg }: SelectedOr
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {organization.admins?.length > 0 ? (
                   organization.admins.slice(0, 3).map(({ userId: adminId }, index) => (
-                    <div key={adminId} className="flex items-center gap-3 bg-gray-700/30 p-3 rounded-lg">
-                      <Avatar className="h-10 w-10">
-                        <AvatarFallback className="bg-blue-600/30 text-blue-200">
-                          {`A${index + 1}`}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="text-sm font-medium text-white">Admin {index + 1}</p>
-                        <p className="text-xs text-gray-400">Organization Leader</p>
-                      </div>
-                    </div>
+                    <AdminCard key={adminId} adminId={adminId} index={index} />
                   ))
                 ) : (
                   <p className="text-gray-400 text-sm col-span-full">Admin information not available</p>

@@ -18,6 +18,8 @@ export default function Explore() {
   const router = useRouter()
   const user = useUser()
 
+  console.log("organizations", organizations)
+
   useEffect(() => {
     if (!organizations || organizations.length === 0) return
     if (id) {

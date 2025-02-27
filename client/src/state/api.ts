@@ -182,6 +182,10 @@ export const api = createApi({
       }),
       invalidatesTags: ["Organizations"],
     }),
+
+    getMyOrganizations: build.query<Organization[], void>({
+      query: () => "organizations/my",
+    }),
     /* 
     ===============
     COURSES
@@ -708,6 +712,7 @@ export const {
   useDeleteOrganizationMutation,
   useGetCoursesByOrgQuery,
   useJoinOrganizationMutation,
+  useGetMyOrganizationsQuery,
   useCreateCourseMutation,
   useUpdateCourseMutation,
   useDeleteCourseMutation,

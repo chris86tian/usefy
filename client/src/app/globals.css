@@ -1586,3 +1586,14 @@ input[type="color"] {
 .dashboard-navbar__sidebar-trigger {
   @apply text-customgreys-dirtyGrey hover:text-white-50 transition-colors;
 }
+
+
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

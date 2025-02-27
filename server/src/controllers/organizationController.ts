@@ -87,3 +87,22 @@ export const joinOrganization = async (req: Request, res: Response): Promise<voi
         res.status(500).json({ message: "Error joining organization", error });
     }
 }
+
+export const getMyOrganizations = async (req: Request, res: Response): Promise<void> => {
+    const auth = getAuth(req);
+
+    try {
+        const allOrganizations = await Organization.scan().exec();
+
+        const userOrganizations = allOrganizations.filter(org =>
+            org.admins?.some((admin: { userId: string; }) => admin.userId === auth.userId) ||
+            org.instructors?.some((instructor: { userId: string; }) => instructor.userId === auth.userId) ||
+            org.learners?.some((learner: { userId: string; }) => learner.userId === auth.userId)
+        );
+
+        res.json({ message: "Organizations retrieved successfully", data: userOrganizations });
+    } catch (error) {
+        console.error("Error retrieving organizations:", error);
+        res.status(500).json({ message: "Error retrieving organizations", error });
+    }
+};
