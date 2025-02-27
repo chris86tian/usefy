@@ -21,6 +21,7 @@ import { useGetTransactionsQuery } from "@/state/api";
 import { useUser } from "@clerk/nextjs";
 import React, { useState } from "react";
 import { SignInRequired } from "@/components/SignInRequired";
+import Header from "@/components/Header";
 
 const UserBilling = () => {
   const [paymentType, setPaymentType] = useState("all");
@@ -45,7 +46,7 @@ const UserBilling = () => {
   return (
     <div className="billing">
       <div className="billing__container">
-        <h2 className="billing__title">Payment History</h2>
+        <Header title="Billing" subtitle="View your billing history" />
         <div className="billing__filters">
           <Select value={paymentType} onValueChange={setPaymentType}>
             <SelectTrigger className="billing__select">

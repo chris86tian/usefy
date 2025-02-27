@@ -50,26 +50,32 @@ export function CreateOrganizationModal({ onOrganizationCreated }: CreateOrganiz
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      await createOrganization(values).unwrap()
-      toast.success("Organization created successfully!")
-      setOpen(false)
-      form.reset()
-      onOrganizationCreated()
+      await createOrganization(values).unwrap();
+      toast.success("Organization created successfully!");
+      form.reset();
+      onOrganizationCreated();
+      setOpen(false);
     } catch (error) {
-      toast.error("Something went wrong")
+      toast.error("Something went wrong");
     }
   }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {user ? (
-          <Button variant={"outline"} className="mb-4">
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Create Organization
-          </Button>
-        ) : null}
-      </DialogTrigger>
+    <DialogTrigger asChild>
+      {user ? (
+        <Button 
+          variant={"outline"} 
+          className="flex items-center my-2 mx-auto w-full"
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+        >
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Create Organization
+        </Button>
+      ) : null}
+    </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Create Organization</DialogTitle>

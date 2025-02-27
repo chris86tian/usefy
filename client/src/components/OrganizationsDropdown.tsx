@@ -3,10 +3,10 @@
 import { SignedIn, useUser } from "@clerk/nextjs"
 import { School, ChevronRight, Plus } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { Button } from "./ui/button"
 import { useGetMyOrganizationsQuery } from "@/state/api"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import Loading from "./Loading"
+import { CreateOrganizationModal } from "@/app/(nondashboard)/explore/_components/CreateOrganizationModal"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,8 +20,6 @@ export function OrganizationsDropdown() {
   const { data: organizations, isLoading } = useGetMyOrganizationsQuery()
   const router = useRouter()
   const { user } = useUser()
-
-  console.log("organizations", organizations)
 
   const handleOrganizationClick = (orgId: string) => {
     router.push(`/organizations/${orgId}`, { scroll: false })
@@ -86,17 +84,9 @@ export function OrganizationsDropdown() {
           )}
 
           <DropdownMenuSeparator className="bg-gray-800" />
-          <DropdownMenuItem
-            onClick={() => {
-              router.push("/organizations/create", { scroll: false })
-            }}
-            className="p-0 focus:bg-transparent"
-          >
-            <Button className="w-full bg-blue-600 hover:bg-blue-700 gap-2">
-              <Plus size={16} />
-              Create New Organization
-            </Button>
-          </DropdownMenuItem>
+          <div className="px-2 py-2">
+            <CreateOrganizationModal onOrganizationCreated={() => {}} />
+          </div>
         </DropdownMenuContent>
       </DropdownMenu>
     </SignedIn>

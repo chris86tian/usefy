@@ -2,12 +2,11 @@
 import Loading from "@/components/Loading"
 import { useGetOrganizationsQuery, useJoinOrganizationMutation } from "@/state/api"
 import { useRouter, useSearchParams } from "next/navigation"
-import React, { useEffect, useState, useMemo } from "react"
+import React, { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { useUser } from "@clerk/nextjs"
 import { OrganizationCard } from "@/components/OrganizationCard"
 import { SelectedOrganization } from "./_components/SelectedOrganization"
-import { CreateOrganizationModal } from "./_components/CreateOrganizationModal"
 
 export default function Explore() {
   const searchParams = useSearchParams()
@@ -17,8 +16,6 @@ export default function Explore() {
   const [selectedOrg, setSelectedOrg] = useState<Organization>()
   const router = useRouter()
   const user = useUser()
-
-  console.log("organizations", organizations)
 
   useEffect(() => {
     if (!organizations || organizations.length === 0) return
@@ -47,10 +44,6 @@ export default function Explore() {
     refetch()
   }
 
-  const handleOrganizationCreated = () => {
-    refetch()
-  }
-
   return (
     <motion.div 
       key="main-container" 
@@ -63,7 +56,6 @@ export default function Explore() {
         <h1 className="search__title">Explore Organizations</h1>
         <h2 className="search__subtitle">{organizations.length} organizations available</h2>
       </div>
-      <CreateOrganizationModal onOrganizationCreated={handleOrganizationCreated} />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <motion.div 
           key="org-list-container" 
