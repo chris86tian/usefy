@@ -12,6 +12,7 @@ import {
 } from "lucide-react"
 // import { useGetOrganizationDetailsQuery, useGetOrganizationStatsQuery } from "@/state/api" // Adjust based on your API
 import Loading from "@/components/Loading" // Adjust path to your loading component
+import Header from "@/components/Header"
 
 export default function OrganizationDashboard() {
   const { orgId } = useParams()
@@ -121,6 +122,7 @@ export default function OrganizationDashboard() {
   return (
     <div className="space-y-4">
       {/* Organization Header */}
+      <Header title="Organization Dashboard" subtitle="Manage your organization and courses" />
       <div className="flex items-start justify-between">
         {/* <div>
           <h1 className="text-3xl font-bold">{organization.name}</h1>

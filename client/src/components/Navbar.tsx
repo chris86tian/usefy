@@ -10,7 +10,7 @@ import { useGetNotificationsQuery } from "@/state/api"
 import { useUser } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
 
-const Navbar = ({ isCoursePage }: { isCoursePage: boolean }) => {
+const Navbar = () => {
   const { user } = useUser()
   const router = useRouter()
   const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false)

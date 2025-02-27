@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useGetCoursesByOrgQuery } from "@/state/api"
 import CourseCard from "@/components/CourseCard"
 import Loading from "@/components/Loading"
 import { BadgeCheck, Users, BookOpen } from "lucide-react"
@@ -22,10 +21,6 @@ export function SelectedOrganization({ organization, handleJoinOrg }: SelectedOr
     organization.admins.some(admin => admin.userId === user?.id) ||
     organization.instructors.some(instructor => instructor.userId === user?.id) ||
     organization.learners.some(learner => learner.userId === user?.id)
-
-  const { data: courses, isLoading, isError } = useGetCoursesByOrgQuery(organization.organizationId)
-
-  if (!courses) return null
 
   const totalMembers = (organization.admins?.length || 0) + 
                        (organization.instructors?.length || 0) + 
@@ -82,7 +77,7 @@ export function SelectedOrganization({ organization, handleJoinOrg }: SelectedOr
           </div>
           <div className="flex items-center gap-2 text-gray-300">
             <BookOpen className="h-4 w-4 text-blue-400" />
-            <span className="text-sm">{courses.length} Courses</span>
+            {/* <span className="text-sm">{courses.length} Courses</span> */}
           </div>
         </div>
       </CardHeader>
@@ -94,7 +89,7 @@ export function SelectedOrganization({ organization, handleJoinOrg }: SelectedOr
             <TabsTrigger value="about" className="data-[state=active]:bg-blue-500">About</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="courses" className="mt-6">
+          {/* <TabsContent value="courses" className="mt-6">
             {isLoading ? (
               <Loading />
             ) : isError ? (
@@ -113,7 +108,7 @@ export function SelectedOrganization({ organization, handleJoinOrg }: SelectedOr
                 <p className="text-gray-400">No courses available for this organization yet.</p>
               </div>
             )}
-          </TabsContent>
+          </TabsContent> */}
           
           <TabsContent value="about" className="mt-6">
             <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">

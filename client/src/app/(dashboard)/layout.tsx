@@ -42,12 +42,11 @@ export default function DashboardLayout({
           {courseId && <ChaptersSidebar />}
           <div
             className={cn(
-              "dashboard__main",
-              isCoursePage && "dashboard__main--not-course"
+              "dashboard__main"
             )}
             style={{ height: "100vh" }}
           >
-            <Navbar isCoursePage={isCoursePage} />
+            <Navbar />
             <main className="dashboard__body">{children}</main>
             <Toaster />
           </div>

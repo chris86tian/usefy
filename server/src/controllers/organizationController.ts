@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import Organization from "../models/organizationModel";
+import Course from "../models/courseModel";
 import{ v4 as uuidv4 }from "uuid";
 import { getAuth } from "@clerk/express";
 
@@ -57,20 +58,6 @@ export const deleteOrganization = async (req: Request, res: Response): Promise<v
     }
 }
 
-export const getCoursesByOrganization = async (req: Request, res: Response): Promise<void> => {
-    const { organizationId } = req.params;
-    try {
-        const organization = await Organization.query("organizationId").eq(organizationId).exec();
-        if (!organization || organization.length === 0) {
-            res.status(404).json({ message: "Organization not found" });
-            return;
-        }
-        res.json({ message: "Courses retrieved successfully", data: organization[0].courses });
-    } catch (error) {
-        res.status(500).json({ message: "Error retrieving courses", error });
-    }
-};
-
 export const joinOrganization = async (req: Request, res: Response): Promise<void> => {
     const { organizationId } = req.params;
     const auth = getAuth(req);
@@ -106,3 +93,31 @@ export const getMyOrganizations = async (req: Request, res: Response): Promise<v
         res.status(500).json({ message: "Error retrieving organizations", error });
     }
 };
+
+export const getOrganizationCourses = async (req: Request, res: Response): Promise<void> => {
+    const { organizationId } = req.params;
+
+    try {
+        const organization = await Organization.query("organizationId").eq(organizationId).exec();
+        const orgData = organization?.[0];
+
+        if (!orgData) {
+            res.status(404).json({ message: "Organization not found" }); 
+            return; 
+        }
+
+        const courseIds = orgData.courses || [];
+        if (courseIds.length === 0) {
+            res.json({ message: "No courses found for this organization", data: [] }); 
+            return; 
+        }
+
+        const courses = await Course.batchGet(courseIds);
+        res.json({ message: "Courses retrieved successfully", data: courses }); 
+        return; 
+    } catch (error) {
+        res.status(500).json({ message: "Error retrieving courses", error }); 
+        return;
+    }
+};
+
