@@ -23,8 +23,6 @@ interface HeaderProps {
 }
 
 async function Header({ assignment, courseId, sectionId, chapterId }: HeaderProps) {
-  console.log(assignment);
-
   return (
     <div className="relative z-10">
       <div className="flex flex-col bg-gray-900 backdrop-blur-xl p-6 mb-4 rounded-lg">

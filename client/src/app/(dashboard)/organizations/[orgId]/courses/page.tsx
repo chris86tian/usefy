@@ -28,8 +28,6 @@ const Courses = () => {
     isError,
   } = useGetOrganizationCoursesQuery(orgId);
 
-  console.log("courses", courses);
-
   const [createCourse] = useCreateCourseMutation();
   const [deleteCourse] = useDeleteCourseMutation();
   const [archiveCourse] = useArchiveCourseMutation();
