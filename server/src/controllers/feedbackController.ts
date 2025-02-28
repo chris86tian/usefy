@@ -97,3 +97,20 @@ export const updateFeedbackStatus = async (req: Request, res: Response): Promise
     res.status(500).json({ message: "Internal server error" });
   }
 }
+
+export const deleteFeedback = async (req: Request, res: Response) => {
+  try {
+    const { feedbackId } = req.params;
+    // const { userId } = getAuth(req);
+
+    // if (!userId || !isInstructor(userId)) {
+    //   return res.status(403).json({ message: "Unauthorized" });
+    // }
+
+    await Feedback.delete({ feedbackId });
+    res.json({ message: "Feedback deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting feedback:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};

@@ -16,12 +16,25 @@ import {
 import { useAppDispatch, useAppSelector } from "@/state/redux"
 import { openChapterModal } from "@/state"
 import { useRouter } from "next/navigation"
+import { Trash2 } from "lucide-react";
+import { useDeleteFeedbackMutation } from "@/state/api";
+import { courseSchema } from "@/lib/schemas"
 
 interface FeedbackListProps {
   courseId: string
 }
 
 const FeedbackList = ({ courseId }: FeedbackListProps) => {
+  const [deleteFeedback, { isLoading: isDeleting }] = useDeleteFeedbackMutation();
+
+  const handleDelete = async (feedbackId: string) => {
+    try {
+      await deleteFeedback(feedbackId).unwrap();
+      toast.success("Feedback deleted successfully");
+    } catch (error) {
+      toast.error("Failed to delete feedback");
+    }
+  };
   const { user } = useUser()
   const { data: feedbacks, isLoading, error } = useGetFeedbackQuery(courseId)
   const [updateStatus] = useUpdateFeedbackStatusMutation()
@@ -41,37 +54,13 @@ const FeedbackList = ({ courseId }: FeedbackListProps) => {
   const dispatch = useAppDispatch()
   const router = useRouter()
   const course = useAppSelector((state) => state.global.courseEditor)
-  
-  const handleFeedbackClick = (
-    courseId: string,
-    sectionId: string,
-    chapterId: string,
-  ) => {
-    // Find the section and chapter indices
-    const sectionIndex = course?.sections.findIndex(s => s.sectionId === sectionId) ?? -1
-    const chapterIndex = course?.sections[sectionIndex]?.chapters.findIndex(c => c.chapterId === chapterId) ?? -1
-  
-    if (sectionIndex >= 0 && chapterIndex >= 0) {
-      dispatch(openChapterModal({
-        sectionIndex,
-        chapterIndex
-      }))
-      
-      router.push(`/teacher/courses/${courseId}`)
-    }
 
-    if (!course) {
-      console.error("Course data not available")
-      return
-    }
-      
-    if (sectionIndex === -1 || chapterIndex === -1) {
-      console.error("Could not find section/chapter for feedback")
-      return
-    }
-  }
-
-  //
+  const handleFeedbackClick = (courseId: string, sectionId: string, chapterId: string) => {
+    const sectionIndex = course.sections.findIndex((s) => s.sectionId === sectionId) ?? 0
+    const chapterIndex = course.sections[sectionIndex]?.chapters.findIndex((c) => c.chapterId === chapterId) ?? 0
+    dispatch(openChapterModal({ sectionIndex, chapterIndex }))
+    router.push(`/teacher/courses/${courseId}`)
+  };
 
   const handleStatusChange = async (feedbackId: string, newStatus: string) => {
     try {
@@ -119,7 +108,7 @@ const FeedbackList = ({ courseId }: FeedbackListProps) => {
                     </div>
                     
                     <div className="flex items-center gap-4">
-                    <span 
+                      <span 
                         className="text-sm text-blue-400 hover:text-blue-300 cursor-pointer underline"
                         onClick={() => handleFeedbackClick(
                             feedback.courseId,
@@ -152,6 +141,21 @@ const FeedbackList = ({ courseId }: FeedbackListProps) => {
                           </SelectContent>
                         </Select>
                       )}
+                      {user?.publicMetadata.userType === 'teacher' && (
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDelete(feedback.feedbackId)}
+                            disabled={isDeleting}
+                          >
+                            
+                            {isDeleting ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
+                            )}
+                          </Button>
+                        )}
                     </div>
                   </div>
                   <p className="text-gray-300">{feedback.feedback}</p>
