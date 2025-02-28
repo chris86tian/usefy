@@ -2,10 +2,11 @@
 
 import { SignedIn, SignedOut, UserButton, useUser } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
-import { Bell, BookOpen, Code2Icon } from "lucide-react";
+import { BookOpen, School } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 import { Button } from "./ui/button";
+import { OrganizationsDropdown } from "./OrganizationsDropdown";
 
 const NonDashboardNavbar = () => {
   const { user } = useUser();
@@ -33,36 +34,35 @@ const NonDashboardNavbar = () => {
                 size={18}
               />
             </div>
-            {/* <div className="relative group">
+
+            <div className="relative group">
               <Link
-                href="/snippets"
+                href="/explore"
                 className="nondashboard-navbar__search-input"
                 scroll={false}
               >
-                <span className="hidden sm:inline">Explore Snippets</span>
+                <span className="hidden sm:inline">Explore Organizations</span>
                 <span className="sm:hidden">Search</span>
               </Link>
-              <Code2Icon
+              <School
                 className="nondashboard-navbar__search-icon"
                 size={18}
               />
-            </div> */}
+            </div>
           </div>
         </div>
         <div className="nondashboard-navbar__actions">
-
           <SignedIn>
             <div className="flex items-center gap-4">
+              <OrganizationsDropdown />
+
               <Link
-                href={
-                  userRole === "teacher"
-                    ? "/teacher/courses"
-                    : "/user/courses"
-                }
-                className="text-customgreys-dirtyGrey"
+                href={userRole === "teacher" ? "/teacher/courses": "/user/courses"}
+                className="text-customgreys-dirtyGrey flex items-center gap-1"
               >
-                My Courses
+                <span>My Courses</span>
               </Link>
+              
               <UserButton
                 appearance={{
                   baseTheme: dark,

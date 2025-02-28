@@ -12,7 +12,6 @@ async function fetchAssignment(courseId: string, sectionId: string, chapterId: s
 
 export default async function Code({ searchParams }: CodeProps) {
   const resolvedSearchParams = await searchParams;
-  console.log(resolvedSearchParams);
   const { courseId, sectionId, chapterId, assignmentId } = resolvedSearchParams;
   const assignment = await fetchAssignment(courseId, sectionId, chapterId, assignmentId); 
 

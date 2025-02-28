@@ -47,6 +47,17 @@ const organizationSchema = new Schema({
         }),
       ],
     },
+    courses: {
+      type: Array,
+      schema: [
+        new Schema({
+          courseId: {
+            type: String,
+            required: true,
+          },
+        }),
+      ],
+    },
   });
 
   const Organization = model("Organization", organizationSchema);

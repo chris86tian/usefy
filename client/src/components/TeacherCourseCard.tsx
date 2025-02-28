@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Archive, BarChartBig, Pencil, Trash2 } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
+import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 
 const TeacherCourseCard = ({
   course,
@@ -28,15 +29,22 @@ const TeacherCourseCard = ({
   const isUserEnrolled = course.enrollments?.some(
     enrollment => enrollment.userId === user?.id
   );
-  
-  // Show "View Only" only if user is not the owner AND not enrolled
+
+  // Show "View Only" if the user is not enrolled and not the owner
   const showViewOnly = !isOwner && !isUserEnrolled;
-  
+
   return (
     <Card className="course-card-teacher group">
       <CardHeader
-        className="course-card-teacher__header"
-        onClick={() => onView(course)} // Allow everyone to view the course
+        className={cn(
+          "course-card-teacher__header",
+          showViewOnly ? "cursor-not-allowed opacity-50" : "cursor-pointer"
+        )}
+        onClick={() => {
+          if (!showViewOnly) {
+            onView(course);
+          }
+        }}
       >
         <Image
           src={course.image || "/placeholder.png"}
@@ -79,6 +87,28 @@ const TeacherCourseCard = ({
               Enrolled
             </p>
           )}
+
+          <div className="flex items-center justify-between pt-4">
+            <div className="flex items-center space-x-2">
+              <Avatar className="w-8 h-8 border-2 border-white shadow-sm">
+                <AvatarImage 
+                  src={`https://api.dicebear.com/7.x/initials/svg?seed=${course.teacherName}`}
+                  alt={course.teacherName} 
+                />
+                <AvatarFallback className="bg-blue-50 text-blue-600">
+                  {course.teacherName[0]}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col">
+                <span className="text-sm font-medium text-gray-500">
+                  {course.teacherName}
+                </span>
+                <span className="text-xs text-gray-500">
+                  Instructor
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Responsive buttons */}
@@ -125,7 +155,11 @@ const TeacherCourseCard = ({
               </Button>
             </>
           ) : (
-            showViewOnly && <p className="text-sm text-gray-500 italic">View Only</p>
+            showViewOnly && (
+              <p className="text-sm text-gray-500 italic text-center">
+                View Only
+              </p>
+            )
           )}
         </div>
       </CardContent>

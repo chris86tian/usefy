@@ -520,7 +520,7 @@ input[type="color"] {
 }
 
 .billing__container {
-  @apply space-y-6 bg-customgreys-secondarybg;
+  @apply space-y-6;
 }
 
 .billing__title {
@@ -598,11 +598,7 @@ input[type="color"] {
 }
 
 .dashboard__main {
-  @apply flex-grow min-h-screen transition-all duration-500 ease-in-out overflow-y-auto bg-customgreys-secondarybg;
-}
-
-.dashboard__main--not-course {
-  @apply bg-customgreys-primarybg;
+  @apply flex-grow min-h-screen transition-all duration-500 ease-in-out overflow-y-auto bg-customgreys-primarybg;
 }
 
 .dashboard__body {
@@ -1047,7 +1043,7 @@ input[type="color"] {
 
 /* Course Card */
 .course-card {
-  @apply flex flex-col w-full h-[340px] xl:h-[340px] border-none bg-customgreys-primarybg overflow-hidden cursor-pointer hover:bg-white-100/10 transition duration-200;
+  @apply flex flex-col w-full h-[340px] xl:h-[340px] border-none bg-customgreys-darkGrey overflow-hidden cursor-pointer hover:bg-white-100/10 transition duration-200;
 }
 
 .course-card__header {
@@ -1101,7 +1097,7 @@ input[type="color"] {
 
 /* Course Card Teacher */
 .course-card-teacher {
-  @apply w-full h-[400px] p-0 bg-background border-none text-foreground bg-customgreys-primarybg overflow-hidden hover:bg-white-100/10 transition duration-200 flex flex-col;
+  @apply w-full h-[400px] p-0 bg-background border-none text-foreground bg-customgreys-darkGrey overflow-hidden hover:bg-white-100/10 transition duration-200 flex flex-col;
 }
 
 .course-card-teacher__header {
@@ -1211,7 +1207,7 @@ input[type="color"] {
 }
 
 .toolbar__search {
-  @apply w-full px-5 h-12 bg-customgreys-primarybg placeholder-customgreys-dirtyGrey text-customgreys-dirtyGrey border-none rounded-md focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring;
+  @apply w-full px-5 h-12 bg-customgreys-secondarybg placeholder-customgreys-dirtyGrey text-customgreys-dirtyGrey border-none rounded-md focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring;
 }
 
 .toolbar__select {
@@ -1585,4 +1581,15 @@ input[type="color"] {
 
 .dashboard-navbar__sidebar-trigger {
   @apply text-customgreys-dirtyGrey hover:text-white-50 transition-colors;
+}
+
+
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
 }

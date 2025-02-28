@@ -19,9 +19,7 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const [courseId, setCourseId] = useState<string | null>(null);
   const { user, isLoaded } = useUser();
-  const isCoursePage = /^\/user\/courses\/[^\/]+(?:\/chapters\/[^\/]+)?$/.test(
-    pathname
-  );
+  const isCoursePage = pathname.startsWith("/user") || pathname.startsWith("/teacher") || pathname.startsWith("/profile") || pathname.startsWith("/settings");
 
   useEffect(() => {
     if (isCoursePage) {
@@ -39,17 +37,16 @@ export default function DashboardLayout({
   return (
     <SidebarProvider>
       <div className="dashboard">
-        <AppSidebar />
+        {isCoursePage && <AppSidebar />}
         <div className="dashboard__content">
           {courseId && <ChaptersSidebar />}
           <div
             className={cn(
-              "dashboard__main",
-              isCoursePage && "dashboard__main--not-course"
+              "dashboard__main"
             )}
             style={{ height: "100vh" }}
           >
-            <Navbar isCoursePage={isCoursePage} />
+            <Navbar />
             <main className="dashboard__body">{children}</main>
             <Toaster />
           </div>

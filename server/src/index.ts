@@ -129,7 +129,7 @@ app.get("/", (req, res) => {
 app.use("/organizations", organizationRoutes);
 app.use("/courses", courseRoutes);
 app.use("/users/course-progress", requireAuth(), userCourseProgressRoutes);
-app.use("/users/clerk", requireAuth(), userClerkRoutes);
+app.use("/users/clerk", userClerkRoutes);
 app.use("/transactions", requireAuth(), transactionRoutes);
 app.use("/notifications", requireAuth(), notificationRoutes);
 app.use("/commits", requireAuth(), commitRoutes);

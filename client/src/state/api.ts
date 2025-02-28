@@ -73,7 +73,7 @@ const customBaseQuery = async (
 export const api = createApi({
   baseQuery: customBaseQuery,
   reducerPath: "api",
-  tagTypes: ["Courses", "Users", "UserCourseProgress", "Feedback"],
+  tagTypes: ["Organizations", "Courses", "Users", "UserCourseProgress", "Feedback"],
   endpoints: (build) => ({
     /* 
     ===============
@@ -123,6 +123,67 @@ export const api = createApi({
         method: "DELETE",
       }),
       invalidatesTags: ["Users"],
+    }),
+
+    /* 
+    ===============
+    ORGANIZATIONS
+    =============== 
+    */
+    getOrganizations: build.query<Organization[], void>({
+      query: () => "organizations",
+      providesTags: ["Organizations"],
+    }),
+
+    getOrganization: build.query<Organization, string>({
+      query: (id) => `organizations/${id}`,
+      providesTags: (result, error, id) => [{ type: "Organizations", id }],
+    }),
+
+    createOrganization: build.mutation<Organization, Partial<Organization>>({
+      query: (body) => ({
+        url: "organizations",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Organizations"],
+    }),
+
+    updateOrganization: build.mutation<
+      Organization,
+      { organizationId: string; formData: FormData }
+    >({
+      query: ({ organizationId, formData }) => ({
+        url: `organizations/${organizationId}`,
+        method: "PUT",
+        body: formData,
+        formData: true,
+      }),
+      invalidatesTags: ["Organizations"],
+    }),
+
+    deleteOrganization: build.mutation<{ message: string }, string>({
+      query: (id) => ({
+        url: `organizations/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Organizations"],
+    }), 
+
+    joinOrganization: build.mutation<Organization, string>({
+      query: (organizationId) => ({
+        url: `organizations/${organizationId}/join`,
+        method: "POST",
+      }),
+      invalidatesTags: ["Organizations"],
+    }),
+
+    getMyOrganizations: build.query<Organization[], void>({
+      query: () => "organizations/my",
+    }),
+
+    getOrganizationCourses: build.query<Course[], string>({
+      query: (organizationId) => `organizations/${organizationId}/courses`,
     }),
     /* 
     ===============
@@ -631,16 +692,6 @@ export const api = createApi({
     ENROLLMENTS
     ===============
     */
-    // enrollUser: build.mutation<
-    //   { message: string },
-    //   { courseId: string; userId: string }
-    // >({
-    //   query: ({ courseId, userId }) => ({
-    //     url: `courses/${courseId}/enroll/${userId}`,
-    //     method: "POST",
-    //   }),
-    // }),
-
     unenrollUser: build.mutation<
       { message: string },
       { courseId: string; userId: string }
@@ -661,6 +712,14 @@ export const {
   useDemoteUserFromAdminMutation,
   useDeleteUserMutation,
   useUpdateUserMutation,
+  useGetOrganizationsQuery,
+  useGetOrganizationQuery,
+  useCreateOrganizationMutation,
+  useUpdateOrganizationMutation,
+  useDeleteOrganizationMutation,
+  useJoinOrganizationMutation,
+  useGetMyOrganizationsQuery,
+  useGetOrganizationCoursesQuery,
   useCreateCourseMutation,
   useUpdateCourseMutation,
   useDeleteCourseMutation,
@@ -698,6 +757,5 @@ export const {
   useGetFeedbackQuery,
   useUpdateFeedbackStatusMutation,
   useDeleteFeedbackMutation,
-  // useEnrollUserMutation,
   useUnenrollUserMutation,
 } = api;
