@@ -68,7 +68,7 @@ export function OrganizationsDropdown() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon" className="flex items-center gap-1 text-gray-600 hover:text-gray-900">
-            <School className="h-5 w-5" />
+            <School className="h-5 w-5 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-[300px]">

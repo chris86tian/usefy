@@ -27,7 +27,7 @@ const NotificationDropdown = ({ notifications }: NotificationDropdownProps) => {
               {notifications.length}
             </span>
           )}
-          <Bell className="h-5 w-5 text-gray-600" />
+          <Bell className="h-5 w-5 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white" />
           <span className="sr-only">Notifications</span>
         </Button>
       </PopoverTrigger>
