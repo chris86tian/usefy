@@ -689,6 +689,14 @@ export const api = createApi({
       invalidatesTags: ["Feedback"],
     }),
 
+    deleteFeedback: build.mutation<{ message: string }, string>({
+      query: (feedbackId) => ({
+        url: `feedback/${feedbackId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ['Feedback'],
+    }),
+
     /*
     ===============
     ENROLLMENTS
@@ -759,5 +767,6 @@ export const {
   useCreateFeedbackMutation,
   useGetFeedbackQuery,
   useUpdateFeedbackStatusMutation,
+  useDeleteFeedbackMutation,
   useUnenrollUserMutation,
 } = api;

@@ -13,12 +13,28 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select"
+import { useAppDispatch, useAppSelector } from "@/state/redux"
+import { openChapterModal } from "@/state"
+import { useRouter } from "next/navigation"
+import { Trash2 } from "lucide-react";
+import { useDeleteFeedbackMutation } from "@/state/api";
+import { courseSchema } from "@/lib/schemas"
 
 interface FeedbackListProps {
   courseId: string
 }
 
 const FeedbackList = ({ courseId }: FeedbackListProps) => {
+  const [deleteFeedback, { isLoading: isDeleting }] = useDeleteFeedbackMutation();
+
+  const handleDelete = async (feedbackId: string) => {
+    try {
+      await deleteFeedback(feedbackId).unwrap();
+      toast.success("Feedback deleted successfully");
+    } catch (error) {
+      toast.error("Failed to delete feedback");
+    }
+  };
   const { user } = useUser()
   const { data: feedbacks, isLoading, error } = useGetFeedbackQuery(courseId)
   const [updateStatus] = useUpdateFeedbackStatusMutation()
@@ -32,6 +48,19 @@ const FeedbackList = ({ courseId }: FeedbackListProps) => {
       {status?.replace(/_/g, ' ') || 'undefined'}
     </span>
   )
+
+  // Link to Assignment/Question:
+
+  const dispatch = useAppDispatch()
+  const router = useRouter()
+  const course = useAppSelector((state) => state.global.courseEditor)
+
+  const handleFeedbackClick = (courseId: string, sectionId: string, chapterId: string) => {
+    const sectionIndex = course.sections.findIndex((s) => s.sectionId === sectionId) ?? 0
+    const chapterIndex = course.sections[sectionIndex]?.chapters.findIndex((c) => c.chapterId === chapterId) ?? 0
+    dispatch(openChapterModal({ sectionIndex, chapterIndex }))
+    router.push(`/teacher/courses/${courseId}`)
+  };
 
   const handleStatusChange = async (feedbackId: string, newStatus: string) => {
     try {
@@ -79,10 +108,17 @@ const FeedbackList = ({ courseId }: FeedbackListProps) => {
                     </div>
                     
                     <div className="flex items-center gap-4">
-                      <span className="text-sm text-blue-400">
+                      <span 
+                        className="text-sm text-blue-400 hover:text-blue-300 cursor-pointer underline"
+                        onClick={() => handleFeedbackClick(
+                            feedback.courseId,
+                            feedback.sectionId,
+                            feedback.chapterId
+                        )}
+                        >
                         {feedback.feedbackType === 'question' 
-                          ? `Question: ${feedback.questionId}`
-                          : `Assignment: ${feedback.assignmentId}`}
+                            ? `Question: ${feedback.questionId}` 
+                            : `Assignment: ${feedback.assignmentId}`}
                       </span>
                       {user?.publicMetadata.userType === 'teacher' && (
                         <Select
@@ -105,6 +141,21 @@ const FeedbackList = ({ courseId }: FeedbackListProps) => {
                           </SelectContent>
                         </Select>
                       )}
+                      {user?.publicMetadata.userType === 'teacher' && (
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDelete(feedback.feedbackId)}
+                            disabled={isDeleting}
+                          >
+                            
+                            {isDeleting ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
+                            )}
+                          </Button>
+                        )}
                     </div>
                   </div>
                   <p className="text-gray-300">{feedback.feedback}</p>
