@@ -1,52 +1,44 @@
-import { formatPrice } from "@/lib/utils";
-import Image from "next/image";
-import React from "react";
+import { formatPrice } from "@/lib/utils"
+import Image from "next/image"
 
-const CourseCardSearch = ({
-  course,
-  isSelected,
-  onClick,
-}: SearchCourseCardProps) => {
+interface SearchCourseCardProps {
+  course: Course
+  isSelected: boolean
+  onClick: () => void
+}
+
+const CourseCardSearch = ({ course, isSelected, onClick }: SearchCourseCardProps) => {
   return (
     <div
-      onClick={onClick}
-      className={`course-card-search group ${
-        isSelected
-          ? "course-card-search--selected"
-          : "course-card-search--unselected"
+      className={`border rounded-lg p-4 cursor-pointer transition-all ${
+        isSelected ? "border-blue-500 shadow-lg" : "border-gray-200"
       }`}
+      onClick={onClick}
     >
-      <div className="course-card-search__image-container">
+      {/* Course Image */}
+      <div className="relative w-full h-40 rounded-md overflow-hidden mb-4">
         <Image
-          src={course.image || "/placeholder.png"}
+          src={course.image || "/placeholder.png"} // Ensure there's a fallback image
           alt={course.title}
-          fill
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          className="course-card-search__image"
-          priority
+          width={420}
+          height={350}
+          objectFit="cover"
+          className="rounded-md"
         />
       </div>
-      <div className="course-card-search__content">
-        <div>
-          <h2 className="course-card-search__title">{course.title}</h2>
-          <p className="course-card-search__description">
-            {course.description}
-          </p>
-        </div>
-        <div className="mt-2">
-          <p className="course-card-search__teacher">By {course.teacherName}</p>
-          <div className="course-card-search__footer">
-            <span className="course-card-search__price">
-              {formatPrice(course.price)}
-            </span>
-            <span className="course-card-search__enrollment">
-              {course.enrollments?.length} Enrolled
-            </span>
-          </div>
-        </div>
+
+      {/* Course Details */}
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{course.title}</h3>
+      <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">{course.description}</p>
+
+      {/* Instructor & Price */}
+      <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">By {course.teacherName}</p>
+      <div className="flex justify-between items-center mt-4">
+        <span className="text-primary font-semibold">{formatPrice(course.price)}</span>
+        <span className="text-sm text-gray-500">{course.enrollments?.length || 0} Enrolled</span>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default CourseCardSearch;
+export default CourseCardSearch

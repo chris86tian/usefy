@@ -21,20 +21,19 @@ import { User } from "@clerk/nextjs/server";
 import { Spinner } from "@/components/ui/Spinner";
 import { useOrganization } from "@/context/OrganizationContext";
 
-interface AdminCoursesProps {
-  orgId: string;
-}
 
-const AdminCourses = ({ orgId }: AdminCoursesProps) => {
+const AdminCourses = () => {
   const router = useRouter();
+  const { currentOrg } = useOrganization();
   const {
     data: courses,
     isLoading,
     isError,
     refetch,
-  } = useGetOrganizationCoursesQuery(orgId);
+  } = useGetOrganizationCoursesQuery(currentOrg?.organizationId ?? "", {
+    skip: !currentOrg,
+  });
   const { user } = useUser();
-  const { currentOrg } = useOrganization();
   const isAdmin = currentOrg?.admins.some((admin) => admin.userId === user?.id);
 
   const [createCourse] = useCreateCourseMutation();
@@ -66,11 +65,11 @@ const AdminCourses = ({ orgId }: AdminCoursesProps) => {
   }, [courses, searchTerm, selectedCategory, user?.id]);
 
   const handleEdit = (course: Course) => {
-    router.push(`/organizations/${orgId}/courses/${course.courseId}/edit`, { scroll: false });
+    router.push(`/organizations/${currentOrg?.organizationId}/courses/${course.courseId}/edit`, { scroll: false });
   };
 
   const handleStats = (course: Course) => {
-    router.push(`/organizations/${orgId}/courses/${course.courseId}/stats`, { scroll: false });
+    router.push(`/organizations/${currentOrg?.organizationId}/courses/${course.courseId}/stats`, { scroll: false });
   }
 
   const handleDelete = async (course: Course) => {
@@ -91,11 +90,11 @@ const AdminCourses = ({ orgId }: AdminCoursesProps) => {
   const handleGoToCourse = (course: Course) => {
     if (course.sections?.[0]?.chapters?.[0]) {
       router.push(
-        `/organizations/${orgId}/courses/${course.courseId}/chapters/${course.sections[0].chapters[0].chapterId}`,
+        `/organizations/${currentOrg?.organizationId}/courses/${course.courseId}/chapters/${course.sections[0].chapters[0].chapterId}`,
         { scroll: false }
       );
     } else {
-      router.push(`/organizations/${orgId}/courses/${course.courseId}`, { scroll: false });
+      router.push(`/organizations/${currentOrg?.organizationId}/courses/${course.courseId}`, { scroll: false });
     }
   };
 
@@ -108,11 +107,11 @@ const AdminCourses = ({ orgId }: AdminCoursesProps) => {
     }).unwrap();
 
     await addCourse({
-      organizationId: orgId,
+      organizationId: currentOrg?.organizationId ?? "",
       courseId: result.courseId,
     }).unwrap();
     
-    router.push(`/organizations/${orgId}/courses/${result.courseId}/edit`, { scroll: false });
+    router.push(`/organizations/${currentOrg?.organizationId}/courses/${result.courseId}/edit`, { scroll: false });
   };
 
   if (isLoading) return <Spinner />;

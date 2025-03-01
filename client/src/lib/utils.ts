@@ -71,7 +71,7 @@ export const parseYouTubeTime = (url: string) => {
 };
 
 export const getUserName = (user: User) => {
-  return user.fullName || user.firstName + " " + user.lastName || user.username || "Unknown User";
+  return user.firstName + " " + user.lastName || user.username || "Unknown User";
 }
 
 export const NAVBAR_HEIGHT = 48;

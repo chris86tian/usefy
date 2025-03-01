@@ -116,15 +116,6 @@ const Navbar = ({ isDashboard = false }: NavbarProps) => {
         <div className="md:hidden border-t border-gray-200 dark:border-gray-800 py-2 px-4">
           <div className="flex items-center justify-between gap-4">
             <Link
-              href="/search"
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors py-2"
-              scroll={false}
-            >
-              <BookOpen className="h-4 w-4" />
-              <span>Explore Courses</span>
-            </Link>
-
-            <Link
               href="/explore"
               className="flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors py-2"
               scroll={false}
