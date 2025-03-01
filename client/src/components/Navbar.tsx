@@ -146,7 +146,7 @@ const Navbar = ({ isDashboard = false }: NavbarProps) => {
                 <div className="flex flex-col h-full">
                   <div className="p-4 border-b border-gray-200 dark:border-gray-800">
                     <div className="flex items-center justify-between">
-                      <h2 className="text-lg font-semibold dark:text-white">Menu</h2>
+                      <h2 className="text-lg font-semibold dark:text-white">usefy.</h2>
                       <SheetClose asChild>
                         <Button variant="ghost" size="icon" aria-label="Close" />
                       </SheetClose>
