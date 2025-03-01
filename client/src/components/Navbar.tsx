@@ -90,7 +90,7 @@ const Navbar = ({ isDashboard = false }: NavbarProps) => {
                 <OrganizationsDropdown />
               )}
 
-              {notifications && <NotificationDropdown notifications={notifications} />}
+              <NotificationDropdown notifications={notifications || []} />
 
               <UserButton />
             </div>

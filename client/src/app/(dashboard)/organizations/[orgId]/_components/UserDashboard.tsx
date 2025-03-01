@@ -6,10 +6,6 @@ import { useGetOrganizationCoursesQuery } from "@/state/api";
 import CourseCardSearch from "@/components/CourseCardSearch";
 import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";
-import { getUserName } from "@/lib/utils";
-import { useUser } from "@clerk/nextjs";
-import { User } from "@clerk/nextjs/server";
-
 interface UserDashboardProps {
   recentActivities: any[]
   upcomingEvents: any[]
@@ -19,8 +15,6 @@ const UserDashboard = ({ recentActivities, upcomingEvents }: UserDashboardProps)
     const router = useRouter()
     const { orgId } = useParams()
     const { data: courses } = useGetOrganizationCoursesQuery(orgId as string)
-    const { user } = useUser()
-    // const name = getUserName(user as unknown as User)
     const publishedCourses = courses?.filter(course => course.status === "Published") || []
 
     const handleCourseClick = (courseId: string) => {
@@ -31,14 +25,6 @@ const UserDashboard = ({ recentActivities, upcomingEvents }: UserDashboardProps)
 
     return (
       <div className="space-y-6">
-        {/* Welcome */}
-        <Card>
-          <CardContent className="p-6">
-            <h2 className="text-2xl font-bold">Welcome!</h2>
-            <p className="mt-2 max-w-md opacity-90">Continue your learning journey or discover new courses to expand your skills.</p>
-          </CardContent>
-        </Card>
-        
         {/* My Learning */}
         <Card>
           <CardHeader>

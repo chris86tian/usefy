@@ -29,6 +29,7 @@ import { CourseComments } from "./_components/CourseComments"
 import { useLikeChapterMutation, useDislikeChapterMutation } from "@/state/api"
 import AdaptiveQuiz from "./adaptive-quiz/AdaptiveQuiz"
 import { Spinner } from "@/components/ui/Spinner"
+import { useOrganization } from "@/context/OrganizationContext"
 
 const isSectionReleased = (section: Section) => {
   if (!section.releaseDate) return false
@@ -54,6 +55,7 @@ const Course = () => {
   const playerRef = useRef<ReactPlayer>(null)
   const quizRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
+  const { currentOrg } = useOrganization()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [videoEndTime, setVideoEndTime] = useState<number | null>(null)
   const [hasShownPrompt, setHasShownPrompt] = useState(false)
@@ -191,7 +193,7 @@ const Course = () => {
     const nextChapterId = findNextAvailableChapter("next")
     if (nextChapterId) {
       setHasShownPrompt(false)
-      router.push(`/user/courses/${course.courseId}/chapters/${nextChapterId}`)
+      router.push(`/organizations/${currentOrg?.organizationId}/courses/${course.courseId}/chapters/${nextChapterId}`)
     }
   }
 
@@ -199,7 +201,7 @@ const Course = () => {
     if (!course) return
     const previousChapterId = findNextAvailableChapter("previous")
     if (previousChapterId) {
-      router.push(`/user/courses/${course.courseId}/chapters/${previousChapterId}`)
+      router.push(`/organizations/${currentOrg?.organizationId}/courses/${course.courseId}/chapters/${previousChapterId}`)
     }
   }
 
