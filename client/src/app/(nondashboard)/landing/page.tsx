@@ -51,6 +51,10 @@ export default async function LandingPage() {
             Generate Courses for Your Organization
           </h1>
 
+          {/* Subheading */}
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            Create and publish interactive learning experiences for your community
+          </p>
           {/* CTA Buttons */}
           <div className="flex flex-wrap justify-center items-center gap-4 pt-4">
             <Link href={user ? "/explore" : "/signin"}>

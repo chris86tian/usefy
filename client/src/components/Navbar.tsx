@@ -1,10 +1,12 @@
 "use client"
 
 import { SignedIn, SignedOut, UserButton, useUser } from "@clerk/nextjs"
-import { BookOpen, School, Home, Menu, Sun, Moon } from "lucide-react"
+import { BookOpen, School, Home, Menu, Sun, Moon, X } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
+import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet"
 import NotificationDropdown from "@/components/NotificationDropdown"
 import { useGetNotificationsQuery } from "@/state/api"
 import { OrganizationsDropdown } from "./OrganizationsDropdown"
@@ -20,6 +22,7 @@ const Navbar = ({ isDashboard = false }: NavbarProps) => {
   const { data: notifications = null } = useGetNotificationsQuery(undefined, { skip: !isDashboard })
   const { theme, setTheme } = useTheme()
   const pathname = usePathname()
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   if (pathname.startsWith("/organizations")) isDashboard = true
 
@@ -58,74 +61,133 @@ const Navbar = ({ isDashboard = false }: NavbarProps) => {
         </div>
 
         <div className="flex items-center gap-4">
-          {isDashboard && (
+          {/* Desktop navigation items */}
+          <div className="hidden md:flex items-center gap-4">
+            {isDashboard && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => router.push("/")}
+                className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+              >
+                <Home className="h-5 w-5" />
+                <span className="sr-only">Home</span>
+              </Button>
+            )}
+
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => router.push("/")}
+              onClick={toggleTheme}
               className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+              aria-label="Toggle theme"
             >
-              <Home className="h-5 w-5" />
-              <span className="sr-only">Home</span>
-            </Button>
-          )}
-
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleTheme}
-            className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
-            aria-label="Toggle theme"
-          >
-            {theme === "dark" ? (
-              <Sun className="h-5 w-5" />
-            ) : (
-              <Moon className="h-5 w-5" />
-            )}
-          </Button>
-
-          <SignedIn>
-            <div className="flex items-center gap-4">
-              {!isDashboard && (
-                <OrganizationsDropdown />
+              {theme === "dark" ? (
+                <Sun className="h-5 w-5" />
+              ) : (
+                <Moon className="h-5 w-5" />
               )}
+            </Button>
 
-              <NotificationDropdown notifications={notifications || []} />
+            <SignedIn>
+              <div className="flex items-center gap-4">
+                {!isDashboard && (
+                  <OrganizationsDropdown />
+                )}
 
-              <UserButton />
-            </div>
-          </SignedIn>
+                <NotificationDropdown notifications={notifications || []} />
 
-          <SignedOut>
-            <div className="flex items-center gap-2">
-              <Link href="/signin" scroll={false}>
-                <Button variant="outline" className="text-blue-500 border-blue-500 dark:text-blue-400 dark:border-blue-400">
-                  Log In
-                </Button>
-              </Link>
-              <Link href="/signup" scroll={false}>
-                <Button className="bg-blue-500 hover:bg-blue-600 text-white">Sign Up</Button>
-              </Link>
-            </div>
-          </SignedOut>
-        </div>
-      </div>
+                <UserButton />
+              </div>
+            </SignedIn>
 
-      {/* Mobile menu for non-dashboard view */}
-      {!isDashboard && (
-        <div className="md:hidden border-t border-gray-200 dark:border-gray-800 py-2 px-4">
-          <div className="flex items-center justify-between gap-4">
-            <Link
-              href="/explore"
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors py-2"
-              scroll={false}
+            <SignedOut>
+              <div className="flex items-center gap-2">
+                <Link href="/signin" scroll={false}>
+                  <Button variant="outline" className="text-blue-500 border-blue-500 dark:text-blue-400 dark:border-blue-400">
+                    Log In
+                  </Button>
+                </Link>
+                <Link href="/signup" scroll={false}>
+                  <Button className="bg-blue-500 hover:bg-blue-600 text-white">Sign Up</Button>
+                </Link>
+              </div>
+            </SignedOut>
+          </div>
+
+          {/* Mobile navigation items */}
+          <div className="md:hidden flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+              aria-label="Toggle theme"
             >
-              <School className="h-4 w-4" />
-              <span>Browse Categories</span>
-            </Link>
+              {theme === "dark" ? (
+                <Sun className="h-5 w-5" />
+              ) : (
+                <Moon className="h-5 w-5" />
+              )}
+            </Button>
+
+            <SignedIn>
+              <NotificationDropdown notifications={notifications || []} />
+              <UserButton />
+            </SignedIn>
+
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="ml-1" aria-label="Menu">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-4/5 bg-white dark:bg-gray-900 p-0">
+                <div className="flex flex-col h-full">
+                  <div className="p-4 border-b border-gray-200 dark:border-gray-800">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-lg font-semibold dark:text-white">Menu</h2>
+                      <SheetClose asChild>
+                        <Button variant="ghost" size="icon" aria-label="Close" />
+                      </SheetClose>
+                    </div>
+                  </div>
+                  
+                  <div className="flex-1 overflow-auto py-4">
+                    <div className="space-y-4 px-4">
+                      <Link
+                        href="/explore"
+                        className="flex items-center gap-3 px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
+                        scroll={false}
+                      >
+                        <School className="h-5 w-5" />
+                        <span>Browse Categories</span>
+                      </Link>
+                    </div>
+                  </div>
+                  
+                  <SignedOut>
+                    <div className="p-4 border-t border-gray-200 dark:border-gray-800">
+                      <div className="grid grid-cols-2 gap-3">
+                        <Link href="/signin" className="w-full" scroll={false}>
+                          <Button variant="outline" className="w-full text-blue-500 border-blue-500 dark:text-blue-400 dark:border-blue-400">
+                            Log In
+                          </Button>
+                        </Link>
+                        <Link href="/signup" className="w-full" scroll={false}>
+                          <Button className="w-full bg-blue-500 hover:bg-blue-600 text-white">
+                            Sign Up
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  </SignedOut>
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
-      )}
+      </div>
     </nav>
   )
 }
