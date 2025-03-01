@@ -10,7 +10,7 @@ const AdminCard = ({ adminId, index }: AdminCardProps) => {
     const { data: adminData, isLoading } = useGetUserQuery(adminId)
 
     return (
-        <div className="flex items-center gap-3 bg-gray-700/30 p-3 rounded-lg">
+        <div className="flex items-center gap-3 shadow-sm p-4 rounded-lg border border-gray-200">
         <Avatar className="h-10 w-10">
             {adminData?.imageUrl ? (
             <AvatarImage src={adminData.imageUrl} alt={adminData.fullName || `Admin ${index + 1}`} />
@@ -21,7 +21,7 @@ const AdminCard = ({ adminId, index }: AdminCardProps) => {
             )}
         </Avatar>
         <div>
-            <p className="text-sm font-medium text-white">
+            <p className="text-sm font-medium mb-1">
             {isLoading ? "Loading..." : (adminData?.fullName || adminData?.firstName + " " + adminData?.lastName || "Admin")}
             </p>
             <p className="text-xs text-gray-400">Organization Admin</p>

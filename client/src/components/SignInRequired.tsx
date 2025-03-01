@@ -7,8 +7,8 @@ export const SignInRequired: React.FC = () => {
   const router = useRouter();
 
   return (
-    <div className="flex h-full items-center justify-center bg-[#1e2738]">
-      <Card className="w-full max-w-md text-center bg-[#2a3548] border-[#3a4a64]">
+    <div className="flex h-full items-center justify-center">
+      <Card className="w-full max-w-md text-center">
         <CardHeader>
           <CardTitle className="text-[#e6e6e6]">Sign In Required</CardTitle>
           <CardDescription className="text-[#a0aec0]">Please sign in to view this page.</CardDescription>
@@ -16,7 +16,7 @@ export const SignInRequired: React.FC = () => {
         <CardContent>
           <Button
             onClick={() => router.push('/signin')}
-            className="w-full bg-[#4a5a74] hover:bg-[#5a6a84] text-[#e6e6e6]"
+            className="w-full"
           >
             Sign In
           </Button>

@@ -6,6 +6,6 @@ import { requireAuth } from "@clerk/express";
 
 const router = Router();
 
-router.get("/:userId", requireAuth(), listNotifications);
+router.get("/", requireAuth(), listNotifications);
 
 export default router;

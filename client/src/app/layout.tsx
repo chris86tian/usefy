@@ -1,4 +1,3 @@
-
 import type { Metadata } from "next";
 import { DM_Sans } from "next/font/google";
 import "./globals.css";
@@ -7,6 +6,8 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "sonner";
 import { Suspense } from "react";
 import ConvexClientProvider from "@/components/providers/ConvexClientProvider";
+import Navbar from "@/components/Navbar";
+import { ThemeProvider } from "@/components/theme-provider";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -16,7 +17,7 @@ const dmSans = DM_Sans({
 
 export const metadata: Metadata = {
   title: "Usefy",
-  description: "Usefy is an AI Virtual Learning Environment",
+  description: "Usefy is an AI platform for organizations to create and manage courses.",
 };
 
 export default function RootLayout({
@@ -25,19 +26,26 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
-      <html lang="en">
-        <body className={`${dmSans.className}`}>
-          <Providers>
-            <Suspense fallback={null}>
-              <div className="root-layout">
+    <html lang="en">
+      <body className={`${dmSans.className}`}>
+        <ClerkProvider>
+          <ThemeProvider 
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <Providers>
+              <Suspense fallback={null}>
+                <Navbar />
                 <ConvexClientProvider>{children}</ConvexClientProvider>
-              </div>
-            </Suspense>
-            <Toaster richColors closeButton />
-          </Providers>
-        </body>
-      </html>
-    </ClerkProvider>
+                <Toaster />
+              </Suspense>
+              <Toaster richColors closeButton />
+            </Providers>
+          </ThemeProvider>
+        </ClerkProvider>
+      </body>
+    </html>
   );
 }

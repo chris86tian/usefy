@@ -1,19 +1,19 @@
 "use client";
 
 import CoursePreview from "@/components/CoursePreview";
-import Loading from "@/components/Loading";
 import { useCurrentCourse } from "@/hooks/useCurrentCourse";
 import { useSearchParams } from "next/navigation";
 import React from "react";
 import SignUpComponent from "@/components/SignUp";
 import SignInComponent from "@/components/SignIn";
+import { Spinner } from "@/components/ui/Spinner";
 
 const CheckoutDetailsPage = () => {
   const { course: selectedCourse, isLoading, isError } = useCurrentCourse();
   const searchParams = useSearchParams();
   const showSignUp = searchParams.get("showSignUp") === "true";
 
-  if (isLoading) return <Loading />;
+  if (isLoading) return <Spinner />;
   if (isError) return <div>Failed to fetch course data</div>;
   if (!selectedCourse) return <div>Course not found</div>;
 

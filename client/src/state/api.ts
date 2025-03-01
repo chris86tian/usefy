@@ -137,7 +137,7 @@ export const api = createApi({
 
     getOrganization: build.query<Organization, string>({
       query: (id) => `organizations/${id}`,
-      providesTags: (result, error, id) => [{ type: "Organizations", id }],
+      providesTags: ["Organizations"],
     }),
 
     createOrganization: build.mutation<Organization, Partial<Organization>>({
@@ -184,6 +184,16 @@ export const api = createApi({
 
     getOrganizationCourses: build.query<Course[], string>({
       query: (organizationId) => `organizations/${organizationId}/courses`,
+    }),
+
+    addCourseToOrganization: build.mutation<
+      { message: string },
+      { organizationId: string; courseId: string }
+    >({
+      query: ({ organizationId, courseId }) => ({
+        url: `organizations/${organizationId}/${courseId}`,
+        method: "POST",
+      }),
     }),
     /* 
     ===============
@@ -436,8 +446,8 @@ export const api = createApi({
     NOTIFICATIONS
     =============== 
     */
-    getNotifications: build.query<UserNotification[], string>({
-      query: (userId) => `notifications/${userId}`,
+    getNotifications: build.query<UserNotification[], void>({
+      query: () => "notifications",
     }),
 
     /* 
@@ -712,6 +722,7 @@ export const {
   useJoinOrganizationMutation,
   useGetMyOrganizationsQuery,
   useGetOrganizationCoursesQuery,
+  useAddCourseToOrganizationMutation,
   useCreateCourseMutation,
   useUpdateCourseMutation,
   useDeleteCourseMutation,

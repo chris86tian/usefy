@@ -1,6 +1,5 @@
 "use client";
 
-import Loading from "@/components/Loading";
 import { useGetCoursesQuery } from "@/state/api";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -8,6 +7,7 @@ import { motion } from "framer-motion";
 import CourseCardSearch from "@/components/CourseCardSearch";
 import SelectedCourse from "./_compontents/SelectedCourse";
 import { useUser } from "@clerk/nextjs";
+import { Spinner } from "@/components/ui/Spinner";
 
 const Search = () => {
   const searchParams = useSearchParams();
@@ -32,7 +32,7 @@ const Search = () => {
     }
   }, [publishedCourses, id]);
 
-  if (isLoading) return <Loading />;
+  if (isLoading) return <Spinner />;
   if (isError || !courses) return <div>Failed to fetch courses</div>;
 
   const handleCourseSelect = (course: Course) => {

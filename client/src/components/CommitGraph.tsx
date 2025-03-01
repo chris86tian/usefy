@@ -70,7 +70,7 @@ const CommitGrid = () => {
   const months = getMonths()
 
   return (
-    <Card className="w-5/12 h-72 bg-customgreys-darkGrey">
+    <Card className="border border-gray-200">
       <CardHeader>
         <CardTitle>Commit Activity</CardTitle>
       </CardHeader>

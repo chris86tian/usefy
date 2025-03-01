@@ -1,12 +1,14 @@
 "use client"
-import Loading from "@/components/Loading"
+
 import { useGetOrganizationsQuery, useJoinOrganizationMutation } from "@/state/api"
 import { useRouter, useSearchParams } from "next/navigation"
-import React, { useEffect, useState } from "react"
-import { motion } from "framer-motion"
+import { useEffect, useState } from "react"
 import { useUser } from "@clerk/nextjs"
 import { OrganizationCard } from "@/components/OrganizationCard"
 import { SelectedOrganization } from "./_components/SelectedOrganization"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { AlertCircle } from "lucide-react"
+import { Spinner } from "@/components/ui/Spinner"
 
 export default function Explore() {
   const searchParams = useSearchParams()
@@ -27,12 +29,22 @@ export default function Explore() {
     }
   }, [organizations, id])
 
-  if (isLoading) return <Loading />
-  if (isError || !organizations) return <div>Failed to fetch organizations</div>
+  if (isLoading) return <Spinner />
+
+  if (isError || !organizations) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>Failed to fetch organizations. Please try again later.</AlertDescription>
+        </Alert>
+      </div>
+    )
+  }
 
   const handleOrgSelect = (org: Organization) => {
     setSelectedOrg(org)
-    router.push(`/explore?id=${org.organizationId}`, { scroll: false, })
+    router.push(`/explore?id=${org.organizationId}`, { scroll: false })
   }
 
   const handleJoinOrg = async (orgId: string) => {
@@ -41,53 +53,35 @@ export default function Explore() {
       return
     }
     await joinOrganization(orgId).unwrap()
-    refetch()
+    router.push(`/organizations/${orgId}`)
   }
 
   return (
-    <motion.div 
-      key="main-container" 
-      initial={{ opacity: 0 }} 
-      animate={{ opacity: 1 }} 
-      transition={{ duration: 0.5 }} 
-      className="container mx-auto px-4 py-8"
-    >
-      <div>
-        <h1 className="search__title">Explore Organizations</h1>
-        <h2 className="search__subtitle">{organizations.length} organizations available</h2>
+    <div className="container mx-auto px-4 py-8 transition-opacity duration-300 ease-in-out">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold tracking-tight">Explore Organizations</h1>
+        <p className="text-lg text-muted-foreground mt-2">{organizations.length} organizations available</p>
       </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <motion.div 
-          key="org-list-container" 
-          initial={{ y: 40, opacity: 0 }} 
-          animate={{ y: 0, opacity: 1 }} 
-          transition={{ duration: 0.5, delay: 0.2 }} 
-          className="lg:col-span-1 space-y-4"
-        >
+        <div className="lg:col-span-1 space-y-4 transition-all duration-300 ease-in-out">
           {organizations.map((org: Organization) => (
-            <OrganizationCard 
-              key={org.organizationId} 
-              organization={org} 
-              isSelected={selectedOrg?.organizationId === org.organizationId} 
-              onClick={() => handleOrgSelect(org)} 
+            <OrganizationCard
+              key={org.organizationId}
+              organization={org}
+              isSelected={selectedOrg?.organizationId === org.organizationId}
+              onClick={() => handleOrgSelect(org)}
             />
           ))}
-        </motion.div>
+        </div>
+
         {selectedOrg && (
-          <motion.div 
-            key="selected-org-container" 
-            initial={{ y: 40, opacity: 0 }} 
-            animate={{ y: 0, opacity: 1 }} 
-            transition={{ duration: 0.5, delay: 0.5 }} 
-            className="lg:col-span-2"
-          >
-            <SelectedOrganization 
-              organization={selectedOrg} 
-              handleJoinOrg={handleJoinOrg} 
-            />
-          </motion.div>
+          <div className="lg:col-span-2 transition-all duration-300 ease-in-out">
+            <SelectedOrganization organization={selectedOrg} handleJoinOrg={handleJoinOrg} />
+          </div>
         )}
       </div>
-    </motion.div>
+    </div>
   )
 }
+

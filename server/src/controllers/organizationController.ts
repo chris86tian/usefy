@@ -121,3 +121,25 @@ export const getOrganizationCourses = async (req: Request, res: Response): Promi
     }
 };
 
+export const addCourseToOrganization = async (req: Request, res: Response): Promise<void> => {
+    const { organizationId, courseId } = req.params;
+
+    try {
+        const organization = await Organization.get(organizationId);
+        if (!organization) {
+            res.status(404).json({ message: "Organization not found" });
+            return;
+        }
+
+        organization.courses = organization.courses || [];
+
+        if (!organization.courses.some((course: { courseId: string; }) => course.courseId === courseId)) {
+            organization.courses.push({ courseId });
+            await organization.save();
+        }
+
+        res.json({ message: "Course added to organization successfully", data: organization });
+    } catch (error) {
+        res.status(500).json({ message: "Error adding course to organization", error });
+    }
+};

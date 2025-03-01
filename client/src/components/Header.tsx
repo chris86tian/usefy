@@ -1,15 +1,13 @@
 import React from "react";
 
-const Header = ({ title, subtitle, rightElement }: HeaderProps) => {
+export default function Header({ title, subtitle, rightElement }: HeaderProps) {
   return (
-    <div className="header">
+    <div className="flex items-center justify-between p-4">
       <div>
-        <h1 className="header__title">{title}</h1>
-        <p className="header__subtitle">{subtitle}</p>
+        <h1 className="text-2xl font-semibold">{title}</h1>
+        <p className="text-gray-500">{subtitle}</p>
       </div>
       {rightElement && <div>{rightElement}</div>}
     </div>
   );
 };
-
-export default Header;

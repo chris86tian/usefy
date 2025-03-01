@@ -11,13 +11,14 @@ interface OrganizationCardProps {
 
 export function OrganizationCard({ organization, isSelected, onClick }: OrganizationCardProps) {
   return (
-    <Card className={cn("cursor-pointer", isSelected ? "bg-gray-700" : "bg-gray-800")}
+    <Card
       onClick={onClick}
+      className={cn("cursor-pointer transition-colors hover:bg-accent", isSelected && "bg-accent border-primary")}
     >
       <CardHeader>
         <div className="flex items-center gap-4">
           <Avatar className="h-12 w-12">
-            <AvatarFallback>
+            <AvatarFallback className="bg-primary/10 text-primary">
               {organization.name
                 .split(" ")
                 .map((n) => n[0])
@@ -26,8 +27,10 @@ export function OrganizationCard({ organization, isSelected, onClick }: Organiza
             </AvatarFallback>
           </Avatar>
           <div>
-            <CardTitle>{organization.name}</CardTitle>
-            <CardDescription>{organization.description}</CardDescription>
+            <CardTitle className="text-lg">{organization.name}</CardTitle>
+            <CardDescription className="line-clamp-1">
+              {organization.description || "Educational organization"}
+            </CardDescription>
           </div>
         </div>
       </CardHeader>

@@ -7,7 +7,7 @@ import {
 } from "@stripe/stripe-js";
 import { useCreateStripePaymentIntentMutation } from "@/state/api";
 import { useCurrentCourse } from "@/hooks/useCurrentCourse";
-import Loading from "@/components/Loading";
+import { Spinner } from "@/components/ui/Spinner";
 
 if (!process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY) {
   throw new Error("NEXT_PUBLIC_STRIPE_PUBLIC_KEY is not set");
@@ -53,7 +53,7 @@ const StripeProvider = ({ children }: { children: React.ReactNode }) => {
     appearance,
   };
 
-  if (!clientSecret) return <Loading />;
+  if (!clientSecret) return <Spinner />;
 
   return (
     <Elements stripe={stripePromise} options={options} key={clientSecret}>

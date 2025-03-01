@@ -1,43 +1,48 @@
-import React, { useState } from "react";
+import { useState } from "react"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { courseCategories } from "@/lib/utils";
+} from "@/components/ui/select"
+import { Input } from "@/components/ui/input"
+import { courseCategories } from "@/lib/utils"
 
-const Toolbar = ({ onSearch, onCategoryChange }: ToolbarProps) => {
-  const [searchTerm, setSearchTerm] = useState("");
+interface ToolbarProps {
+  onSearch: (value: string) => void
+  onCategoryChange: (value: string) => void
+}
+
+export function Toolbar({ onSearch, onCategoryChange }: ToolbarProps) {
+  const [searchTerm, setSearchTerm] = useState("")
 
   const handleSearch = (value: string) => {
-    setSearchTerm(value);
-    onSearch(value);
-  };
+    setSearchTerm(value)
+    onSearch(value)
+  }
 
   return (
-    <div className="toolbar">
-      <input
-        type="text"
-        value={searchTerm}
-        onChange={(e) => handleSearch(e.target.value)}
-        placeholder="Search courses"
-        className="toolbar__search"
-      />
+    <div className="flex flex-col sm:flex-row gap-4 mx-4">
+      <div className="flex-1">
+        <Input
+          type="search"
+          value={searchTerm}
+          onChange={(e) => handleSearch(e.target.value)}
+          placeholder="Search courses..."
+          className="w-full"
+        />
+      </div>
       <Select onValueChange={onCategoryChange}>
-        <SelectTrigger className="toolbar__select">
-          <SelectValue placeholder="Categories" />
+        <SelectTrigger className="w-full sm:w-[200px]">
+          <SelectValue placeholder="All Categories" />
         </SelectTrigger>
-        <SelectContent className="bg-customgreys-primarybg hover:bg-customgreys-primarybg">
-          <SelectItem value="all" className="toolbar__select-item">
-            All Categories
-          </SelectItem>
+        <SelectContent>
+          <SelectItem value="all">All Categories</SelectItem>
           {courseCategories.map((category) => (
             <SelectItem
               key={category.value}
               value={category.value}
-              className="toolbar__select-item"
             >
               {category.label}
             </SelectItem>
@@ -45,7 +50,5 @@ const Toolbar = ({ onSearch, onCategoryChange }: ToolbarProps) => {
         </SelectContent>
       </Select>
     </div>
-  );
-};
-
-export default Toolbar;
+  )
+}

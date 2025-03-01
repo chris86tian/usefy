@@ -1,6 +1,5 @@
 "use client";
 
-import Loading from "@/components/Loading";
 import WizardStepper from "@/components/WizardStepper";
 import { useCheckoutNavigation } from "@/hooks/useCheckoutNavigation";
 import { useUser } from "@clerk/nextjs";
@@ -8,12 +7,13 @@ import React from "react";
 import CheckoutDetailsPage from "./details";
 import PaymentPage from "./payment";
 import CompletionPage from "./completion";
+import { Spinner } from "@/components/ui/Spinner";
 
 const CheckoutWizard = () => {
   const { isLoaded } = useUser();
   const { checkoutStep } = useCheckoutNavigation();
 
-  if (!isLoaded) return <Loading />;
+  if (!isLoaded) return <Spinner />;
 
   const renderStep = () => {
     switch (checkoutStep) {

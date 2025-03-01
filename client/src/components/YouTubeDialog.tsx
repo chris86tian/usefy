@@ -16,7 +16,7 @@ import { Youtube } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { LANGUAGE_CONFIG } from "../app/(dashboard)/user/courses/[courseId]/chapters/[chapterId]/_constants";
+import { LANGUAGE_CONFIG } from "../app/(dashboard)/organizations/[orgId]/courses/[courseId]/chapters/[chapterId]/_constants";
 
 type YouTubeDialogProps = {
   isOpen: boolean

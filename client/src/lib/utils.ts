@@ -2,6 +2,7 @@ import { ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import * as z from "zod";
 import { toast } from "sonner";
+import { User } from "@clerk/nextjs/server";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -68,6 +69,10 @@ export const parseYouTubeTime = (url: string) => {
 
   return seconds;
 };
+
+export const getUserName = (user: User) => {
+  return user.fullName || user.firstName + " " + user.lastName || user.username || "Unknown User";
+}
 
 export const NAVBAR_HEIGHT = 48;
 

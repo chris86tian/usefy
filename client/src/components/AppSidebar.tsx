@@ -19,10 +19,10 @@ import {
   User,
   LayoutDashboard as Dashboard,
 } from "lucide-react";
-import Loading from "./Loading";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { Spinner } from "./ui/Spinner";
 
 const AppSidebar = () => {
   const { user, isLoaded } = useUser();
@@ -45,10 +45,9 @@ const AppSidebar = () => {
     ],
   };
 
-  if (!isLoaded) return <Loading />;
-  if (!user) return <div>User not found</div>;
+  if (!isLoaded) return <Spinner />;
 
-  const userType = (user.publicMetadata.userType as "user" | "teacher") || "user";
+  const userType = (user?.publicMetadata.userType as "user" | "teacher") || "user";
   const currentNavLinks = navLinks[userType];
 
   return (
