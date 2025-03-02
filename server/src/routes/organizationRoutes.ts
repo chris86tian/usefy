@@ -16,7 +16,7 @@ const router = Router();
 router.get("/my", requireAuth(), getMyOrganizations);
 router.get("/", listOrganizations);
 router.get("/:organizationId", getOrganization);
-router.post("/", requireAuth(), requireAuth(), createOrganization);
+router.post("/", requireAuth(), createOrganization);
 router.delete("/:organizationId", requireAuth(), deleteOrganization);
 router.post("/:organizationId/join", requireAuth(), joinOrganization);
 router.get("/:organizationId/courses", getOrganizationCourses);
