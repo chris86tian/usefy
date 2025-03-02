@@ -10,8 +10,6 @@ import { DynamoDB } from "@aws-sdk/client-dynamodb";
 import "./utils/scheduledEmail";
 import { createClerkClient, requireAuth } from "@clerk/express";
 import cors from "cors";
-
-import courseRoutes from "./routes/courseRoutes";
 import userClerkRoutes from "./routes/userClerkRoutes";
 import transactionRoutes from "./routes/transactionRoutes";
 import userCourseProgressRoutes from "./routes/userCourseProgressRoutes";
@@ -127,7 +125,6 @@ app.get("/", (req, res) => {
 });
 
 app.use("/organizations", organizationRoutes);
-app.use("/courses", courseRoutes);
 app.use("/users/course-progress", requireAuth(), userCourseProgressRoutes);
 app.use("/users/clerk", userClerkRoutes);
 app.use("/transactions", requireAuth(), transactionRoutes);
