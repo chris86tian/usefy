@@ -94,7 +94,7 @@ export function OrganizationsDropdown() {
         organizationId: uuidv4(),
         name: values.name,
         description: values.description,
-        image: null,
+        image: "",
         admins: [],
         instructors: [],
         learners: [],
