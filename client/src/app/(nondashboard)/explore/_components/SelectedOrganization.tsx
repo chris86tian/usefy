@@ -1,32 +1,48 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { BadgeCheck, Users, BookOpen, CheckCircle } from "lucide-react"
-import { useUser } from "@clerk/nextjs"
-import AdminCard from "./AdminCard"
-import { useGetOrganizationCoursesQuery } from "@/state/api"
-import CourseCard from "@/components/CourseCard"
-import { Spinner } from "@/components/ui/Spinner"
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BadgeCheck, Users, BookOpen, CheckCircle } from "lucide-react";
+import { useUser } from "@clerk/nextjs";
+import AdminCard from "./AdminCard";
+import { useGetOrganizationCoursesQuery } from "@/state/api";
+import CourseCard from "@/components/CourseCard";
+import { Spinner } from "@/components/ui/Spinner";
 
 interface SelectedOrganizationProps {
-  organization: Organization
-  handleJoinOrg: (orgId: string) => void
+  organization: Organization;
+  handleJoinOrg: (orgId: string) => void;
 }
 
-export function SelectedOrganization({ organization, handleJoinOrg }: SelectedOrganizationProps) {
-  const { user } = useUser()
-  const { data: courses, isLoading, isError } = useGetOrganizationCoursesQuery(organization.organizationId)
+export function SelectedOrganization({
+  organization,
+  handleJoinOrg,
+}: SelectedOrganizationProps) {
+  const { user } = useUser();
+  const {
+    data: courses,
+    isLoading,
+    isError,
+  } = useGetOrganizationCoursesQuery(organization.organizationId);
+
+  const admins = organization.admins || [];
+  const instructors = organization.instructors || [];
+  const learners = organization.learners || [];
+  const safeCourses = courses || [];
+
   const isUserMember =
-    organization.admins.some((admin) => admin.userId === user?.id) ||
-    organization.instructors.some((instructor) => instructor.userId === user?.id) ||
-    organization.learners.some((learner) => learner.userId === user?.id)
+    admins.some((admin) => admin.userId === user?.id) ||
+    instructors.some((instructor) => instructor.userId === user?.id) ||
+    learners.some((learner) => learner.userId === user?.id);
 
-  const totalMembers =
-    (organization.admins?.length || 0) + (organization.instructors?.length || 0) + (organization.learners?.length || 0)
-
-  if (!courses) return null
+  const totalMembers = admins.length + instructors.length + learners.length;
 
   return (
     <Card className="h-full overflow-hidden shadow-lg border border-border">
@@ -34,7 +50,9 @@ export function SelectedOrganization({ organization, handleJoinOrg }: SelectedOr
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div className="flex items-center gap-4">
             <div>
-              <CardTitle className="text-2xl font-bold">{organization.name}</CardTitle>
+              <CardTitle className="text-2xl font-bold">
+                {organization.name}
+              </CardTitle>
               <CardDescription className="mt-1">
                 {organization.description || "Educational organization"}
               </CardDescription>
@@ -65,7 +83,7 @@ export function SelectedOrganization({ organization, handleJoinOrg }: SelectedOr
           </div>
           <div className="flex items-center gap-2 text-muted-foreground">
             <BookOpen className="h-4 w-4 text-primary" />
-            <span className="text-sm">{courses.length} Courses</span>
+            <span className="text-sm">{safeCourses.length} Courses</span>
           </div>
         </div>
       </CardHeader>
@@ -82,37 +100,55 @@ export function SelectedOrganization({ organization, handleJoinOrg }: SelectedOr
               <Spinner />
             ) : isError ? (
               <div className="p-8 text-center rounded-lg bg-destructive/10 border border-destructive/20">
-                <p className="text-destructive">Failed to load courses. Please try again later.</p>
+                <p className="text-destructive">
+                  Failed to load courses. Please try again later.
+                </p>
               </div>
-            ) : courses?.length > 0 ? (
+            ) : safeCourses.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {courses.map((course: Course) => (
-                  <CourseCard key={course.courseId} course={course} onGoToCourse={() => {}} />
+                {safeCourses.map((course: Course) => (
+                  <CourseCard
+                    key={course.courseId}
+                    course={course}
+                    onGoToCourse={() => {}}
+                  />
                 ))}
               </div>
             ) : (
               <div className="p-8 text-center rounded-lg bg-muted border border-border">
                 <BookOpen className="mx-auto h-12 w-12 text-muted-foreground mb-3" />
-                <p className="text-muted-foreground">No courses available for this organization yet.</p>
+                <p className="text-muted-foreground">
+                  No courses available for this organization yet.
+                </p>
               </div>
             )}
           </TabsContent>
 
           <TabsContent value="about" className="mt-6">
             <div className="bg-card rounded-lg p-6 border">
-              <h3 className="text-xl font-semibold mb-3">About {organization.name}</h3>
+              <h3 className="text-xl font-semibold mb-3">
+                About {organization.name}
+              </h3>
               <p className="text-muted-foreground mb-4">
                 {organization.description ||
                   "This organization is dedicated to providing quality education and learning resources."}
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {organization.admins?.length > 0 ? (
-                  organization.admins
+                {admins.length > 0 ? (
+                  admins
                     .slice(0, 3)
-                    .map(({ userId: adminId }, index) => <AdminCard key={adminId} adminId={adminId} index={index} />)
+                    .map(({ userId: adminId }, index) => (
+                      <AdminCard
+                        key={adminId}
+                        adminId={adminId}
+                        index={index}
+                      />
+                    ))
                 ) : (
-                  <p className="text-muted-foreground text-sm col-span-full">Admin information not available</p>
+                  <p className="text-muted-foreground text-sm col-span-full">
+                    Admin information not available
+                  </p>
                 )}
               </div>
             </div>
@@ -120,6 +156,5 @@ export function SelectedOrganization({ organization, handleJoinOrg }: SelectedOr
         </Tabs>
       </CardContent>
     </Card>
-  )
+  );
 }
-

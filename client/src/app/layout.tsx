@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { DM_Sans } from "next/font/google";
 import "./globals.css";
-import Providers from "./providers"
+import Providers from "./providers";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "sonner";
 import { Suspense } from "react";
@@ -17,7 +17,8 @@ const dmSans = DM_Sans({
 
 export const metadata: Metadata = {
   title: "Usefy",
-  description: "Usefy is an AI platform for organizations to create and manage courses.",
+  description:
+    "Usefy is an AI platform for organizations to create and manage courses.",
 };
 
 export default function RootLayout({
@@ -26,10 +27,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${dmSans.className}`}>
         <ClerkProvider>
-          <ThemeProvider 
+          <ThemeProvider
             attribute="class"
             defaultTheme="light"
             enableSystem
