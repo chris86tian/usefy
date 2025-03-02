@@ -10,16 +10,17 @@ const SignUpComponent = () => {
   const searchParams = useSearchParams();
   const isCheckoutPage = searchParams.get("showSignUp") !== null;
   const courseId = searchParams.get("id");
+  const orgId = searchParams.get("orgId");
   const { theme } = useTheme()
   const isDarkTheme = theme === "dark"
 
   const signInUrl = isCheckoutPage
-    ? `/checkout?step=1&id=${courseId}&showSignUp=false`
+    ? `/checkout?step=1&id=${courseId}&orgId=${orgId}&showSignUp=false`
     : "/signin";
 
   const getRedirectUrl = () => {
     if (isCheckoutPage) {
-      return `/checkout?step=2&id=${courseId}&showSignUp=false`;
+      return `/checkout?step=2&id=${courseId}&orgId=${orgId}&showSignUp=false`;
     }
 
     return "/";

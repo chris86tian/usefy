@@ -271,10 +271,10 @@ const CourseEditor = () => {
   }
 
   return (
-    <div>
+    <div className="dark:text-gray-100">
       <div className="flex items-center gap-5 mb-5">
         <button
-          className="flex items-center border border-gray-400 px-4 py-2 gap-2 rounded-md hover:bg-gray-100"
+          className="flex items-center border border-gray-400 dark:border-gray-600 px-4 py-2 gap-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-200"
           onClick={() => router.back()}
         >
           <ArrowLeft className="w-4 h-4" />
@@ -299,7 +299,7 @@ const CourseEditor = () => {
                   }`}
                   inputClassName="data-[state=checked]:bg-green-500"
                 />
-                <Button type="submit" className="bg-blue-700 hover:bg-blue-600">
+                <Button type="submit" className="bg-blue-700 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700">
                   <CheckCircle className="w-5 h-5" />
                   Save
                 </Button>
@@ -324,7 +324,7 @@ const CourseEditor = () => {
                   label="Course Title"
                   type="text"
                   placeholder="Write course title here"
-                  className="border-none"
+                  className="border-none dark:text-gray-100"
                   initialValue={course?.title}
                 />
 
@@ -334,6 +334,7 @@ const CourseEditor = () => {
                   type="textarea"
                   placeholder="Write course description here"
                   initialValue={course?.description}
+                  className="dark:text-gray-100"
                 />
 
                 <CustomFormField
@@ -351,6 +352,7 @@ const CourseEditor = () => {
                     },
                   ]}
                   initialValue={course?.category}
+                  className="dark:text-gray-100"
                 />
 
                 <CustomFormField
@@ -359,25 +361,26 @@ const CourseEditor = () => {
                   type="number"
                   placeholder="0"
                   initialValue={course?.price}
+                  className="dark:text-gray-100"
                 />
 
                 <div className="space-y-2 flex flex-between">
                   <div className="flex flex-col">
-                    <label className="text-sm font-medium text-gray-600 mb-2">Upload Thumbnail</label>
+                    <label className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Upload Thumbnail</label>
                     <input
                       type="file"
                       accept="image/*"
                       onChange={(e) => setImage(e.target.files?.[0] || null)}
-                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border file:border-gray-300 file:bg-gray-100"
+                      className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border file:border-gray-300 dark:file:border-gray-600 file:bg-gray-100 dark:file:bg-gray-700 dark:file:text-gray-200"
                     />
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-gray-100 mt-4 md:mt-0 p-4 rounded-lg basis-1/2">
+            <div className="bg-gray-100 dark:bg-gray-800 mt-4 md:mt-0 p-4 rounded-lg basis-1/2">
               <div className="flex justify-between items-center mb-2">
-                <h2 className="text-2xl font-semibold text-gray-800">Sections</h2>
+                <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">Sections</h2>
 
                 <div className="flex items-center space-x-2">
                   <Button
@@ -385,22 +388,22 @@ const CourseEditor = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => dispatch(openSectionModal({ sectionIndex: null }))}
-                    className="border-gray-300 text-blue-700 group"
+                    className="border-gray-300 dark:border-gray-600 text-blue-700 dark:text-blue-400 group"
                     disabled={isGenerating}
                   >
-                    <Plus className="h-4 w-4 text-blue-700 group-hover:text-blue-800" />
-                    <span className="text-blue-700 group-hover:text-blue-800">Add Section</span>
+                    <Plus className="h-4 w-4 text-blue-700 dark:text-blue-400 group-hover:text-blue-800 dark:group-hover:text-blue-300" />
+                    <span className="text-blue-700 dark:text-blue-400 group-hover:text-blue-800 dark:group-hover:text-blue-300">Add Section</span>
                   </Button>
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     onClick={() => setIsDialogOpen(true)}
-                    className="border-gray-300 text-blue-700 group"
+                    className="border-gray-300 dark:border-gray-600 text-blue-700 dark:text-blue-400 group"
                     disabled={isGenerating}
                   >
-                    <Sparkles className="h-4 w-4 text-blue-700 group-hover:text-blue-800" />
-                    <span className="text-blue-700 group-hover:text-blue-800">
+                    <Sparkles className="h-4 w-4 text-blue-700 dark:text-blue-400 group-hover:text-blue-800 dark:group-hover:text-blue-300" />
+                    <span className="text-blue-700 dark:text-blue-400 group-hover:text-blue-800 dark:group-hover:text-blue-300">
                       {isGenerating ? "Generating..." : "Generate"}
                     </span>
                   </Button>
@@ -413,22 +416,22 @@ const CourseEditor = () => {
               </div>
 
               {isLoading ? (
-                <p>Loading course content...</p>
+                <p className="dark:text-gray-300">Loading course content...</p>
               ) : isGenerating ? (
                 <div className="flex flex-col items-center justify-center py-8 space-y-4">
                   <div className="flex items-center space-x-3">
                     <div
-                      className="w-6 h-6 border-2 border-blue-700 border-t-transparent rounded-full animate-spin"
+                      className="w-6 h-6 border-2 border-blue-700 dark:border-blue-500 border-t-transparent rounded-full animate-spin"
                       aria-label="Generating content"
                     />
-                    <p className="text-gray-800">Generating course content from video...</p>
+                    <p className="text-gray-800 dark:text-gray-200">Generating course content from video...</p>
                   </div>
-                  <p className="text-sm text-gray-500">This may take a few moments as we analyze the video content.</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">This may take a few moments as we analyze the video content.</p>
 
                   <Button
                     type="button"
                     onClick={() => setIsGenerating(false)}
-                    className="bg-blue-700 hover:bg-blue-600"
+                    className="bg-blue-700 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700"
                   >
                     Cancel
                   </Button>
@@ -436,7 +439,7 @@ const CourseEditor = () => {
               ) : sections.length > 0 ? (
                 <DroppableComponent />
               ) : (
-                <p>No sections available</p>
+                <p className="dark:text-gray-300">No sections available</p>
               )}
             </div>
           </div>
@@ -444,10 +447,10 @@ const CourseEditor = () => {
           {isUploading && (
             <div className="flex flex-col items-center mt-4 space-y-2">
               <div
-                className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"
+                className="w-8 h-8 border-4 border-blue-500 dark:border-blue-400 border-t-transparent rounded-full animate-spin"
                 aria-label="Loading"
               />
-              <p className="text-gray-800">Uploading videos... {progress}% complete</p>
+              <p className="text-gray-800 dark:text-gray-200">Uploading videos... {progress}% complete</p>
             </div>
           )}
         </form>
@@ -460,4 +463,3 @@ const CourseEditor = () => {
 }
 
 export default CourseEditor
-

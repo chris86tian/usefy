@@ -77,23 +77,21 @@ const Courses = () => {
   const archivedCount = courses?.filter((course) => course.status === "Archived").length
 
   return (
-    <div className="min-h-screen">
+    <div className="space-y-6">
       <Header title="My Courses" subtitle="View your enrolled courses" />
-      <div className="flex items-center justify-between mb-6">
-        <Toolbar onSearch={setSearchTerm} onCategoryChange={setSelectedCategory} />
-        {archivedCount > 0 && (
-          <button
-            onClick={() => setShowArchived(!showArchived)}
-            className="flex items-center mb-4 ml-4 text-muted-foreground hover:text-foreground focus:outline-none"
-          >
-            <Archive className="h-6 w-6" />
-          </button>
-        )}
-      </div>
+      <Toolbar onSearch={setSearchTerm} onCategoryChange={setSelectedCategory} />
+      {archivedCount > 0 && (
+        <button
+          onClick={() => setShowArchived(!showArchived)}
+          className="flex items-center mb-4 ml-4 text-muted-foreground hover:text-foreground focus:outline-none"
+        >
+          <Archive className="h-6 w-6" />
+        </button>
+      )}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-6">
         {filteredCourses.map((course) => (
           <div key={course.courseId} className="relative">
-            <CourseCard course={course} onGoToCourse={handleGoToCourse} />
+            <CourseCard course={course} onGoToCourse={handleGoToCourse} onEnroll={() => {}} isEnrolled />
             {course.status === "Archived" && <ArchivedOverlay />}
           </div>
         ))}

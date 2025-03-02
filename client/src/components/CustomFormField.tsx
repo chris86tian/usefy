@@ -69,7 +69,7 @@ export const CustomFormField: React.FC<FormFieldProps> = ({
             placeholder={placeholder}
             {...field}
             rows={3}
-            className={`border-none bg-gray-100 p-4 ${inputClassName}`}
+            className={`border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white p-4 ${inputClassName}`}
           />
         )
       case "select":
@@ -79,15 +79,15 @@ export const CustomFormField: React.FC<FormFieldProps> = ({
             defaultValue={field.value || (initialValue as string)}
             onValueChange={field.onChange}
           >
-            <SelectTrigger className={`w-full border-none bg-gray-50 p-4 ${inputClassName}`}>
+            <SelectTrigger className={`w-full border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white p-4 ${inputClassName}`}>
               <SelectValue placeholder={placeholder} />
             </SelectTrigger>
-            <SelectContent className="w-full bg-gray-50 border-gray-400 shadow">
+            <SelectContent className="w-full bg-white dark:bg-gray-900 border-gray-400 dark:border-gray-700 shadow">
               {options?.map((option) => (
                 <SelectItem
                   key={option.value}
                   value={option.value}
-                  className={`cursor-pointer hover:!bg-gray-100 hover:!text-gray-800`}
+                  className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-gray-200"
                 >
                   {option.label}
                 </SelectItem>
@@ -102,7 +102,7 @@ export const CustomFormField: React.FC<FormFieldProps> = ({
               checked={field.value}
               onCheckedChange={field.onChange}
               id={name}
-              className={`text-gray-500 ${inputClassName}`}
+              className="text-gray-500 dark:text-gray-300"
             />
             <FormLabel htmlFor={name} className={labelClassName}>
               {label}
@@ -116,35 +116,18 @@ export const CustomFormField: React.FC<FormFieldProps> = ({
           </div>
         )
       case "file":
-        const ACCEPTED_VIDEO_TYPES = ["video/mp4", "video/webm", "video/ogg"]
-        const acceptedFileTypes = accept ? [accept] : ACCEPTED_VIDEO_TYPES
-
         return (
           <FilePond
-            className={`${inputClassName}`}
+            className={`dark:text-white dark:bg-gray-800 ${inputClassName}`}
             files={field.value ? [field.value] : []}
             allowMultiple={multiple}
             onupdatefiles={(fileItems: any) => {
               field.onChange(multiple ? fileItems.map((fileItem: any) => fileItem.file) : fileItems[0]?.file)
             }}
-            acceptedFileTypes={acceptedFileTypes}
+            acceptedFileTypes={accept ? [accept] : undefined}
             labelIdle={`Drag & Drop your files or <span class="filepond--label-action">Browse</span>`}
             credits={false}
           />
-        )
-      case "number":
-        return (
-          <Input
-            type="number"
-            placeholder={placeholder}
-            {...field}
-            className={`border-none bg-gray-50 p-4 ${inputClassName}`}
-            disabled={disabled}
-          />
-        )
-      case "multi-input":
-        return (
-          <MultiInputField name={name} control={control} placeholder={placeholder} inputClassName={inputClassName} />
         )
       default:
         return (
@@ -152,7 +135,7 @@ export const CustomFormField: React.FC<FormFieldProps> = ({
             type={type}
             placeholder={placeholder}
             {...field}
-            className={`border-none bg-gray-50 p-4 ${inputClassName}`}
+            className={`border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white p-4 ${inputClassName}`}
             disabled={disabled}
           />
         )
@@ -168,10 +151,9 @@ export const CustomFormField: React.FC<FormFieldProps> = ({
         <FormItem className={`${type !== "switch" && "rounded-md"} relative ${className}`}>
           {type !== "switch" && (
             <div className="flex justify-between items-center">
-              <FormLabel className={`text-gray-500 text-sm ${labelClassName}`}>{label}</FormLabel>
-
+              <FormLabel className={`text-gray-500 dark:text-gray-300 text-sm ${labelClassName}`}>{label}</FormLabel>
               {!disabled && isIcon && type !== "file" && type !== "multi-input" && (
-                <Edit className="size-4 text-gray-500" />
+                <Edit className="size-4 text-gray-500 dark:text-gray-300" />
               )}
             </div>
           )}
@@ -187,47 +169,3 @@ export const CustomFormField: React.FC<FormFieldProps> = ({
     />
   )
 }
-
-interface MultiInputFieldProps {
-  name: string
-  control: any
-  placeholder?: string
-  inputClassName?: string
-}
-
-const MultiInputField: React.FC<MultiInputFieldProps> = ({ name, control, placeholder, inputClassName }) => {
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name,
-  })
-
-  return (
-    <div className="space-y-2">
-      {fields.map((field, index) => (
-        <div key={field.id} className="flex items-center space-x-2">
-          <FormField
-            control={control}
-            name={`${name}.${index}`}
-            render={({ field }) => (
-              <FormControl>
-                <Input
-                  {...field}
-                  placeholder={placeholder}
-                  className={`flex-1 border-none bg-gray-100 p-4 ${inputClassName}`}
-                />
-              </FormControl>
-            )}
-          />
-          <Button type="button" onClick={() => remove(index)} variant="ghost" size="icon" className="text-gray-500">
-            <X className="w-4 h-4" />
-          </Button>
-        </div>
-      ))}
-      <Button type="button" onClick={() => append("")} variant="outline" size="sm" className="mt-2 text-gray-500">
-        <Plus className="w-4 h-4 mr-2" />
-        Add Item
-      </Button>
-    </div>
-  )
-}
-

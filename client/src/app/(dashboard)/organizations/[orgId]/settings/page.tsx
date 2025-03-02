@@ -1,21 +1,21 @@
 "use client";
 
 import React from "react";
-import AdminCourses from "./_components/AdminCourses";
-import UserCourses from "./_components/UserCourses";
+import AdminSettings from "./_components/AdminSettings";
+import UserSettings from "./_components/UserSettings";
 import { useOrganization } from "@/context/OrganizationContext";
 import { useUser } from "@clerk/nextjs";
 
-const Courses = () => {
+const Settings = () => {
   const { user } = useUser();
   const { currentOrg } = useOrganization();
   const isAuthorized = currentOrg?.admins.some((admin) => admin.userId === user?.id);
 
   return (
     <>
-      {isAuthorized ? <AdminCourses /> : <UserCourses />}
+      {isAuthorized ? <AdminSettings /> : <UserSettings />}
     </>
   );
 };
 
-export default Courses;
+export default Settings;

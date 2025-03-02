@@ -1,28 +1,33 @@
+import type React from "react"
 import { Card, CardHeader, CardContent, CardTitle, CardFooter } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
 import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
 
 interface CourseCardProps {
   course: Course
   onGoToCourse: (course: Course) => void
+  onEnroll: (courseId: string) => void
+  isEnrolled: boolean
 }
 
-const CourseCard = ({ course, onGoToCourse }: CourseCardProps) => {
+const CourseCard = ({ course, onGoToCourse, onEnroll, isEnrolled }: CourseCardProps) => {
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    onGoToCourse(course)
+  }
+
+  const handleEnroll = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    onEnroll(course.courseId)
+  }
+
   return (
-    <Card
-      onClick={() => onGoToCourse(course)}
-      className="overflow-hidden transition-colors hover:bg-accent cursor-pointer group"
-    >
+    <Card onClick={handleClick} className="overflow-hidden transition-colors hover:bg-accent cursor-pointer group">
       <CardHeader className="p-0">
         <div className="aspect-video relative overflow-hidden">
-        <Image
-          src={course.image || "/placeholder.png"}
-          alt={course.title}
-          width={420}
-          height={350}
-          priority
-        />
+          <Image src={course.image || "/placeholder.png"} alt={course.title} width={420} height={350} priority />
         </div>
       </CardHeader>
       <CardContent className="p-4">
@@ -46,8 +51,14 @@ const CourseCard = ({ course, onGoToCourse }: CourseCardProps) => {
         </Badge>
         <span className="text-sm font-medium text-muted-foreground">{course.level}</span>
       </CardFooter>
+      {!isEnrolled && (
+          <Button onClick={handleEnroll} variant="default" className="w-full">
+            Enroll Now
+          </Button>
+      )}
     </Card>
   )
 }
 
 export default CourseCard
+

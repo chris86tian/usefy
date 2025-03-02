@@ -82,26 +82,26 @@ const SectionModal = () => {
 
   return (
     <CustomModal isOpen={isSectionModalOpen} onClose={onClose}>
-      <div className="p-6 bg-white rounded-lg">
+      <div className="p-6 bg-white dark:bg-gray-900 rounded-lg">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">Add/Edit Section</h2>
-          <button 
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 transition-colors"
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Add/Edit Section</h2>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={onClose} 
+            className="text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
           >
             <X className="w-6 h-6" />
-          </button>
+          </Button>
         </div>
 
         <Form {...methods}>
-          <form
-            onSubmit={methods.handleSubmit(onSubmit)}
-            className="space-y-6"
-          >
-            <CustomFormField
-              name="title"
-              label="Section Title"
-              placeholder="Write section title here"
+          <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6">
+            <CustomFormField 
+              name="title" 
+              label="Section Title" 
+              placeholder="Write section title here" 
+              inputClassName="dark:bg-gray-800 dark:text-white dark:border-gray-700"
             />
 
             <CustomFormField
@@ -109,20 +109,21 @@ const SectionModal = () => {
               label="Section Description"
               type="textarea"
               placeholder="Write section description here"
+              inputClassName="dark:bg-gray-800 dark:text-white dark:border-gray-700"
             />
 
             <div className="flex justify-end gap-3">
               <Button 
                 type="button" 
                 variant="outline" 
-                onClick={onClose}
-                className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                onClick={onClose} 
+                className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
               >
                 Cancel
               </Button>
               <Button 
                 type="submit" 
-                className="bg-blue-600 hover:bg-blue-700 text-white"
+                className="bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 text-white"
               >
                 Save
               </Button>

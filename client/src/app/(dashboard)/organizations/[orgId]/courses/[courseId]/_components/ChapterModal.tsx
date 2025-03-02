@@ -238,10 +238,10 @@ const ChapterModal = () => {
 
   return (
     <CustomModal isOpen={isChapterModalOpen} onClose={onClose}>
-      <div className="p-6 bg-white rounded-lg max-h-[90vh] overflow-y-auto">
+      <div className="p-6 bg-white dark:bg-gray-800 rounded-lg max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">Add/Edit Chapter</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700 transition-colors">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Add/Edit Chapter</h2>
+          <button onClick={onClose} className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors">
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -258,7 +258,7 @@ const ChapterModal = () => {
             />
 
             <div className="mb-4">
-              <FormLabel className="text-gray-600 text-sm">Select Video Type</FormLabel>
+              <FormLabel className="text-gray-600 dark:text-gray-300 text-sm">Select Video Type</FormLabel>
               <div className="flex items-center gap-4 justify-start mt-2">
                 <label className="flex items-center cursor-pointer">
                   <input
@@ -267,9 +267,9 @@ const ChapterModal = () => {
                     value="file"
                     checked={videoType === "file"}
                     onChange={() => setVideoType("file")}
-                    className="mr-2"
+                    className="mr-2 text-blue-600 dark:text-blue-500"
                   />
-                  <span className="text-gray-700">File Upload</span>
+                  <span className="text-gray-700 dark:text-gray-200">File Upload</span>
                 </label>
                 <label className="flex items-center cursor-pointer">
                   <input
@@ -278,9 +278,9 @@ const ChapterModal = () => {
                     value="link"
                     checked={videoType === "link"}
                     onChange={() => setVideoType("link")}
-                    className="mr-2"
+                    className="mr-2 text-blue-600 dark:text-blue-500"
                   />
-                  <span className="text-gray-700">YouTube/Vimeo Link</span>
+                  <span className="text-gray-700 dark:text-gray-200">YouTube/Vimeo Link</span>
                 </label>
               </div>
             </div>
@@ -291,7 +291,7 @@ const ChapterModal = () => {
                 name="video"
                 render={({ field: { onChange } }) => (
                   <FormItem>
-                    <FormLabel className="text-gray-600 text-sm">Upload Video</FormLabel>
+                    <FormLabel className="text-gray-600 dark:text-gray-300 text-sm">Upload Video</FormLabel>
                     <FormControl>
                       <Input
                         type="file"
@@ -300,10 +300,10 @@ const ChapterModal = () => {
                           const file = e.target.files?.[0]
                           if (file) onChange(file)
                         }}
-                        className="border border-gray-200 bg-gray-50 py-2 cursor-pointer"
+                        className="border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 py-2 cursor-pointer dark:text-gray-200"
                       />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-red-500 dark:text-red-400" />
                   </FormItem>
                 )}
               />
@@ -312,14 +312,14 @@ const ChapterModal = () => {
             )}
 
             {/* Quiz Section */}
-            <div className="mt-6 border border-gray-200 rounded-lg">
+            <div className="mt-6 border border-gray-200 dark:border-gray-700 rounded-lg">
               <div
-                className="flex items-center justify-between p-4 cursor-pointer bg-gray-50 rounded-t-lg"
+                className="flex items-center justify-between p-4 cursor-pointer bg-gray-50 dark:bg-gray-700 rounded-t-lg"
                 onClick={() => setIsQuizSectionOpen(!isQuizSectionOpen)}
               >
                 <div className="flex items-center gap-2">
-                  <Brain className="w-5 h-5 text-gray-600" />
-                  <FormLabel className="text-gray-600 text-sm mb-0">Quiz Questions ({questions.length})</FormLabel>
+                  <Brain className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                  <FormLabel className="text-gray-600 dark:text-gray-300 text-sm mb-0">Quiz Questions ({questions.length})</FormLabel>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button
@@ -328,23 +328,23 @@ const ChapterModal = () => {
                       e.stopPropagation()
                       addQuestion()
                     }}
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white"
                   >
                     Add Question
                   </Button>
-                  {isQuizSectionOpen ? <ChevronUp /> : <ChevronDown />}
+                  {isQuizSectionOpen ? <ChevronUp className="text-gray-600 dark:text-gray-300" /> : <ChevronDown className="text-gray-600 dark:text-gray-300" />}
                 </div>
               </div>
 
               {isQuizSectionOpen && (
-                <div className="p-4">
+                <div className="p-4 dark:bg-gray-800">
                   {questions.map((question, questionIndex) => (
-                    <div key={questionIndex} className="mb-4 border border-gray-200 rounded-lg">
+                    <div key={questionIndex} className="mb-4 border border-gray-200 dark:border-gray-700 rounded-lg">
                       <div
-                        className="flex items-center justify-between p-3 cursor-pointer bg-gray-50 rounded-t-lg"
+                        className="flex items-center justify-between p-3 cursor-pointer bg-gray-50 dark:bg-gray-700 rounded-t-lg"
                         onClick={() => toggleQuestion(questionIndex)}
                       >
-                        <span className="font-medium text-gray-700">Question {questionIndex + 1}</span>
+                        <span className="font-medium text-gray-700 dark:text-gray-200">Question {questionIndex + 1}</span>
                         <div className="flex items-center gap-2">
                           <Button
                             type="button"
@@ -354,28 +354,29 @@ const ChapterModal = () => {
                             }}
                             variant="destructive"
                             size="sm"
+                            className="dark:bg-red-600 dark:hover:bg-red-700"
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
-                          {expandedQuestions.includes(questionIndex) ? <ChevronUp /> : <ChevronDown />}
+                          {expandedQuestions.includes(questionIndex) ? <ChevronUp className="text-gray-600 dark:text-gray-300" /> : <ChevronDown className="text-gray-600 dark:text-gray-300" />}
                         </div>
                       </div>
 
                       {expandedQuestions.includes(questionIndex) && (
-                        <div className="p-4 bg-white">
+                        <div className="p-4 bg-white dark:bg-gray-800">
                           <Input
                             value={question.question}
                             onChange={(e) => updateQuestion(questionIndex, "question", e.target.value)}
                             placeholder="Enter your question"
-                            className="mb-2"
+                            className="mb-2 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:placeholder-gray-400"
                           />
 
                           <div className="my-2">
-                            <FormLabel className="text-gray-600 text-sm">Difficulty</FormLabel>
+                            <FormLabel className="text-gray-600 dark:text-gray-300 text-sm">Difficulty</FormLabel>
                             <select
                               value={question.difficulty}
                               onChange={(e) => updateQuestion(questionIndex, "difficulty", e.target.value)}
-                              className="w-full mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-900"
+                              className="w-full mt-1 p-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md text-gray-900 dark:text-gray-200"
                             >
                               <option value="easy">Easy</option>
                               <option value="medium">Medium</option>
@@ -390,13 +391,13 @@ const ChapterModal = () => {
                                 name={`correct-answer-${questionIndex}`}
                                 checked={question.correctAnswer === optionIndex}
                                 onChange={() => updateQuestion(questionIndex, "correctAnswer", optionIndex)}
-                                className="text-blue-600"
+                                className="text-blue-600 dark:text-blue-500"
                               />
                               <Input
                                 value={option}
                                 onChange={(e) => updateOption(questionIndex, optionIndex, e.target.value)}
                                 placeholder={`Option ${optionIndex + 1}`}
-                                className="flex-1"
+                                className="flex-1 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:placeholder-gray-400"
                               />
                             </div>
                           ))}
@@ -409,14 +410,14 @@ const ChapterModal = () => {
             </div>
 
             {/* Assignments Section */}
-            <div className="mt-6 border border-gray-200 rounded-lg">
+            <div className="mt-6 border border-gray-200 dark:border-gray-700 rounded-lg">
               <div
-                className="flex items-center justify-between p-4 cursor-pointer bg-gray-50 rounded-t-lg"
+                className="flex items-center justify-between p-4 cursor-pointer bg-gray-50 dark:bg-gray-700 rounded-t-lg"
                 onClick={() => setIsAssignmentSectionOpen(!isAssignmentSectionOpen)}
               >
                 <div className="flex items-center gap-2">
-                  <BookOpen className="w-5 h-5 text-gray-600" />
-                  <FormLabel className="text-gray-600 text-sm mb-0">Assignments ({assignments.length})</FormLabel>
+                  <BookOpen className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                  <FormLabel className="text-gray-600 dark:text-gray-300 text-sm mb-0">Assignments ({assignments.length})</FormLabel>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button
@@ -425,23 +426,23 @@ const ChapterModal = () => {
                       e.stopPropagation()
                       addAssignment()
                     }}
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white"
                   >
                     Add Assignment
                   </Button>
-                  {isAssignmentSectionOpen ? <ChevronUp /> : <ChevronDown />}
+                  {isAssignmentSectionOpen ? <ChevronUp className="text-gray-600 dark:text-gray-300" /> : <ChevronDown className="text-gray-600 dark:text-gray-300" />}
                 </div>
               </div>
 
               {isAssignmentSectionOpen && (
-                <div className="p-4">
+                <div className="p-4 dark:bg-gray-800">
                   {assignments.map((assignment, assignmentIndex) => (
-                    <div key={assignment.assignmentId} className="mb-4 border border-gray-200 rounded-lg">
+                    <div key={assignment.assignmentId} className="mb-4 border border-gray-200 dark:border-gray-700 rounded-lg">
                       <div
-                        className="flex items-center justify-between p-3 cursor-pointer bg-gray-50 rounded-t-lg"
+                        className="flex items-center justify-between p-3 cursor-pointer bg-gray-50 dark:bg-gray-700 rounded-t-lg"
                         onClick={() => toggleAssignment(assignment.assignmentId)}
                       >
-                        <span className="font-medium text-gray-700">
+                        <span className="font-medium text-gray-700 dark:text-gray-200">
                           {assignment.title || `Assignment ${assignmentIndex + 1}`}
                         </span>
                         <div className="flex items-center gap-2">
@@ -453,32 +454,33 @@ const ChapterModal = () => {
                             }}
                             variant="destructive"
                             size="sm"
+                            className="dark:bg-red-600 dark:hover:bg-red-700"
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
-                          {expandedAssignments.includes(assignment.assignmentId) ? <ChevronUp /> : <ChevronDown />}
+                          {expandedAssignments.includes(assignment.assignmentId) ? <ChevronUp className="text-gray-600 dark:text-gray-300" /> : <ChevronDown className="text-gray-600 dark:text-gray-300" />}
                         </div>
                       </div>
 
                       {expandedAssignments.includes(assignment.assignmentId) && (
-                        <div className="p-4 bg-white">
+                        <div className="p-4 bg-white dark:bg-gray-800">
                           <Input
                             value={assignment.title}
                             onChange={(e) => updateAssignment(assignmentIndex, "title", e.target.value)}
                             placeholder="Assignment Title"
-                            className="mb-2"
+                            className="mb-2 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:placeholder-gray-400"
                           />
                           <textarea
                             value={assignment.description}
                             onChange={(e) => updateAssignment(assignmentIndex, "description", e.target.value)}
                             placeholder="Assignment Description"
-                            className="w-full min-h-[100px] mb-4 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-900"
+                            className="w-full min-h-[100px] mb-4 p-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md text-gray-900 dark:text-gray-200 dark:placeholder-gray-400"
                           />
 
                           {/* Hints Section */}
                           <div className="mt-4">
                             <div className="flex items-center justify-between mb-2">
-                              <FormLabel className="text-gray-600 text-sm">Hints</FormLabel>
+                              <FormLabel className="text-gray-600 dark:text-gray-300 text-sm">Hints</FormLabel>
                               <Button
                                 type="button"
                                 onClick={(e) => {
@@ -487,7 +489,7 @@ const ChapterModal = () => {
                                 }}
                                 size="sm"
                                 variant="outline"
-                                className="border-gray-300"
+                                className="border-gray-300 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
                               >
                                 Add Hint
                               </Button>
@@ -499,12 +501,14 @@ const ChapterModal = () => {
                                   value={hint}
                                   onChange={(e) => updateHint(assignmentIndex, hintIndex, e.target.value)}
                                   placeholder={`Hint ${hintIndex + 1}`}
+                                  className="dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:placeholder-gray-400"
                                 />
                                 <Button
                                   type="button"
                                   onClick={() => removeHint(assignmentIndex, hintIndex)}
                                   variant="destructive"
                                   size="sm"
+                                  className="dark:bg-red-600 dark:hover:bg-red-700"
                                 >
                                   <X className="w-4 h-4" />
                                 </Button>
@@ -524,11 +528,14 @@ const ChapterModal = () => {
                 type="button"
                 variant="outline"
                 onClick={onClose}
-                className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
               >
                 Cancel
               </Button>
-              <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white">
+              <Button 
+                type="submit" 
+                className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white"
+              >
                 Save
               </Button>
             </div>
