@@ -123,6 +123,8 @@ export function SelectedOrganization({
                     key={course.courseId}
                     course={course}
                     onGoToCourse={() => {}}
+                    onEnroll={() => {}}
+                    isEnrolled={true}
                   />
                 ))}
               </div>

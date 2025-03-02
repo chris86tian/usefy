@@ -19,12 +19,10 @@ interface NavbarProps {
 
 const Navbar = ({ isDashboard = false }: NavbarProps) => {
   const router = useRouter()
+  const pathname = usePathname()
+  if (pathname.startsWith("/organizations")) isDashboard = true
   const { data: notifications = null } = useGetNotificationsQuery(undefined, { skip: !isDashboard })
   const { theme, setTheme } = useTheme()
-  const pathname = usePathname()
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-
-  if (pathname.startsWith("/organizations")) isDashboard = true
 
   const toggleTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark")
