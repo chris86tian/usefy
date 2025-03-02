@@ -73,7 +73,13 @@ const customBaseQuery = async (
 export const api = createApi({
   baseQuery: customBaseQuery,
   reducerPath: "api",
-  tagTypes: ["Organizations", "Courses", "Users", "UserCourseProgress", "Feedback"],
+  tagTypes: [
+    "Organizations",
+    "Courses",
+    "Users",
+    "UserCourseProgress",
+    "Feedback",
+  ],
   endpoints: (build) => ({
     /* 
     ===============
@@ -168,7 +174,7 @@ export const api = createApi({
         method: "DELETE",
       }),
       invalidatesTags: ["Organizations"],
-    }), 
+    }),
 
     joinOrganization: build.mutation<Organization, string>({
       query: (organizationId) => ({
@@ -184,6 +190,17 @@ export const api = createApi({
 
     getOrganizationCourses: build.query<Course[], string>({
       query: (organizationId) => `organizations/${organizationId}/courses`,
+      // Handle 404 errors by returning an empty array
+      transformErrorResponse: (response) => {
+        if (response.status === 404) {
+          return { data: [] };
+        }
+        return response;
+      },
+      transformResponse: (response, meta, arg) => {
+        if (!response) return [];
+        return response;
+      },
     }),
 
     addCourseToOrganization: build.mutation<
@@ -704,7 +721,7 @@ export const api = createApi({
         url: `feedback/${feedbackId}`,
         method: "DELETE",
       }),
-      invalidatesTags: ['Feedback'],
+      invalidatesTags: ["Feedback"],
     }),
 
     /*
