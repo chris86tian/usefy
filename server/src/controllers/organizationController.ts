@@ -3,140 +3,212 @@ import Organization from "../models/organizationModel";
 import Course from "../models/courseModel";
 import { getAuth } from "@clerk/express";
 
-export const getOrganization = async (req: Request, res: Response): Promise<void> => {
-    const { organizationId } = req.params;
-    try {
-        const organization = await Organization.query("organizationId").eq(organizationId).exec();
-        res.json({ message: "Organization retrieved successfully", data: organization });
-    } catch (error) {
-        res.status(500).json({ message: "Error retrieving organization", error });
-    }
-}
-
-export const listOrganizations = async (req: Request, res: Response): Promise<void> => {
-    try {
-        const organizations = await Organization.scan().exec();
-        res.json({ message: "Organizations retrieved successfully", data: organizations });
-    } catch (error) {
-        res.status(500).json({ message: "Error retrieving organizations", error });
-    }
-}
-
-export const createOrganization = async (req: Request, res: Response): Promise<void> => {
-    const { organizationId, name, description, image } = req.body;
-    const auth = getAuth(req);
-
-    try {
-        const organization = new Organization({
-            organizationId,
-            name,
-            description,
-            image,
-            admins: [{ userId: auth.userId }],
-            instructors: [],
-            learners: [],
-            courses: [],
-        });
-        await organization.save();
-        res.json({ message: "Organization created successfully", data: organization });
-    } catch (error) {
-        console.log("error", error);
-        res.status(500).json({ message: "Error creating organization", error });
-    }
-}
-
-export const deleteOrganization = async (req: Request, res: Response): Promise<void> => {
-    const { organizationId } = req.params;
-    try {
-        await Organization.delete(organizationId);
-        res.json({ message: "Organization deleted successfully" });
-    } catch (error) {
-        res.status(500).json({ message: "Error deleting organization", error });
-    }
-}
-
-export const joinOrganization = async (req: Request, res: Response): Promise<void> => {
-    const { organizationId } = req.params;
-    const auth = getAuth(req);
-    try {
-        const organization = await Organization.query("organizationId").eq(organizationId).exec();
-        if (!organization || organization.length === 0) {
-            res.status(404).json({ message: "Organization not found" });
-            return;
-        }
-        organization[0].learners.push({ userId: auth.userId });
-        await organization[0].save();
-        res.json({ message: "Organization joined successfully", data: organization[0] });
-    } catch (error) {
-        res.status(500).json({ message: "Error joining organization", error });
-    }
-}
-
-export const getMyOrganizations = async (req: Request, res: Response): Promise<void> => {
-    const auth = getAuth(req);
-
-    try {
-        const allOrganizations = await Organization.scan().exec();
-
-        const userOrganizations = allOrganizations.filter(org =>
-            org.admins?.some((admin: { userId: string; }) => admin.userId === auth.userId) ||
-            org.instructors?.some((instructor: { userId: string; }) => instructor.userId === auth.userId) ||
-            org.learners?.some((learner: { userId: string; }) => learner.userId === auth.userId)
-        );
-
-        res.json({ message: "Organizations retrieved successfully", data: userOrganizations });
-    } catch (error) {
-        console.error("Error retrieving organizations:", error);
-        res.status(500).json({ message: "Error retrieving organizations", error });
-    }
+export const getOrganization = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { organizationId } = req.params;
+  try {
+    const organization = await Organization.query("organizationId")
+      .eq(organizationId)
+      .exec();
+    res.json({
+      message: "Organization retrieved successfully",
+      data: organization,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error retrieving organization", error });
+  }
 };
 
-export const getOrganizationCourses = async (req: Request, res: Response): Promise<void> => {
-    const { organizationId } = req.params;
-
-    try {
-        const organization = await Organization.query("organizationId").eq(organizationId).exec();
-        const orgData = organization?.[0];
-
-        if (!orgData) {
-            res.status(404).json({ message: "Organization not found" }); 
-            return; 
-        }
-
-        const courseIds = orgData.courses || [];
-        if (courseIds.length === 0) {
-            res.json({ message: "No courses found for this organization", data: [] }); 
-            return; 
-        }
-
-        const courses = await Course.batchGet(courseIds);
-        res.json({ message: "Courses retrieved successfully", data: courses }); 
-        return; 
-    } catch (error) {
-        res.status(500).json({ message: "Error retrieving courses", error }); 
-        return;
-    }
+export const listOrganizations = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const organizations = await Organization.scan().exec();
+    res.json({
+      message: "Organizations retrieved successfully",
+      data: organizations,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error retrieving organizations", error });
+  }
 };
 
-export const addCourseToOrganization = async (req: Request, res: Response): Promise<void> => {
-    const { organizationId, courseId } = req.params;
+export const createOrganization = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { organizationId, name, description, image } = req.body;
+  const auth = getAuth(req);
 
-    try {
-        const organization = await Organization.get(organizationId);
-        if (!organization) {
-            res.status(404).json({ message: "Organization not found" });
-            return;
-        }
+  try {
+    const organization = new Organization({
+      organizationId,
+      name,
+      description,
+      image,
+      admins: [{ userId: auth.userId }],
+      instructors: [],
+      learners: [],
+      courses: [],
+    });
+    await organization.save();
+    res.json({
+      message: "Organization created successfully",
+      data: organization,
+    });
+  } catch (error) {
+    console.log("error", error);
+    res.status(500).json({ message: "Error creating organization", error });
+  }
+};
 
-        organization.courses = organization.courses || [];
+export const deleteOrganization = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { organizationId } = req.params;
+  try {
+    await Organization.delete(organizationId);
+    res.json({ message: "Organization deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting organization", error });
+  }
+};
 
-        if (!organization.courses.some((course: { courseId: string; }) => course.courseId === courseId)) {
-            organization.courses.push({ courseId });
-            await organization.save();
-        }
-
-        res.json({ message: "Course added to organization successfully", data: organization });
-    } catch (error) {
-        res.status(500).json({ message: "Error adding course to organization", error });
+export const joinOrganization = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { organizationId } = req.params;
+  const auth = getAuth(req);
+  try {
+    const organization = await Organization.query("organizationId")
+      .eq(organizationId)
+      .exec();
+    if (!organization || organization.length === 0) {
+      res.status(404).json({ message: "Organization not found" });
+      return;
     }
+    organization[0].learners.push({ userId: auth.userId });
+    await organization[0].save();
+    res.json({
+      message: "Organization joined successfully",
+      data: organization[0],
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error joining organization", error });
+  }
+};
+
+export const getMyOrganizations = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const auth = getAuth(req);
+
+  try {
+    const allOrganizations = await Organization.scan().exec();
+
+    const userOrganizations = allOrganizations.filter(
+      (org) =>
+        org.admins?.some(
+          (admin: { userId: string }) => admin.userId === auth.userId
+        ) ||
+        org.instructors?.some(
+          (instructor: { userId: string }) => instructor.userId === auth.userId
+        ) ||
+        org.learners?.some(
+          (learner: { userId: string }) => learner.userId === auth.userId
+        )
+    );
+
+    res.json({
+      message: "Organizations retrieved successfully",
+      data: userOrganizations,
+    });
+  } catch (error) {
+    console.error("Error retrieving organizations:", error);
+    res.status(500).json({ message: "Error retrieving organizations", error });
+  }
+};
+
+export const getOrganizationCourses = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { organizationId } = req.params;
+
+  try {
+    console.log(`Getting courses for organization: ${organizationId}`);
+
+    const organization = await Organization.query("organizationId")
+      .eq(organizationId)
+      .exec();
+    const orgData = organization?.[0];
+
+    if (!orgData) {
+      console.log(`Organization not found: ${organizationId}`);
+      res.json({ message: "No courses found for this organization", data: [] });
+      return;
+    }
+
+    const courseIds = orgData.courses || [];
+    if (courseIds.length === 0) {
+      res.json({ message: "No courses found for this organization", data: [] });
+      return;
+    }
+
+    console.log(
+      `Found ${courseIds.length} courses for organization ${organizationId}`
+    );
+
+    const courses = await Course.batchGet(courseIds);
+    res.json({ message: "Courses retrieved successfully", data: courses });
+    return;
+  } catch (error) {
+    console.error(
+      `Error retrieving courses for organization ${organizationId}:`,
+      error
+    );
+    res.json({ message: "Error retrieving courses", data: [], error });
+    return;
+  }
+};
+
+export const addCourseToOrganization = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { organizationId, courseId } = req.params;
+
+  try {
+    const organization = await Organization.get(organizationId);
+    if (!organization) {
+      res.status(404).json({ message: "Organization not found" });
+      return;
+    }
+
+    organization.courses = organization.courses || [];
+
+    if (
+      !organization.courses.some(
+        (course: { courseId: string }) => course.courseId === courseId
+      )
+    ) {
+      organization.courses.push({ courseId });
+      await organization.save();
+    }
+
+    res.json({
+      message: "Course added to organization successfully",
+      data: organization,
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error adding course to organization", error });
+  }
 };
