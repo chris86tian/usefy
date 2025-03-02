@@ -428,6 +428,7 @@ declare global {
     organizationId: string
     name: string
     description: string
+    image: string | null
     admins: { userId: string }[]
     instructors: { userId: string }[]
     learners: { userId: string }[]
