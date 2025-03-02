@@ -30,7 +30,11 @@ export function SelectedOrganization({
     data: courses,
     isLoading,
     isError,
-  } = useGetOrganizationCoursesQuery(organization.organizationId);
+    error,
+  } = useGetOrganizationCoursesQuery(organization.organizationId, {
+    skip: false,
+    refetchOnMountOrArgChange: true,
+  });
 
   const admins = organization.admins || [];
   const instructors = organization.instructors || [];
@@ -101,7 +105,9 @@ export function SelectedOrganization({
             ) : isError ? (
               <div className="p-8 text-center rounded-lg bg-destructive/10 border border-destructive/20">
                 <p className="text-destructive">
-                  Failed to load courses. Please try again later.
+                  {error && "status" in error && error.status === 404
+                    ? "No courses available for this organization yet."
+                    : "Failed to load courses. Please try again later."}
                 </p>
               </div>
             ) : safeCourses.length > 0 ? (
