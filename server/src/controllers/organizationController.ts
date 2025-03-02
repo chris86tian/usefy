@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import Organization from "../models/organizationModel";
 import Course from "../models/courseModel";
-import{ v4 as uuidv4 }from "uuid";
 import { getAuth } from "@clerk/express";
 
 export const getOrganization = async (req: Request, res: Response): Promise<void> => {
@@ -24,17 +23,15 @@ export const listOrganizations = async (req: Request, res: Response): Promise<vo
 }
 
 export const createOrganization = async (req: Request, res: Response): Promise<void> => {
-    const { name, description } = req.body;
+    const { organizationId, name, description, image } = req.body;
     const auth = getAuth(req);
-
-    console.log("auth", auth);
-    console.log("req.body", req.body);
 
     try {
         const organization = new Organization({
-            organizationId: uuidv4(),
+            organizationId,
             name,
             description,
+            image,
             admins: [{ userId: auth.userId }],
             instructors: [],
             learners: [],

@@ -14,6 +14,9 @@ const organizationSchema = new Schema({
       type: String,
       required: true,
     },
+    image: {
+      type: String,
+    },
     admins: {
       type: Array,
       schema: [
