@@ -14,14 +14,23 @@ const customBaseQuery = async (
   api: BaseQueryApi,
   extraOptions: any
 ) => {
+  const skipAuth = extraOptions?.skipAuth || false;
+
   const baseQuery = fetchBaseQuery({
     baseUrl: server_url,
     credentials: "include",
     prepareHeaders: async (headers) => {
-      const token = await window.Clerk?.session?.getToken();
-      if (token) {
-        headers.set("Authorization", `Bearer ${token}`);
+      if (!skipAuth) {
+        try {
+          const token = await window.Clerk?.session?.getToken();
+          if (token) {
+            headers.set("Authorization", `Bearer ${token}`);
+          }
+        } catch (error) {
+          console.error("Error getting auth token:", error);
+        }
       }
+
       const body = (args as FetchArgs).body;
       if (!body || !(body instanceof FormData)) {
         headers.set("Content-Type", "application/json");
@@ -190,9 +199,16 @@ export const api = createApi({
 
     getOrganizationCourses: build.query<Course[], string>({
       query: (organizationId) => `organizations/${organizationId}/courses`,
-      // Handle 404 errors by returning an empty array
       transformErrorResponse: (response) => {
-        if (response.status === 404) {
+        if (
+          response.status === 404 ||
+          response.status === 401 ||
+          response.status === 403
+        ) {
+          console.log(
+            `Error fetching courses for organization ${response.status}:`,
+            response
+          );
           return { data: [] };
         }
         return response;
@@ -200,6 +216,9 @@ export const api = createApi({
       transformResponse: (response, meta, arg) => {
         if (!response) return [];
         return response;
+      },
+      extraOptions: {
+        skipAuth: true,
       },
     }),
 

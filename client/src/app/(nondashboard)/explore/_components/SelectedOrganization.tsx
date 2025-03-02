@@ -15,6 +15,7 @@ import AdminCard from "./AdminCard";
 import { useGetOrganizationCoursesQuery } from "@/state/api";
 import CourseCard from "@/components/CourseCard";
 import { Spinner } from "@/components/ui/Spinner";
+import { useEffect } from "react";
 
 interface SelectedOrganizationProps {
   organization: Organization;
@@ -35,6 +36,12 @@ export function SelectedOrganization({
     skip: false,
     refetchOnMountOrArgChange: true,
   });
+
+  useEffect(() => {
+    if (error) {
+      console.log("Error fetching courses:", error);
+    }
+  }, [error]);
 
   const admins = organization.admins || [];
   const instructors = organization.instructors || [];
