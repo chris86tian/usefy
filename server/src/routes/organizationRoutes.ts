@@ -7,7 +7,8 @@ import {
     joinOrganization,
     getMyOrganizations,
     getOrganizationCourses,
-    addCourseToOrganization
+    addCourseToOrganization,
+    removeCourseFromOrganization,
 } from "../controllers/organizationController";
 import { requireAuth } from "@clerk/express";
 
@@ -21,5 +22,6 @@ router.delete("/:organizationId", requireAuth(), deleteOrganization);
 router.post("/:organizationId/join", requireAuth(), joinOrganization);
 router.get("/:organizationId/courses", getOrganizationCourses);
 router.post("/:organizationId/:courseId", requireAuth(), addCourseToOrganization);
+router.delete("/:organizationId/:courseId", requireAuth(), removeCourseFromOrganization);
 
 export default router;

@@ -11,6 +11,7 @@ import {
   useUnarchiveCourseMutation,
   useGetOrganizationCoursesQuery,
   useAddCourseToOrganizationMutation,
+  useRemoveCourseFromOrganizationMutation,
 } from "@/state/api";
 import { useRouter } from "next/navigation";
 import React, { useMemo, useState } from "react";
@@ -20,7 +21,6 @@ import { useUser } from "@clerk/nextjs";
 import { User } from "@clerk/nextjs/server";
 import { Spinner } from "@/components/ui/Spinner";
 import { useOrganization } from "@/context/OrganizationContext";
-
 
 const AdminCourses = () => {
   const router = useRouter();
@@ -41,6 +41,7 @@ const AdminCourses = () => {
   const [archiveCourse] = useArchiveCourseMutation();
   const [unarchiveCourse] = useUnarchiveCourseMutation();
   const [addCourse] = useAddCourseToOrganizationMutation();
+  const [removeCourse] = useRemoveCourseFromOrganizationMutation();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -74,8 +75,17 @@ const AdminCourses = () => {
 
   const handleDelete = async (course: Course) => {
     if (window.confirm("Are you sure you want to delete this course?")) {
-      await deleteCourse(course.courseId).unwrap();
-      refetch();
+      try {
+        await removeCourse({
+          organizationId: currentOrg?.organizationId ?? "",
+          courseId: course.courseId
+        }).unwrap();
+        
+        await deleteCourse(course.courseId).unwrap();
+        refetch();
+      } catch (error) {
+        console.error("Failed to delete course:", error);
+      }
     }
   };
 

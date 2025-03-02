@@ -35,7 +35,6 @@ export function SelectedOrganization({
   const admins = organization.admins || [];
   const instructors = organization.instructors || [];
   const learners = organization.learners || [];
-  const safeCourses = courses || [];
 
   const isUserMember =
     admins.some((admin) => admin.userId === user?.id) ||
@@ -83,7 +82,7 @@ export function SelectedOrganization({
           </div>
           <div className="flex items-center gap-2 text-muted-foreground">
             <BookOpen className="h-4 w-4 text-primary" />
-            <span className="text-sm">{safeCourses.length} Courses</span>
+            <span className="text-sm">{courses?.length} Courses</span>
           </div>
         </div>
       </CardHeader>
@@ -104,9 +103,9 @@ export function SelectedOrganization({
                   Failed to load courses. Please try again later.
                 </p>
               </div>
-            ) : safeCourses.length > 0 ? (
+            ) : courses && courses.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {safeCourses.map((course: Course) => (
+                {courses?.map((course: Course) => (
                   <CourseCard
                     key={course.courseId}
                     course={course}
