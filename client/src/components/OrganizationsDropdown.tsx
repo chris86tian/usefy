@@ -42,12 +42,13 @@ const formSchema = z.object({
 
 export function OrganizationsDropdown() {
   const { data: organizations, isLoading, refetch } = useGetMyOrganizationsQuery()
-  const [createOrganization, { isLoading: isCreating }] = useCreateOrganizationMutation()
+  const [ createOrganization, { isLoading: isCreating } ] = useCreateOrganizationMutation()
   const [ getUploadImageUrl ] = useGetUploadImageUrlMutation()
   const router = useRouter()
   const { user } = useUser()
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const isSuperAdmin = user?.publicMetadata.userType === "superadmin"
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -178,99 +179,101 @@ export function OrganizationsDropdown() {
             </div>
           )}
 
-          <div className="p-4 space-y-4 border-t">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                  control={form.control}
-                  name="image"
-                  render={() => (
-                    <FormItem>
-                      <FormLabel>Organization Logo</FormLabel>
-                      <FormControl>
-                        <div className="space-y-2">
-                          {imagePreview ? (
-                            <div className="relative w-full h-32 rounded-md overflow-hidden border border-input">
-                              <Image 
-                                src={imagePreview} 
-                                alt="Preview" 
-                                fill 
-                                style={{ objectFit: 'cover' }} 
-                              />
-                              <Button 
-                                type="button" 
-                                variant="destructive" 
-                                size="icon" 
-                                className="absolute top-2 right-2 h-8 w-8"
-                                onClick={clearImage}
+          {isSuperAdmin && (
+            <div className="p-4 space-y-4 border-t">
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                    control={form.control}
+                    name="image"
+                    render={() => (
+                      <FormItem>
+                        <FormLabel>Organization Logo</FormLabel>
+                        <FormControl>
+                          <div className="space-y-2">
+                            {imagePreview ? (
+                              <div className="relative w-full h-32 rounded-md overflow-hidden border border-input">
+                                <Image 
+                                  src={imagePreview} 
+                                  alt="Preview" 
+                                  fill 
+                                  style={{ objectFit: 'cover' }} 
+                                />
+                                <Button 
+                                  type="button" 
+                                  variant="destructive" 
+                                  size="icon" 
+                                  className="absolute top-2 right-2 h-8 w-8"
+                                  onClick={clearImage}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <div 
+                                className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-md p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                                onClick={() => fileInputRef.current?.click()}
                               >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          ) : (
-                            <div 
-                              className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-md p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
-                              onClick={() => fileInputRef.current?.click()}
-                            >
-                              <Upload className="h-10 w-10 text-gray-400 mx-auto mb-2" />
-                              <p className="text-sm text-muted-foreground">Click to upload an image</p>
-                              <p className="text-xs text-muted-foreground mt-1">SVG, PNG, JPG or GIF (Max 5MB)</p>
-                            </div>
-                          )}
-                          <input 
-                            type="file" 
-                            ref={fileInputRef}
-                            onChange={handleImageChange} 
-                            className="hidden" 
-                            accept="image/*"
+                                <Upload className="h-10 w-10 text-gray-400 mx-auto mb-2" />
+                                <p className="text-sm text-muted-foreground">Click to upload an image</p>
+                                <p className="text-xs text-muted-foreground mt-1">SVG, PNG, JPG or GIF (Max 5MB)</p>
+                              </div>
+                            )}
+                            <input 
+                              type="file" 
+                              ref={fileInputRef}
+                              onChange={handleImageChange} 
+                              className="hidden" 
+                              accept="image/*"
+                            />
+                          </div>
+                        </FormControl>
+                        <FormDescription>
+                          Upload your organization logo or icon
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Organization Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter organization name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Description</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Tell us about your organization"
+                            className="resize-none h-20"
+                            {...field}
                           />
-                        </div>
-                      </FormControl>
-                      <FormDescription>
-                        Upload your organization logo or icon
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Organization Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter organization name" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Tell us about your organization"
-                          className="resize-none h-20"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <Button type="submit" className="w-full" disabled={isCreating}>
-                  {isCreating ? "Creating..." : "Create Organization"}
-                </Button>
-              </form>
-            </Form>
-          </div>
+                  <Button type="submit" className="w-full" disabled={isCreating}>
+                    {isCreating ? "Creating..." : "Create Organization"}
+                  </Button>
+                </form>
+              </Form>
+            </div>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     </SignedIn>

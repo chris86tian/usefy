@@ -241,6 +241,21 @@ export const api = createApi({
         method: "DELETE",
       }),
     }),
+
+    inviteUserToOrganization: build.mutation<
+      { message: string },
+      { organizationId: string; email: string ; role: string}
+    >({
+      query: ({ organizationId, email, role }) => ({
+        url: `organizations/${organizationId}/invite`,
+        method: "POST",
+        body: { email, role },
+      }),
+    }),
+
+    getOrganizationUsers: build.query<{ admins: User[]; instructors: User[]; learners: User[] }, string>({
+      query: (organizationId: string) => `organizations/${organizationId}/users`,
+    }),
     /* 
     ===============
     COURSES
@@ -778,6 +793,8 @@ export const {
   useGetOrganizationCoursesQuery,
   useAddCourseToOrganizationMutation,
   useRemoveCourseFromOrganizationMutation,
+  useInviteUserToOrganizationMutation,
+  useGetOrganizationUsersQuery,
   useCreateCourseMutation,
   useUpdateCourseMutation,
   useDeleteCourseMutation,

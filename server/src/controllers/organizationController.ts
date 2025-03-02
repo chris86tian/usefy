@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import Organization from "../models/organizationModel";
 import Course from "../models/courseModel";
 import { getAuth } from "@clerk/express";
+import { clerkClient } from "..";
+import { sendEmail } from "../utils/sendEmail";
 
 export const getOrganization = async (
   req: Request,
@@ -235,4 +237,105 @@ export const removeCourseFromOrganization = async (req: Request, res: Response):
     } catch (error) {
         res.status(500).json({ message: "Error removing course from organization", error });
     }
+};
+
+export const inviteUserToOrganization = async (req: Request, res: Response): Promise<void> => {
+  const { organizationId } = req.params;
+  const { role, email } = req.body;
+
+  try {
+      const users = await clerkClient.users.getUserList({ emailAddress: [email] });
+
+      let user;
+      if (users.totalCount > 0) {
+          user = users.data[0];
+      }
+
+      const organization = await Organization.get(organizationId);
+      if (!organization) {
+          res.status(404).json({ message: "Organization not found" });
+          return;
+      }
+
+      if (user) {
+          switch (role) {
+              case "admin":
+                  if (!organization.admins.some((admin: any) => admin.userId === user.id)) {
+                      organization.admins.push({ userId: user.id });
+                  }
+                  sendEmail(
+                      user.emailAddresses[0].emailAddress,
+                      "You've been added as an admin to an organization",
+                      `You've been added as an admin to the organization ${organization.name}. Click here to view: https://www.usefy.com/organizations/${organization.organizationId}`
+                  );
+                  break;
+              case "instructor":
+                  if (!organization.instructors.some((inst: any) => inst.userId === user.id)) {
+                      organization.instructors.push({ userId: user.id });
+                  }
+                  sendEmail(
+                      user.emailAddresses[0].emailAddress,
+                      "You've been added as an instructor to an organization",
+                      `You've been added as an instructor to the organization ${organization.name}. Click here to view: https://www.usefy.com/organizations/${organization.organizationId}`
+                  );
+                  break;
+              case "learner":
+                  if (!organization.learners.some((learner: any) => learner.userId === user.id)) {
+                      organization.learners.push({ userId: user.id });
+                  }
+                  sendEmail(
+                      user.emailAddresses[0].emailAddress,
+                      "You've been added as a learner to an organization",
+                      `You've been added as a learner to the organization ${organization.name}. Click here to view: https://www.usefy.com/organizations/${organization.organizationId}`
+                  );
+                  break;
+              default:
+                  res.status(400).json({ message: "Invalid role specified" });
+                  return;
+          }
+
+          await organization.save();
+          res.json({ message: "User added to organization successfully", data: organization });
+      } else {
+          sendEmail(
+              email,
+              "You've been invited to join an organization",
+              `You've been invited to join the organization ${organization.name}. Click here to create an account and join: https://www.usefy.com/signup`
+          );
+      }
+  } catch (error) {
+      console.error("Error inviting user:", error);
+      res.status(500).json({ message: "Error inviting user to organization", error });
+  }
+};
+
+export const getOrganizationUsers = async (req: Request, res: Response): Promise<void> => {
+  const { organizationId } = req.params;
+
+  try {
+    const organization = await Organization.get(organizationId);
+    if (!organization) {
+      res.status(404).json({ message: "Organization not found" });
+      return;
+    }
+
+    const userIds = new Set([
+      ...organization.admins.map((admin: { userId: string }) => admin.userId),
+      ...organization.instructors.map((instructor: { userId: string }) => instructor.userId),
+      ...organization.learners.map((learner: { userId: string }) => learner.userId),
+    ]);
+
+    const users = await clerkClient.users.getUserList({ userId: Array.from(userIds) });
+
+    const response = {
+      admins: users.data.filter(user => organization.admins.some((admin: { userId: string }) => admin.userId === user.id)),
+      instructors: users.data.filter(user => organization.instructors.some((instructor: { userId: string }) => instructor.userId === user.id)),
+      learners: users.data.filter(user => organization.learners.some((learner: { userId: string }) => learner.userId === user.id)),
+    };
+
+    res.json({ message: "Organization users retrieved successfully", data: response });
+  } catch (error) {
+    console.error("Error retrieving organization users:", error);
+    res.status(500).json({ message: "Error retrieving organization users", error });
+  }
 };

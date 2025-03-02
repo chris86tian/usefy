@@ -21,6 +21,16 @@ import { useUser } from "@clerk/nextjs";
 import { User } from "@clerk/nextjs/server";
 import { Spinner } from "@/components/ui/Spinner";
 import { useOrganization } from "@/context/OrganizationContext";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const AdminCourses = () => {
   const router = useRouter();
@@ -45,6 +55,8 @@ const AdminCourses = () => {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [courseToDelete, setCourseToDelete] = useState<Course | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const filteredCourses = useMemo(() => {
     if (!courses) return [];
@@ -73,19 +85,27 @@ const AdminCourses = () => {
     router.push(`/organizations/${currentOrg?.organizationId}/courses/${course.courseId}/stats`, { scroll: false });
   }
 
-  const handleDelete = async (course: Course) => {
-    if (window.confirm("Are you sure you want to delete this course?")) {
-      try {
-        await removeCourse({
-          organizationId: currentOrg?.organizationId ?? "",
-          courseId: course.courseId
-        }).unwrap();
-        
-        await deleteCourse(course.courseId).unwrap();
-        refetch();
-      } catch (error) {
-        console.error("Failed to delete course:", error);
-      }
+  const handleDeleteConfirmation = (course: Course) => {
+    setCourseToDelete(course);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteCourse = async () => {
+    if (!courseToDelete) return;
+    
+    try {
+      await removeCourse({
+        organizationId: currentOrg?.organizationId ?? "",
+        courseId: courseToDelete.courseId
+      }).unwrap();
+      
+      await deleteCourse(courseToDelete.courseId).unwrap();
+      refetch();
+    } catch (error) {
+      console.error("Failed to delete course:", error);
+    } finally {
+      setIsDeleteDialogOpen(false);
+      setCourseToDelete(null);
     }
   };
 
@@ -157,7 +177,7 @@ const AdminCourses = () => {
             key={course.courseId}
             course={course}
             onEdit={handleEdit}
-            onDelete={handleDelete}
+            onDelete={handleDeleteConfirmation}
             isOwner={course.teacherId === user?.id || !!isAdmin}
             onView={handleGoToCourse}
             onArchive={handleArchive}
@@ -172,6 +192,27 @@ const AdminCourses = () => {
           </div>
         )}
       </div>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the course
+              {courseToDelete && ` "${courseToDelete.title}"`} and remove it from the organization.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteCourse}
+              className="bg-red-500 hover:bg-red-600 text-white"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
