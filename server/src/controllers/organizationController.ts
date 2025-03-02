@@ -212,3 +212,27 @@ export const addCourseToOrganization = async (
       .json({ message: "Error adding course to organization", error });
   }
 };
+
+export const removeCourseFromOrganization = async (req: Request, res: Response): Promise<void> => {
+    const { organizationId, courseId } = req.params;
+
+    try {
+        const organization = await Organization.get(organizationId);
+        if (!organization) {
+            res.status(404).json({ message: "Organization not found" });
+            return;
+        }
+
+        organization.courses = organization.courses || [];
+
+        const courseIndex = organization.courses.findIndex((course: { courseId: string; }) => course.courseId === courseId);
+        if (courseIndex !== -1) {
+            organization.courses.splice(courseIndex, 1);
+            await organization.save();
+        }
+
+        res.json({ message: "Course removed from organization successfully", data: organization });
+    } catch (error) {
+        res.status(500).json({ message: "Error removing course from organization", error });
+    }
+};

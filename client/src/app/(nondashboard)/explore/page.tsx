@@ -20,7 +20,6 @@ export default function Explore() {
     data: organizations,
     isLoading,
     isError,
-    refetch,
   } = useGetOrganizationsQuery();
   const [joinOrganization] = useJoinOrganizationMutation();
   const [selectedOrg, setSelectedOrg] = useState<Organization>();
@@ -52,8 +51,6 @@ export default function Explore() {
     );
   }
 
-  const safeOrganizations = organizations || [];
-
   const handleOrgSelect = (org: Organization) => {
     setSelectedOrg(org);
     router.push(`/explore?id=${org.organizationId}`, { scroll: false });
@@ -75,13 +72,13 @@ export default function Explore() {
           Explore Organizations
         </h1>
         <p className="text-lg text-muted-foreground mt-2">
-          {safeOrganizations.length} organizations available
+          {organizations.length} organizations available
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-1 space-y-4 transition-all duration-300 ease-in-out">
-          {safeOrganizations.map((org: Organization) => (
+          {organizations.map((org: Organization) => (
             <OrganizationCard
               key={org.organizationId}
               organization={org}

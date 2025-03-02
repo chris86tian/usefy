@@ -212,6 +212,16 @@ export const api = createApi({
         method: "POST",
       }),
     }),
+
+    removeCourseFromOrganization: build.mutation<
+      { message: string },
+      { organizationId: string; courseId: string }
+    >({
+      query: ({ organizationId, courseId }) => ({
+        url: `organizations/${organizationId}/${courseId}`,
+        method: "DELETE",
+      }),
+    }),
     /* 
     ===============
     COURSES
@@ -748,6 +758,7 @@ export const {
   useGetMyOrganizationsQuery,
   useGetOrganizationCoursesQuery,
   useAddCourseToOrganizationMutation,
+  useRemoveCourseFromOrganizationMutation,
   useCreateCourseMutation,
   useUpdateCourseMutation,
   useDeleteCourseMutation,
