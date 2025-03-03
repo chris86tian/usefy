@@ -43,8 +43,8 @@ const Navbar = ({ isDashboard = false }: NavbarProps) => {
               usefy.
             </Link>
           }
-
-          {!isDashboard && (
+        
+          {/* {!isDashboard && (
             <div className="hidden md:flex items-center gap-4 ml-6">
               <Link
                 href="/explore"
@@ -52,10 +52,10 @@ const Navbar = ({ isDashboard = false }: NavbarProps) => {
                 scroll={false}
               >
                 <School className="h-4 w-4" />
-                <span>Browse Categories</span>
+                <span>Browse</span>
               </Link>
             </div>
-          )}
+          )} */}
         </div>
 
         <div className="flex items-center gap-4">
@@ -151,7 +151,7 @@ const Navbar = ({ isDashboard = false }: NavbarProps) => {
                     </div>
                   </div>
                   
-                  <div className="flex-1 overflow-auto py-4">
+                  {/* <div className="flex-1 overflow-auto py-4">
                     <div className="space-y-4 px-4">
                       <Link
                         href="/explore"
@@ -159,10 +159,10 @@ const Navbar = ({ isDashboard = false }: NavbarProps) => {
                         scroll={false}
                       >
                         <School className="h-5 w-5" />
-                        <span>Browse Categories</span>
+                        <span>Browse</span>
                       </Link>
                     </div>
-                  </div>
+                  </div> */}
                   
                   <SignedOut>
                     <div className="p-4 border-t border-gray-200 dark:border-gray-800">

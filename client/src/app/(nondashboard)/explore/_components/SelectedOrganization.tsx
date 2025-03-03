@@ -11,8 +11,10 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BadgeCheck, Users, BookOpen, CheckCircle } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
-import AdminCard from "./AdminCard";
-import { useGetOrganizationCoursesQuery } from "@/state/api";
+import { 
+  useGetOrganizationCoursesQuery,
+  useGetCohortsQuery,
+ } from "@/state/api";
 import CourseCard from "@/components/CourseCard";
 import { Spinner } from "@/components/ui/Spinner";
 import { useEffect } from "react";
@@ -33,6 +35,16 @@ export function SelectedOrganization({
     isError,
     error,
   } = useGetOrganizationCoursesQuery(organization.organizationId, {
+    skip: false,
+    refetchOnMountOrArgChange: true,
+  });
+
+  const {
+    data: cohorts,
+    isLoading: isLoadingCohorts,
+    isError: isErrorCohorts,
+    error: errorCohorts,
+  } = useGetCohortsQuery(organization.organizationId, {
     skip: false,
     refetchOnMountOrArgChange: true,
   });
@@ -148,24 +160,36 @@ export function SelectedOrganization({
                   "This organization is dedicated to providing quality education and learning resources."}
               </p>
 
-              {/* <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {admins.length > 0 ? (
-                  admins
-                    .map(({ userId: adminId }, index) => (
-                      <AdminCard
-                        key={adminId}
-                        adminId={adminId}
-                        index={index}
-                      />
-                    ))
+              <div className="mt-6">
+                <h4 className="text-lg font-semibold mb-2">Cohorts</h4>
+
+                {isLoadingCohorts ? (
+                  <Spinner />
+                ) : isErrorCohorts ? (
+                  <div className="p-4 text-center rounded-lg bg-destructive/10 border border-destructive/20">
+                    <p className="text-destructive">
+                      {errorCohorts && "status" in errorCohorts && errorCohorts.status === 404
+                        ? "No cohorts available for this organization yet."
+                        : "Failed to load cohorts. Please try again later."}
+                    </p>
+                  </div>
+                ) : cohorts && cohorts.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {cohorts.map((cohort: Cohort) => (
+                      <div key={cohort.cohortId} className="p-4 border rounded-lg bg-muted">
+                        <h4 className="text-md font-medium">{cohort.name}</h4>
+                      </div>
+                    ))}
+                  </div>
                 ) : (
-                  <p className="text-muted-foreground text-sm col-span-full">
-                    Admin information not available
-                  </p>
+                  <div className="p-4 text-center rounded-lg bg-muted border border-border">
+                    <p className="text-muted-foreground">No cohorts available for this organization yet.</p>
+                  </div>
                 )}
-              </div> */}
+              </div>
             </div>
           </TabsContent>
+
         </Tabs>
       </CardContent>
     </Card>
