@@ -3,6 +3,7 @@ import { BaseQueryApi, FetchArgs } from "@reduxjs/toolkit/query";
 import { User } from "@clerk/nextjs/server";
 import { Clerk } from "@clerk/clerk-js";
 import { toast } from "sonner";
+import { create } from "domain";
 
 const server_url =
   process.env.NEXT_ENV === "production"
@@ -88,6 +89,7 @@ export const api = createApi({
     "Users",
     "UserCourseProgress",
     "Feedback",
+    "Cohorts",
   ],
   endpoints: (build) => ({
     /* 
@@ -156,6 +158,7 @@ export const api = createApi({
         url: `organizations/${organizationId}`,
         method: "PUT",
         body: formData,
+        formData: true,
       }),
       invalidatesTags: ["Organizations"],
     }),
@@ -260,6 +263,23 @@ export const api = createApi({
         method: "PUT",
         body: { currentRole, newRole },
       }),
+    }),
+    /* 
+    ===============
+    COHORTS
+    =============== 
+    */
+    createCohort: build.mutation<Cohort, Partial<Cohort> & { organizationId: string }>({
+      query: ({ organizationId, ...body }) => ({
+        url: `cohorts/${organizationId}`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Cohorts"],
+    }),
+    getCohorts: build.query<Cohort[], string>({
+      query: (organizationId) => `cohorts/${organizationId}`,
+      providesTags: ["Cohorts"],
     }),
     /* 
     ===============
@@ -800,6 +820,8 @@ export const {
   useGetOrganizationUsersQuery,
   useRemoveUserFromOrganizationMutation,
   useChangeUserRoleMutation,
+  useCreateCohortMutation,
+  useGetCohortsQuery,
   useCreateCourseMutation,
   useUpdateCourseMutation,
   useDeleteCourseMutation,

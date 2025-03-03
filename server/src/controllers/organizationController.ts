@@ -51,6 +51,7 @@ export const createOrganization = async (
       name,
       description,
       image,
+      cohorts: [],
       admins: [{ userId: auth.userId }],
       instructors: [],
       learners: [],
@@ -67,14 +68,14 @@ export const createOrganization = async (
   }
 };
 
-export const updateOrganization = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const updateOrganization = async (req: Request, res: Response): Promise<void> => {
   const { organizationId } = req.params;
-  const { name, description, image } = req.body;
+  const name = req.body.name;
+  const description = req.body.description;
+  const image = req.body.image;
+
   console.log("organizationId", organizationId);
-  console.log("req", req.body);
+  console.log("req.body", req.body);
 
   try {
     const organization = await Organization.update(organizationId, {

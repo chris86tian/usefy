@@ -1,14 +1,13 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { useParams, usePathname, useRouter } from "next/navigation"
-import { useGetMyOrganizationsQuery } from "@/state/api"
+import { useGetMyOrganizationsQuery, useCreateCohortMutation, useGetCohortsQuery } from "@/state/api"
 import { useUser } from "@clerk/nextjs"
 import { Sidebar, SidebarProvider } from "@/components/ui/sidebar"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { ChevronDown, BookOpen, BarChart, Settings, Home, DollarSign, User } from "lucide-react"
+import { ChevronDown, BookOpen, Settings, Home, DollarSign, User, Users, Plus } from "lucide-react"
 import { Spinner } from "@/components/ui/Spinner"
 import { OrganizationContext } from "@/context/OrganizationContext"
 import {
@@ -19,9 +18,23 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Toaster } from "@/components/ui/toaster"
 import { cn } from "@/lib/utils"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { toast } from "sonner"
+import { v4 as uuidv4 } from "uuid"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 
 interface OrganizationLayoutProps {
   children: React.ReactNode
@@ -33,7 +46,12 @@ export default function OrganizationLayout({ children }: OrganizationLayoutProps
   const router = useRouter()
   const { user } = useUser()
   const { data: organizations, isLoading } = useGetMyOrganizationsQuery()
+  const { data: cohorts, refetch } = useGetCohortsQuery(orgId as string)
   const [currentOrg, setCurrentOrg] = useState<Organization | null>(null)
+  const [isCreateCohortModalOpen, setIsCreateCohortModalOpen] = useState(false)
+  const [cohortName, setCohortName] = useState("")
+  const [createCohort] = useCreateCohortMutation()
+
 
   useEffect(() => {
     if (organizations && orgId) {
@@ -46,7 +64,7 @@ export default function OrganizationLayout({ children }: OrganizationLayoutProps
     }
   }, [organizations, orgId, router])
 
-  const isUserAdmin = currentOrg?.admins?.some((admin) => admin.userId === user?.id)
+  const isUserAdmin = currentOrg?.admins?.some((admin: { userId: string }) => admin.userId === user?.id)
 
   const baseNavItems = [
     {
@@ -76,12 +94,6 @@ export default function OrganizationLayout({ children }: OrganizationLayoutProps
   ]
 
   const adminNavItems = [
-    // {
-    //   label: "Analytics",
-    //   href: `/organizations/${orgId}/analytics`,
-    //   icon: BarChart,
-    //   active: pathname.includes(`/organizations/${orgId}/analytics`),
-    // },
     {
       label: "Group Settings",
       href: `/organizations/${orgId}/settings`,
@@ -100,6 +112,27 @@ export default function OrganizationLayout({ children }: OrganizationLayoutProps
       const newPath = currentSubPath ? `/organizations/${newOrgId}/${currentSubPath}` : `/organizations/${newOrgId}`
 
       router.push(newPath)
+    }
+  }
+
+  const handleCreateCohort = async () => {
+    if (!cohortName.trim()) {
+      toast.error("Please enter a cohort name")
+      return
+    }
+
+    try {
+      await createCohort({
+        organizationId: orgId as string,
+        cohortId: uuidv4(),
+        name: cohortName.trim(),
+      }).unwrap()
+      toast.success("Cohort created successfully")
+      setIsCreateCohortModalOpen(false)
+      setCohortName("")
+      refetch()
+    } catch (error) {
+      toast.error("Failed to create cohort")
     }
   }
 
@@ -181,6 +214,75 @@ export default function OrganizationLayout({ children }: OrganizationLayoutProps
                   )
                 })}
               </nav>
+
+              <Accordion type="single" collapsible className="w-full" defaultValue="cohorts">
+                <AccordionItem value="cohorts">
+                  <AccordionTrigger className="px-4 py-2">
+                  <div className="flex items-center gap-3">
+                    <Users className="h-4 w-4" />
+                    <span>Cohorts</span>
+                  </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                  <div className="space-y-1 mx-4">
+                    {cohorts?.map((cohort) => (
+                    <Button
+                      variant="ghost"
+                      key={cohort.cohortId}
+                      onClick={() => router.push(`/organizations/${orgId}/cohorts/${cohort.cohortId}`)}
+                      className={cn(
+                        "flex items-center transition-colors",
+                        pathname.includes(`/organizations/${orgId}/cohorts/${cohort.cohortId}`)
+                          ? "bg-white text-primary dark:bg-gray-950 dark:text-primary" 
+                          : "bg-transparent text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                      )}
+                    >
+                      <span>{cohort.name}</span>
+                    </Button>
+                    ))}
+                  </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+
+              {isUserAdmin && (
+                <div className="p-3">
+                  <Dialog open={isCreateCohortModalOpen} onOpenChange={setIsCreateCohortModalOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" className="w-full">
+                        <Plus className="mr-2 h-4 w-4" />
+                        Create Cohort
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[425px]">
+                      <DialogHeader>
+                        <DialogTitle>Create New Cohort</DialogTitle>
+                        <DialogDescription>
+                          Enter the name for your new cohort. Click save when you&apos;re done.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="cohortName" className="text-right">
+                            Name
+                          </Label>
+                          <Input
+                            id="cohortName"
+                            value={cohortName}
+                            onChange={(e) => setCohortName(e.target.value)}
+                            className="col-span-3"
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button type="submit" onClick={handleCreateCohort}>
+                          Create Cohort
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              )}
             </ScrollArea>
           </Sidebar>
 

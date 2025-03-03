@@ -429,9 +429,19 @@ declare global {
     name: string
     description: string
     image: string | null
+    cohorts: string[]
     admins: { userId: string }[]
     instructors: { userId: string }[]
     learners: { userId: string }[]
+    courses: string[]
+  }
+
+  interface Cohort {
+    cohortId: string
+    name: string
+    organizationId: string
+    learners: { userId: string }[]
+    instructors: { userId: string }[]
     courses: string[]
   }
 }

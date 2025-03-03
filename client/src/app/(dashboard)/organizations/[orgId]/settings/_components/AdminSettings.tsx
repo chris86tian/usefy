@@ -48,8 +48,8 @@ const AdminSettings = () => {
   const [removeUser] = useRemoveUserFromOrganizationMutation()
   const [changeUserRole] = useChangeUserRoleMutation()
 
-  const [orgName, setOrgName] = useState(currentOrg?.name || "")
-  const [orgDescription, setOrgDescription] = useState(currentOrg?.description || "")
+  const [orgName, setOrgName] = useState(currentOrg?.name)
+  const [orgDescription, setOrgDescription] = useState(currentOrg?.description)
   const [orgImage, setOrgImage] = useState<File | null>(null)
   const [orgImagePreview, setOrgImagePreview] = useState(currentOrg?.image || "")
   const [inviteEmail, setInviteEmail] = useState("")
@@ -69,22 +69,24 @@ const AdminSettings = () => {
 
   const handleSave = async () => {
     try {
-      const formData = new FormData()
-      formData.append("name", orgName)
-      formData.append("description", orgDescription)
+      const formData = new FormData();
+      formData.append("name", orgName || "");
+      formData.append("description", orgDescription || "");
       if (orgImage) {
-        formData.append("image", orgImage)
+        formData.append("image", "");
       }
 
       await updateOrganization({
         organizationId: currentOrg?.organizationId || "",
-        formData: formData,
-      }).unwrap()
-      toast.success("Organization updated successfully")
+        formData,
+      }).unwrap();
+
+      toast.success("Organization updated successfully");
     } catch (error) {
-      toast.error("Failed to update organization")
+      toast.error("Failed to update organization");
     }
   }
+
 
   const handleDelete = async () => {
     try {
@@ -166,10 +168,10 @@ const AdminSettings = () => {
   }, [members, searchTerm, roleFilter])
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <Header title="Organization Settings" subtitle="Manage your organization settings and members" />
 
-      <Tabs defaultValue="members" className="w-full">
+      <Tabs defaultValue="members" className="w-full mb-2">
         <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
           <TabsTrigger value="members" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
@@ -311,7 +313,7 @@ const AdminSettings = () => {
         </TabsContent>
 
         <TabsContent value="settings">
-          <div className="space-y-4">
+          <div className="space-y-4 p-4">
             <div className="space-y-2">
               <Label htmlFor="orgName">Organization Name</Label>
               <Input id="orgName" value={orgName} onChange={(e) => setOrgName(e.target.value)} />
@@ -325,7 +327,7 @@ const AdminSettings = () => {
                 rows={4}
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-x-4">
               <Label htmlFor="orgImage">Organization Image</Label>
               <Input
                 id="orgImage"
@@ -355,7 +357,7 @@ const AdminSettings = () => {
         </TabsContent>
 
         <TabsContent value="danger">
-          <div className="pt-6">
+          <div className="p-4">
             <h2 className="text-xl font-semibold mb-4">Danger Zone</h2>
             <AlertDialog>
               <AlertDialogTrigger asChild>

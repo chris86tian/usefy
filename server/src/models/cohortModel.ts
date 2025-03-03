@@ -1,44 +1,18 @@
 import { model, Schema } from "dynamoose";
 
-const organizationSchema = new Schema({
-    organizationId: {
+const cohortSchema = new Schema({
+    cohortId: {
       type: String,
       hashKey: true,
+      required: true,
+    },
+    organizationId: {
+      type: String,
       required: true,
     },
     name: {
       type: String,
       required: true,
-    },
-    description: {
-      type: String,
-      required: true,
-    },
-    image: {
-      type: String,
-    },
-    cohorts: {
-      type: Array,
-      required: true,
-      schema: [
-        new Schema({
-          cohortId: {
-            type: String,
-            required: true,
-          },
-        }),
-      ],
-    },
-    admins: {
-      type: Array,
-      schema: [
-        new Schema({
-          userId: {
-            type: String,
-            required: true,
-          },
-        }),
-      ],
     },
     instructors: {
       type: Array,
@@ -75,5 +49,5 @@ const organizationSchema = new Schema({
     },
   });
 
-  const Organization = model("Organization", organizationSchema);
-  export default Organization;
+  const Cohort = model("Cohort", cohortSchema);
+  export default Cohort;

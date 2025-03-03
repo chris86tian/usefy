@@ -27,18 +27,15 @@ export default async function LandingPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Section */}
       <section
         className="relative flex flex-col items-center justify-center container mx-auto px-4 py-10 md:py-32"
         aria-label="Hero"
       >
-        {/* Background gradient */}
         <div className="absolute inset-0 -z-10 h-full w-full bg-white dark:bg-black bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]">
           <div className="absolute left-0 right-0 top-0 -z-10 m-auto h-[310px] w-[310px] rounded-full bg-blue-400 dark:bg-blue-500 opacity-20 blur-[100px]"></div>
         </div>
 
         <div className="space-y-6 text-center max-w-4xl px-4">
-          {/* Pill badge */}
           <div className="mx-auto w-fit rounded-full border border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-900/30 px-4 py-1 mb-6">
             <div className="flex items-center gap-2 text-sm font-medium text-blue-900 dark:text-blue-200">
               <Sparkles className="h-4 w-4" />
@@ -46,16 +43,13 @@ export default async function LandingPage() {
             </div>
           </div>
 
-          {/* Main heading */}
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-gray-900 via-blue-800 to-gray-900 dark:from-white dark:via-blue-300 dark:to-white animate-gradient-x pb-2">
             Generate Courses for Your Organization
           </h1>
 
-          {/* Subheading */}
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Create and publish interactive learning experiences for your community
+            Use AI agents to create and manage learning experiences for your team
           </p>
-          {/* CTA Buttons */}
           <div className="flex flex-wrap justify-center items-center gap-4 pt-4">
             <Link href={user ? "/explore" : "/signin"}>
               <Button
@@ -69,7 +63,6 @@ export default async function LandingPage() {
           </div>
         </div>
 
-        {/* Dashboard Preview Image */}
         <div className="mt-16 relative">
           <div className="border border-border rounded-xl overflow-hidden shadow-lg">
             <Image
@@ -85,7 +78,6 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* Features Section */}
       <section id="features" className="container mx-auto px-4 py-20 md:py-32">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">Powerful Features for Organizations</h2>
@@ -140,7 +132,6 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* How It Works */}
       <section id="how-it-works" className="bg-muted py-20 md:py-32">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
@@ -179,7 +170,6 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* Testimonials */}
       <section className="container mx-auto px-4 py-20 md:py-32">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">Trusted by Leading Organizations</h2>
@@ -218,7 +208,6 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* CTA Section */}
       <section className="bg-primary/5 py-20 md:py-32">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">Ready to Transform Learning?</h2>
