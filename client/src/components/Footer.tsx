@@ -106,8 +106,10 @@ const Footer = () => {
             >
               Arslan Kamchybekov
             </Link>
-            <Link href="https://growthhungry.life" className="text-sm hover:text-white transition-colors">
-              Usefy
+            <Link 
+              href="https://growthhungry.life" 
+              className="text-sm hover:text-white transition-colors">
+              Usefy (GrowthHungry)
             </Link>
           </div>
         </div>
