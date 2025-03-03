@@ -116,22 +116,6 @@ export const api = createApi({
       query: (courseId) => `users/clerk/course/${courseId}`,
     }),
 
-    promoteUserToAdmin: build.mutation<User, string>({
-      query: (userId) => ({
-        url: `users/clerk/${userId}/promote`,
-        method: "PUT",
-      }),
-      invalidatesTags: ["Users"],
-    }),
-
-    demoteUserFromAdmin: build.mutation<User, string>({
-      query: (userId) => ({
-        url: `users/clerk/${userId}/demote`,
-        method: "PUT",
-      }),
-      invalidatesTags: ["Users"],
-    }),
-
     deleteUser: build.mutation<{ message: string }, string>({
       query: (userId) => ({
         url: `users/clerk/${userId}`,
@@ -172,7 +156,6 @@ export const api = createApi({
         url: `organizations/${organizationId}`,
         method: "PUT",
         body: formData,
-        formData: true,
       }),
       invalidatesTags: ["Organizations"],
     }),
@@ -255,6 +238,28 @@ export const api = createApi({
 
     getOrganizationUsers: build.query<{ admins: User[]; instructors: User[]; learners: User[] }, string>({
       query: (organizationId: string) => `organizations/${organizationId}/users`,
+    }),
+
+    removeUserFromOrganization: build.mutation<
+      { message: string },
+      { organizationId: string; userId: string, role: string }
+    >({
+      query: ({ organizationId, userId, role }) => ({
+        url: `organizations/${organizationId}/remove/${userId}`,
+        method: "DELETE",
+        body: { role },
+      }),
+    }),
+
+    changeUserRole: build.mutation<
+      { message: string },
+      { organizationId: string; userId: string; currentRole: string; newRole: string }
+    >({
+      query: ({ organizationId, userId, currentRole, newRole }) => ({
+        url: `organizations/${organizationId}/change-role/${userId}`,
+        method: "PUT",
+        body: { currentRole, newRole },
+      }),
     }),
     /* 
     ===============
@@ -779,8 +784,6 @@ export const {
   useGetUserQuery,
   useGetUsersQuery,
   useGetCourseUsersQuery,
-  usePromoteUserToAdminMutation,
-  useDemoteUserFromAdminMutation,
   useDeleteUserMutation,
   useUpdateUserMutation,
   useGetOrganizationsQuery,
@@ -795,6 +798,8 @@ export const {
   useRemoveCourseFromOrganizationMutation,
   useInviteUserToOrganizationMutation,
   useGetOrganizationUsersQuery,
+  useRemoveUserFromOrganizationMutation,
+  useChangeUserRoleMutation,
   useCreateCourseMutation,
   useUpdateCourseMutation,
   useDeleteCourseMutation,

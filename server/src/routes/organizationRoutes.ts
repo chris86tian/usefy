@@ -3,6 +3,7 @@ import {
   getOrganization,
   listOrganizations,
   createOrganization,
+  updateOrganization,
   deleteOrganization,
   joinOrganization,
   getMyOrganizations,
@@ -10,7 +11,9 @@ import {
   addCourseToOrganization,
   removeCourseFromOrganization,
   inviteUserToOrganization,
-  getOrganizationUsers
+  getOrganizationUsers,
+  removeUserFromOrganization,
+  changeUserRole,
 } from "../controllers/organizationController";
 import { requireAuth } from "@clerk/express";
 
@@ -20,14 +23,11 @@ router.get("/my", requireAuth(), getMyOrganizations);
 router.get("/", listOrganizations);
 router.get("/:organizationId", getOrganization);
 router.post("/", requireAuth(), createOrganization);
+router.put("/:organizationId", requireAuth(), updateOrganization);
 router.delete("/:organizationId", requireAuth(), deleteOrganization);
 router.post("/:organizationId/join", requireAuth(), joinOrganization);
 router.get("/:organizationId/courses", getOrganizationCourses);
-router.post(
-  "/:organizationId/invite",
-  requireAuth(),
-  inviteUserToOrganization
-);
+router.post("/:organizationId/invite", requireAuth(), inviteUserToOrganization);
 router.post(
   "/:organizationId/:courseId",
   requireAuth(),
@@ -39,5 +39,15 @@ router.delete(
   removeCourseFromOrganization
 );
 router.get("/:organizationId/users", requireAuth(), getOrganizationUsers);
+router.delete(
+  "/:organizationId/remove/:userId",
+  requireAuth(),
+  removeUserFromOrganization
+);
+router.put(
+  "/:organizationId/change-role/:userId",
+  requireAuth(),
+  changeUserRole
+);
 
 export default router;

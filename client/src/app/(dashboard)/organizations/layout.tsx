@@ -76,12 +76,12 @@ export default function OrganizationLayout({ children }: OrganizationLayoutProps
   ]
 
   const adminNavItems = [
-    {
-      label: "Analytics",
-      href: `/organizations/${orgId}/analytics`,
-      icon: BarChart,
-      active: pathname.includes(`/organizations/${orgId}/analytics`),
-    },
+    // {
+    //   label: "Analytics",
+    //   href: `/organizations/${orgId}/analytics`,
+    //   icon: BarChart,
+    //   active: pathname.includes(`/organizations/${orgId}/analytics`),
+    // },
     {
       label: "Group Settings",
       href: `/organizations/${orgId}/settings`,
@@ -108,12 +108,12 @@ export default function OrganizationLayout({ children }: OrganizationLayoutProps
   return (
     <SidebarProvider>
       <OrganizationContext.Provider value={{ currentOrg }}>
-        <div className="flex h-screen w-full bg-background">
-          <Sidebar className="w-64 flex-shrink-0 border-r border-border">
+        <div className="flex h-screen w-full">
+          <Sidebar className="w-64 flex-shrink-0 border-r border-border bg-white dark:bg-gray-950">
             <div className="px-4 py-4 border-b">
               {currentOrg && (
                 <DropdownMenu>
-                  <DropdownMenuTrigger className="flex items-center justify-between w-full px-2 py-2 rounded-md hover:bg-accent transition-colors">
+                  <DropdownMenuTrigger className="flex items-center justify-between w-full px-2 rounded-md hover:bg-accent transition-colors">
                     <div className="flex items-center gap-2">
                       <Avatar className="h-8 w-8">
                         <AvatarFallback className="bg-primary/10 text-primary">

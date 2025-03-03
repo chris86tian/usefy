@@ -1,18 +1,20 @@
 "use client"
 
-import React from "react"
-import { useState, useRef } from "react"
+import type React from "react"
+import { useState, useRef, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useOrganization } from "@/context/OrganizationContext"
 import { toast } from "sonner"
-import { 
-  useUpdateOrganizationMutation, 
-  useDeleteOrganizationMutation, 
+import {
+  useUpdateOrganizationMutation,
+  useDeleteOrganizationMutation,
   useInviteUserToOrganizationMutation,
   useGetOrganizationUsersQuery,
+  useRemoveUserFromOrganizationMutation,
+  useChangeUserRoleMutation,
 } from "@/state/api"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
@@ -33,16 +35,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import Header from "@/components/Header"
-import { Users, Settings, Shield } from "lucide-react"
-import { User } from "@clerk/nextjs/server"
+import { Users, Settings, Shield, Search } from "lucide-react"
+import type { User } from "@clerk/nextjs/server"
 
 const AdminSettings = () => {
   const router = useRouter()
   const { currentOrg } = useOrganization()
-  const { data: members } = useGetOrganizationUsersQuery(currentOrg?.organizationId || "")
   const [updateOrganization] = useUpdateOrganizationMutation()
   const [deleteOrganization] = useDeleteOrganizationMutation()
   const [inviteUser] = useInviteUserToOrganizationMutation()
+  const { data: members, refetch } = useGetOrganizationUsersQuery(currentOrg?.organizationId || "")
+  const [removeUser] = useRemoveUserFromOrganizationMutation()
+  const [changeUserRole] = useChangeUserRoleMutation()
 
   const [orgName, setOrgName] = useState(currentOrg?.name || "")
   const [orgDescription, setOrgDescription] = useState(currentOrg?.description || "")
@@ -50,7 +54,8 @@ const AdminSettings = () => {
   const [orgImagePreview, setOrgImagePreview] = useState(currentOrg?.image || "")
   const [inviteEmail, setInviteEmail] = useState("")
   const [inviteRole, setInviteRole] = useState<"admin" | "instructor" | "learner">("learner")
-
+  const [searchTerm, setSearchTerm] = useState("")
+  const [roleFilter, setRoleFilter] = useState<"all" | "admin" | "instructor" | "learner">("all")
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -106,10 +111,59 @@ const AdminSettings = () => {
       }).unwrap()
       toast.success(`Invitation sent to ${inviteEmail}`)
       setInviteEmail("")
+      refetch()
     } catch (error) {
       toast.error("Failed to send invitation")
     }
   }
+
+  const handleRemoveUser = async (userId: string, role: string) => {
+    try {
+      await removeUser({
+        organizationId: currentOrg?.organizationId || "",
+        userId,
+        role,
+      }).unwrap()
+      refetch()
+      toast.success("User removed successfully")
+    } catch (error) {
+      toast.error("Failed to remove user")
+    }
+  }
+
+  const handleChangeRole = async (userId: string, currentRole: string, newRole: string) => {
+    try {
+      if (currentRole === "admin" && newRole !== "admin" && members?.admins?.length === 1) {
+        toast.error("You must have at least one admin in the organization")
+        return
+      }
+      await changeUserRole({
+        organizationId: currentOrg?.organizationId || "",
+        userId,
+        currentRole,
+        newRole,
+      }).unwrap()
+      refetch()
+      toast.success("User role changed successfully")
+    } catch (error) {
+      toast.error("Failed to change user role")
+    }
+  }
+
+  const filteredUsers = useMemo(() => {
+    const allUsers = [...(members?.admins || []), ...(members?.instructors || []), ...(members?.learners || [])]
+
+    return allUsers.filter((user) => {
+      const matchesSearch = user.emailAddresses?.[0]?.emailAddress?.toLowerCase().includes(searchTerm.toLowerCase())
+      const matchesRole =
+        roleFilter === "all" ||
+        (roleFilter === "admin" && members?.admins?.some((admin) => admin.id === user.id)) ||
+        (roleFilter === "instructor" && members?.instructors?.some((instructor) => instructor.id === user.id)) ||
+        (roleFilter === "learner" && members?.learners?.some((learner) => learner.id === user.id))
+
+      return matchesSearch && matchesRole
+    })
+  }, [members, searchTerm, roleFilter])
 
   return (
     <div className="space-y-6">
@@ -171,6 +225,30 @@ const AdminSettings = () => {
               <CardDescription>Manage your organization members</CardDescription>
             </CardHeader>
             <CardContent>
+              <div className="flex items-center space-x-2 mb-4">
+                <div className="relative flex-grow">
+                  <Input
+                    type="text"
+                    placeholder="Search members..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+                <Select
+                  value={roleFilter}
+                  onValueChange={(value: "all" | "admin" | "instructor" | "learner") => setRoleFilter(value)}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Filter by role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Roles</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="instructor">Instructor</SelectItem>
+                    <SelectItem value="learner">Learner</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -181,149 +259,123 @@ const AdminSettings = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {members?.admins?.map((admin: User) => (
-                    <TableRow key={admin.id}>
-                      <TableCell>{admin.emailAddresses?.[0]?.emailAddress || "N/A"}</TableCell>
-                      <TableCell>
-                        <Badge className="bg-red-100 text-red-800">Admin</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={!admin.banned || !admin.locked ? "default" : "secondary"}>
-                          {!admin.banned || !admin.locked ? "Active" : "Inactive"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Button variant="ghost" size="sm">
-                          Remove
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {filteredUsers.map((user: User) => {
+                    const isAdmin = members?.admins?.some((admin) => admin.id === user.id)
+                    const isInstructor = members?.instructors?.some((instructor) => instructor.id === user.id)
+                    const isLearner = members?.learners?.some((learner) => learner.id === user.id)
+                    const role = isAdmin ? "admin" : isInstructor ? "instructor" : "learner"
 
-                  {members?.instructors?.map((instructor: User) => (
-                    <TableRow key={instructor.id}>
-                      <TableCell>{instructor.emailAddresses?.[0]?.emailAddress || "N/A"}</TableCell>
-                      <TableCell>
-                        <Badge className="bg-blue-100 text-blue-800">Instructor</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={!instructor.banned || !instructor.locked ? "default" : "secondary"}>
-                          {!instructor.banned || !instructor.locked ? "Active" : "Inactive"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Button variant="ghost" size="sm">
-                          Remove
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-
-                  {members?.learners?.map((learner: User) => (
-                    <TableRow key={learner.id}>
-                      <TableCell>{learner.emailAddresses?.[0]?.emailAddress || "N/A"}</TableCell>
-                      <TableCell>
-                        <Badge className="bg-green-100 text-green-800">Learner</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={!learner.banned || !learner.locked ? "default" : "secondary"}>
-                          {!learner.banned || !learner.locked ? "Active" : "Inactive"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Button variant="ghost" size="sm">
-                          Remove
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                    return (
+                      <TableRow key={user.id}>
+                        <TableCell>{user.emailAddresses?.[0]?.emailAddress || "N/A"}</TableCell>
+                        <TableCell>
+                          <Badge
+                            className={
+                              role === "admin"
+                                ? "bg-red-100 text-red-800"
+                                : role === "instructor"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : "bg-green-100 text-green-800"
+                            }
+                          >
+                            {role.charAt(0).toUpperCase() + role.slice(1)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={!user.banned || !user.locked ? "default" : "secondary"}>
+                            {!user.banned || !user.locked ? "Active" : "Inactive"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Select onValueChange={(newRole) => handleChangeRole(user.id, role, newRole)}>
+                            <SelectTrigger className="w-[180px]">
+                              <SelectValue placeholder={role.charAt(0).toUpperCase() + role.slice(1)} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {role !== "admin" && <SelectItem value="admin">Admin</SelectItem>}
+                              {role !== "instructor" && <SelectItem value="instructor">Instructor</SelectItem>}
+                              {role !== "learner" && <SelectItem value="learner">Learner</SelectItem>}
+                            </SelectContent>
+                          </Select>
+                          <Button variant="ghost" size="sm" onClick={() => handleRemoveUser(user.id, role)}>
+                            Remove
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
                 </TableBody>
-                              </Table>
+              </Table>
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="settings">
-          <Card>
-            <CardHeader>
-              <CardTitle>Organization Details</CardTitle>
-              <CardDescription>Update your organization information</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex items-center gap-4">
-                  <Image
-                    src={orgImagePreview || "/placeholder.png"}
-                    alt="Organization Image"
-                    width={100}
-                    height={100}
-                    className="rounded-lg object-cover"
-                  />
-                  <div className="space-y-2">
-                    <Input
-                      id="orgImage"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      className="hidden"
-                      ref={fileInputRef}
-                    />
-                    <Button type="button" onClick={() => fileInputRef.current?.click()} variant="outline">
-                      Change Image
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="orgName">Organization Name</Label>
-                <Input id="orgName" value={orgName} onChange={(e) => setOrgName(e.target.value)} />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="orgDescription">Description</Label>
-                <Textarea
-                  id="orgDescription"
-                  value={orgDescription}
-                  onChange={(e) => setOrgDescription(e.target.value)}
-                  rows={4}
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="orgName">Organization Name</Label>
+              <Input id="orgName" value={orgName} onChange={(e) => setOrgName(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="orgDescription">Description</Label>
+              <Textarea
+                id="orgDescription"
+                value={orgDescription}
+                onChange={(e) => setOrgDescription(e.target.value)}
+                rows={4}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="orgImage">Organization Image</Label>
+              <Input
+                id="orgImage"
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="hidden"
+                ref={fileInputRef}
+              />
+              <Button type="button" onClick={() => fileInputRef.current?.click()} variant="outline">
+                Choose Image
+              </Button>
+            </div>
+            {orgImagePreview && (
+              <div className="mt-4">
+                <Image
+                  src={orgImagePreview || "/placeholder.svg"}
+                  alt="Organization Image"
+                  width={200}
+                  height={200}
+                  className="rounded-lg object-cover"
                 />
               </div>
-
-              <Button onClick={handleSave} className="w-full">
-                Save Changes
-              </Button>
-            </CardContent>
-          </Card>
+            )}
+            <Button onClick={handleSave}>Save Changes</Button>
+          </div>
         </TabsContent>
 
         <TabsContent value="danger">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-red-600">Danger Zone</CardTitle>
-              <CardDescription>Irreversible and destructive actions</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive">Delete Organization</Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This action cannot be undone. This will permanently delete your organization and remove all
-                      associated data from our servers.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDelete}>Yes, delete organization</AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </CardContent>
-          </Card>
+          <div className="pt-6">
+            <h2 className="text-xl font-semibold mb-4">Danger Zone</h2>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive">Delete Organization</Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete your organization and remove all
+                    associated data from our servers.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDelete}>Yes, delete organization</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

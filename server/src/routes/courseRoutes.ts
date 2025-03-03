@@ -58,6 +58,7 @@ router.get(
   "/:courseId/sections/:sectionId/chapters/:chapterId/assignments/:assignmentId",
   getAssignment
 ); // requireAuth(),
+
 router.post(
   "/:courseId/sections/:sectionId/chapters/:chapterId/assignments",
   requireAuth(),

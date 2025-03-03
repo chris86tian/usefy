@@ -9,7 +9,7 @@ import { useUser } from "@clerk/nextjs";
 const Settings = () => {
   const { user } = useUser();
   const { currentOrg } = useOrganization();
-  const isAuthorized = currentOrg?.admins.some((admin) => admin.userId === user?.id);
+  const isAuthorized = currentOrg?.admins.some((admin) => admin.userId === user?.id) || user?.publicMetadata.userType === "superadmin";
 
   return (
     <>

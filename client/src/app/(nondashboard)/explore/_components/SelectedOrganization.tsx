@@ -148,10 +148,9 @@ export function SelectedOrganization({
                   "This organization is dedicated to providing quality education and learning resources."}
               </p>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {/* <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {admins.length > 0 ? (
                   admins
-                    .slice(0, 3)
                     .map(({ userId: adminId }, index) => (
                       <AdminCard
                         key={adminId}
@@ -164,7 +163,7 @@ export function SelectedOrganization({
                     Admin information not available
                   </p>
                 )}
-              </div>
+              </div> */}
             </div>
           </TabsContent>
         </Tabs>

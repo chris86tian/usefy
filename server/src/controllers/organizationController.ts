@@ -67,6 +67,32 @@ export const createOrganization = async (
   }
 };
 
+export const updateOrganization = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { organizationId } = req.params;
+  const { name, description, image } = req.body;
+  console.log("organizationId", organizationId);
+  console.log("req", req.body);
+
+  try {
+    const organization = await Organization.update(organizationId, {
+      $SET: {
+        name,
+        description,
+        image,
+      },
+    });
+    res.json({
+      message: "Organization updated successfully",
+      data: organization,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating organization", error });
+  }
+};
+
 export const deleteOrganization = async (
   req: Request,
   res: Response
@@ -162,11 +188,7 @@ export const getOrganizationCourses = async (
       res.json({ message: "No courses found for this organization", data: [] });
       return;
     }
-
-    console.log(
-      `Found ${courseIds.length} courses for organization ${organizationId}`
-    );
-
+    
     const courses = await Course.batchGet(courseIds);
     res.json({ message: "Courses retrieved successfully", data: courses });
     return;
@@ -266,7 +288,7 @@ export const inviteUserToOrganization = async (req: Request, res: Response): Pro
                   sendEmail(
                       user.emailAddresses[0].emailAddress,
                       "You've been added as an admin to an organization",
-                      `You've been added as an admin to the organization ${organization.name}. Click here to view: https://www.usefy.com/organizations/${organization.organizationId}`
+                      `You've been added as an admin to the organization ${organization.name}. Click here to view: ${process.env.CLIENT_URL}/organizations/${organization.organizationId}`
                   );
                   break;
               case "instructor":
@@ -276,7 +298,7 @@ export const inviteUserToOrganization = async (req: Request, res: Response): Pro
                   sendEmail(
                       user.emailAddresses[0].emailAddress,
                       "You've been added as an instructor to an organization",
-                      `You've been added as an instructor to the organization ${organization.name}. Click here to view: https://www.usefy.com/organizations/${organization.organizationId}`
+                      `You've been added as an instructor to the organization ${organization.name}. Click here to view: ${process.env.CLIENT_URL}/organizations/${organization.organizationId}`
                   );
                   break;
               case "learner":
@@ -286,7 +308,7 @@ export const inviteUserToOrganization = async (req: Request, res: Response): Pro
                   sendEmail(
                       user.emailAddresses[0].emailAddress,
                       "You've been added as a learner to an organization",
-                      `You've been added as a learner to the organization ${organization.name}. Click here to view: https://www.usefy.com/organizations/${organization.organizationId}`
+                      `You've been added as a learner to the organization ${organization.name}. Click here to view: ${process.env.CLIENT_URL}/organizations/${organization.organizationId}`
                   );
                   break;
               default:
@@ -337,5 +359,97 @@ export const getOrganizationUsers = async (req: Request, res: Response): Promise
   } catch (error) {
     console.error("Error retrieving organization users:", error);
     res.status(500).json({ message: "Error retrieving organization users", error });
+  }
+};
+
+export const removeUserFromOrganization = async (req: Request, res: Response): Promise<void> => {
+  const { organizationId, userId } = req.params;
+  const { role } = req.body;
+
+  try {
+    const organization = await Organization.get(organizationId);
+    if (!organization) {
+      res.status(404).json({ message: "Organization not found" });
+      return;
+    }
+
+    switch (role) {
+      case "admin":
+        organization.admins = organization.admins.filter((admin: { userId: string }) => admin.userId !== userId);
+        break;
+      case "instructor":
+        organization.instructors = organization.instructors.filter((instructor: { userId: string }) => instructor.userId !== userId);
+        break;
+      case "learner":
+        organization.learners = organization.learners.filter((learner: { userId: string }) => learner.userId !== userId);
+        break;
+      default:
+        res.status(400).json({ message: "Invalid role specified" });
+        return;
+    }
+
+    await organization.save();
+    res.json({ message: "User removed from organization successfully", data: organization });
+  } catch (error) {
+    console.error("Error removing user from organization:", error);
+    res.status(500).json({ message: "Error removing user from organization", error });
+  }
+};
+
+export const changeUserRole = async (req: Request, res: Response): Promise<void> => {
+  const { organizationId, userId } = req.params;
+  const { currentRole, newRole } = req.body;
+
+  try {
+    const organization = await Organization.get(organizationId);
+    if (!organization) {
+      res.status(404).json({ message: "Organization not found" });
+      return;
+    }
+
+    let roleArray;
+    switch (currentRole) {
+      case "admin":
+        roleArray = organization.admins;
+        break;
+      case "instructor":
+        roleArray = organization.instructors;
+        break;
+      case "learner":
+        roleArray = organization.learners;
+        break;
+      default:
+        res.status(400).json({ message: "Invalid current role specified" });
+        return;
+    }
+
+    const userIndex = roleArray.findIndex((user: { userId: string }) => user.userId === userId);
+    if (userIndex === -1) {
+      res.status(404).json({ message: "User not found in organization" });
+      return;
+    }
+
+    roleArray.splice(userIndex, 1);
+
+    switch (newRole) {
+      case "admin":
+        organization.admins.push({ userId });
+        break;
+      case "instructor":
+        organization.instructors.push({ userId });
+        break;
+      case "learner":
+        organization.learners.push({ userId });
+        break;
+      default:
+        res.status(400).json({ message: "Invalid new role specified" });
+        return;
+    }
+
+    await organization.save();
+    res.json({ message: "User role changed successfully", data: organization });
+  } catch (error) {
+    console.error("Error changing user role:", error);
+    res.status(500).json({ message: "Error changing user role", error });
   }
 };
