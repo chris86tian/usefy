@@ -1,46 +1,66 @@
 "use client"
-
-import { useState, useEffect } from "react"
-import { useParams } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Spinner } from "@/components/ui/Spinner"
 import { BookOpen, Users } from "lucide-react"
+import { getUserName, handleEnroll } from "@/lib/utils"
+import type { User } from "@clerk/nextjs/server"
+import { useUser } from "@clerk/nextjs"
+import { useCreateTransactionMutation } from "@/state/api"
+import { toast } from "sonner"
 
-// Sample API hook (replace with actual implementation)
-const useGetCohortQuery = (cohortId: string) => {
-  // Simulate API call
-  const [isLoading, setIsLoading] = useState(true)
-  const [cohort, setCohort] = useState<any>(null)
-
-  useEffect(() => {
-    setTimeout(() => {
-      setCohort({
-        cohortId,
-        name: "Cohort 2023",
-        learners: [
-          { id: "1", name: "John Doe", email: "john@example.com" },
-          { id: "2", name: "Jane Smith", email: "jane@example.com" },
-        ],
-        courses: [
-          { id: "1", title: "Introduction to React", instructor: "Alice Johnson" },
-          { id: "2", title: "Advanced JavaScript", instructor: "Bob Williams" },
-        ],
-      })
-      setIsLoading(false)
-    }, 1000)
-  }, [cohortId])
-
-  return { data: cohort, isLoading }
+interface Course {
+  courseId: string
+  title: string
+  instructors?: { userId: string }[]
+  enrollments?: { userId: string }[]
 }
 
-const UserCohortPage = () => {
-  const { cohortId } = useParams()
-  const { data: cohort, isLoading } = useGetCohortQuery(cohortId as string)
+interface UserCohortPageProps {
+  cohort: any
+  cohortLoading: boolean
+  orgUsers: any
+  usersLoading: boolean
+  refetch: () => void
+}
 
-  if (isLoading) {
+const UserCohortPage = ({ cohort, cohortLoading, orgUsers, usersLoading, refetch }: UserCohortPageProps) => {
+  const { user } = useUser()
+  const [createTransaction] = useCreateTransactionMutation()
+
+  const getInstructorName = (instructorId: string) => {
+    const instructor = orgUsers?.instructors?.find((i: User) => i.id === instructorId)
+    return instructor ? getUserName(instructor) : instructorId
+  }
+
+  const handleCourseClick = (course: Course) => {
+    if (!user) {
+      toast.error("You must be logged in to enroll in courses")
+      return
+    }
+
+    const isEnrolled = course?.enrollments?.some((enrollment) => enrollment.userId === user.id)
+
+    if (!isEnrolled) {
+      handleEnroll(user.id, course.courseId, createTransaction)
+        .then(() => {
+          toast.success(`Successfully enrolled in ${course.title}`)
+          setTimeout(() => {
+            refetch()
+          }, 100)
+        })
+        .catch((error) => {
+          console.error("Enrollment error:", error)
+          toast.error("Failed to enroll in course")
+        })
+    } else {
+      toast.info("You are already enrolled in this course")
+    }
+  }
+
+  if (cohortLoading || usersLoading) {
     return <Spinner />
   }
 
@@ -83,15 +103,23 @@ const UserCohortPage = () => {
                 </TableHeader>
                 <TableBody>
                   {cohort.courses.length > 0 ? (
-                    cohort.courses.map((course: any) => (
-                      <TableRow key={course.id} className="cursor-pointer hover:bg-accent/50">
-                        <TableCell className="font-medium">{course.title}</TableCell>
-                        <TableCell>{course.instructor}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">Enrolled</Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))
+                    cohort.courses.map((course: Course) => {
+                      const isEnrolled = course?.enrollments?.some((enrollment) => enrollment.userId === user?.id)
+                      return (
+                        <TableRow
+                          key={course.courseId}
+                          className="cursor-pointer hover:bg-accent/50"
+                        >
+                          <TableCell className="font-medium">{course.title}</TableCell>
+                          <TableCell>{getInstructorName(course?.instructors?.[0]?.userId || "")}</TableCell>
+                          <TableCell>
+                            <Badge variant={isEnrolled ? "outline" : "default"} onClick={() => handleCourseClick(course)}>
+                              {isEnrolled ? "Enrolled" : "Enroll"}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })
                   ) : (
                     <TableRow>
                       <TableCell colSpan={3} className="text-center text-muted-foreground">
@@ -120,10 +148,10 @@ const UserCohortPage = () => {
                 </TableHeader>
                 <TableBody>
                   {cohort.learners.length > 0 ? (
-                    cohort.learners.map((learner: any) => (
+                    cohort.learners.map((learner: User) => (
                       <TableRow key={learner.id}>
-                        <TableCell className="font-medium">{learner.name}</TableCell>
-                        <TableCell>{learner.email}</TableCell>
+                        <TableCell className="font-medium">{getUserName(learner)}</TableCell>
+                        <TableCell>{learner.emailAddresses[0].emailAddress}</TableCell>
                       </TableRow>
                     ))
                   ) : (

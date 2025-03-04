@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { useParams } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
@@ -24,15 +23,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Search, UserPlus, BookOpen, Users, UserCheck, UserX, Edit, MoreHorizontal } from "lucide-react"
 import { getUserName, handleEnroll } from "@/lib/utils"
 import {
-  useGetOrganizationUsersQuery,
-  useGetCohortQuery,
   useGetOrganizationCoursesQuery,
   useAddLearnerToCohortMutation,
   useAddCourseToCohortMutation,
   useAddCourseInstructorMutation,
   useRemoveCourseInstructorMutation,
   useCreateTransactionMutation,
-  useEnrollUserMutation,
   useUnenrollUserMutation,
 } from "@/state/api"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -48,25 +44,22 @@ import {
 } from "@/components/ui/alert-dialog"
 import { User } from "@clerk/nextjs/server"
 
-const AdminCohortPage = () => {
-  const { orgId, cohortId } = useParams()
-  const {
-    data: cohort,
-    isLoading: cohortLoading,
-    refetch,
-  } = useGetCohortQuery({
-    organizationId: orgId as string,
-    cohortId: cohortId as string,
-  })
-  const { data: orgUsers, isLoading: usersLoading } = useGetOrganizationUsersQuery(orgId as string)
-  const { data: orgCourses, isLoading: coursesLoading } = useGetOrganizationCoursesQuery(orgId as string)
+interface AdminCohortPageProps {
+  cohort: any
+  cohortLoading: boolean
+  orgUsers: any
+  usersLoading: boolean
+  refetch: () => void
+}
+
+const AdminCohortPage = ({ cohort, cohortLoading, orgUsers, usersLoading, refetch }: AdminCohortPageProps) => {
+  const { data: orgCourses, isLoading: coursesLoading } = useGetOrganizationCoursesQuery(cohort.organizationId as string)
 
   const [addLearnerToCohort] = useAddLearnerToCohortMutation()
   const [addCourseToCohort] = useAddCourseToCohortMutation()
   const [addCourseInstructor] = useAddCourseInstructorMutation()
   const [removeCourseInstructor] = useRemoveCourseInstructorMutation()
   const [createTransaction] = useCreateTransactionMutation()
-  const [enrollUser] = useEnrollUserMutation()
   const [unenrollUser] = useUnenrollUserMutation()
 
   const [searchTerm, setSearchTerm] = useState("")
@@ -87,8 +80,8 @@ const AdminCohortPage = () => {
 
     try {
       await addLearnerToCohort({
-        organizationId: orgId as string,
-        cohortId: cohortId as string,
+        organizationId: cohort.organizationId as string,
+        cohortId: cohort.cohortId as string,
         learnerId: selectedLearnerId,
       })
 
@@ -116,8 +109,8 @@ const AdminCohortPage = () => {
 
     try {
       await addCourseToCohort({
-        organizationId: orgId as string,
-        cohortId: cohortId as string,
+        organizationId: cohort.organizationId as string,
+        cohortId: cohort.cohortId as string,
         courseId: selectedCourseId,
       })
 
@@ -226,7 +219,7 @@ const AdminCohortPage = () => {
 
   const filteredLearners =
     orgUsers?.learners?.filter(
-      (learner) =>
+      (learner: User) =>
         !cohort?.learners.some((l: any) => l.id === learner.id) &&
         (getUserName(learner)?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           learner.emailAddresses[0].emailAddress?.toLowerCase().includes(searchTerm.toLowerCase())),
@@ -237,7 +230,7 @@ const AdminCohortPage = () => {
   )
 
   const getInstructorName = (instructorId: string) => {
-    const instructor = orgUsers?.instructors?.find((i) => i.id === instructorId)
+    const instructor = orgUsers?.instructors?.find((i: User) => i.id === instructorId)
     return instructor ? getUserName(instructor) : instructorId
   }
 

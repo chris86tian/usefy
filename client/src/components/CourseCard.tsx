@@ -1,9 +1,11 @@
 import type React from "react"
 import { Card, CardHeader, CardContent, CardTitle, CardFooter } from "@/components/ui/card"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
+import { useGetUserQuery } from "@/state/api"
+import { getUserName } from "@/lib/utils"
 
 interface CourseCardProps {
   course: Course
@@ -13,6 +15,8 @@ interface CourseCardProps {
 }
 
 const CourseCard = ({ course, onGoToCourse, onEnroll, isEnrolled }: CourseCardProps) => {
+  const instructorId = course.instructors?.[0]?.userId || "";
+  const { data: instructor } = useGetUserQuery(instructorId, { skip: !instructorId });
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault()
     onGoToCourse(course)
@@ -35,13 +39,26 @@ const CourseCard = ({ course, onGoToCourse, onEnroll, isEnrolled }: CourseCardPr
           <CardTitle className="line-clamp-2 text-lg">{course.title}</CardTitle>
           <p className="line-clamp-2 text-sm text-muted-foreground">{course.description}</p>
           <div className="flex items-center gap-2">
-            {/* <Avatar className="h-8 w-8">
-              <AvatarFallback className="bg-primary/10 text-primary">{course.instructors[0].userId.charAt(0)}</AvatarFallback>
-            </Avatar>
-            <div className="flex flex-col">
-              <span className="text-sm font-medium">{course.instructors[0].userId}</span>
-              <span className="text-xs text-muted-foreground">Instructor</span>
-            </div> */}
+          {instructor?.id ? (
+            <div className="flex items-center gap-2">
+              <Avatar className="h-6 w-6">
+                <AvatarImage src={instructor.imageUrl} />
+                <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                  {getUserName(instructor)?.[0]}
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-sm font-medium">{getUserName(instructor)}</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Avatar className="h-6 w-6">
+                <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                  N/A
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-sm font-medium">No Instructor Assigned</span>
+            </div>
+          )}
           </div>
         </div>
       </CardContent>
