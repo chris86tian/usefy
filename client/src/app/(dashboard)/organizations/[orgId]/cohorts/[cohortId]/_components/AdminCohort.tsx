@@ -91,6 +91,8 @@ const AdminCohortPage = ({ orgUsers, usersLoading, courses }: AdminCohortPagePro
   const [isManageUsersDialogOpen, setIsManageUsersDialogOpen] = useState(false)
   const [selectedCourseForUsers, setSelectedCourseForUsers] = useState<Course | null>(null)
 
+  const availableCourses = orgCourses?.filter((course) => !courses?.some((c) => c.courseId === course.courseId)) || []
+
   const handleAddLearner = async () => {
     if (!selectedLearnerId) {
       toast.error("Please select a learner")
@@ -210,7 +212,6 @@ const AdminCohortPage = ({ orgUsers, usersLoading, courses }: AdminCohortPagePro
         userId: courseToEdit.instructors[0].userId,
       })
 
-      // Unenroll the instructor
       await unenrollUser({
         courseId: courseToEdit.courseId,
         userId: courseToEdit.instructors[0].userId,
@@ -256,8 +257,6 @@ const AdminCohortPage = ({ orgUsers, usersLoading, courses }: AdminCohortPagePro
         (getUserName(learner)?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           learner.emailAddresses[0].emailAddress?.toLowerCase().includes(searchTerm.toLowerCase())),
     ) || []
-
-  const availableCourses = orgCourses?.filter((course) => !courses.some((c) => c.courseId === course.courseId))
 
   const getInstructorName = (instructorId: string) => {
     const instructor = orgUsers?.instructors?.find((i: User) => i.id === instructorId)
@@ -415,8 +414,8 @@ const AdminCohortPage = ({ orgUsers, usersLoading, courses }: AdminCohortPagePro
                         <SelectValue placeholder="Select course" />
                       </SelectTrigger>
                       <SelectContent>
-                        {availableCourses && availableCourses.length > 0 ? (
-                          availableCourses?.map((course) => (
+                        {availableCourses.length > 0 ? (
+                          availableCourses.map((course) => (
                             <SelectItem key={course.courseId} value={course.courseId}>
                               {course.title}
                             </SelectItem>

@@ -1,7 +1,6 @@
 "use client";
 
 import Header from "@/components/Header";
-import { AdminCourseCard } from "@/components/AdminCourseCard";
 import { Toolbar } from "@/components/Toolbar";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,6 +27,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import CourseCard from "@/components/CourseCard";
 
 const AdminCourses = () => {
   const router = useRouter();
@@ -163,9 +163,10 @@ const AdminCourses = () => {
       />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredCourses.map((course) => (
-          <AdminCourseCard
+          <CourseCard
             key={course.courseId}
             course={course}
+            variant="admin"
             onEdit={handleEdit}
             onDelete={handleDeleteConfirmation}
             isOwner={!!isAdmin}
