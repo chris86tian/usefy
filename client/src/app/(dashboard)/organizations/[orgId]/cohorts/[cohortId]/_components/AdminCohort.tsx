@@ -30,6 +30,8 @@ import {
   useRemoveCourseInstructorMutation,
   useCreateTransactionMutation,
   useUnenrollUserMutation,
+  useGetCohortQuery,
+  useGetCohortLearnersQuery,
 } from "@/state/api"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import {
@@ -42,18 +44,33 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { User } from "@clerk/nextjs/server"
+import type { User } from "@clerk/nextjs/server"
+import { useParams } from "next/navigation"
+import ManageUsersDialog from "./ManageUsersDialog"
 
 interface AdminCohortPageProps {
-  cohort: any
-  cohortLoading: boolean
-  orgUsers: any
+  orgUsers: { instructors: User[]; learners: User[]; admins: User[] }
   usersLoading: boolean
-  refetch: () => void
+  courses: Course[]
 }
 
-const AdminCohortPage = ({ cohort, cohortLoading, orgUsers, usersLoading, refetch }: AdminCohortPageProps) => {
-  const { data: orgCourses, isLoading: coursesLoading } = useGetOrganizationCoursesQuery(cohort.organizationId as string)
+const AdminCohortPage = ({ orgUsers, usersLoading, courses }: AdminCohortPageProps) => {
+  const { orgId, cohortId } = useParams()
+  const {
+    data: cohort,
+    isLoading: cohortLoading,
+    refetch,
+  } = useGetCohortQuery(
+    { organizationId: orgId as string, cohortId: cohortId as string },
+    { skip: !orgId || !cohortId },
+  )
+  const { data: orgCourses, isLoading: coursesLoading } = useGetOrganizationCoursesQuery(
+    cohort?.organizationId as string,
+  )
+  const { data: learners, isLoading: cohortLearnersLoading } = useGetCohortLearnersQuery(
+    { organizationId: cohort?.organizationId as string, cohortId: cohort?.cohortId as string },
+    { skip: !cohort },
+  )
 
   const [addLearnerToCohort] = useAddLearnerToCohortMutation()
   const [addCourseToCohort] = useAddCourseToCohortMutation()
@@ -69,8 +86,10 @@ const AdminCohortPage = ({ cohort, cohortLoading, orgUsers, usersLoading, refetc
   const [isAddLearnerDialogOpen, setIsAddLearnerDialogOpen] = useState(false)
   const [isAddCourseDialogOpen, setIsAddCourseDialogOpen] = useState(false)
   const [isChangeInstructorDialogOpen, setIsChangeInstructorDialogOpen] = useState(false)
-  const [courseToEdit, setCourseToEdit] = useState<any>(null)
+  const [courseToEdit, setCourseToEdit] = useState<Course | null>(null)
   const [isRemoveInstructorAlertOpen, setIsRemoveInstructorAlertOpen] = useState(false)
+  const [isManageUsersDialogOpen, setIsManageUsersDialogOpen] = useState(false)
+  const [selectedCourseForUsers, setSelectedCourseForUsers] = useState<Course | null>(null)
 
   const handleAddLearner = async () => {
     if (!selectedLearnerId) {
@@ -80,15 +99,17 @@ const AdminCohortPage = ({ cohort, cohortLoading, orgUsers, usersLoading, refetc
 
     try {
       await addLearnerToCohort({
-        organizationId: cohort.organizationId as string,
-        cohortId: cohort.cohortId as string,
+        organizationId: cohort?.organizationId as string,
+        cohortId: cohort?.cohortId as string,
         learnerId: selectedLearnerId,
       })
 
       toast.success("Learner added to cohort successfully")
       setIsAddLearnerDialogOpen(false)
       setSelectedLearnerId("")
-      refetch()
+      setTimeout(() => {
+        refetch()
+      }, 100)
     } catch (error) {
       toast.error("Failed to add learner to cohort")
       setIsAddLearnerDialogOpen(false)
@@ -109,8 +130,8 @@ const AdminCohortPage = ({ cohort, cohortLoading, orgUsers, usersLoading, refetc
 
     try {
       await addCourseToCohort({
-        organizationId: cohort.organizationId as string,
-        cohortId: cohort.cohortId as string,
+        organizationId: cohort?.organizationId as string,
+        cohortId: cohort?.cohortId as string,
         courseId: selectedCourseId,
       })
 
@@ -125,7 +146,9 @@ const AdminCohortPage = ({ cohort, cohortLoading, orgUsers, usersLoading, refetc
       setIsAddCourseDialogOpen(false)
       setSelectedCourseId("")
       setSelectedInstructorId("")
-      refetch()
+      setTimeout(() => {
+        refetch()
+      }, 100)
     } catch (error) {
       toast.error("Failed to add course to cohort")
       setIsAddCourseDialogOpen(false)
@@ -164,7 +187,9 @@ const AdminCohortPage = ({ cohort, cohortLoading, orgUsers, usersLoading, refetc
       setIsChangeInstructorDialogOpen(false)
       setCourseToEdit(null)
       setSelectedInstructorId("")
-      refetch()
+      setTimeout(() => {
+        refetch()
+      }, 100)
     } catch (error) {
       toast.error("Failed to update course instructor")
       setIsChangeInstructorDialogOpen(false)
@@ -194,7 +219,9 @@ const AdminCohortPage = ({ cohort, cohortLoading, orgUsers, usersLoading, refetc
       toast.success("Instructor removed successfully")
       setIsRemoveInstructorAlertOpen(false)
       setCourseToEdit(null)
-      refetch()
+      setTimeout(() => {
+        refetch()
+      }, 100)
     } catch (error) {
       toast.error("Failed to remove instructor")
       setIsRemoveInstructorAlertOpen(false)
@@ -202,13 +229,13 @@ const AdminCohortPage = ({ cohort, cohortLoading, orgUsers, usersLoading, refetc
     }
   }
 
-  const openChangeInstructorDialog = (course: any) => {
+  const openChangeInstructorDialog = (course: Course) => {
     setCourseToEdit(course)
     setSelectedInstructorId(course.instructors && course.instructors.length > 0 ? course.instructors[0].userId : "")
     setIsChangeInstructorDialogOpen(true)
   }
 
-  const openRemoveInstructorAlert = (course: any) => {
+  const openRemoveInstructorAlert = (course: Course) => {
     if (!course.instructors || course.instructors.length === 0) {
       toast.error("No instructor assigned to this course")
       return
@@ -217,24 +244,27 @@ const AdminCohortPage = ({ cohort, cohortLoading, orgUsers, usersLoading, refetc
     setIsRemoveInstructorAlertOpen(true)
   }
 
+  const openManageUsersDialog = (course: Course) => {
+    setSelectedCourseForUsers(course)
+    setIsManageUsersDialogOpen(true)
+  }
+
   const filteredLearners =
     orgUsers?.learners?.filter(
-      (learner: User) =>
-        !cohort?.learners.some((l: any) => l.id === learner.id) &&
+      (learner) =>
+        !learners?.some((l) => l.id === learner.id) &&
         (getUserName(learner)?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           learner.emailAddresses[0].emailAddress?.toLowerCase().includes(searchTerm.toLowerCase())),
     ) || []
 
-  const availableCourses = orgCourses?.filter(
-    (course) => !cohort?.courses.some((c: any) => c.courseId === course.courseId),
-  )
+  const availableCourses = orgCourses?.filter((course) => !courses.some((c) => c.courseId === course.courseId))
 
   const getInstructorName = (instructorId: string) => {
     const instructor = orgUsers?.instructors?.find((i: User) => i.id === instructorId)
     return instructor ? getUserName(instructor) : instructorId
   }
 
-  if (cohortLoading || usersLoading || coursesLoading) {
+  if (cohortLoading || usersLoading || coursesLoading || cohortLearnersLoading) {
     return <Spinner />
   }
 
@@ -293,7 +323,7 @@ const AdminCohortPage = ({ cohort, cohortLoading, orgUsers, usersLoading, refetc
                   </div>
                   <div className="max-h-[300px] overflow-y-auto border rounded-md">
                     {filteredLearners?.length > 0 ? (
-                      filteredLearners?.map((learner: User) => (
+                      filteredLearners?.map((learner) => (
                         <div
                           key={learner.id}
                           className={`flex items-center justify-between p-3 hover:bg-accent cursor-pointer ${
@@ -333,8 +363,8 @@ const AdminCohortPage = ({ cohort, cohortLoading, orgUsers, usersLoading, refetc
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {cohort.learners.length > 0 ? (
-                    cohort.learners.map((learner: any) => (
+                  {learners && learners.length > 0 ? (
+                    learners.map((learner) => (
                       <TableRow key={learner.id}>
                         <TableCell className="font-medium">{getUserName(learner)}</TableCell>
                         <TableCell>{learner.emailAddresses[0].emailAddress}</TableCell>
@@ -386,7 +416,7 @@ const AdminCohortPage = ({ cohort, cohortLoading, orgUsers, usersLoading, refetc
                       </SelectTrigger>
                       <SelectContent>
                         {availableCourses && availableCourses.length > 0 ? (
-                          availableCourses?.map((course: Course) => (
+                          availableCourses?.map((course) => (
                             <SelectItem key={course.courseId} value={course.courseId}>
                               {course.title}
                             </SelectItem>
@@ -435,8 +465,8 @@ const AdminCohortPage = ({ cohort, cohortLoading, orgUsers, usersLoading, refetc
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {cohort.courses && cohort.courses.length > 0 ? (
-                    cohort.courses.map((course: any) => (
+                  {courses.length > 0 ? (
+                    courses.map((course) => (
                       <TableRow key={course.courseId}>
                         <TableCell className="font-medium">{course.title}</TableCell>
                         <TableCell>
@@ -466,6 +496,10 @@ const AdminCohortPage = ({ cohort, cohortLoading, orgUsers, usersLoading, refetc
                                   Remove Instructor
                                 </DropdownMenuItem>
                               )}
+                              <DropdownMenuItem onClick={() => openManageUsersDialog(course)}>
+                                <Users className="mr-2 h-4 w-4" />
+                                Manage Enrollments
+                              </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
@@ -515,7 +549,9 @@ const AdminCohortPage = ({ cohort, cohortLoading, orgUsers, usersLoading, refetc
                     <SelectItem key={instructor.id} value={instructor.id}>
                       <span className="flex flex-col">
                         <span>{getUserName(instructor)}</span>
-                        <span className="text-xs text-muted-foreground">{instructor.emailAddresses[0].emailAddress}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {instructor.emailAddresses[0].emailAddress}
+                        </span>
                       </span>
                     </SelectItem>
                   ))}
@@ -553,8 +589,25 @@ const AdminCohortPage = ({ cohort, cohortLoading, orgUsers, usersLoading, refetc
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Manage Users Dialog */}
+      <ManageUsersDialog
+        isOpen={isManageUsersDialogOpen}
+        onClose={() => {
+          setIsManageUsersDialogOpen(false)
+          setSelectedCourseForUsers(null)
+        }}
+        course={selectedCourseForUsers}
+        cohortLearners={learners || []}
+        onSuccess={() => {
+          setTimeout(() => {
+            refetch()
+          }, 100)
+        }}
+      />
     </div>
   )
 }
 
 export default AdminCohortPage
+

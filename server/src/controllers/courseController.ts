@@ -341,7 +341,7 @@ export const removeCourseInstructor = async (
   }   
 }
 
-export const getCourseInstructor = async (
+export const getCourseInstructors = async (
   req: Request,
   res: Response
 ): Promise<void> => {
@@ -360,12 +360,11 @@ export const getCourseInstructor = async (
       return;
     }
 
-    const instructorId = course.instructors[0].userId;
-    const user = await clerkClient.users.getUser(instructorId);
+    const userIds = course.instructors.map((instructor: any) => instructor.userId);
 
-    console.log(user);
+    const user = (await clerkClient.users.getUserList({ userId: userIds })).data;
 
-    res.json({ message: "Instructor retrieved successfully", data: user });
+    res.json({ message: "Instructors retrieved successfully", data: user });
   } catch (error) {
     res.status(500).json({ message: "Error retrieving instructor", error });
   }
@@ -988,7 +987,6 @@ export const downvoteComment = async (
   res: Response
 ): Promise<void> => {
   const { courseId, sectionId, chapterId, commentId } = req.params;
-  const { userId } = getAuth(req);
 
   try {
     const course = await Course.get(courseId);

@@ -282,7 +282,6 @@ export const api = createApi({
     }),
     getCohort: build.query<Cohort, { organizationId: string; cohortId: string }>({
       query: ({ organizationId, cohortId }) => `cohorts/${organizationId}/${cohortId}`,
-      providesTags: ["Cohorts"],
     }),
     updateCohort: build.mutation<Cohort, { organizationId: string; cohortId: string; name: string }>({
       query: ({ organizationId, cohortId, name }) => ({
@@ -299,6 +298,9 @@ export const api = createApi({
       }),
       invalidatesTags: ["Cohorts"],
     }),
+    getCohortLearners: build.query<User[], { organizationId: string; cohortId: string }>({
+      query: ({ organizationId, cohortId }) => `cohorts/${organizationId}/${cohortId}/learners`,
+    }),
     addLearnerToCohort: build.mutation<
       { message: string },
       { organizationId: string; cohortId: string; learnerId: string }
@@ -308,6 +310,19 @@ export const api = createApi({
         method: "POST",
         body: { learnerId },
       }),
+    }),
+    removeLearnerFromCohort: build.mutation<
+      { message: string },
+      { organizationId: string; cohortId: string; learnerId: string }
+    >({
+      query: ({ organizationId, cohortId, learnerId }) => ({
+        url: `cohorts/${organizationId}/${cohortId}/remove-learner`,
+        method: "DELETE",
+        body: { learnerId },
+      }),
+    }),
+    getCohortCourses: build.query<Course[], { organizationId: string; cohortId: string }>({
+      query: ({ organizationId, cohortId }) => `cohorts/${organizationId}/${cohortId}/courses`,
     }),
     addCourseToCohort: build.mutation<
       { message: string },
@@ -432,7 +447,7 @@ export const api = createApi({
       }),
     }),
 
-    getCourseInstructor: build.query<User, string>({
+    getCourseInstructors: build.query<User[], string>({
       query: (courseId) => `courses/${courseId}/instructors`,
     }),
 
@@ -905,7 +920,10 @@ export const {
   useGetCohortQuery,
   useUpdateCohortMutation,
   useDeleteCohortMutation,
+  useGetCohortLearnersQuery,
   useAddLearnerToCohortMutation,
+  useRemoveLearnerFromCohortMutation,
+  useGetCohortCoursesQuery,
   useAddCourseToCohortMutation,
   useRemoveCourseFromCohortMutation,
   useCreateCourseMutation,
@@ -913,7 +931,7 @@ export const {
   useDeleteCourseMutation,
   useAddCourseInstructorMutation,
   useRemoveCourseInstructorMutation,
-  useGetCourseInstructorQuery,
+  useGetCourseInstructorsQuery,
   useArchiveCourseMutation,
   useUnarchiveCourseMutation,
   useGetCoursesQuery,

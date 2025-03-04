@@ -159,7 +159,9 @@ export function OrganizationsDropdown() {
                     <div>
                       <h3 className="font-medium">{org.name}</h3>
                       <p className="text-sm text-muted-foreground">
-                        {org.admins?.some((admin) => admin.userId === user?.id)
+                        {user?.publicMetadata?.userType === "superadmin"
+                          ? "Super Admin"
+                          : org.admins?.some((admin) => admin.userId === user?.id)
                           ? "Admin"
                           : org.instructors?.some((instructor) => instructor.userId === user?.id)
                             ? "Instructor"

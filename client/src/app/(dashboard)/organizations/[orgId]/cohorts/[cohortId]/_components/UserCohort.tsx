@@ -10,24 +10,25 @@ import type { User } from "@clerk/nextjs/server"
 import { useUser } from "@clerk/nextjs"
 import { useCreateTransactionMutation } from "@/state/api"
 import { toast } from "sonner"
-
-interface Course {
-  courseId: string
-  title: string
-  instructors?: { userId: string }[]
-  enrollments?: { userId: string }[]
-}
+import { 
+  useGetCohortLearnersQuery,
+  useGetCohortQuery,
+} from "@/state/api"
+import { useParams } from "next/navigation"
 
 interface UserCohortPageProps {
-  cohort: any
-  cohortLoading: boolean
-  orgUsers: any
+  orgUsers: { instructors: User[], learners: User[], admins: User[] }
   usersLoading: boolean
-  refetch: () => void
+  courses: Course[]
 }
 
-const UserCohortPage = ({ cohort, cohortLoading, orgUsers, usersLoading, refetch }: UserCohortPageProps) => {
+const UserCohortPage = ({ orgUsers, usersLoading, courses }: UserCohortPageProps) => {
   const { user } = useUser()
+  const { orgId, cohortId } = useParams()
+  
+  const { data: cohort, isLoading: cohortLoading, refetch } = useGetCohortQuery({ organizationId: orgId as string, cohortId: cohortId as string }, { skip: !orgId || !cohortId })
+  const { data: learners, isLoading: cohortLearnersLoading } = useGetCohortLearnersQuery({ organizationId: cohort?.organizationId as string, cohortId: cohort?.cohortId as string }, { skip: !cohort })
+
   const [createTransaction] = useCreateTransactionMutation()
 
   const getInstructorName = (instructorId: string) => {
@@ -102,8 +103,8 @@ const UserCohortPage = ({ cohort, cohortLoading, orgUsers, usersLoading, refetch
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {cohort.courses.length > 0 ? (
-                    cohort.courses.map((course: Course) => {
+                  {courses.length > 0 ? (
+                    courses.map((course: Course) => {
                       const isEnrolled = course?.enrollments?.some((enrollment) => enrollment.userId === user?.id)
                       return (
                         <TableRow
@@ -147,8 +148,8 @@ const UserCohortPage = ({ cohort, cohortLoading, orgUsers, usersLoading, refetch
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {cohort.learners.length > 0 ? (
-                    cohort.learners.map((learner: User) => (
+                  {learners && learners.length > 0 ? (
+                    learners.map((learner: User) => (
                       <TableRow key={learner.id}>
                         <TableCell className="font-medium">{getUserName(learner)}</TableCell>
                         <TableCell>{learner.emailAddresses[0].emailAddress}</TableCell>

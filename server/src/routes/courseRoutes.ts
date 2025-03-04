@@ -10,7 +10,7 @@ import {
   updateCourse,
   addCourseInstructor,
   removeCourseInstructor,
-  getCourseInstructor,
+  getCourseInstructors,
   getUploadVideoUrl,
   getUploadImageUrl,
   createAssignment,
@@ -96,7 +96,7 @@ router.delete(
 router.get(
   "/:courseId/instructors",
   requireAuth(),
-  getCourseInstructor
+  getCourseInstructors
 );
 
 router.post(

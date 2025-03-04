@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import Cohort from "../models/cohortModel";
 import Course from "../models/courseModel";
+import Organization from "../models/organizationModel";
 import { clerkClient } from "..";
 
 export const createCohort = async (req: Request, res: Response): Promise<void> => {
@@ -36,27 +37,12 @@ export const getCohorts = async (req: Request, res: Response): Promise<void> => 
 export const getCohort = async (req: Request, res: Response): Promise<void> => {
     const { cohortId } = req.params;
     try {
-        const cohortInfo = await Cohort.get(cohortId);
-
-        if (!cohortInfo) {
+        const cohort = await Cohort.get(cohortId);
+        if (!cohort) {
             res.status(404).json({ message: "Cohort not found" });
             return;
         }
-
-        const courseIds = cohortInfo.courses?.map((course: any) => course.courseId) || [];
-        const courses = courseIds.length > 0 ? await Course.batchGet(courseIds) : [];
-
-        const learnerIds = cohortInfo.learners?.map((learner: any) => learner.userId) || [];
-        const learners = learnerIds.length > 0 ? (await clerkClient.users.getUserList({ userId: Array.from(learnerIds) })).data : [];
-
-        const cohort = {
-            cohortId: cohortInfo.cohortId,
-            name: cohortInfo.name,
-            organizationId: cohortInfo.organizationId,
-            learners,
-            courses,
-        };
-
+        console.log(cohort);
         res.json({ message: "Cohort retrieved successfully", data: cohort });
     } catch (error) {
         console.error("Error retrieving cohort:", error);
@@ -96,7 +82,22 @@ export const updateCohort = async (req: Request, res: Response): Promise<void> =
     }
 };
 
-
+export const getCohortLearners = async (req: Request, res: Response): Promise<void> => {
+    const { cohortId } = req.params;
+    try {
+        const cohort = await Cohort.get(cohortId);
+        const learners = await Promise.all(
+            cohort.learners.map(async (learner: any) => {
+                const user = await clerkClient.users.getUser(learner.userId);
+                return user;
+            })
+        );
+        res.json({ message: "Cohort learners retrieved successfully", data: learners });
+    } catch (error) {
+        res.status(500).json({ message: "Error retrieving cohort learners", error });
+    }
+};
+        
 
 export const addLearnerToCohort = async (req: Request, res: Response): Promise<void> => {
     const { cohortId } = req.params;
@@ -131,6 +132,23 @@ export const removeLearnerFromCohort = async (req: Request, res: Response): Prom
         res.status(500).json({ message: "Error removing learner from cohort", error });
     }
 };
+
+export const getCohortCourses = async (req: Request, res: Response): Promise<void> => {
+    const { cohortId } = req.params;
+    try {
+        const cohort = await Cohort.get(cohortId);
+        const courses = await Promise.all(
+            cohort.courses.map(async (course: any) => {
+                const courseData = await Course.get(course.courseId);
+                return courseData;
+            })
+        );
+        res.json({ message: "Cohort courses retrieved successfully", data: courses });
+    } catch (error) {
+        res.status(500).json({ message: "Error retrieving cohort courses", error });
+    }
+};
+    
 
 export const addCourseToCohort = async (req: Request, res: Response): Promise<void> => {
     const { cohortId } = req.params;
