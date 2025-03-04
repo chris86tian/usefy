@@ -15,6 +15,10 @@ import {
   useGetOrganizationUsersQuery,
   useRemoveUserFromOrganizationMutation,
   useChangeUserRoleMutation,
+  useGetCohortsQuery,
+  useUpdateCohortMutation,
+  useDeleteCohortMutation,
+  useCreateCohortMutation,
 } from "@/state/api"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
@@ -35,16 +39,32 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import Header from "@/components/Header"
-import { Users, Settings, Shield, Search } from "lucide-react"
+import { Users, Settings, Shield, Search, Edit, Trash2, PlusCircle, BookOpen } from "lucide-react"
 import type { User } from "@clerk/nextjs/server"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { v4 as uuidv4 } from "uuid"
 
 const AdminSettings = () => {
   const router = useRouter()
   const { currentOrg } = useOrganization()
   const [updateOrganization] = useUpdateOrganizationMutation()
   const [deleteOrganization] = useDeleteOrganizationMutation()
+
+  const { data: cohorts, refetch: refetchCohorts } = useGetCohortsQuery(currentOrg?.organizationId || "")
+  const [updateCohort] = useUpdateCohortMutation()
+  const [deleteCohort] = useDeleteCohortMutation()
+  const [createCohort] = useCreateCohortMutation()
+
+  const { data: members, refetch: refetchMembers } = useGetOrganizationUsersQuery(currentOrg?.organizationId || "")
   const [inviteUser] = useInviteUserToOrganizationMutation()
-  const { data: members, refetch } = useGetOrganizationUsersQuery(currentOrg?.organizationId || "")
   const [removeUser] = useRemoveUserFromOrganizationMutation()
   const [changeUserRole] = useChangeUserRoleMutation()
 
@@ -56,6 +76,14 @@ const AdminSettings = () => {
   const [inviteRole, setInviteRole] = useState<"admin" | "instructor" | "learner">("learner")
   const [searchTerm, setSearchTerm] = useState("")
   const [roleFilter, setRoleFilter] = useState<"all" | "admin" | "instructor" | "learner">("all")
+
+  // Cohort state
+  const [isCreateCohortDialogOpen, setIsCreateCohortDialogOpen] = useState(false)
+  const [isEditCohortDialogOpen, setIsEditCohortDialogOpen] = useState(false)
+  const [newCohortName, setNewCohortName] = useState("")
+  const [editCohortId, setEditCohortId] = useState("")
+  const [editCohortName, setEditCohortName] = useState("")
+  const [cohortSearchTerm, setCohortSearchTerm] = useState("")
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -69,24 +97,23 @@ const AdminSettings = () => {
 
   const handleSave = async () => {
     try {
-      const formData = new FormData();
-      formData.append("name", orgName || "");
-      formData.append("description", orgDescription || "");
+      const formData = new FormData()
+      formData.append("name", orgName || "")
+      formData.append("description", orgDescription || "")
       if (orgImage) {
-        formData.append("image", "");
+        formData.append("image", orgImage)
       }
 
       await updateOrganization({
         organizationId: currentOrg?.organizationId || "",
         formData,
-      }).unwrap();
+      }).unwrap()
 
-      toast.success("Organization updated successfully");
+      toast.success("Organization updated successfully")
     } catch (error) {
-      toast.error("Failed to update organization");
+      toast.error("Failed to update organization")
     }
   }
-
 
   const handleDelete = async () => {
     try {
@@ -113,7 +140,7 @@ const AdminSettings = () => {
       }).unwrap()
       toast.success(`Invitation sent to ${inviteEmail}`)
       setInviteEmail("")
-      refetch()
+      refetchMembers()
     } catch (error) {
       toast.error("Failed to send invitation")
     }
@@ -126,7 +153,7 @@ const AdminSettings = () => {
         userId,
         role,
       }).unwrap()
-      refetch()
+      refetchMembers()
       toast.success("User removed successfully")
     } catch (error) {
       toast.error("Failed to remove user")
@@ -145,11 +172,74 @@ const AdminSettings = () => {
         currentRole,
         newRole,
       }).unwrap()
-      refetch()
+      refetchMembers()
       toast.success("User role changed successfully")
     } catch (error) {
       toast.error("Failed to change user role")
     }
+  }
+
+  // Cohort handlers
+  const handleCreateCohort = async () => {
+    if (!newCohortName.trim()) {
+      toast.error("Please enter a cohort name")
+      return
+    }
+
+    try {
+      await createCohort({
+        organizationId: currentOrg?.organizationId || "",
+        cohortId: uuidv4(),
+        name: newCohortName.trim(),
+      }).unwrap()
+      toast.success("Cohort created successfully")
+      setIsCreateCohortDialogOpen(false)
+      setNewCohortName("")
+      refetchCohorts()
+    } catch (error) {
+      toast.error("Failed to create cohort")
+    }
+  }
+
+  const handleEditCohort = async () => {
+    if (!editCohortName.trim()) {
+      toast.error("Please enter a cohort name")
+      return
+    }
+
+    try {
+      await updateCohort({
+        organizationId: currentOrg?.organizationId || "",
+        cohortId: editCohortId,
+        name: editCohortName.trim(),
+      }).unwrap()
+      toast.success("Cohort updated successfully")
+      setIsEditCohortDialogOpen(false)
+      setEditCohortId("")
+      setEditCohortName("")
+      refetchCohorts()
+    } catch (error) {
+      toast.error("Failed to update cohort")
+    }
+  }
+
+  const handleDeleteCohort = async (cohortId: string) => {
+    try {
+      await deleteCohort({
+        organizationId: currentOrg?.organizationId || "",
+        cohortId,
+      }).unwrap()
+      toast.success("Cohort deleted successfully")
+      refetchCohorts()
+    } catch (error) {
+      toast.error("Failed to delete cohort")
+    }
+  }
+
+  const openEditCohortDialog = (cohort: any) => {
+    setEditCohortId(cohort.cohortId)
+    setEditCohortName(cohort.name)
+    setIsEditCohortDialogOpen(true)
   }
 
   const filteredUsers = useMemo(() => {
@@ -167,15 +257,25 @@ const AdminSettings = () => {
     })
   }, [members, searchTerm, roleFilter])
 
+  const filteredCohorts = useMemo(() => {
+    if (!cohorts) return []
+
+    return cohorts.filter((cohort) => cohort.name.toLowerCase().includes(cohortSearchTerm.toLowerCase()))
+  }, [cohorts, cohortSearchTerm])
+
   return (
     <div className="space-y-4">
       <Header title="Organization Settings" subtitle="Manage your organization settings and members" />
 
       <Tabs defaultValue="members" className="w-full mb-2">
-        <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
+        <TabsList className="grid w-full grid-cols-4 lg:w-[500px]">
           <TabsTrigger value="members" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             Members
+          </TabsTrigger>
+          <TabsTrigger value="cohorts" className="flex items-center gap-2">
+            <BookOpen className="h-4 w-4" />
+            Cohorts
           </TabsTrigger>
           <TabsTrigger value="settings" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
@@ -229,11 +329,13 @@ const AdminSettings = () => {
             <CardContent>
               <div className="flex items-center space-x-2 mb-4">
                 <div className="relative flex-grow">
+                  <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     type="text"
                     placeholder="Search members..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-8"
                   />
                 </div>
                 <Select
@@ -312,6 +414,163 @@ const AdminSettings = () => {
           </Card>
         </TabsContent>
 
+        <TabsContent value="cohorts" className="space-y-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Cohorts</CardTitle>
+                <CardDescription>Manage your organization cohorts</CardDescription>
+              </div>
+              <Dialog open={isCreateCohortDialogOpen} onOpenChange={setIsCreateCohortDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Create Cohort
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Create New Cohort</DialogTitle>
+                    <DialogDescription>
+                      Enter the name for your new cohort. Click save when you&apos;re done.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="cohortName" className="text-right">
+                        Name
+                      </Label>
+                      <Input
+                        id="cohortName"
+                        value={newCohortName}
+                        onChange={(e) => setNewCohortName(e.target.value)}
+                        className="col-span-3"
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsCreateCohortDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" onClick={handleCreateCohort}>
+                      Create Cohort
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center space-x-2 mb-4">
+                <div className="relative flex-grow">
+                  <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder="Search cohorts..."
+                    value={cohortSearchTerm}
+                    onChange={(e) => setCohortSearchTerm(e.target.value)}
+                    className="pl-8"
+                  />
+                </div>
+              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Learners</TableHead>
+                    <TableHead>Courses</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredCohorts.length > 0 ? (
+                    filteredCohorts.map((cohort) => (
+                      <TableRow key={cohort.cohortId}>
+                        <TableCell className="font-medium">{cohort.name}</TableCell>
+                        <TableCell>{cohort.learners?.length || 0}</TableCell>
+                        <TableCell>{cohort.courses?.length || 0}</TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() =>
+                                router.push(`/organizations/${currentOrg?.organizationId}/cohorts/${cohort.cohortId}`)
+                              }
+                            >
+                              View
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => openEditCohortDialog(cohort)}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This will permanently delete the cohort and remove all associated data.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDeleteCohort(cohort.cohortId)}>
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center text-muted-foreground">
+                        No cohorts found
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          {/* Edit Cohort Dialog */}
+          <Dialog open={isEditCohortDialogOpen} onOpenChange={setIsEditCohortDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Edit Cohort</DialogTitle>
+                <DialogDescription>Update the cohort name. Click save when you&apos;re done.</DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="editCohortName" className="text-right">
+                    Name
+                  </Label>
+                  <Input
+                    id="editCohortName"
+                    value={editCohortName}
+                    onChange={(e) => setEditCohortName(e.target.value)}
+                    className="col-span-3"
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsEditCohortDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" onClick={handleEditCohort}>
+                  Save Changes
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </TabsContent>
+
         <TabsContent value="settings">
           <div className="space-y-4 p-4">
             <div className="space-y-2">
@@ -327,7 +586,7 @@ const AdminSettings = () => {
                 rows={4}
               />
             </div>
-            <div className="space-x-4">
+            <div className="space-x-2">
               <Label htmlFor="orgImage">Organization Image</Label>
               <Input
                 id="orgImage"

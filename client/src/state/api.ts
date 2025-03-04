@@ -3,7 +3,6 @@ import { BaseQueryApi, FetchArgs } from "@reduxjs/toolkit/query";
 import { User } from "@clerk/nextjs/server";
 import { Clerk } from "@clerk/clerk-js";
 import { toast } from "sonner";
-import { create } from "domain";
 
 const server_url =
   process.env.NEXT_ENV === "production"
@@ -281,6 +280,55 @@ export const api = createApi({
       query: (organizationId) => `cohorts/${organizationId}`,
       providesTags: ["Cohorts"],
     }),
+    getCohort: build.query<Cohort, { organizationId: string; cohortId: string }>({
+      query: ({ organizationId, cohortId }) => `cohorts/${organizationId}/${cohortId}`,
+      providesTags: ["Cohorts"],
+    }),
+    updateCohort: build.mutation<Cohort, { organizationId: string; cohortId: string; name: string }>({
+      query: ({ organizationId, cohortId, name }) => ({
+        url: `cohorts/${organizationId}/${cohortId}`,
+        method: "PUT",
+        body: { name },
+      }),
+      invalidatesTags: ["Cohorts"],
+    }),
+    deleteCohort: build.mutation<{ message: string }, { organizationId: string; cohortId: string }>({
+      query: ({ organizationId, cohortId }) => ({
+        url: `cohorts/${organizationId}/${cohortId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Cohorts"],
+    }),
+    addLearnerToCohort: build.mutation<
+      { message: string },
+      { organizationId: string; cohortId: string; learnerId: string }
+    >({
+      query: ({ organizationId, cohortId, learnerId }) => ({
+        url: `cohorts/${organizationId}/${cohortId}/add-learner`,
+        method: "POST",
+        body: { learnerId },
+      }),
+    }),
+    addCourseToCohort: build.mutation<
+      { message: string },
+      { organizationId: string; cohortId: string; courseId: string }
+    >({
+      query: ({ organizationId, cohortId, courseId }) => ({
+        url: `cohorts/${organizationId}/${cohortId}/add-course`,
+        method: "POST",
+        body: { courseId },
+      }),
+    }),
+    removeCourseFromCohort: build.mutation<
+      { message: string },
+      { organizationId: string; cohortId: string; courseId: string }
+    >({
+      query: ({ organizationId, cohortId, courseId }) => ({
+        url: `cohorts/${organizationId}/${cohortId}/remove-course`,
+        method: "DELETE",
+        body: { courseId },
+      }),
+    }),
     /* 
     ===============
     COURSES
@@ -299,14 +347,11 @@ export const api = createApi({
       providesTags: (result, error, id) => [{ type: "Courses", id }],
     }),
 
-    createCourse: build.mutation<
-      Course,
-      { teacherId: string; teacherName: string }
+    createCourse: build.mutation<Course, void
     >({
-      query: (body) => ({
+      query: () => ({
         url: `courses`,
         method: "POST",
-        body,
       }),
       invalidatesTags: ["Courses"],
     }),
@@ -363,6 +408,32 @@ export const api = createApi({
         method: "DELETE",
       }),
       invalidatesTags: ["Courses"],
+    }),
+
+    addCourseInstructor: build.mutation<
+      { message: string },
+      { courseId: string; userId: string }
+    >({
+      query: ({ courseId, userId }) => ({
+        url: `courses/${courseId}/instructors`,
+        method: "POST",
+        body: { userId },
+      }),
+    }),
+
+    removeCourseInstructor: build.mutation<
+      { message: string },
+      { courseId: string; userId: string }
+    >({
+      query: ({ courseId, userId }) => ({
+        url: `courses/${courseId}/instructors`,
+        method: "DELETE",
+        body: { userId },
+      }),
+    }),
+
+    getCourseInstructor: build.query<User, string>({
+      query: (courseId) => `courses/${courseId}/instructors`,
     }),
 
     getUploadVideoUrl: build.mutation<
@@ -788,6 +859,15 @@ export const api = createApi({
     ENROLLMENTS
     ===============
     */
+    enrollUser: build.mutation<
+      { message: string },
+      { courseId: string; userId: string }
+    >({
+      query: ({ courseId, userId }) => ({
+        url: `courses/${courseId}/enroll/${userId}`,
+        method: "POST",
+      }),
+    }),
     unenrollUser: build.mutation<
       { message: string },
       { courseId: string; userId: string }
@@ -822,9 +902,18 @@ export const {
   useChangeUserRoleMutation,
   useCreateCohortMutation,
   useGetCohortsQuery,
+  useGetCohortQuery,
+  useUpdateCohortMutation,
+  useDeleteCohortMutation,
+  useAddLearnerToCohortMutation,
+  useAddCourseToCohortMutation,
+  useRemoveCourseFromCohortMutation,
   useCreateCourseMutation,
   useUpdateCourseMutation,
   useDeleteCourseMutation,
+  useAddCourseInstructorMutation,
+  useRemoveCourseInstructorMutation,
+  useGetCourseInstructorQuery,
   useArchiveCourseMutation,
   useUnarchiveCourseMutation,
   useGetCoursesQuery,
@@ -859,5 +948,6 @@ export const {
   useGetFeedbackQuery,
   useUpdateFeedbackStatusMutation,
   useDeleteFeedbackMutation,
+  useEnrollUserMutation,
   useUnenrollUserMutation,
 } = api;

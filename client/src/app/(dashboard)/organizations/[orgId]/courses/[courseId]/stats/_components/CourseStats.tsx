@@ -29,12 +29,6 @@ export default function CourseStats({ courseId }: CourseStatsProps) {
         description="Students enrolled in the course"
       />
       <StatCard
-        title="Course Level"
-        value={course.level}
-        icon={<Layers className="h-4 w-4 text-muted-foreground" />}
-        description="Difficulty level of the course"
-      />
-      <StatCard
         title="Total Sections"
         value={course.sections.length}
         icon={<Book className="h-4 w-4 text-muted-foreground" />}

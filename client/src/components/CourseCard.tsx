@@ -35,13 +35,13 @@ const CourseCard = ({ course, onGoToCourse, onEnroll, isEnrolled }: CourseCardPr
           <CardTitle className="line-clamp-2 text-lg">{course.title}</CardTitle>
           <p className="line-clamp-2 text-sm text-muted-foreground">{course.description}</p>
           <div className="flex items-center gap-2">
-            <Avatar className="h-8 w-8">
-              <AvatarFallback className="bg-primary/10 text-primary">{course.teacherName.charAt(0)}</AvatarFallback>
+            {/* <Avatar className="h-8 w-8">
+              <AvatarFallback className="bg-primary/10 text-primary">{course.instructors[0].userId.charAt(0)}</AvatarFallback>
             </Avatar>
             <div className="flex flex-col">
-              <span className="text-sm font-medium">{course.teacherName}</span>
+              <span className="text-sm font-medium">{course.instructors[0].userId}</span>
               <span className="text-xs text-muted-foreground">Instructor</span>
-            </div>
+            </div> */}
           </div>
         </div>
       </CardContent>
@@ -49,7 +49,6 @@ const CourseCard = ({ course, onGoToCourse, onEnroll, isEnrolled }: CourseCardPr
         <Badge variant="secondary" className="hover:bg-secondary">
           {course.category}
         </Badge>
-        <span className="text-sm font-medium text-muted-foreground">{course.level}</span>
       </CardFooter>
       {!isEnrolled && (
           <Button onClick={handleEnroll} variant="default" className="w-full">

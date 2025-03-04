@@ -1,12 +1,11 @@
 "use client";
 
 import Header from "@/components/Header";
-import { TeacherCourseCard } from "@/components/TeacherCourseCard";
+import { AdminCourseCard } from "@/components/AdminCourseCard";
 import { Toolbar } from "@/components/Toolbar";
 import { Button } from "@/components/ui/button";
 import {
   useCreateCourseMutation,
-  useDeleteCourseMutation,
   useArchiveCourseMutation,
   useUnarchiveCourseMutation,
   useGetOrganizationCoursesQuery,
@@ -16,9 +15,7 @@ import {
 import { useRouter } from "next/navigation";
 import React, { useMemo, useState } from "react";
 import { WandSparkles } from "lucide-react";
-import { getUserName } from "@/lib/utils";
 import { useUser } from "@clerk/nextjs";
-import { User } from "@clerk/nextjs/server";
 import { Spinner } from "@/components/ui/Spinner";
 import { useOrganization } from "@/context/OrganizationContext";
 import {
@@ -47,11 +44,10 @@ const AdminCourses = () => {
   const isAdmin = currentOrg?.admins.some((admin) => admin.userId === user?.id);
 
   const [createCourse] = useCreateCourseMutation();
-  const [deleteCourse] = useDeleteCourseMutation();
   const [archiveCourse] = useArchiveCourseMutation();
   const [unarchiveCourse] = useUnarchiveCourseMutation();
   const [addCourse] = useAddCourseToOrganizationMutation();
-  const [removeCourse] = useRemoveCourseFromOrganizationMutation();
+  const [removeCourseFromOrganization] = useRemoveCourseFromOrganizationMutation();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -71,8 +67,10 @@ const AdminCourses = () => {
         return matchesSearch && matchesCategory;
       })
       .sort((a, b) => {
-        if (a.teacherId === user?.id && b.teacherId !== user?.id) return -1;
-        if (a.teacherId !== user?.id && b.teacherId === user?.id) return 1;
+        const isUserInstructorA = a.instructors?.some(instructor => instructor.userId === user?.id);
+        const isUserInstructorB = b.instructors?.some(instructor => instructor.userId === user?.id);
+        if (isUserInstructorA && !isUserInstructorB) return -1;
+        if (!isUserInstructorA && isUserInstructorB) return 1;
         return 0;
       });
   }, [courses, searchTerm, selectedCategory, user?.id]);
@@ -94,12 +92,10 @@ const AdminCourses = () => {
     if (!courseToDelete) return;
     
     try {
-      await removeCourse({
+      await removeCourseFromOrganization({
         organizationId: currentOrg?.organizationId ?? "",
         courseId: courseToDelete.courseId
       }).unwrap();
-      
-      await deleteCourse(courseToDelete.courseId).unwrap();
       refetch();
     } catch (error) {
       console.error("Failed to delete course:", error);
@@ -131,10 +127,7 @@ const AdminCourses = () => {
   const handleCreateCourse = async () => {
     if (!user) return;
 
-    const result = await createCourse({
-      teacherId: user.id,
-      teacherName: getUserName(user as unknown as User),
-    }).unwrap();
+    const result = await createCourse().unwrap();
 
     await addCourse({
       organizationId: currentOrg?.organizationId ?? "",
@@ -145,12 +138,7 @@ const AdminCourses = () => {
   };
 
   if (isLoading) return <Spinner />;
-  if (isError || !courses) 
-    return (
-      <div className="flex items-center justify-center h-[600px] text-gray-500">
-        Error loading courses.
-      </div>
-    );
+
 
   return (
     <div className="space-y-6">
@@ -158,13 +146,15 @@ const AdminCourses = () => {
         title="Courses Management"
         subtitle="Manage your organization's courses"
         rightElement={
-          <Button
-            onClick={handleCreateCourse}
-            className="bg-blue-500 hover:bg-blue-600 text-white"
-          >
-            <WandSparkles className="w-5 h-5" />
-            Create Course
-          </Button>
+          isAdmin ? (
+            <Button
+              onClick={handleCreateCourse}
+              className="bg-blue-500 hover:bg-blue-600 text-white"
+            >
+              <WandSparkles className="w-5 h-5" />
+              Create Course
+            </Button>
+          ) : null
         }
       />
       <Toolbar
@@ -173,12 +163,12 @@ const AdminCourses = () => {
       />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredCourses.map((course) => (
-          <TeacherCourseCard
+          <AdminCourseCard
             key={course.courseId}
             course={course}
             onEdit={handleEdit}
             onDelete={handleDeleteConfirmation}
-            isOwner={course.teacherId === user?.id || !!isAdmin}
+            isOwner={!!isAdmin}
             onView={handleGoToCourse}
             onArchive={handleArchive}
             onUnarchive={handleUnarchive}

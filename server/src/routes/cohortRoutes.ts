@@ -2,6 +2,12 @@ import { Router } from "express";
 import {
     createCohort,
     getCohorts,
+    getCohort,
+    updateCohort,
+    deleteCohort,
+    addLearnerToCohort,
+    addCourseToCohort,
+    removeCourseFromCohort,
 } from "../controllers/cohortController";
 import { requireAuth } from "@clerk/express";
 
@@ -9,5 +15,11 @@ const router = Router();
 
 router.post("/:organizationId", requireAuth(), createCohort);
 router.get("/:organizationId", getCohorts);
+router.get("/:organizationId/:cohortId", getCohort);
+router.put("/:organizationId/:cohortId", requireAuth(), updateCohort);
+router.delete("/:organizationId/:cohortId", requireAuth(), deleteCohort);
+router.post("/:organizationId/:cohortId/add-learner", addLearnerToCohort);
+router.post("/:organizationId/:cohortId/add-course", addCourseToCohort);
+router.post("/:organizationId/:cohortId/remove-course", removeCourseFromCohort);
 
 export default router;

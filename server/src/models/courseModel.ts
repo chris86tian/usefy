@@ -247,13 +247,17 @@ export const courseSchema = new Schema(
       hashKey: true,
       required: true,
     },
-    teacherId: {
-      type: String,
+    instructors: {
+      type: Array,
       required: true,
-    },
-    teacherName: {
-      type: String,
-      required: true,
+      schema: [
+        new Schema({
+          userId: {
+            type: String,
+            required: true,
+          },
+        }),
+      ],
     },
     title: {
       type: String,
@@ -271,11 +275,6 @@ export const courseSchema = new Schema(
     },
     price: {
       type: Number,
-    },
-    level: {
-      type: String,
-      required: true,
-      enum: ["Beginner", "Intermediate", "Advanced"],
     },
     status: {
       type: String,

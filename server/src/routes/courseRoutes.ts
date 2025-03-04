@@ -8,6 +8,9 @@ import {
   getCourse,
   listCourses,
   updateCourse,
+  addCourseInstructor,
+  removeCourseInstructor,
+  getCourseInstructor,
   getUploadVideoUrl,
   getUploadImageUrl,
   createAssignment,
@@ -24,6 +27,7 @@ import {
   likeChapter,
   dislikeChapter,
   getUserCourseSubmissions,
+  enrollUser,
   unenrollUser,
   fixCourseImageUrls,
 } from "../controllers/courseController";
@@ -32,15 +36,68 @@ import { requireAuth } from "@clerk/express";
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
-router.get("/", listCourses);
-router.post("/", requireAuth(), createCourse);
-router.post("/fix-image-urls", requireAuth(), fixCourseImageUrls);
+router.get(
+  "/", 
+  listCourses
+);
+router.post(
+  "/", 
+  requireAuth(), 
+  createCourse
+);
+router.post(
+  "/fix-image-urls", 
+  requireAuth(), 
+  fixCourseImageUrls
+);
 
-router.get("/:courseId", getCourse);
-router.put("/:courseId", requireAuth(), upload.none(), updateCourse);
-router.put("/:courseId/archive", requireAuth(), archiveCourse);
-router.put("/:courseId/unarchive", requireAuth(), unarchiveCourse);
-router.delete("/:courseId", requireAuth(), deleteCourse);
+router.get(
+  "/:courseId", 
+  getCourse
+);
+
+router.put(
+  "/:courseId", 
+  requireAuth(), 
+  upload.none(), 
+  updateCourse
+);
+
+router.put(
+  "/:courseId/archive", 
+  requireAuth(), 
+  archiveCourse
+);
+
+router.put(
+  "/:courseId/unarchive", 
+  requireAuth(), 
+  unarchiveCourse
+);
+
+router.delete(
+  "/:courseId", 
+  requireAuth(), 
+  deleteCourse
+);
+
+router.post(
+  "/:courseId/instructors",
+  requireAuth(),
+  addCourseInstructor
+);
+
+router.delete(
+  "/:courseId/instructors",
+  requireAuth(),
+  removeCourseInstructor
+);
+
+router.get(
+  "/:courseId/instructors",
+  requireAuth(),
+  getCourseInstructor
+);
 
 router.post(
   "/:courseId/sections/:sectionId/chapters/:chapterId/get-upload-url",
@@ -129,6 +186,16 @@ router.get(
   getUserCourseSubmissions
 );
 
-router.post("/:courseId/unenroll/:userId", requireAuth(), unenrollUser);
+router.post(
+  "/:courseId/enroll/:userId",
+  requireAuth(),
+  enrollUser
+);
+
+router.post(
+  "/:courseId/unenroll/:userId", 
+  requireAuth(), 
+  unenrollUser
+);
 
 export default router;

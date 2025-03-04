@@ -16,14 +16,16 @@ import {
   changeUserRole,
 } from "../controllers/organizationController";
 import { requireAuth } from "@clerk/express";
+import multer from "multer";
 
 const router = Router();
+const upload = multer({ storage: multer.memoryStorage() });
 
 router.get("/my", requireAuth(), getMyOrganizations);
 router.get("/", listOrganizations);
 router.get("/:organizationId", getOrganization);
 router.post("/", requireAuth(), createOrganization);
-router.put("/:organizationId", requireAuth(), updateOrganization);
+router.put("/:organizationId", requireAuth(), upload.any(), updateOrganization);
 router.delete("/:organizationId", requireAuth(), deleteOrganization);
 router.post("/:organizationId/join", requireAuth(), joinOrganization);
 router.get("/:organizationId/courses", getOrganizationCourses);

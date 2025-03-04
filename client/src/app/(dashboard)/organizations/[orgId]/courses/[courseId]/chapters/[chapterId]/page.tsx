@@ -297,7 +297,7 @@ const Course = () => {
           <h1 className="text-2xl font-bold">{currentChapter?.title}</h1>
           <div className="flex items-center space-x-4">
             <Badge variant="outline" className="px-3 py-1">
-              {course.teacherName}
+              {/* {course.instructors[0].userId} */}
             </Badge>
           </div>
         </div>
@@ -339,12 +339,12 @@ const Course = () => {
               </div>
 
               <div className="flex items-center gap-3">
-                {user.id === course.teacherId && (
+                {/* {course.instructors.some((instructor) => instructor.userId === user.id) && (
                   <Button onClick={() => setIsModalOpen(true)} variant="outline" size="sm">
                     <Sparkles className="h-4 w-4 mr-2" />
                     Create Assignment
                   </Button>
-                )}
+                )} */}
 
                 <div className="flex items-center gap-2">
                   <Button
@@ -456,8 +456,7 @@ const Course = () => {
               <Assignments
                 chapterId={currentChapter.chapterId}
                 sectionId={currentSection?.sectionId}
-                courseId={course.courseId}
-                teacherId={course.teacherId}
+                course={course}
               />
             </CardContent>
           </Card>

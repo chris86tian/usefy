@@ -8,8 +8,8 @@ import { AssignmentsSkeleton } from './_components/AssignmentsSkeleton'
 import { AssignmentsError } from './_components/AssignmentsError'
 import { EmptyAssignments } from './_components/EmptyAssignments'
 
-const Assignments = ({ teacherId, courseId, chapterId, sectionId }: AssignmentsProps) => {
-  const { data: assignments, isLoading, error } = useGetAssignmentsQuery({ chapterId, sectionId, courseId })
+const Assignments = ({ course, chapterId, sectionId }: AssignmentsProps) => {
+  const { data: assignments, isLoading, error } = useGetAssignmentsQuery({ chapterId, sectionId, courseId: course.courseId })
 
   const renderContent = () => {
     if (isLoading) return <AssignmentsSkeleton columns={2} />
@@ -22,8 +22,7 @@ const Assignments = ({ teacherId, courseId, chapterId, sectionId }: AssignmentsP
           <AssignmentCard 
             key={assignment.assignmentId} 
             assignment={assignment}
-            teacherId={teacherId}
-            courseId={courseId}
+            course={course}
             sectionId={sectionId}
             chapterId={chapterId}
           />

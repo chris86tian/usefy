@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
 import { useGetCourseUsersQuery } from "@/state/api"
-import EnrollmentModal from "./EnrollmentModal"
 import { User } from "@clerk/nextjs/server"
 import { UserPlus2 } from "lucide-react"
 
@@ -63,12 +62,6 @@ export default function UserList({ courseId, selectedUser, onUserSelect }: UserL
           </div>
         </ScrollArea>
       </CardContent>
-      <EnrollmentModal
-        isOpen={isEnrollmentModalOpen}
-        onClose={() => setIsEnrollmentModalOpen(false)}
-        courseId={courseId}
-        enrolledUsers={users || []}
-      />
     </Card>
   )
 }

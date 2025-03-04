@@ -100,14 +100,12 @@ declare global {
 
   interface Course {
     courseId: string;
-    teacherId: string;
-    teacherName: string;
+    instructors?: { userId: string }[]
     title: string;
     description?: string;
     category: string;
     image?: string;
     price?: number;
-    level: "Beginner" | "Intermediate" | "Advanced";
     status: "Draft" | "Published" | "Archived";
     sections: Section[];
     enrollments?: Array<{
@@ -256,8 +254,7 @@ declare global {
     courseImage: string;
   }
 
-  // COMPONENT PROPS
-  interface TeacherCourseCardProps {
+  interface AdminCourseCardProps {
     course: Course;
     isOwner: boolean;
     onEdit: (course: Course) => void;
@@ -271,8 +268,7 @@ declare global {
   interface AssignmentsProps {
     chapterId: string;
     sectionId: string;
-    courseId: string;
-    teacherId: string;
+    course: Course;
   }
 
   interface WizardStepperProps {
@@ -418,8 +414,7 @@ declare global {
   
   interface AssignmentCardProps {
     assignment: Assignment
-    teacherId: string
-    courseId: string
+    course: Course
     sectionId: string
     chapterId: string
   }
@@ -429,7 +424,7 @@ declare global {
     name: string
     description: string
     image: string | null
-    cohorts: string[]
+    cohorts?: string[]
     admins: { userId: string }[]
     instructors: { userId: string }[]
     learners: { userId: string }[]

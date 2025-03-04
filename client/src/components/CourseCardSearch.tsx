@@ -32,7 +32,7 @@ const CourseCardSearch = ({ course, isSelected, onClick }: SearchCourseCardProps
       <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">{course.description}</p>
 
       {/* Instructor & Price */}
-      <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">By {course.teacherName}</p>
+      {/* <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">By {course.instructors[0].userId}</p> */}
       <div className="flex justify-between items-center mt-4">
         <span className="text-primary font-semibold">{formatPrice(course.price)}</span>
         <span className="text-sm text-gray-500">{course.enrollments?.length || 0} Enrolled</span>

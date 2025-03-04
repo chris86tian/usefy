@@ -19,7 +19,6 @@ const organizationSchema = new Schema({
     },
     cohorts: {
       type: Array,
-      required: true,
       schema: [
         new Schema({
           cohortId: {

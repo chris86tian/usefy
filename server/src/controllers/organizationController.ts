@@ -1,9 +1,10 @@
 import { Request, Response } from "express";
 import Organization from "../models/organizationModel";
-import Course from "../models/courseModel";
 import { getAuth } from "@clerk/express";
 import { clerkClient } from "..";
 import { sendEmail } from "../utils/sendEmail";
+import Cohort from "../models/cohortModel";
+import Course from "../models/courseModel";
 
 export const getOrganization = async (
   req: Request,
@@ -253,9 +254,24 @@ export const removeCourseFromOrganization = async (req: Request, res: Response):
         const courseIndex = organization.courses.findIndex((course: { courseId: string; }) => course.courseId === courseId);
         if (courseIndex !== -1) {
             organization.courses.splice(courseIndex, 1);
-            await organization.save();
         }
 
+        organization.cohorts = organization.cohorts || [];
+        organization.cohorts.forEach(async (cohort: { cohortId: string; }) => {
+            const cohortData = await Cohort.get(cohort.cohortId);
+            if (cohortData) {
+                cohortData.courses = cohortData.courses || [];
+                const courseIndex = cohortData.courses.findIndex((course: { courseId: string; }) => course.courseId === courseId);
+                if (courseIndex !== -1) {
+                    cohortData.courses.splice(courseIndex, 1);
+                    await cohortData.save();
+                }
+            }
+        });
+
+        await Course.delete(courseId);
+        
+        await organization.save();
         res.json({ message: "Course removed from organization successfully", data: organization });
     } catch (error) {
         res.status(500).json({ message: "Error removing course from organization", error });

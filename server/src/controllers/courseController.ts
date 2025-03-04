@@ -1,12 +1,13 @@
 import { Request, Response } from "express";
-import Course from "../models/courseModel";
 import AWS from "aws-sdk";
 import { v4 as uuidv4 } from "uuid";
 import { getAuth } from "@clerk/express";
-import UserCourseProgress from "../models/userCourseProgressModel";
-import Commit from "../models/commitModel";
 import { mergeSections, calculateOverallProgress } from "../utils/utils";
+import Commit from "../models/commitModel";
+import Course from "../models/courseModel";
+import UserCourseProgress from "../models/userCourseProgressModel";
 import UserNotification from "../models/notificationModel";
+import { clerkClient } from "..";
 
 const s3 = new AWS.S3();
 
@@ -46,30 +47,23 @@ export const createCourse = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { teacherId, teacherName } = req.body;
-
-    if (!teacherId || !teacherName) {
-      res.status(400).json({ message: "Teacher Id and name are required" });
-      return;
-    }
+    const auth = getAuth(req);
 
     const newCourse = new Course({
       courseId: uuidv4(),
-      teacherId,
-      teacherName,
+      instructors: [],
       title: "Untitled Course",
       description: "",
       category: "Uncategorized",
       image: "",
       price: 0,
-      level: "Beginner",
       status: "Draft",
       sections: [],
       enrollments: [],
     });
 
     const initialProgress = new UserCourseProgress({
-      userId: teacherId,
+      userId: auth.userId,
       courseId: newCourse.courseId,
       enrollmentDate: new Date().toISOString(),
       overallProgress: 0,
@@ -110,11 +104,6 @@ export const updateCourse = async (
     const course = await Course.get(courseId);
     if (!course) {
       res.status(404).json({ message: "Course not found" });
-      return;
-    }
-
-    if (course.teacherId !== userId) {
-      res.status(403).json({ message: "Not authorized to update this course" });
       return;
     }
 
@@ -239,13 +228,6 @@ export const archiveCourse = async (
       return;
     }
 
-    if (course.teacherId !== userId) {
-      res
-        .status(403)
-        .json({ message: "Not authorized to archive this course " });
-      return;
-    }
-
     course.status = "Archived";
     await course.save();
 
@@ -266,13 +248,6 @@ export const deleteCourse = async (
     const course = await Course.get(courseId);
     if (!course) {
       res.status(404).json({ message: "Course not found" });
-      return;
-    }
-
-    if (course.teacherId !== userId) {
-      res
-        .status(403)
-        .json({ message: "Not authorized to delete this course " });
       return;
     }
 
@@ -298,13 +273,6 @@ export const unarchiveCourse = async (
       return;
     }
 
-    if (course.teacherId !== userId) {
-      res
-        .status(403)
-        .json({ message: "Not authorized to unarchive this course " });
-      return;
-    }
-
     course.status = "Draft";
     await course.save();
 
@@ -313,6 +281,95 @@ export const unarchiveCourse = async (
     res.status(500).json({ message: "Error unarchiving course", error });
   }
 };
+
+export const addCourseInstructor = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { courseId } = req.params;
+  const { userId } = req.body;
+
+  try {
+    const course = await Course.get(courseId);
+    if (!course) {
+      res.status(404).json({ message: "Course not found" });
+      return;
+    }
+
+    if (!course.instructors) {
+      course.instructors = [];
+    }
+
+    course.instructors.push({ userId });
+
+    await course.save();
+
+    res.json({ message: "Instructor added to course successfully", data: course });
+  } catch (error) {
+    res.status(500).json({ message: "Error adding instructor to course", error });
+  }
+};
+
+export const removeCourseInstructor = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { courseId } = req.params;
+  const { userId } = req.body;
+
+  try {
+    const course = await Course.get(courseId);
+    if (!course) {
+      res.status(404).json({ message: "Course not found" });
+      return;
+    }
+
+    if (!course.instructors) {
+      res.status(404).json({ message: "Instructors not found" });
+      return;
+    }
+
+    course.instructors = course.instructors.filter(
+      (instructor: any) => instructor.userId !== userId
+    );
+
+    await course.save();
+
+    res.json({ message: "Instructor removed from course successfully", data: course });
+  } catch (error) {
+    res.status(500).json({ message: "Error removing instructor from course", error });
+  }   
+}
+
+export const getCourseInstructor = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { courseId } = req.params;
+  console.log("courseId", courseId);
+
+  try {
+    const course = await Course.get(courseId);
+    if (!course) {
+      res.status(404).json({ message: "Course not found" });
+      return;
+    }
+
+    if (!course.instructors) {
+      res.json({ message: "Instructors not found", data: [] });
+      return;
+    }
+
+    const instructorId = course.instructors[0].userId;
+    const user = await clerkClient.users.getUser(instructorId);
+
+    console.log(user);
+
+    res.json({ message: "Instructor retrieved successfully", data: user });
+  } catch (error) {
+    res.status(500).json({ message: "Error retrieving instructor", error });
+  }
+}
 
 export const getUploadVideoUrl = async (
   req: Request,
@@ -422,13 +479,6 @@ export const createAssignment = async (
     );
     if (!chapter) {
       res.status(404).json({ message: "Chapter not found" });
-      return;
-    }
-
-    if (course.teacherId !== userId) {
-      res.status(403).json({
-        message: "Not authorized to create assignment for this course",
-      });
       return;
     }
 
@@ -574,13 +624,6 @@ export const deleteAssignment = async (
       return;
     }
 
-    if (course.teacherId !== userId) {
-      res.status(403).json({
-        message: "Not authorized to delete assignments for this course",
-      });
-      return;
-    }
-
     const section = course.sections.find(
       (section: any) => section.sectionId === sectionId
     );
@@ -628,14 +671,6 @@ export const updateAssignment = async (
       res.status(404).json({ message: "Course not found" });
       return;
     }
-
-    if (course.teacherId !== userId) {
-      res.status(403).json({
-        message: "Not authorized to update assignments for this course",
-      });
-      return;
-    }
-
     const section = course.sections.find(
       (section: any) => section.sectionId === sectionId
     );
@@ -1188,6 +1223,37 @@ export const dislikeChapter = async (
     res.json({ data: chapter });
   } catch (error) {
     res.status(500).json({ message: "Error disliking chapter", error });
+  }
+};
+
+export const enrollUser = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { courseId, userId } = req.params;
+
+    if (!courseId || !userId) {
+      res.status(400).json({ message: "Missing courseId or userId" });
+    }
+
+    const course = await Course.get(courseId);
+    if (!course) {
+      res.status(404).json({ message: "Course not found" });
+    }
+
+    if (!Array.isArray(course.enrollments)) {
+      course.enrollments = [];
+    }
+
+    course.enrollments.push({ userId });
+
+    await course.save();
+
+    res.json({ message: "User enrolled successfully" });
+  } catch (error) {
+    console.error("Unhandled server error:", error);
+    res.status(500).json({ message: "Internal server error", error });
   }
 };
 

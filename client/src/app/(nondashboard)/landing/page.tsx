@@ -1,3 +1,5 @@
+'use client'
+
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
@@ -11,9 +13,9 @@ import {
   CheckCircle2, 
   Sparkles 
 } from "lucide-react"
-import { currentUser } from "@clerk/nextjs/server"
+import { useUser } from "@clerk/nextjs"
 
-export default async function LandingPage() {
+export default function LandingPage() {
   const FeatureIcons = {
     Building2,
     BookOpen,
@@ -23,7 +25,7 @@ export default async function LandingPage() {
     CheckCircle2
   };
 
-  const user = await currentUser()
+  const { user } = useUser();
 
   return (
     <div className="min-h-screen bg-background">

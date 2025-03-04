@@ -9,7 +9,7 @@ import { useUser } from "@clerk/nextjs";
 const Courses = () => {
   const { user } = useUser();
   const { currentOrg } = useOrganization();
-  const isAuthorized = currentOrg?.admins.some((admin) => admin.userId === user?.id);
+  const isAuthorized = currentOrg?.admins.some((admin) => admin.userId === user?.id) || currentOrg?.instructors.some((instructor) => instructor.userId === user?.id);
 
   return (
     <>

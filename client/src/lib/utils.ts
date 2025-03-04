@@ -74,6 +74,24 @@ export const getUserName = (user: User) => {
   return user.firstName + " " + user.lastName || user.username || "Unknown User";
 }
 
+export const handleEnroll = async (userId: string, courseId: string, createTransaction: any) => {
+  try {
+      const transactionData: Partial<Transaction> = {
+          transactionId: "free-enrollment",
+          userId: userId,
+          courseId: courseId,
+          paymentProvider: undefined,
+          amount: 0,
+      };
+  
+      await createTransaction(transactionData);
+      toast.success("Enrolled user successfully!");
+  } catch (error) {
+      console.error("Failed to send email:", error);
+      toast.error("Enrolled successfully, but failed to send email.");
+  }
+}
+
 export const NAVBAR_HEIGHT = 48;
 
 export const courseCategories = [

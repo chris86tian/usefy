@@ -11,10 +11,10 @@ const CohortPage = () => {
     const { orgId, cohortId } = useParams();
     const { user } = useUser()
     const { currentOrg } = useOrganization()
-    const isAdmin = currentOrg?.admins.some((admin) => admin.userId === user?.id)
+    const isAuthorized = currentOrg?.admins.some((admin) => admin.userId === user?.id) || currentOrg?.instructors.some((instructor) => instructor.userId === user?.id)
     return (
         <>
-            {isAdmin ? <AdminCohortPage /> : <UserCohortPage />}
+            {isAuthorized ? <AdminCohortPage /> : <UserCohortPage />}
         </>
     )
 };

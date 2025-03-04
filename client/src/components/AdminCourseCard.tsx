@@ -1,13 +1,14 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import Image from "next/image"
-import { cn } from "@/lib/utils"
+import { cn, getUserName } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Archive, BarChartBig, Pencil, Trash2 } from "lucide-react"
 import { useUser } from "@clerk/nextjs"
 import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useGetUserQuery } from "@/state/api"
 
-interface TeacherCourseCardProps {
+interface AdminCourseCardProps {
   course: Course
   onEdit: (course: Course) => void
   onDelete: (course: Course) => void
@@ -18,7 +19,7 @@ interface TeacherCourseCardProps {
   isOwner: boolean
 }
 
-export function TeacherCourseCard({
+export function AdminCourseCard({
   course,
   onEdit,
   onDelete,
@@ -27,12 +28,22 @@ export function TeacherCourseCard({
   onUnarchive,
   onStats,
   isOwner,
-}: TeacherCourseCardProps) {
+}: AdminCourseCardProps) {
   const { user } = useUser()
+  
+  const instructorId = course.instructors?.[0]?.userId || "";
+  const { data: instructor } = useGetUserQuery(instructorId, { skip: !instructorId });
+
+  // Check if the current user is an instructor for this course
+  const isInstructor = course.instructors?.some(
+    (instructor) => instructor.userId === user?.id
+  );
 
   const isUserEnrolled = course.enrollments?.some((enrollment) => enrollment.userId === user?.id)
-
-  const showViewOnly = !isOwner && !isUserEnrolled
+  
+  // Determine view permissions
+  const canEdit = isOwner || isInstructor;
+  const showViewOnly = !canEdit && !isUserEnrolled;
 
   const statusVariants = {
     Published: "default",
@@ -77,18 +88,30 @@ export function TeacherCourseCard({
             </Badge>
           )}
 
-          <div className="flex items-center gap-2">
-            <Avatar className="h-6 w-6">
-              <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                {course.teacherName.charAt(0)}
-              </AvatarFallback>
-            </Avatar>
-            <span className="text-sm font-medium">{course.teacherName}</span>
-          </div>
+          {instructor?.id ? (
+            <div className="flex items-center gap-2">
+              <Avatar className="h-6 w-6">
+                <AvatarImage src={instructor.imageUrl} />
+                <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                  {getUserName(instructor)?.[0]}
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-sm font-medium">{getUserName(instructor)}</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Avatar className="h-6 w-6">
+                <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                  N/A
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-sm font-medium">No Instructor Assigned</span>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {isOwner ? (
+          {canEdit ? (
             <>
               <Button variant="secondary" size="sm" onClick={() => onEdit(course)}>
                 <Pencil className="w-4 h-4 mr-2" />
@@ -109,10 +132,12 @@ export function TeacherCourseCard({
                   Unarchive
                 </Button>
               )}
-              <Button variant="destructive" size="sm" onClick={() => onDelete(course)}>
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete
-              </Button>
+              {isOwner && (
+                <Button variant="destructive" size="sm" onClick={() => onDelete(course)}>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete
+                </Button>
+              )}
             </>
           ) : (
             showViewOnly && <p className="text-sm text-muted-foreground italic text-center w-full">View Only</p>
@@ -122,4 +147,3 @@ export function TeacherCourseCard({
     </Card>
   )
 }
-

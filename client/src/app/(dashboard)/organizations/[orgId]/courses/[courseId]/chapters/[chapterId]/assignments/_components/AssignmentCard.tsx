@@ -96,8 +96,7 @@ const Description = ({ text }: { text: string }) => {
 
 export function AssignmentCard({ 
   assignment, 
-  teacherId, 
-  courseId, 
+  course,
   sectionId, 
   chapterId 
 }: AssignmentCardProps) {
@@ -113,7 +112,7 @@ export function AssignmentCard({
     try {
       await deleteAssignment({
         assignmentId: assignment.assignmentId,
-        courseId,
+        courseId: course.courseId,
         sectionId,
         chapterId
       }).unwrap()
@@ -123,7 +122,7 @@ export function AssignmentCard({
   }
 
   const handleStartAssignment = () => {
-    router.push(`/organizations/${orgId}/courses/${courseId}/chapters/${chapterId}/code?courseId=${courseId}&sectionId=${sectionId}&chapterId=${chapterId}&assignmentId=${assignment.assignmentId}`)
+    router.push(`/organizations/${orgId}/courses/${course.courseId}/chapters/${chapterId}/code?courseId=${course.courseId}&sectionId=${sectionId}&chapterId=${chapterId}&assignmentId=${assignment.assignmentId}`)
   }
 
   return (
@@ -135,7 +134,7 @@ export function AssignmentCard({
               <FileText className="h-5 w-5 text-primary" />
               <h3 className="font-semibold text-lg">{assignment.title}</h3>
             </div>
-            {user?.id === teacherId && (
+            {course?.instructors?.some((instructor) => instructor.userId === user?.id) && (
               <div className="flex items-center space-x-2">
                 <Button
                   variant="outline"
@@ -225,7 +224,7 @@ export function AssignmentCard({
         <AssignmentModal
           mode="edit"
           assignment={assignment}
-          courseId={courseId}
+          courseId={course.courseId}
           sectionId={sectionId}
           chapterId={chapterId}
           onAssignmentChange={() => {

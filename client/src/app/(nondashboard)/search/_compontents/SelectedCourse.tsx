@@ -9,7 +9,7 @@ const SelectedCourse = ({ course, handleEnrollNow, userId }: SelectedCourseProps
       <div>
         <h3 className="selected-course__title">{course.title}</h3>
         <p className="selected-course__author">
-          By {course.teacherName} |{" "}
+          {/* By {course.instructors[0].userId} |{" "} */}
           <span className="selected-course__enrollment-count">
             {course?.enrollments?.length} enrolled
           </span>
