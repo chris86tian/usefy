@@ -67,6 +67,7 @@ const AdminSettings = () => {
   const [inviteUser, { isLoading: isInviteLoading }] = useInviteUserToOrganizationMutation()
   const [removeUser] = useRemoveUserFromOrganizationMutation()
   const [changeUserRole] = useChangeUserRoleMutation()
+  const [roleSelections, setRoleSelections] = useState<Record<string, string>>({});
 
   const [orgName, setOrgName] = useState(currentOrg?.name)
   const [orgDescription, setOrgDescription] = useState(currentOrg?.description)
@@ -163,21 +164,28 @@ const AdminSettings = () => {
   const handleChangeRole = async (userId: string, currentRole: string, newRole: string) => {
     try {
       if (currentRole === "admin" && newRole !== "admin" && members?.admins?.length === 1) {
-        toast.error("You must have at least one admin in the organization")
-        return
+        toast.error("You must have at least one admin in the organization");
+        return;
       }
       await changeUserRole({
         organizationId: currentOrg?.organizationId || "",
         userId,
         currentRole,
         newRole,
-      }).unwrap()
-      refetchMembers()
-      toast.success("User role changed successfully")
+      }).unwrap();
+      refetchMembers();
+      
+      setRoleSelections(prev => ({
+        ...prev,
+        [userId]: ""
+      }));
+      
+      toast.success("User role changed successfully");
     } catch (error) {
-      toast.error("Failed to change user role")
+      toast.error("Failed to change user role");
     }
-  }
+  };
+  
 
   // Cohort handlers
   const handleCreateCohort = async () => {
@@ -391,16 +399,24 @@ const AdminSettings = () => {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <Select onValueChange={(newRole) => handleChangeRole(user.id, role, newRole)}>
-                            <SelectTrigger className="w-[180px]">
-                              <SelectValue placeholder={role.charAt(0).toUpperCase() + role.slice(1)} />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {role !== "admin" && <SelectItem value="admin">Admin</SelectItem>}
-                              {role !== "instructor" && <SelectItem value="instructor">Instructor</SelectItem>}
-                              {role !== "learner" && <SelectItem value="learner">Learner</SelectItem>}
-                            </SelectContent>
-                          </Select>
+                        <Select 
+                          value={roleSelections[user.id] || ""}
+                          onValueChange={(newRole) => {
+                            setRoleSelections(prev => ({
+                              ...prev,
+                              [user.id]: newRole
+                            }));
+                            handleChangeRole(user.id, role, newRole);
+                          }}>
+                          <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder={role.charAt(0).toUpperCase() + role.slice(1)}/>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {role !== "admin" && <SelectItem value="admin">Admin</SelectItem>}
+                            {role !== "instructor" && <SelectItem value="instructor">Instructor</SelectItem>}
+                            {role !== "learner" && <SelectItem value="learner">Learner</SelectItem>}
+                          </SelectContent>
+                        </Select>
                           <Button variant="ghost" size="sm" onClick={() => handleRemoveUser(user.id, role)}>
                             Remove
                           </Button>

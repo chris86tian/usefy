@@ -48,9 +48,7 @@ const UserCohortPage = ({ orgUsers, usersLoading, courses }: UserCohortPageProps
       handleEnroll(user.id, course.courseId, createTransaction)
         .then(() => {
           toast.success(`Successfully enrolled in ${course.title}`)
-          setTimeout(() => {
-            refetch()
-          }, 100)
+          refetch()
         })
         .catch((error) => {
           console.error("Enrollment error:", error)

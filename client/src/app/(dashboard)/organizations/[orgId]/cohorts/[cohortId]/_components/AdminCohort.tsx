@@ -56,11 +56,7 @@ interface AdminCohortPageProps {
 
 const AdminCohortPage = ({ orgUsers, usersLoading, courses }: AdminCohortPageProps) => {
   const { orgId, cohortId } = useParams()
-  const {
-    data: cohort,
-    isLoading: cohortLoading,
-    refetch,
-  } = useGetCohortQuery(
+  const { data: cohort, isLoading: cohortLoading, refetch } = useGetCohortQuery(
     { organizationId: orgId as string, cohortId: cohortId as string },
     { skip: !orgId || !cohortId },
   )
@@ -109,9 +105,7 @@ const AdminCohortPage = ({ orgUsers, usersLoading, courses }: AdminCohortPagePro
       toast.success("Learner added to cohort successfully")
       setIsAddLearnerDialogOpen(false)
       setSelectedLearnerId("")
-      setTimeout(() => {
-        refetch()
-      }, 100)
+      refetch()
     } catch (error) {
       toast.error("Failed to add learner to cohort")
       setIsAddLearnerDialogOpen(false)
@@ -148,9 +142,7 @@ const AdminCohortPage = ({ orgUsers, usersLoading, courses }: AdminCohortPagePro
       setIsAddCourseDialogOpen(false)
       setSelectedCourseId("")
       setSelectedInstructorId("")
-      setTimeout(() => {
-        refetch()
-      }, 100)
+      refetch()
     } catch (error) {
       toast.error("Failed to add course to cohort")
       setIsAddCourseDialogOpen(false)
@@ -189,9 +181,7 @@ const AdminCohortPage = ({ orgUsers, usersLoading, courses }: AdminCohortPagePro
       setIsChangeInstructorDialogOpen(false)
       setCourseToEdit(null)
       setSelectedInstructorId("")
-      setTimeout(() => {
-        refetch()
-      }, 100)
+      refetch()
     } catch (error) {
       toast.error("Failed to update course instructor")
       setIsChangeInstructorDialogOpen(false)
@@ -220,9 +210,7 @@ const AdminCohortPage = ({ orgUsers, usersLoading, courses }: AdminCohortPagePro
       toast.success("Instructor removed successfully")
       setIsRemoveInstructorAlertOpen(false)
       setCourseToEdit(null)
-      setTimeout(() => {
-        refetch()
-      }, 100)
+      refetch()
     } catch (error) {
       toast.error("Failed to remove instructor")
       setIsRemoveInstructorAlertOpen(false)
@@ -597,11 +585,11 @@ const AdminCohortPage = ({ orgUsers, usersLoading, courses }: AdminCohortPagePro
           setSelectedCourseForUsers(null)
         }}
         course={selectedCourseForUsers}
-        cohortLearners={learners || []}
+        cohortLearners={learners as User[]}
         onSuccess={() => {
-          setTimeout(() => {
-            refetch()
-          }, 100)
+          refetch()
+          setSelectedCourseForUsers(null)
+          setIsManageUsersDialogOpen(false)
         }}
       />
     </div>
