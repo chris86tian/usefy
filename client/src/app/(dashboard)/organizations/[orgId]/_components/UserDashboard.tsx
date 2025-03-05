@@ -146,7 +146,6 @@ const UserDashboard = ({ recentActivities, upcomingEvents }: UserDashboardProps)
             <CourseCard 
               key={course.courseId} 
               course={course} 
-              onGoToCourse={() => {}}
               onEnroll={handleEnroll}
               isEnrolled={course.enrollments?.some((enrollment) => enrollment.userId === user?.id) || false}
             />

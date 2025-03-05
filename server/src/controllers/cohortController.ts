@@ -106,8 +106,6 @@ export const getCohortLearners = async (req: Request, res: Response): Promise<vo
                 }
             })
         );
-
-        console.log(learners);
         
         res.json({ message: "Cohort learners retrieved successfully", data: learners });
     } catch (error) {

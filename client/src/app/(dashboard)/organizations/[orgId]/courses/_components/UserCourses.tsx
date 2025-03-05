@@ -91,7 +91,7 @@ const Courses = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-6">
         {filteredCourses.map((course) => (
           <div key={course.courseId} className="relative">
-            <CourseCard course={course} onGoToCourse={handleGoToCourse} onEnroll={() => {}} isEnrolled />
+            <CourseCard course={course} onView={handleGoToCourse} onEnroll={() => {}} isEnrolled />
             {course.status === "Archived" && <ArchivedOverlay />}
           </div>
         ))}

@@ -134,8 +134,6 @@ export function SelectedOrganization({
                   <CourseCard
                     key={course.courseId}
                     course={course}
-                    onGoToCourse={() => {}}
-                    onEnroll={() => {}}
                     isEnrolled={true}
                   />
                 ))}
