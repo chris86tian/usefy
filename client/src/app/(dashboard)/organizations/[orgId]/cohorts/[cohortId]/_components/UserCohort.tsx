@@ -29,6 +29,7 @@ const UserCohortPage = ({ orgUsers, usersLoading, courses }: UserCohortPageProps
   const { data: cohort, isLoading: cohortLoading, refetch } = useGetCohortQuery({ organizationId: orgId as string, cohortId: cohortId as string }, { skip: !orgId || !cohortId })
   const { data: learners, isLoading: cohortLearnersLoading } = useGetCohortLearnersQuery({ organizationId: cohort?.organizationId as string, cohortId: cohort?.cohortId as string }, { skip: !cohort })
 
+  console.log(learners)
   const [createTransaction] = useCreateTransactionMutation()
 
   const getInstructorName = (instructorId: string) => {

@@ -86,14 +86,32 @@ export const getCohortLearners = async (req: Request, res: Response): Promise<vo
     const { cohortId } = req.params;
     try {
         const cohort = await Cohort.get(cohortId);
+        if (!cohort) {
+            res.status(404).json({ message: "Cohort not found" });
+            return;
+        }
+        
+        if (!cohort.learners || cohort.learners.length === 0) {
+            res.json({ message: "No learners in this cohort", data: [] });
+            return;
+        }
+
         const learners = await Promise.all(
             cohort.learners.map(async (learner: any) => {
-                const user = await clerkClient.users.getUser(learner.userId);
-                return user;
+                try {
+                    return await clerkClient.users.getUser(learner.userId);
+                } catch (error) {
+                    console.error(`Error fetching user ${learner.userId}:`, error);
+                    return null;
+                }
             })
         );
+
+        console.log(learners);
+        
         res.json({ message: "Cohort learners retrieved successfully", data: learners });
     } catch (error) {
+        console.error("Error retrieving cohort learners:", error);
         res.status(500).json({ message: "Error retrieving cohort learners", error });
     }
 };
