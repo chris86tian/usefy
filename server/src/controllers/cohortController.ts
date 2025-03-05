@@ -42,7 +42,6 @@ export const getCohort = async (req: Request, res: Response): Promise<void> => {
             res.status(404).json({ message: "Cohort not found" });
             return;
         }
-        console.log(cohort);
         res.json({ message: "Cohort retrieved successfully", data: cohort });
     } catch (error) {
         console.error("Error retrieving cohort:", error);

@@ -23,7 +23,6 @@ const UserDashboard = ({ recentActivities, upcomingEvents }: UserDashboardProps)
   const publishedCourses = courses?.filter((course) => course.status === "Published") || []
 
   const handleEnroll = (courseId: string) => {
-    console.log(orgId)
     router.push(`/checkout?step=1&id=${courseId}&orgId=${orgId}&showSignUp=false`, {
       scroll: false,
     });

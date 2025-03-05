@@ -346,7 +346,6 @@ export const getCourseInstructors = async (
   res: Response
 ): Promise<void> => {
   const { courseId } = req.params;
-  console.log("courseId", courseId);
 
   try {
     const course = await Course.get(courseId);

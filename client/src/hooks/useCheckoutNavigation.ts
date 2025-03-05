@@ -11,7 +11,6 @@ export const useCheckoutNavigation = () => {
 
   const courseId = searchParams.get("id") ?? "";
   const orgId = searchParams.get("orgId") ?? "";
-  console.log(orgId);
   const checkoutStep = parseInt(searchParams.get("step") ?? "1", 10);
 
   const navigateToStep = useCallback(

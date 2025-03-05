@@ -24,8 +24,6 @@ const PaymentPageContent = () => {
   const { signOut } = useClerk()
   const router = useRouter()
 
-  console.log("orgId", orgId)
-
   const handleFreeEnrollment = async () => {
     try {
       const transactionData: Partial<Transaction> = {

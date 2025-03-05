@@ -111,7 +111,7 @@ export const createTransaction = async (
         });
         await notification.save();
       } catch (error) {
-        console.log(error);
+        console.error("Error creating notification", error);
       }
 
       res.json({ message: "Enrolled in free course successfully", data: { courseProgress: initialProgress } });

@@ -65,7 +65,6 @@ export const createOrganization = async (
       data: organization,
     });
   } catch (error) {
-    console.log("error", error);
     res.status(500).json({ message: "Error creating organization", error });
   }
 };
@@ -75,9 +74,6 @@ export const updateOrganization = async (req: Request, res: Response): Promise<v
   const name = req.body.name;
   const description = req.body.description;
   const image = req.body.image;
-
-  console.log("organizationId", organizationId);
-  console.log("req.body", req.body);
 
   try {
     const organization = await Organization.update(organizationId, {
@@ -173,15 +169,12 @@ export const getOrganizationCourses = async (
   const { organizationId } = req.params;
 
   try {
-    console.log(`Getting courses for organization: ${organizationId}`);
-
     const organization = await Organization.query("organizationId")
       .eq(organizationId)
       .exec();
     const orgData = organization?.[0];
 
     if (!orgData) {
-      console.log(`Organization not found: ${organizationId}`);
       res.json({ message: "No courses found for this organization", data: [] });
       return;
     }

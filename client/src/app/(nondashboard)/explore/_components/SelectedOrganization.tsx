@@ -49,12 +49,6 @@ export function SelectedOrganization({
     refetchOnMountOrArgChange: true,
   });
 
-  useEffect(() => {
-    if (error) {
-      console.log("Error fetching courses:", error);
-    }
-  }, [error]);
-
   const admins = organization.admins || [];
   const instructors = organization.instructors || [];
   const learners = organization.learners || [];

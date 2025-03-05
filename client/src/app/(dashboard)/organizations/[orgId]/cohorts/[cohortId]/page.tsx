@@ -18,7 +18,7 @@ export default function CohortPage() {
     const { data: orgUsers, isLoading: usersLoading } = useGetOrganizationUsersQuery(orgId as string)
     const { data: cohortCourses } = useGetCohortCoursesQuery({ organizationId: orgId as string, cohortId: cohortId as string })
 
-    const isAuthorized = currentOrg?.admins.some((admin) => admin.userId === user?.id) || currentOrg?.instructors.some((instructor) => instructor.userId === user?.id)
+    const isAuthorized = currentOrg?.admins.some((admin) => admin.userId === user?.id)
 
     return (
         <>
