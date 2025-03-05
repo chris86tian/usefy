@@ -64,7 +64,7 @@ const AdminSettings = () => {
   const [createCohort] = useCreateCohortMutation()
 
   const { data: members, refetch: refetchMembers } = useGetOrganizationUsersQuery(currentOrg?.organizationId || "")
-  const [inviteUser] = useInviteUserToOrganizationMutation()
+  const [inviteUser, { isLoading: isInviteLoading }] = useInviteUserToOrganizationMutation()
   const [removeUser] = useRemoveUserFromOrganizationMutation()
   const [changeUserRole] = useChangeUserRoleMutation()
 
@@ -315,7 +315,7 @@ const AdminSettings = () => {
                       <SelectItem value="learner">Learner</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Button type="submit">Send Invitation</Button>
+                  <Button type="submit">{isInviteLoading ? "Sending..." : "Invite"}</Button>
                 </div>
               </form>
             </CardContent>

@@ -2,9 +2,10 @@ import { Request, Response } from "express";
 import Organization from "../models/organizationModel";
 import { getAuth } from "@clerk/express";
 import { clerkClient } from "..";
-import { sendEmail } from "../utils/sendEmail";
 import Cohort from "../models/cohortModel";
 import Course from "../models/courseModel";
+import { sendNotificationAndEmail } from "../utils/sendNotificationAndEmail";
+import { sendEmail } from "../utils/sendEmail";
 
 export const getOrganization = async (
   req: Request,
@@ -283,70 +284,100 @@ export const inviteUserToOrganization = async (req: Request, res: Response): Pro
   const { role, email } = req.body;
 
   try {
-      const users = await clerkClient.users.getUserList({ emailAddress: [email] });
+    const users = await clerkClient.users.getUserList({ emailAddress: [email] });
+    let user = users.totalCount > 0 ? users.data[0] : null;
 
-      let user;
-      if (users.totalCount > 0) {
-          user = users.data[0];
-      }
+    const organization = await Organization.get(organizationId);
+    if (!organization) {
+      res.status(404).json({ message: "Organization not found" });
+      return;
+    }
 
-      const organization = await Organization.get(organizationId);
-      if (!organization) {
-          res.status(404).json({ message: "Organization not found" });
+    let title, message;
+    
+    if (user) {
+      // User exists → Assign role
+      switch (role) {
+        case "admin":
+          if (!organization.admins.some((admin: any) => admin.userId === user?.id)) {
+            organization.admins.push({ userId: user.id });
+          }
+          title = "You've been added as an admin to an organization";
+          message = `You've been added as an admin to the organization ${organization.name}. Click here to view: ${process.env.CLIENT_URL}/organizations/${organization.organizationId}`;
+          break;
+        case "instructor":
+          if (!organization.instructors.some((inst: any) => inst.userId === user?.id)) {
+            organization.instructors.push({ userId: user.id });
+          }
+          title = "You've been added as an instructor to an organization";
+          message = `You've been added as an instructor to the organization ${organization.name}. Click here to view: ${process.env.CLIENT_URL}/organizations/${organization.organizationId}`;
+          break;
+        case "learner":
+          if (!organization.learners.some((learner: any) => learner.userId === user?.id)) {
+            organization.learners.push({ userId: user.id });
+          }
+          title = "You've been added as a learner to an organization";
+          message = `You've been added as a learner to the organization ${organization.name}. Click here to view: ${process.env.CLIENT_URL}/organizations/${organization.organizationId}`;
+          break;
+        default:
+          res.status(400).json({ message: "Invalid role specified" });
           return;
       }
 
-      if (user) {
-          switch (role) {
-              case "admin":
-                  if (!organization.admins.some((admin: any) => admin.userId === user.id)) {
-                      organization.admins.push({ userId: user.id });
-                  }
-                  sendEmail(
-                      user.emailAddresses[0].emailAddress,
-                      "You've been added as an admin to an organization",
-                      `You've been added as an admin to the organization ${organization.name}. Click here to view: ${process.env.CLIENT_URL}/organizations/${organization.organizationId}`
-                  );
-                  break;
-              case "instructor":
-                  if (!organization.instructors.some((inst: any) => inst.userId === user.id)) {
-                      organization.instructors.push({ userId: user.id });
-                  }
-                  sendEmail(
-                      user.emailAddresses[0].emailAddress,
-                      "You've been added as an instructor to an organization",
-                      `You've been added as an instructor to the organization ${organization.name}. Click here to view: ${process.env.CLIENT_URL}/organizations/${organization.organizationId}`
-                  );
-                  break;
-              case "learner":
-                  if (!organization.learners.some((learner: any) => learner.userId === user.id)) {
-                      organization.learners.push({ userId: user.id });
-                  }
-                  sendEmail(
-                      user.emailAddresses[0].emailAddress,
-                      "You've been added as a learner to an organization",
-                      `You've been added as a learner to the organization ${organization.name}. Click here to view: ${process.env.CLIENT_URL}/organizations/${organization.organizationId}`
-                  );
-                  break;
-              default:
-                  res.status(400).json({ message: "Invalid role specified" });
-                  return;
-          }
+      await sendNotificationAndEmail(user.id, email, title, message);
+    } else {
+      user = await clerkClient.users.createUser({
+        emailAddress: [email],
+        password: generateTemporaryPassword(),
+        skipPasswordChecks: true,
+        publicMetadata: { initialInvite: true, organizationId, invitedRole: role },
+        privateMetadata: { forcePasswordReset: true },
+      });
 
-          await organization.save();
-          res.json({ message: "User added to organization successfully", data: organization });
-      } else {
-          sendEmail(
-              email,
-              "You've been invited to join an organization",
-              `You've been invited to join the organization ${organization.name}. Click here to create an account and join: https://www.usefy.com/signup`
-          );
+      switch (role) {
+        case "admin":
+          organization.admins.push({ userId: user.id });
+          break;
+        case "instructor":
+          organization.instructors.push({ userId: user.id });
+          break;
+        case "learner":
+          organization.learners.push({ userId: user.id });
+          break;
+        default:
+          res.status(400).json({ message: "Invalid role specified" });
+          return;
       }
+
+      const resetPasswordLink = `${process.env.CLIENT_URL}/reset-password?email=${encodeURIComponent(email)}`;
+
+      await sendEmail(
+        email,
+        "You're invited to join an organization - Reset Your Password",
+        `You've been invited to join the organization ${organization.name}. Click the link below to reset your password and activate your account:
+        
+        ${resetPasswordLink}
+
+        If you did not request this, you can ignore this email.`
+      );
+    }
+
+    await organization.save();
+    res.json({ message: "User invitation processed successfully", data: organization });
   } catch (error) {
-      console.error("Error inviting user:", error);
-      res.status(500).json({ message: "Error inviting user to organization", error });
+    console.error("Error inviting user:", error);
+    res.status(500).json({ message: "Error inviting user to organization", error });
   }
 };
+
+function generateTemporaryPassword(length = 12): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()';
+  let password = '';
+  for (let i = 0; i < length; i++) {
+    password += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return password;
+}
 
 export const getOrganizationUsers = async (req: Request, res: Response): Promise<void> => {
   const { organizationId } = req.params;

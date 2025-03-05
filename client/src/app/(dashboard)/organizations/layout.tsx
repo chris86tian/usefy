@@ -95,7 +95,7 @@ export default function OrganizationLayout({ children }: OrganizationLayoutProps
 
   const adminNavItems = [
     {
-      label: "Group Settings",
+      label: "Settings",
       href: `/organizations/${orgId}/settings`,
       icon: Settings,
       active: pathname.includes(`/organizations/${orgId}/settings`),
