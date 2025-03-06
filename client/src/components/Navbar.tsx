@@ -3,7 +3,6 @@
 import { SignedIn, SignedOut, UserButton, useUser } from "@clerk/nextjs"
 import { Home, Menu, Sun, Moon, X } from "lucide-react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet"
 import NotificationDropdown from "@/components/NotificationDropdown"

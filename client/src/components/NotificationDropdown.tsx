@@ -6,13 +6,6 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Bell } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 
-interface UserNotification {
-  id?: string;
-  title: string;
-  message: string;
-  timestamp: string;
-}
-
 interface NotificationDropdownProps {
   notifications: UserNotification[]
 }

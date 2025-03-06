@@ -8,6 +8,7 @@ import Course from "../models/courseModel";
 import UserCourseProgress from "../models/userCourseProgressModel";
 import UserNotification from "../models/notificationModel";
 import { clerkClient } from "..";
+import { sendNotificationAndEmail } from "../utils/sendNotificationAndEmail";
 
 const s3 = new AWS.S3();
 
@@ -186,7 +187,6 @@ export const updateCourse = async (
         .exec();
 
       for (const progress of progressList) {
-        // Create a deep copy of the existing progress sections to avoid mutations
         const existingSections = JSON.parse(
           JSON.stringify(progress.sections || [])
         );
@@ -197,6 +197,18 @@ export const updateCourse = async (
         progress.lastAccessedTimestamp = new Date().toISOString();
         progress.overallProgress = calculateOverallProgress(progress.sections);
         await progress.save();
+      }
+    }
+
+    for (const enrollment of course.enrollments) {
+      const user = await clerkClient.users.getUser(enrollment.userId);
+      if (user.emailAddresses && user.emailAddresses.length > 0) {
+        sendNotificationAndEmail(
+          enrollment.userId, 
+          user.emailAddresses[0].emailAddress, 
+          "Course Updated", 
+          `The course "${course.title}" has been updated by the instructor. Please check the course page for more details.`
+        );
       }
     }
 

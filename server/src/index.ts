@@ -7,7 +7,6 @@ import * as dynamoose from "dynamoose";
 import serverless from "serverless-http";
 import AWS from "aws-sdk";
 import { DynamoDB } from "@aws-sdk/client-dynamodb";
-import "./utils/scheduledEmail";
 import { createClerkClient, requireAuth } from "@clerk/express";
 import cors from "cors";
 import courseRoutes from "./routes/courseRoutes";

@@ -13,7 +13,9 @@ export const listNotifications = async (
       .exec();
     res.json({
       message: "Notifications retrieved successfully",
-      data: notifications,
+      data: notifications.sort((a, b) => 
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      ),
     });
   } catch (error) {
     res.status(500).json({ message: "Error retrieving notifications", error });
