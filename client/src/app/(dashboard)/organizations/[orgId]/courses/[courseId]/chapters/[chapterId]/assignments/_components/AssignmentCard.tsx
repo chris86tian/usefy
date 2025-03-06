@@ -121,7 +121,7 @@ export function AssignmentCard({
     }
   }
 
-  const handleStartAssignment = () => {
+  const handleStartAssignment = (assignment: Assignment) => {
     router.push(`/organizations/${orgId}/courses/${course.courseId}/chapters/${chapterId}/code?courseId=${course.courseId}&sectionId=${sectionId}&chapterId=${chapterId}&assignmentId=${assignment.assignmentId}`)
   }
 
@@ -211,7 +211,7 @@ export function AssignmentCard({
 
         <CardFooter className="p-4 pt-0">
           <Button 
-            onClick={handleStartAssignment}
+            onClick={() => handleStartAssignment(assignment)}
             className="w-full"
           >
             <CodeIcon className="h-4 w-4 mr-2" />

@@ -1,28 +1,78 @@
 "use client"
 
 import type React from "react"
-import { CheckCircle, Trophy, Lock, AlertCircle } from "lucide-react"
+
+import { useState, useEffect } from "react"
+import { ChevronDown, ChevronUp, CheckCircle, Trophy, Lock, AlertCircle, ChevronRight, ChevronLeft, ArrowLeft } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { useCourseProgressData } from "@/hooks/useCourseProgressData"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { SignInRequired } from "@/components/SignInRequired"
 import { Spinner } from "@/components/ui/Spinner"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
+import { Button } from "@/components/ui/button"
 import { useOrganization } from "@/context/OrganizationContext"
-import { CollapsibleSidebar } from "@/components/CollapsibleSidebar"
-import { useState } from "react"
 
 const ChaptersSidebar = () => {
   const router = useRouter()
+  const [expandedSections, setExpandedSections] = useState<string[]>([])
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const { currentOrg } = useOrganization()
-  const { user, course, userProgress, chapterId, courseId, isLoading, updateChapterProgress } = useCourseProgressData()
-  const [collapsed, setCollapsed] = useState(false)
+
+  const {
+    user,
+    course,
+    userProgress,
+    chapterId,
+    courseId,
+    isLoading,
+    updateChapterProgress,
+    isChapterCompleted,
+    isQuizCompleted,
+    isCurrentChapterAssignemtsCompleted,
+  } = useCourseProgressData()
+
+  useEffect(() => {
+    // If there's a current section, expand it by default
+    if (course && chapterId) {
+      const currentSection = course.sections.find((section: any) =>
+        section.chapters.some((chapter: any) => chapter.chapterId === chapterId),
+      )
+
+      if (currentSection && !expandedSections.includes(currentSection.sectionTitle)) {
+        setExpandedSections((prev) => [...prev, currentSection.sectionTitle])
+      }
+    }
+  }, [course, chapterId, expandedSections])
+
+  // Check if sidebar should be collapsed based on screen size
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setSidebarCollapsed(window.innerWidth < 1024)
+    }
+
+    checkScreenSize()
+    window.addEventListener("resize", checkScreenSize)
+
+    return () => {
+      window.removeEventListener("resize", checkScreenSize)
+    }
+  }, [])
 
   if (isLoading) return <Spinner />
   if (!user) return <SignInRequired />
   if (!course || !userProgress) return <div>Error loading course content</div>
+
+  const toggleSection = (sectionTitle: string) => {
+    setExpandedSections((prevSections) =>
+      prevSections.includes(sectionTitle)
+        ? prevSections.filter((title) => title !== sectionTitle)
+        : [...prevSections, sectionTitle],
+    )
+  }
 
   const handleChapterClick = (sectionId: string, chapterId: string) => {
     router.push(`/organizations/${currentOrg?.organizationId}/courses/${courseId}/chapters/${chapterId}`, {
@@ -30,30 +80,84 @@ const ChaptersSidebar = () => {
     })
   }
 
-  return (
-    <CollapsibleSidebar width="20rem" collapsedWidth="4rem" showToggle={false} onCollapseChange={setCollapsed}>
-      <div className="w-full overflow-hidden">
-        <div className="p-4 border-b border-border">
-          <h2 className="text-xl font-semibold truncate">{course.title}</h2>
-        </div>
+  const handleBackToCourses = () => {
+    router.push(`/organizations/${currentOrg?.organizationId}/courses`)
+  }
 
-        <div className="space-y-1">
-          {course.sections.map((section, index) => (
+  const toggleSidebarCollapse = () => {
+    setSidebarCollapsed(!sidebarCollapsed)
+  }
+
+  return (
+    <div className="w-full overflow-hidden flex flex-col h-full relative">
+      <div className="px-4 pb-5 border-b border-border flex items-center justify-between">
+        {!sidebarCollapsed ? (
+          <>
+            <h2 className="text-xl font-semibold truncate">{course.title}</h2>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleSidebarCollapse}
+              className="ml-2 flex-shrink-0"
+              title="Collapse sidebar"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+          </>
+        ) : (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleSidebarCollapse}
+            className="mx-auto"
+            title="Expand sidebar"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+
+      {!sidebarCollapsed && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleBackToCourses}
+          className="mt-2 text-muted-foreground hover:text-foreground mx-4"
+        >
+          Back to courses
+        </Button>
+      )}
+
+      <div className="space-y-1 flex-1 overflow-auto">
+        {course.sections.map((section: any, index: number) => {
+          const sectionProgress = userProgress.sections.find((s: any) => s.sectionId === section.sectionId)
+
+          return (
             <Section
               key={section.sectionId}
               section={section}
               index={index}
-              sectionProgress={userProgress.sections.find((s) => s.sectionId === section.sectionId)}
+              sectionProgress={sectionProgress}
               chapterId={chapterId as string}
               courseId={courseId as string}
+              expandedSections={expandedSections}
+              toggleSection={toggleSection}
               handleChapterClick={handleChapterClick}
               updateChapterProgress={updateChapterProgress}
-              collapsed={collapsed}
+              isChapterCompleted={(sectionId: string, chapterId: string) => {
+                if (!sectionProgress) return false
+                return sectionProgress.chapters.some((c: any) => c.chapterId === chapterId && c.completed)
+              }}
+              isQuizCompleted={(chapterId: string) => {
+                if (!sectionProgress) return false
+                return sectionProgress.chapters.some((c: any) => c.chapterId === chapterId && c.quizCompleted)
+              }}
+              collapsed={sidebarCollapsed}
             />
-          ))}
-        </div>
+          )
+        })}
       </div>
-    </CollapsibleSidebar>
+    </div>
   )
 }
 
@@ -63,8 +167,12 @@ const Section = ({
   sectionProgress,
   chapterId,
   courseId,
+  expandedSections,
+  toggleSection,
   handleChapterClick,
   updateChapterProgress,
+  isChapterCompleted,
+  isQuizCompleted,
   collapsed,
 }: {
   section: any
@@ -72,18 +180,51 @@ const Section = ({
   sectionProgress: any
   chapterId: string
   courseId: string
+  expandedSections: string[]
+  toggleSection: (sectionTitle: string) => void
   handleChapterClick: (sectionId: string, chapterId: string) => void
   updateChapterProgress: (sectionId: string, chapterId: string, completed: boolean) => void
+  isChapterCompleted: (sectionId: string, chapterId: string) => boolean
+  isQuizCompleted: (chapterId: string) => boolean
   collapsed?: boolean
 }) => {
   const completedChapters = sectionProgress?.chapters.filter((c: any) => c.completed).length || 0
   const totalChapters = section.chapters.length
+  const isExpanded = expandedSections.includes(section.sectionTitle)
+
   const isReleased = section.releaseDate ? new Date(section.releaseDate) <= new Date() : true
+
   const completionPercentage = totalChapters > 0 ? Math.round((completedChapters / totalChapters) * 100) : 0
 
+  if (collapsed) {
+    // When sidebar is collapsed, just show the chapters without section headers
+    return (
+      <div className="py-2 border-b border-border last:border-0">
+        {isReleased && (
+          <ChaptersList
+            section={section}
+            sectionProgress={sectionProgress}
+            chapterId={chapterId}
+            courseId={courseId}
+            handleChapterClick={handleChapterClick}
+            updateChapterProgress={updateChapterProgress}
+            isReleased={isReleased}
+            isChapterCompleted={isChapterCompleted}
+            isQuizCompleted={isQuizCompleted}
+            collapsed={collapsed}
+          />
+        )}
+      </div>
+    )
+  }
+
   return (
-    <div className="border-b border-border">
-      <div className="flex flex-col w-full px-4 py-3">
+    <Collapsible
+      open={isExpanded}
+      onOpenChange={() => toggleSection(section.sectionTitle)}
+      className="border-b border-border"
+    >
+      <CollapsibleTrigger className="flex flex-col w-full px-4 py-3 hover:bg-accent/50 transition-colors">
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center text-muted-foreground text-sm">
             {!isReleased && <Lock className="mr-1 h-4 w-4" />}
@@ -94,20 +235,25 @@ const Section = ({
               </Badge>
             )}
           </div>
+          {isExpanded ? (
+            <ChevronUp className="h-4 w-4 text-muted-foreground" />
+          ) : (
+            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          )}
         </div>
         <div className="flex items-center justify-between w-full mt-1">
           <h3 className="font-medium text-foreground">{section.sectionTitle}</h3>
         </div>
-      </div>
+      </CollapsibleTrigger>
 
-      <div className="px-4 pb-4 space-y-4">
+      <CollapsibleContent className="px-4 pb-4 space-y-4">
         <ProgressVisuals
           section={section}
           sectionProgress={sectionProgress}
           completedChapters={completedChapters}
           totalChapters={totalChapters}
-          completionPercentage={completionPercentage}
           isReleased={isReleased}
+          completionPercentage={completionPercentage}
         />
 
         <ChaptersList
@@ -118,10 +264,12 @@ const Section = ({
           handleChapterClick={handleChapterClick}
           updateChapterProgress={updateChapterProgress}
           isReleased={isReleased}
+          isChapterCompleted={isChapterCompleted}
+          isQuizCompleted={isQuizCompleted}
           collapsed={collapsed}
         />
-      </div>
-    </div>
+      </CollapsibleContent>
+    </Collapsible>
   )
 }
 
@@ -133,7 +281,7 @@ const ProgressVisuals = ({
   isReleased,
   completionPercentage,
 }: {
-  section: Section
+  section: any
   sectionProgress: any
   completedChapters: number
   totalChapters: number
@@ -180,6 +328,8 @@ const ChaptersList = ({
   handleChapterClick,
   updateChapterProgress,
   isReleased,
+  isChapterCompleted,
+  isQuizCompleted,
   collapsed,
 }: {
   section: any
@@ -189,6 +339,8 @@ const ChaptersList = ({
   handleChapterClick: (sectionId: string, chapterId: string) => void
   updateChapterProgress: (sectionId: string, chapterId: string, completed: boolean) => void
   isReleased: boolean
+  isChapterCompleted: (sectionId: string, chapterId: string) => boolean
+  isQuizCompleted: (chapterId: string) => boolean
   collapsed?: boolean
 }) => {
   if (!isReleased) {
@@ -196,7 +348,7 @@ const ChaptersList = ({
   }
 
   return (
-    <ul className="space-y-1">
+    <ul className={cn("space-y-1", collapsed && "flex flex-col items-center")}>
       {section.chapters.map((chapter: any, index: number) => (
         <Chapter
           key={chapter.chapterId}
@@ -209,6 +361,8 @@ const ChaptersList = ({
           handleChapterClick={handleChapterClick}
           updateChapterProgress={updateChapterProgress}
           isReleased={isReleased}
+          isChapterCompleted={isChapterCompleted}
+          isQuizCompleted={isQuizCompleted}
           collapsed={collapsed}
         />
       ))}
@@ -222,9 +376,12 @@ const Chapter = ({
   sectionId,
   sectionProgress,
   chapterId,
+  courseId,
   handleChapterClick,
   updateChapterProgress,
   isReleased,
+  isChapterCompleted,
+  isQuizCompleted,
   collapsed,
 }: {
   chapter: Chapter
@@ -236,11 +393,12 @@ const Chapter = ({
   handleChapterClick: (sectionId: string, chapterId: string) => void
   updateChapterProgress: (sectionId: string, chapterId: string, completed: boolean) => void
   isReleased: boolean
+  isChapterCompleted: (sectionId: string, chapterId: string) => boolean
+  isQuizCompleted: (chapterId: string) => boolean
   collapsed?: boolean
 }) => {
-  const chapterProgress = sectionProgress?.chapters.find((c: any) => c.chapterId === chapter.chapterId)
-  const isCompleted = chapterProgress?.completed
-  const isQuizCompleted = chapterProgress?.quizCompleted || !chapter.quiz
+  const completed = isChapterCompleted(sectionId, chapter.chapterId)
+  const quizCompleted = isQuizCompleted(chapter.chapterId)
   const isCurrentChapter = chapterId === chapter.chapterId
   const isCurrentChapterAssignmentsSubmitted =
     !chapter.assignments || chapter.assignments.every((assignment: Assignment) => assignment.submissions.length > 0)
@@ -248,7 +406,7 @@ const Chapter = ({
   const handleToggleComplete = (e: React.MouseEvent) => {
     if (!isReleased) return
     e.stopPropagation()
-    updateChapterProgress(sectionId, chapter.chapterId, !isCompleted)
+    updateChapterProgress(sectionId, chapter.chapterId, !completed)
   }
 
   const handleChapterSelection = () => {
@@ -256,66 +414,103 @@ const Chapter = ({
     handleChapterClick(sectionId, chapter.chapterId)
   }
 
-  return (
-    <li>
+  if (collapsed) {
+    return (
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <div
+            <li
               className={cn(
-                "flex items-center px-2 py-2 rounded-md transition-colors",
-                isCurrentChapter ? "bg-primary/10 text-primary" : "hover:bg-accent",
+                "flex items-center justify-center p-2 rounded-md cursor-pointer transition-colors my-1",
+                isCurrentChapter ? "bg-primary/10 text-primary" : "hover:bg-accent text-muted-foreground",
                 !isReleased && "opacity-50 cursor-not-allowed",
-                collapsed && "justify-center",
               )}
               onClick={isReleased ? handleChapterSelection : undefined}
             >
-              {isCompleted && isReleased ? (
+              {completed && isReleased ? (
                 <div
-                  className="flex items-center justify-center w-6 h-6 rounded-full cursor-pointer text-primary"
+                  className="flex items-center justify-center w-8 h-8 rounded-full cursor-pointer text-primary"
                   onClick={handleToggleComplete}
-                  title="Toggle completion status"
                 >
                   <CheckCircle className="h-5 w-5" />
                 </div>
               ) : (
                 <div
                   className={cn(
-                    "flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium",
+                    "flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium",
                     isCurrentChapter ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground",
                   )}
                 >
-                  {!isReleased ? <Lock className="h-3 w-3" /> : index + 1}
+                  {!isReleased ? <Lock className="h-4 w-4" /> : index + 1}
                 </div>
               )}
-
-              {!collapsed && (
-                <span className={cn("ml-2 text-sm font-medium flex-1", isCompleted && "text-muted-foreground")}>
-                  {chapter.title}
-                </span>
-              )}
-
-              {!collapsed && isReleased && (
-                <div className="flex items-center ml-auto">
-                  {!isQuizCompleted || !isCurrentChapterAssignmentsSubmitted ? (
-                    <div className="animate-bounce">
-                      <AlertCircle className="w-4 h-4 text-amber-500 cursor-help" />
-                    </div>
-                  ) : (
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                  )}
-                </div>
-              )}
-            </div>
+            </li>
           </TooltipTrigger>
           <TooltipContent side="right">
-            <p>{chapter.title}</p>
-            {!isQuizCompleted || !isCurrentChapterAssignmentsSubmitted ? (
-              <p className="text-amber-500 text-xs mt-1">Complete the {isQuizCompleted ? "assignments" : "quiz"}</p>
+            <p className="font-medium">{chapter.title}</p>
+            {!quizCompleted || !isCurrentChapterAssignmentsSubmitted ? (
+              <p className="text-xs text-amber-500 mt-1">Complete the {quizCompleted ? "assignments" : "quiz"}</p>
             ) : null}
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
+    )
+  }
+
+  return (
+    <li>
+      <div
+        className={cn(
+          "flex items-center px-2 py-2 rounded-md transition-colors",
+          isCurrentChapter ? "bg-primary/10 text-primary" : "hover:bg-accent",
+          !isReleased && "opacity-50 cursor-not-allowed",
+        )}
+        onClick={isReleased ? handleChapterSelection : undefined}
+      >
+        {completed && isReleased ? (
+          <div
+            className="flex items-center justify-center w-6 h-6 rounded-full cursor-pointer text-primary"
+            onClick={handleToggleComplete}
+            title="Toggle completion status"
+          >
+            <CheckCircle className="h-5 w-5" />
+          </div>
+        ) : (
+          <div
+            className={cn(
+              "flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium",
+              isCurrentChapter ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground",
+            )}
+          >
+            {!isReleased ? <Lock className="h-3 w-3" /> : index + 1}
+          </div>
+        )}
+
+        <span className={cn("ml-2 text-sm font-medium flex-1", completed && "text-muted-foreground")}>
+          {chapter.title}
+        </span>
+
+        {isReleased && (
+          <div className="flex items-center ml-auto">
+            {!quizCompleted || !isCurrentChapterAssignmentsSubmitted ? (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="animate-bounce">
+                      <AlertCircle className="w-4 h-4 text-amber-500 cursor-help" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <p>Complete the {quizCompleted ? "assignments" : "quiz"}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : (
+              <CheckCircle className="w-4 h-4 text-green-500" />
+            )}
+          </div>
+        )}
+      </div>
     </li>
   )
 }

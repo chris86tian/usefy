@@ -28,6 +28,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import CourseCard from "@/components/CourseCard";
+import { handleEnroll } from "@/lib/utils";
+import { useCreateTransactionMutation } from "@/state/api";
 
 const AdminCourses = () => {
   const router = useRouter();
@@ -48,6 +50,7 @@ const AdminCourses = () => {
   const [unarchiveCourse] = useUnarchiveCourseMutation();
   const [addCourse] = useAddCourseToOrganizationMutation();
   const [removeCourseFromOrganization] = useRemoveCourseFromOrganizationMutation();
+  const [createTransaction] = useCreateTransactionMutation();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -128,6 +131,12 @@ const AdminCourses = () => {
     if (!user) return;
 
     const result = await createCourse().unwrap();
+
+    if (currentOrg?.admins) {
+      for (const admin of currentOrg.admins) {
+        await handleEnroll(admin.userId, result.courseId, createTransaction);
+      }
+    }
 
     await addCourse({
       organizationId: currentOrg?.organizationId ?? "",
