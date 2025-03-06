@@ -43,7 +43,7 @@ export default function OrganizationLayout({ children }: OrganizationLayoutProps
         <OrganizationSidebar
           organizations={organizations || []}
           cohorts={cohorts || []}
-          currentOrg={currentOrg}
+          currentOrg={currentOrg as Organization}
           isUserAdmin={!!isUserAdmin}
           orgId={orgId as string}
           refetchCohorts={refetch}
