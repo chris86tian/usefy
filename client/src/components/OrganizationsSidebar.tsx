@@ -189,7 +189,82 @@ export default function OrganizationSidebar({
 
       <SidebarSection title="Cohorts" collapsed={collapsed}>
         {collapsed ? (
-          <SidebarItem icon={Users} label="Cohorts" collapsed={collapsed} />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn(
+                  "w-full h-10 rounded-md transition-colors my-1",
+                  "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                )}
+              >
+                <Users className="h-5 w-5" />
+                <span className="sr-only">Cohorts</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="right" align="start" className="w-56">
+              <DropdownMenuLabel>Cohorts</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <ScrollArea className="h-[var(--radix-dropdown-menu-content-available-height)] max-h-60">
+                {cohorts && cohorts.length > 0 ? (
+                  cohorts.map((cohort) => (
+                    <DropdownMenuItem
+                      key={cohort.cohortId}
+                      className={cn(
+                        "cursor-pointer",
+                        pathname.includes(`/organizations/${orgId}/cohorts/${cohort.cohortId}`) && "bg-accent",
+                      )}
+                      onClick={() => router.push(`/organizations/${orgId}/cohorts/${cohort.cohortId}`)}
+                    >
+                      {cohort.name}
+                    </DropdownMenuItem>
+                  ))
+                ) : (
+                  <div className="px-2 py-1.5 text-sm text-muted-foreground">No cohorts available</div>
+                )}
+              </ScrollArea>
+              {isUserAdmin && (
+                <>
+                  <DropdownMenuSeparator />
+                  <Dialog open={isCreateCohortModalOpen} onOpenChange={setIsCreateCohortModalOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm" className="w-full mx-2 my-1">
+                        <Plus className="mr-2 h-4 w-4" />
+                        Create Cohort
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[425px]">
+                      <DialogHeader>
+                        <DialogTitle>Create New Cohort</DialogTitle>
+                        <DialogDescription>
+                          Enter the name for your new cohort. Click save when you&apos;re done.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="cohortName" className="text-right">
+                            Name
+                          </Label>
+                          <Input
+                            id="cohortName"
+                            value={cohortName}
+                            onChange={(e) => setCohortName(e.target.value)}
+                            className="col-span-3"
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button type="submit" onClick={handleCreateCohort}>
+                          Create Cohort
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         ) : (
           <>
             {cohorts?.map((cohort) => (

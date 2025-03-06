@@ -9,6 +9,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import ChaptersSidebar from "@/components/ChaptersSidebar"
 import { useCourseProgressData } from "@/hooks/useCourseProgressData"
 import { Spinner } from "@/components/ui/Spinner"
+import { useOrganization } from "@/context/OrganizationContext"
 
 interface ChapterLayoutProps {
   children: React.ReactNode
@@ -19,6 +20,8 @@ export default function ChapterLayout({ children }: ChapterLayoutProps) {
   const [isMobile, setIsMobile] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
+
+  const { currentOrg } = useOrganization()
 
   const {
     course,
@@ -87,7 +90,7 @@ export default function ChapterLayout({ children }: ChapterLayoutProps) {
 
   const navigateToChapter = (chapter: any) => {
     if (chapter) {
-      router.push(`/user/courses/${courseId}/chapters/${chapter.chapterId}`)
+      router.push(`/organizations/${currentOrg?.organizationId}/courses/${courseId}/chapters/${chapter.chapterId}`)
     }
   }
 
