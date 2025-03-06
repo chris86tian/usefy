@@ -114,6 +114,7 @@ export function SidebarItem({ icon: Icon, label, active, onClick, collapsed }: S
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
+              
               variant="ghost"
               size="icon"
               className={cn(

@@ -101,8 +101,8 @@ const UserCohortPage = ({ orgUsers, usersLoading, courses }: UserCohortPageProps
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {courses.length > 0 ? (
-                    courses.map((course: Course) => {
+                  {courses?.length > 0 ? (
+                    courses.map((course) => {
                       const isEnrolled = course?.enrollments?.some((enrollment) => enrollment.userId === user?.id)
                       return (
                         <TableRow

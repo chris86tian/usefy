@@ -3,6 +3,7 @@ import Cohort from "../models/cohortModel";
 import Course from "../models/courseModel";
 import Organization from "../models/organizationModel";
 import { clerkClient } from "..";
+import { getAuth } from "@clerk/express";
 
 export const createCohort = async (req: Request, res: Response): Promise<void> => {
     const { cohortId, name } = req.body;
@@ -32,6 +33,14 @@ export const getCohorts = async (req: Request, res: Response): Promise<void> => 
     } catch (error) {
         res.status(500).json({ message: "Error retrieving cohorts", error });
     }
+};
+
+export const getMyOrganizationCohorts = async (req: Request, res: Response): Promise<void> => {
+    const organizationId = req.params.organizationId;
+    const auth = getAuth(req);
+    const userId = auth.userId;
+
+    // TODO: getMyOrganizationCohorts
 };
 
 export const getCohort = async (req: Request, res: Response): Promise<void> => {

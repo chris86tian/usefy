@@ -17,7 +17,6 @@ interface NavbarProps {
 }
 
 const Navbar = ({ isDashboard = false }: NavbarProps) => {
-  const router = useRouter()
   const pathname = usePathname()
   if (pathname.startsWith("/organizations")) isDashboard = true
   const { data: notifications = null } = useGetNotificationsQuery(undefined, { skip: !isDashboard })
@@ -72,10 +71,9 @@ const Navbar = ({ isDashboard = false }: NavbarProps) => {
               )}
             </Button>
 
-            <OrganizationsDropdown />
-
             <SignedIn>
               <div className="flex items-center gap-4">
+                <OrganizationsDropdown />
                 <NotificationDropdown notifications={notifications || []} />
                 <UserButton />
               </div>
