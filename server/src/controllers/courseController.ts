@@ -354,16 +354,16 @@ export const getCourseInstructors = async (
       return;
     }
 
-    if (!course.instructors) {
+    if (!course.instructors || course.instructors.length === 0) {
       res.json({ message: "Instructors not found", data: [] });
       return;
     }
 
     const userIds = course.instructors.map((instructor: any) => instructor.userId);
 
-    const user = (await clerkClient.users.getUserList({ userId: userIds })).data;
+    const instructors = (await clerkClient.users.getUserList({ userId: userIds })).data;
 
-    res.json({ message: "Instructors retrieved successfully", data: user });
+    res.json({ message: "Instructors retrieved successfully", data: instructors });
   } catch (error) {
     res.status(500).json({ message: "Error retrieving instructor", error });
   }
