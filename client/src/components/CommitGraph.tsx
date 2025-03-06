@@ -72,7 +72,7 @@ const CommitGrid = () => {
   return (
     <Card className="border border-gray-200">
       <CardHeader>
-        <CardTitle>Commit Activity</CardTitle>
+        <CardTitle>Usefy Activity</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col gap-1">

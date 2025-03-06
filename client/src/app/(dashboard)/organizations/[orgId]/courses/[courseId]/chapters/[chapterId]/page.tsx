@@ -20,16 +20,19 @@ import {
   GraduationCap,
   Calendar,
   MessagesSquare,
+  User,
+  Users,
 } from "lucide-react"
 import AssignmentModal from "./_components/AssignmentModal"
 import Assignments from "./assignments/Assignments"
 import { SignInRequired } from "@/components/SignInRequired"
-import { parseYouTubeTime } from "@/lib/utils"
+import { getUserName, parseYouTubeTime } from "@/lib/utils"
 import { CourseComments } from "./_components/CourseComments"
 import { useLikeChapterMutation, useDislikeChapterMutation } from "@/state/api"
 import AdaptiveQuiz from "./adaptive-quiz/AdaptiveQuiz"
 import { Spinner } from "@/components/ui/Spinner"
 import { useOrganization } from "@/context/OrganizationContext"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 const isSectionReleased = (section: Section) => {
   if (!section.releaseDate) return false
@@ -49,6 +52,7 @@ const Course = () => {
     isCurrentChapterAssignemtsCompleted,
     updateChapterProgress,
     hasMarkedComplete,
+    courseInstructors,
     setHasMarkedComplete,
   } = useCourseProgressData()
 
@@ -296,9 +300,23 @@ const Course = () => {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">{currentChapter?.title}</h1>
           <div className="flex items-center space-x-4">
-            <Badge variant="outline" className="px-3 py-1">
-              {/* {course.instructors[0].userId} */}
-            </Badge>
+            {/* Show course instructors as dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="flex items-center space-x-2">
+                  <Users className="h-4 w-4" />
+                  <span>Course Instructors</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                {courseInstructors?.map((instructor) => (
+                  <DropdownMenuItem key={instructor.id}>
+                    <User className="mr-2 h-4 w-4" />
+                    <span>{getUserName(instructor)}</span>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>

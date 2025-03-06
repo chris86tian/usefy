@@ -44,9 +44,7 @@ export function CourseCard({
   const { user } = useUser()
   const [isInstructorsOpen, setIsInstructorsOpen] = useState(false)
 
-  // Always fetch instructors regardless of variant
   const { data: instructors } = useGetCourseInstructorsQuery(course.courseId)
-  console.log(instructors)
 
   const isInstructor = instructors?.some((instructor) => instructor.id === user?.id)
   const canEdit = isOwner || isInstructor

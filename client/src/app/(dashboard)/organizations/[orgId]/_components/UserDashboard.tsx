@@ -9,6 +9,7 @@ import CourseCard from "@/components/CourseCard"
 import { useParams } from "next/navigation"
 import { useRouter } from "next/navigation"
 import { useUser } from "@clerk/nextjs"
+import CommitGraph from "@/components/CommitGraph"
 
 interface UserDashboardProps {
   recentActivities: any[]
@@ -124,6 +125,10 @@ const UserDashboard = ({ recentActivities, upcomingEvents }: UserDashboardProps)
           </div>
         </CardContent>
       </Card>
+
+      <div className="flex items-center justify-between">
+        <CommitGraph />
+      </div>
 
       {/* Organization courses */}
       <div>

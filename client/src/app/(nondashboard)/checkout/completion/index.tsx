@@ -27,8 +27,8 @@ const CompletionPage = () => {
       </div>
       <div className="mt-8">
         <Button asChild>
-          <Link href="/user/courses" scroll={false}>
-            Go to Courses
+          <Link href="/" scroll={false}>
+            Go to your dashboard
           </Link>
         </Button>
       </div>

@@ -4,6 +4,7 @@ import {
   useGetCourseQuery,
   useGetUserCourseProgressQuery,
   useUpdateUserCourseProgressMutation,
+  useGetCourseInstructorsQuery,
 } from "@/state/api";
 import { useUser } from "@clerk/nextjs";
 
@@ -12,6 +13,8 @@ export const useCourseProgressData = () => {
   const { user, isLoaded } = useUser();
   const [hasMarkedComplete, setHasMarkedComplete] = useState(false);
   const [updateProgress] = useUpdateUserCourseProgressMutation();
+
+  const { data: courseInstructors } = useGetCourseInstructorsQuery((courseId as string) ?? "", { skip: !courseId});
 
   const { data: course, isLoading: courseLoading } = useGetCourseQuery(
     (courseId as string) ?? "",
@@ -113,6 +116,7 @@ export const useCourseProgressData = () => {
     courseId,
     chapterId,
     course,
+    courseInstructors,
     userProgress,
     currentSection,
     currentChapter,

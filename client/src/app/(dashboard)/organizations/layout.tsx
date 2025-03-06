@@ -79,18 +79,12 @@ export default function OrganizationLayout({ children }: OrganizationLayoutProps
       icon: BookOpen,
       active: pathname.includes(`/organizations/${orgId}/courses`),
     },
-    {
-      label: "Profile",
-      href: `/organizations/${orgId}/profile`,
-      icon: User,
-      active: pathname.includes(`/organizations/${orgId}/profile`),
-    },
-    {
-      label: "Payments",
-      href: `/organizations/${orgId}/payments`,
-      icon: DollarSign,
-      active: pathname.includes(`/organizations/${orgId}/payments`),
-    },
+    // {
+    //   label: "Payments",
+    //   href: `/organizations/${orgId}/payments`,
+    //   icon: DollarSign,
+    //   active: pathname.includes(`/organizations/${orgId}/payments`),
+    // },
   ]
 
   const adminNavItems = [

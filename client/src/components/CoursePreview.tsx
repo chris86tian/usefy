@@ -16,7 +16,6 @@ const CoursePreview = ({ course }: CoursePreviewProps) => {
         </div>
         <div>
           <h2 className="text-2xl font-bold">{course.title}</h2>
-          {/* <p className="text-muted-foreground">by {course.instructors[0].userId}</p> */}
           <p className="text-sm text-muted-foreground mt-2">{course.description}</p>
         </div>
 
