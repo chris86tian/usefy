@@ -113,7 +113,7 @@ const UserCohortPage = ({ orgUsers, usersLoading, courses }: UserCohortPageProps
                           <TableCell>{getInstructorName(course?.instructors?.[0]?.userId || "")}</TableCell>
                           <TableCell>
                             <Badge variant={isEnrolled ? "outline" : "default"} onClick={() => handleCourseClick(course)}>
-                              {isEnrolled ? "Enrolled" : "Enroll"}
+                              {isEnrolled ? "In Progress" : "Enroll"}
                             </Badge>
                           </TableCell>
                         </TableRow>

@@ -8,10 +8,10 @@ const CommitGrid = () => {
   const { data: commits } = useGetCommitsQuery({ userId: user?.id || "" })
 
   const getColor = (count: number) => {
-    if (count === 0) return "bg-gray-700"
-    if (count <= 2) return "bg-green-900"
+    if (count === 0) return "bg-gray-400"
+    if (count <= 2) return "bg-green-500"
     if (count <= 4) return "bg-green-700"
-    if (count <= 6) return "bg-green-500"
+    if (count <= 6) return "bg-green-900"
     return "bg-green-300"
   }
 
@@ -100,11 +100,10 @@ const CommitGrid = () => {
         <div className="flex items-center gap-2 mt-4 text-sm text-gray-400">
           <span>Less</span>
           <div className="flex gap-1">
-            <div className="w-3 h-3 rounded-sm bg-gray-700" />
-            <div className="w-3 h-3 rounded-sm bg-green-900" />
-            <div className="w-3 h-3 rounded-sm bg-green-700" />
+            <div className="w-3 h-3 rounded-sm bg-gray-400" />
             <div className="w-3 h-3 rounded-sm bg-green-500" />
-            <div className="w-3 h-3 rounded-sm bg-green-300" />
+            <div className="w-3 h-3 rounded-sm bg-green-700" />
+            <div className="w-3 h-3 rounded-sm bg-green-900" />
           </div>
           <span>More</span>
         </div>
