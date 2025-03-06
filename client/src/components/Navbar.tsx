@@ -58,18 +58,6 @@ const Navbar = ({ isDashboard = false }: NavbarProps) => {
         <div className="flex items-center gap-4">
           {/* Desktop navigation items */}
           <div className="hidden md:flex items-center gap-4">
-            {isDashboard && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => router.push("/")}
-                className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
-              >
-                <Home className="h-5 w-5" />
-                <span className="sr-only">Home</span>
-              </Button>
-            )}
-
             <Button
               variant="ghost"
               size="icon"
@@ -84,14 +72,11 @@ const Navbar = ({ isDashboard = false }: NavbarProps) => {
               )}
             </Button>
 
+            <OrganizationsDropdown />
+
             <SignedIn>
               <div className="flex items-center gap-4">
-                {!isDashboard && (
-                  <OrganizationsDropdown />
-                )}
-
                 <NotificationDropdown notifications={notifications || []} />
-
                 <UserButton />
               </div>
             </SignedIn>

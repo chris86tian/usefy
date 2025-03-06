@@ -76,11 +76,10 @@ export function CourseCard({
         (onView || variant === "learner") && "cursor-pointer",
         showViewOnly && "opacity-70",
       )}
-      onClick={variant === "learner" ? handleClick : undefined}
     >
       <CardHeader
         className={cn("p-0", variant === "admin" && !showViewOnly && "cursor-pointer")}
-        onClick={variant === "admin" ? handleClick : undefined}
+        onClick={handleClick}
       >
         <div className="aspect-video relative overflow-hidden">
           <Image
