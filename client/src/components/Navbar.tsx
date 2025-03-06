@@ -1,10 +1,9 @@
 "use client"
 
 import { SignedIn, SignedOut, UserButton, useUser } from "@clerk/nextjs"
-import { BookOpen, School, Home, Menu, Sun, Moon, X } from "lucide-react"
+import { Home, Menu, Sun, Moon, X } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet"
 import NotificationDropdown from "@/components/NotificationDropdown"
@@ -38,11 +37,9 @@ const Navbar = ({ isDashboard = false }: NavbarProps) => {
             </Button>
           )}
 
-          {!isDashboard && 
-            <Link href="/" className="flex items-center gap-2 font-bold text-xl dark:text-white" scroll={false}>
-              usefy.
-            </Link>
-          }
+          <Link href="/" className="flex items-center gap-2 font-bold text-xl dark:text-white" scroll={false}>
+            usefy.
+          </Link>
         
           {/* {!isDashboard && (
             <div className="hidden md:flex items-center gap-4 ml-6">

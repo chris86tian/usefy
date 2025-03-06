@@ -1,18 +1,14 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { Menu, ArrowLeft, ArrowRight, CheckCircle } from "lucide-react"
-import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import ChaptersSidebar from "@/components/ChaptersSidebar"
 import { useCourseProgressData } from "@/hooks/useCourseProgressData"
 import { Spinner } from "@/components/ui/Spinner"
-import { useOrganization } from "@/context/OrganizationContext"
 
 interface ChapterLayoutProps {
   children: React.ReactNode
@@ -35,9 +31,9 @@ export default function ChapterLayout({ children }: ChapterLayoutProps) {
     updateChapterProgress,
   } = useCourseProgressData()
 
-  const { currentOrg } = useOrganization()
-  const [nextChapter, setNextChapter] = useState(null)
-  const [prevChapter, setPrevChapter] = useState(null)
+  // Calculate next and previous chapters
+  const [nextChapter, setNextChapter] = useState<any>(null)
+  const [prevChapter, setPrevChapter] = useState<any>(null)
 
   useEffect(() => {
     if (course && chapterId) {
@@ -91,7 +87,7 @@ export default function ChapterLayout({ children }: ChapterLayoutProps) {
 
   const navigateToChapter = (chapter: any) => {
     if (chapter) {
-      router.push(`/organizations/${currentOrg?.organizationId}/courses/${courseId}/chapters/${chapter.chapterId}`)
+      router.push(`/user/courses/${courseId}/chapters/${chapter.chapterId}`)
     }
   }
 
@@ -119,11 +115,9 @@ export default function ChapterLayout({ children }: ChapterLayoutProps) {
   return (
     <div className="flex min-h-screen bg-background">
       {/* Desktop Sidebar */}
-      <aside className={cn("hidden lg:block w-80 border-r border-border shrink-0 h-screen sticky top-0")}>
-        <ScrollArea className="h-full">
-          <ChaptersSidebar />
-        </ScrollArea>
-      </aside>
+      <div className="hidden lg:block">
+        <ChaptersSidebar />
+      </div>
 
       {/* Mobile Sidebar */}
       <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
@@ -134,9 +128,7 @@ export default function ChapterLayout({ children }: ChapterLayoutProps) {
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="p-0 w-80">
-          <ScrollArea className="h-full">
-            <ChaptersSidebar />
-          </ScrollArea>
+          <ChaptersSidebar />
         </SheetContent>
       </Sheet>
 
