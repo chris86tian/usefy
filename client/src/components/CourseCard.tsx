@@ -56,6 +56,8 @@ export function CourseCard({
     Archived: "secondary",
   } as const
 
+  console.log(course.enrollments)
+
   const handleClick = () => {
     if (onView && !showViewOnly) {
       onView(course)

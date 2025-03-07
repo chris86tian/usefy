@@ -36,22 +36,6 @@ const PaymentPageContent = () => {
 
       await createTransaction(transactionData)
 
-      try {
-        await fetch("/api/send-email", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: user?.emailAddresses[0].emailAddress,
-            name: user?.fullName,
-            courseName: course?.title,
-          }),
-        })
-        toast.success("Enrolled in free course! Email notification sent.")
-      } catch (error) {
-        console.error("Failed to send email:", error)
-        toast.error("Enrolled successfully, but failed to send email.")
-      }
-
       router.push(`/organizations/${orgId}/courses`)
       router.refresh()
     } catch (error) {
@@ -89,24 +73,6 @@ const PaymentPageContent = () => {
       }
 
       await createTransaction(transactionData)
-
-      try {
-        await fetch("/api/send-email", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: user?.emailAddresses[0].emailAddress,
-            name: user?.fullName,
-            courseName: course?.title,
-            transactionId: result.paymentIntent.id,
-          }),
-        })
-        toast.success("Purchase successful! Email notification sent.")
-      } catch (error) {
-        console.error("Failed to send email:", error)
-        toast.error("Purchase successful, but failed to send email.")
-      }
-
       router.push(`/organizations/${orgId}/courses`)
     } else {
       toast.error("Payment failed. Please try again.")

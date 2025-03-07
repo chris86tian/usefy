@@ -129,33 +129,6 @@ const UserDashboard = ({ recentActivities, upcomingEvents }: UserDashboardProps)
       <div className="flex items-center justify-between">
         <CommitGraph />
       </div>
-
-      {/* Organization courses */}
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight mb-4">Organization Courses</h2>
-        <div className="flex flex-wrap gap-2 mb-6">
-          {["Web Development", "Enterprise IT", "React & Next.js", "JavaScript", "Backend Development"].map(
-            (tag, index) => (
-              <span
-                key={index}
-                className="rounded-full bg-secondary px-3 py-1 text-sm font-medium text-secondary-foreground"
-              >
-                {tag}
-              </span>
-            ),
-          )}
-        </div>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {publishedCourses?.map((course) => (
-            <CourseCard 
-              key={course.courseId} 
-              course={course} 
-              onEnroll={handleEnroll}
-              isEnrolled={course.enrollments?.some((enrollment) => enrollment.userId === user?.id) || false}
-            />
-          ))}
-        </div>
-      </div>
     </div>
   )
 }

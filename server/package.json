@@ -34,6 +34,7 @@
     "nodemailer": "^6.9.16",
     "npm": "^10.9.2",
     "pluralize": "^8.0.0",
+    "resend": "^4.1.2",
     "serverless-http": "^3.2.0",
     "stripe": "^17.4.0",
     "uuid": "^11.0.3"

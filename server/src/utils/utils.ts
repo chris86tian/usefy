@@ -1,4 +1,12 @@
 import path from "path";
+import { Resend } from "resend";
+import { v4 as uuidv4 } from "uuid";
+import UserNotification from "../models/notificationModel";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+let lastRequestTime = 0;
 
 export const updateCourseVideoInfo = (
   course: any,
@@ -173,4 +181,56 @@ export const calculateOverallProgress = (sections: any[]): number => {
   );
 
   return totalChapters > 0 ? (completedChapters / totalChapters) * 100 : 0;
+};
+
+export const sendMessage = async (
+  userId: string | null,
+  email: string,
+  title: string,
+  message: string,
+  options: {
+    sendEmail?: boolean;
+    sendNotification?: boolean;
+    rateLimited?: boolean;
+  } = {}
+) => {
+  const { sendEmail = true, sendNotification = true, rateLimited = false } = options;
+
+  try {
+    if (sendEmail) {
+      if (rateLimited) {
+        const now = Date.now();
+        const timeSinceLastRequest = now - lastRequestTime;
+
+        if (timeSinceLastRequest < 500) {
+          await delay(500 - timeSinceLastRequest);
+        }
+      }
+
+      await resend.emails.send({
+        from: process.env.EMAIL_FROM!,
+        to: email,
+        subject: title,
+        text: message,
+      });
+
+      console.log("✅ Email sent to", email);
+      lastRequestTime = Date.now();
+    }
+
+    if (sendNotification && userId) {
+      const notification = new UserNotification({
+        notificationId: uuidv4(),
+        userId,
+        title,
+        message,
+        timestamp: new Date().toISOString(),
+      });
+
+      await notification.save();
+      console.log("✅ Notification saved for user", userId);
+    }
+  } catch (error) {
+    console.error("❌ Error sending message:", error);
+  }
 };

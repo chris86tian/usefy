@@ -6,6 +6,7 @@ import Transaction from "../models/transactionModel";
 import UserCourseProgress from "../models/userCourseProgressModel";
 import UserNotification from "../models/notificationModel";
 import { v4 as uuidv4 } from 'uuid';
+import { sendMessage } from "../utils/utils";
 
 dotenv.config();
 
@@ -72,91 +73,55 @@ export const createStripePaymentIntent = async (
   }
 };
 
-export const createTransaction = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const createTransaction = async (req: Request, res: Response): Promise<void> => {
   const { userId, courseId, transactionId, amount, paymentProvider } = req.body;
 
   try {
-    if (amount === 0) {
-      const course = await Course.get(courseId);
-
-      const initialProgress = new UserCourseProgress({
-        userId,
-        courseId,
-        enrollmentDate: new Date().toISOString(),
-        overallProgress: 0,
-        lastAccessedTimestamp: new Date().toISOString(),
-        sections: course.sections.map((section: any) => ({
-          sectionId: section.sectionId,
-          chapters: section.chapters.map((chapter: any) => ({
-            chapterId: chapter.chapterId,
-            completed: false,
-            quizCompleted: false,
-          })),
-        })),
-      });
-      await initialProgress.save();
-
-      await Course.update({ courseId }, {$ADD: { enrollments: [{ userId }] } } );
-
-      try {
-        const notification = new UserNotification({
-          notificationId: uuidv4(),
-          userId,
-          title: "Free Course Enrolled",
-          message: "You have enrolled in a free course: " + course.title,
-          timestamp: new Date().toISOString(),
-        });
-        await notification.save();
-      } catch (error) {
-        console.error("Error creating notification", error);
-      }
-
-      res.json({ message: "Enrolled in free course successfully", data: { courseProgress: initialProgress } });
-      return;
-    }
-
     const course = await Course.get(courseId);
 
-    const newTransaction = new Transaction({
-      dateTime: new Date().toISOString(),
-      userId,
-      courseId,
-      transactionId,
-      amount,
-      paymentProvider,
-    });
-    await newTransaction.save();
+    if (amount > 0) {
+      const newTransaction = new Transaction({
+        dateTime: new Date().toISOString(),
+        userId,
+        courseId,
+        transactionId,
+        amount,
+        paymentProvider,
+      });
+      await newTransaction.save();
+    }
 
-    const initialProgress = new UserCourseProgress({
+    const progress = new UserCourseProgress({
       userId,
       courseId,
       enrollmentDate: new Date().toISOString(),
       overallProgress: 0,
       lastAccessedTimestamp: new Date().toISOString(),
-      sections: course.sections.map((section: any) => ({
-        sectionId: section.sectionId,
-        chapters: section.chapters.map((chapter: any) => ({
-          chapterId: chapter.chapterId,
+      sections: course.sections.map(({ sectionId, chapters }: any) => ({
+        sectionId,
+        chapters: chapters.map(({ chapterId }: any) => ({
+          chapterId,
           completed: false,
           quizCompleted: false,
         })),
       })),
     });
-    await initialProgress.save();
 
-    await Course.update(
-      { courseId },
-      {
-        $ADD: {
-          enrollments: [{ userId }],
-        },
-      }
+    await progress.save();
+    await Course.update({ courseId }, { $ADD: { enrollments: [{ userId }] } });
+
+    await sendMessage(
+      userId,
+      "Course Enrollment",
+      `You have been enrolled in ${course.title}`,
+      `You have been enrolled in ${course.title}. You can start learning now!`,
+      { sendEmail: true, sendNotification: true, rateLimited: false }
     );
 
-    res.json({ message: "Purchased Course successfully", data: { transaction: newTransaction, courseProgress: initialProgress } });
+    res.json({
+      message: amount === 0 ? "Enrolled in free course successfully" : "Purchased Course successfully",
+      data: { transaction: amount > 0 ? transactionId : undefined, courseProgress: progress },
+    });
   } catch (error) {
     res.status(500).json({ message: "Error creating transaction and enrollment", error });
   }

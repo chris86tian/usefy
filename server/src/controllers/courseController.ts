@@ -8,7 +8,7 @@ import Course from "../models/courseModel";
 import UserCourseProgress from "../models/userCourseProgressModel";
 import UserNotification from "../models/notificationModel";
 import { clerkClient } from "..";
-import { sendNotificationAndEmail } from "../utils/sendNotificationAndEmail";
+import { sendMessage } from "../utils/utils";
 
 const s3 = new AWS.S3();
 
@@ -50,7 +50,7 @@ export const createCourse = async (
   try {
     const auth = getAuth(req);
 
-    const newCourse = new Course({
+    const course = new Course({
       courseId: uuidv4(),
       instructors: [],
       title: "Untitled Course",
@@ -63,13 +63,13 @@ export const createCourse = async (
       enrollments: [],
     });
 
-    const initialProgress = new UserCourseProgress({
+    const progress = new UserCourseProgress({
       userId: auth.userId,
-      courseId: newCourse.courseId,
+      courseId: course.courseId,
       enrollmentDate: new Date().toISOString(),
       overallProgress: 0,
       lastAccessedTimestamp: new Date().toISOString(),
-      sections: newCourse.sections.map((section: any) => ({
+      sections: course.sections.map((section: any) => ({
         sectionId: section.sectionId,
         chapters: section.chapters.map((chapter: any) => ({
           chapterId: chapter.chapterId,
@@ -78,11 +78,11 @@ export const createCourse = async (
         })),
       })),
     });
-    await initialProgress.save();
+    await progress.save();
 
-    await newCourse.save();
+    await course.save();
 
-    res.json({ message: "Course created successfully", data: newCourse });
+    res.json({ message: "Course created successfully", data: course });
   } catch (error) {
     res.status(500).json({ message: "Error creating course", error });
   }
@@ -203,11 +203,12 @@ export const updateCourse = async (
     for (const enrollment of course.enrollments) {
       const user = await clerkClient.users.getUser(enrollment.userId);
       if (user.emailAddresses && user.emailAddresses.length > 0) {
-        sendNotificationAndEmail(
-          enrollment.userId, 
-          user.emailAddresses[0].emailAddress, 
-          "Course Updated", 
-          `The course "${course.title}" has been updated by the instructor. Please check the course page for more details.`
+        await sendMessage(
+          enrollment.userId,
+          user.emailAddresses[0].emailAddress,
+          "Course Updated",
+          `The course ${course.title} has been updated. Check it out now!`,
+          { sendEmail: true, sendNotification: true, rateLimited: true }
         );
       }
     }
@@ -1253,6 +1254,10 @@ export const enrollUser = async (
 
     if (!Array.isArray(course.enrollments)) {
       course.enrollments = [];
+    }
+
+    if (course.enrollments.find((enrollment: any) => enrollment.userId === userId)) {
+      res.status(400).json({ message: "User is already enrolled in this course" });
     }
 
     course.enrollments.push({ userId });
