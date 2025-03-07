@@ -38,8 +38,8 @@ const ChaptersSidebar = () => {
   useEffect(() => {
     // If there's a current section, expand it by default
     if (course && chapterId) {
-      const currentSection = course.sections.find((section: any) =>
-        section.chapters.some((chapter: any) => chapter.chapterId === chapterId),
+      const currentSection = course.sections.find((section) =>
+        section.chapters.some((chapter) => chapter.chapterId === chapterId),
       )
 
       if (currentSection && !expandedSections.includes(currentSection.sectionTitle)) {
@@ -90,7 +90,7 @@ const ChaptersSidebar = () => {
 
   return (
     <div className="w-full overflow-hidden flex flex-col h-full relative">
-      <div className="px-4 pb-5 border-b border-border flex items-center justify-between">
+      <div className="px-3 pb-3 border-b border-border flex items-center justify-between">
         {!sidebarCollapsed ? (
           <>
             <h2 className="text-xl font-semibold truncate">{course.title}</h2>
@@ -129,8 +129,8 @@ const ChaptersSidebar = () => {
       )}
 
       <div className="space-y-1 flex-1 overflow-auto">
-        {course.sections.map((section: any, index: number) => {
-          const sectionProgress = userProgress.sections.find((s: any) => s.sectionId === section.sectionId)
+        {course.sections.map((section, index: number) => {
+          const sectionProgress = userProgress.sections.find((s) => s.sectionId === section.sectionId)
 
           return (
             <Section
@@ -146,11 +146,11 @@ const ChaptersSidebar = () => {
               updateChapterProgress={updateChapterProgress}
               isChapterCompleted={(sectionId: string, chapterId: string) => {
                 if (!sectionProgress) return false
-                return sectionProgress.chapters.some((c: any) => c.chapterId === chapterId && c.completed)
+                return sectionProgress.chapters.some((c) => c.chapterId === chapterId && c.completed)
               }}
               isQuizCompleted={(chapterId: string) => {
                 if (!sectionProgress) return false
-                return sectionProgress.chapters.some((c: any) => c.chapterId === chapterId && c.quizCompleted)
+                return sectionProgress.chapters.some((c) => c.chapterId === chapterId && c.quizCompleted)
               }}
               collapsed={sidebarCollapsed}
             />
@@ -175,7 +175,7 @@ const Section = ({
   isQuizCompleted,
   collapsed,
 }: {
-  section: any
+  section: Section
   index: number
   sectionProgress: any
   chapterId: string
@@ -197,9 +197,8 @@ const Section = ({
   const completionPercentage = totalChapters > 0 ? Math.round((completedChapters / totalChapters) * 100) : 0
 
   if (collapsed) {
-    // When sidebar is collapsed, just show the chapters without section headers
     return (
-      <div className="py-2 border-b border-border last:border-0">
+      <div className="border-b border-border last:border-0">
         {isReleased && (
           <ChaptersList
             section={section}
@@ -281,7 +280,7 @@ const ProgressVisuals = ({
   isReleased,
   completionPercentage,
 }: {
-  section: any
+  section: Section,
   sectionProgress: any
   completedChapters: number
   totalChapters: number
@@ -332,7 +331,7 @@ const ChaptersList = ({
   isQuizCompleted,
   collapsed,
 }: {
-  section: any
+  section: Section,
   sectionProgress: any
   chapterId: string
   courseId: string
@@ -349,7 +348,7 @@ const ChaptersList = ({
 
   return (
     <ul className={cn("space-y-1", collapsed && "flex flex-col items-center")}>
-      {section.chapters.map((chapter: any, index: number) => (
+      {section.chapters.map((chapter, index: number) => (
         <Chapter
           key={chapter.chapterId}
           chapter={chapter}
@@ -486,7 +485,7 @@ const Chapter = ({
           </div>
         )}
 
-        <span className={cn("ml-2 text-sm font-medium flex-1", completed && "text-muted-foreground")}>
+        <span className={cn("mx-2 text-sm font-medium flex-1", completed && "text-muted-foreground")}>
           {chapter.title}
         </span>
 

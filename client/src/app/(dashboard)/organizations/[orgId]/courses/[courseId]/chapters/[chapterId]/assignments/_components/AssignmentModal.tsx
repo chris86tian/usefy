@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react"
+import type React from "react"
 import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -10,11 +10,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, Link, File, ImageIcon, Plus, X, Wand2, Code2 } from "lucide-react"
 import { useCreateAssignmentMutation, useUpdateAssignmentMutation } from "@/state/api"
 import { v4 as uuidv4 } from "uuid"
-import { ResourceList } from "./ResourceList"
+import { ResourceList } from "../../_components/ResourceList"
 import { useGetUploadImageUrlMutation } from "@/state/api"
 import { uploadAssignmentFile } from "@/lib/utils"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface AssignmentModalProps {
   chapterId: string
@@ -49,7 +50,7 @@ const AssignmentModal = ({
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({})
   const [isGeneratingAI, setIsGeneratingAI] = useState(false)
-  const [isPreview, setIsPreview] = useState(false)
+  const [activeTab, setActiveTab] = useState<"edit" | "preview">("edit")
 
   const [createAssignment] = useCreateAssignmentMutation()
   const [updateAssignment] = useUpdateAssignmentMutation()
@@ -72,6 +73,7 @@ const AssignmentModal = ({
       const assignmentData = {
         assignmentId: mode === "create" ? uuidv4() : assignment!.assignmentId,
         title,
+        isCoding: false,
         description,
         resources,
         hints,
@@ -190,7 +192,7 @@ const AssignmentModal = ({
 
     if (selectedResourceType === "link") {
       return (
-        <Button type="button" variant="outline" onClick={() => handleAddResource("link")}>
+        <Button type="button" variant="outline" onClick={() => handleAddResource("link")} size="sm">
           {icons.link}
           Add Link
         </Button>
@@ -203,6 +205,7 @@ const AssignmentModal = ({
         variant="outline"
         onClick={() => document.getElementById("file-upload")?.click()}
         disabled={isUploading}
+        size="sm"
       >
         {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : icons[selectedResourceType]}
         {isUploading
@@ -251,10 +254,6 @@ const AssignmentModal = ({
     setDescription(before + codeBlock + after)
   }
 
-  const togglePreview = () => {
-    setIsPreview(!isPreview)
-  }
-
   const renderMarkdown = (text: string) => {
     return text.split("```").map((block, index) => {
       if (index % 2 === 1) {
@@ -274,70 +273,79 @@ const AssignmentModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[1000px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{mode === "create" ? "Create New Assignment" : "Edit Assignment"}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-6 py-4">
-          {mode === "create" && (
-            <Button type="button" onClick={generateAssignment} disabled={isGeneratingAI} className="w-full sm:w-auto">
-              {isGeneratingAI ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Wand2 className="h-4 w-4 mr-2" />
-                  Generate
-                </>
-              )}
-            </Button>
-          )}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="title">Assignment Title</Label>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 gap-4">
+            <div>
+              <Label htmlFor="title" className="text-sm font-medium">
+                Assignment Title
+              </Label>
               <Input
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Enter assignment title"
                 required
+                className="mt-1"
               />
             </div>
 
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <Label htmlFor="description">Description</Label>
-                <div className="space-x-2">
-                  <Button type="button" variant="outline" size="sm" onClick={insertCodeBlock}>
-                    Add Code Block
-                  </Button>
-                  <Button type="button" variant="outline" size="sm" onClick={togglePreview}>
-                    {isPreview ? "Edit" : "Preview"}
-                  </Button>
-                </div>
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <Label htmlFor="description" className="text-sm font-medium">
+                  Description
+                </Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={insertCodeBlock}
+                  className="h-7 px-2 text-xs"
+                >
+                  <Code2 className="h-3 w-3 mr-1" />
+                  Add Code
+                </Button>
               </div>
 
-              {isPreview ? (
-                <Card>
-                  <CardContent className="p-4">{renderMarkdown(description)}</CardContent>
-                </Card>
-              ) : (
-                <Textarea
-                  id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Enter assignment description. Use ``` to create code blocks."
-                  className="min-h-[8rem] resize-y"
-                  required
-                />
-              )}
+              <Tabs
+                value={activeTab}
+                onValueChange={(value) => setActiveTab(value as "edit" | "preview")}
+                className="w-full"
+              >
+                <TabsList className="grid w-full grid-cols-2 mb-2">
+                  <TabsTrigger value="edit">Edit</TabsTrigger>
+                  <TabsTrigger value="preview">Preview</TabsTrigger>
+                </TabsList>
+                <TabsContent value="edit" className="mt-0">
+                  <Textarea
+                    id="description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Enter assignment description. Use ``` to create code blocks."
+                    className="min-h-[8rem] resize-y"
+                    required
+                  />
+                </TabsContent>
+                <TabsContent value="preview" className="mt-0">
+                  <Card>
+                    <CardContent className="p-4 min-h-[8rem]">
+                      {description ? (
+                        renderMarkdown(description)
+                      ) : (
+                        <p className="text-muted-foreground">No content to preview</p>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
             </div>
 
-            <div className="space-y-4">
-              <Label>Hints</Label>
-              <div className="space-y-4">
+            <div>
+              <Label className="text-sm font-medium">Hints</Label>
+              <div className="space-y-2 mt-1">
                 {hints.map((hint, index) => (
                   <div key={index} className="flex items-center gap-2">
                     <Input
@@ -349,7 +357,13 @@ const AssignmentModal = ({
                       }}
                       className="flex-1"
                     />
-                    <Button type="button" variant="outline" size="icon" onClick={() => handleRemoveHint(index)}>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleRemoveHint(index)}
+                      className="h-8 w-8"
+                    >
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
@@ -368,10 +382,11 @@ const AssignmentModal = ({
                   />
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="ghost"
                     size="icon"
                     onClick={handleAddHint}
                     disabled={!newHint.trim()}
+                    className="h-8 w-8"
                   >
                     <Plus className="h-4 w-4" />
                   </Button>
@@ -379,68 +394,101 @@ const AssignmentModal = ({
               </div>
             </div>
 
-            <ResourceList
-              resources={resources}
-              uploadProgress={uploadProgress}
-              onRemove={(id) => {
-                setResources(resources.filter((r) => r.id !== id))
-                setUploadProgress((prev) => {
-                  const newProgress = { ...prev }
-                  delete newProgress[id]
-                  return newProgress
-                })
-              }}
-              onUpdate={(id, field, value) => {
-                setResources(resources.map((r) => (r.id === id ? { ...r, [field]: value } : r)))
-              }}
-            />
-
-            <div className="flex items-center space-x-2">
-              <Select
-                value={selectedResourceType}
-                onValueChange={(value: "link" | "image" | "file") => setSelectedResourceType(value)}
-              >
-                <SelectTrigger className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="link">Link</SelectItem>
-                  <SelectItem value="image">Image</SelectItem>
-                  <SelectItem value="file">File</SelectItem>
-                </SelectContent>
-              </Select>
-              {renderResourceButton()}
-              <input
-                id="file-upload"
-                type="file"
-                className="hidden"
-                onChange={handleFileChange}
-                accept={selectedResourceType === "image" ? "image/*" : undefined}
+            <div>
+              <Label className="text-sm font-medium">Resources</Label>
+              <ResourceList
+                resources={resources}
+                uploadProgress={uploadProgress}
+                onRemove={(id) => {
+                  setResources(resources.filter((r) => r.id !== id))
+                  setUploadProgress((prev) => {
+                    const newProgress = { ...prev }
+                    delete newProgress[id]
+                    return newProgress
+                  })
+                }}
+                onUpdate={(id, field, value) => {
+                  setResources(resources.map((r) => (r.id === id ? { ...r, [field]: value } : r)))
+                }}
               />
-            </div>
 
-            <div className="flex justify-end space-x-3">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isUploading}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isSubmitting || isUploading}>
-                {isSubmitting ? (
+              <div className="flex items-center space-x-2 mt-2">
+                <Select
+                  value={selectedResourceType}
+                  onValueChange={(value: "link" | "image" | "file") => setSelectedResourceType(value)}
+                >
+                  <SelectTrigger className="w-28 h-8">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="link">Link</SelectItem>
+                    <SelectItem value="image">Image</SelectItem>
+                    <SelectItem value="file">File</SelectItem>
+                  </SelectContent>
+                </Select>
+                {renderResourceButton()}
+                <input
+                  id="file-upload"
+                  type="file"
+                  className="hidden"
+                  onChange={handleFileChange}
+                  accept={selectedResourceType === "image" ? "image/*" : undefined}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end space-x-2 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isUploading}
+              size="sm"
+            >
+              Cancel
+            </Button>
+
+            {mode === "create" && (
+              <Button
+                type="button"
+                onClick={generateAssignment}
+                disabled={isGeneratingAI || isSubmitting}
+                variant="outline"
+                size="sm"
+              >
+                {isGeneratingAI ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {mode === "create" ? "Creating..." : "Updating..."}
+                    <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                    Generating...
                   </>
-                ) : mode === "create" ? (
-                  "Create Assignment"
                 ) : (
-                  "Update Assignment"
+                  <>
+                    <Wand2 className="h-3 w-3 mr-1" />
+                    Generate
+                  </>
                 )}
               </Button>
-            </div>
-          </form>
-        </div>
+            )}
+
+            <Button type="submit" disabled={isSubmitting || isUploading} size="sm">
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                  {mode === "create" ? "Creating..." : "Updating..."}
+                </>
+              ) : mode === "create" ? (
+                "Create Assignment"
+              ) : (
+                "Update Assignment"
+              )}
+            </Button>
+          </div>
+        </form>
       </DialogContent>
     </Dialog>
   )
 }
 
 export default AssignmentModal
+

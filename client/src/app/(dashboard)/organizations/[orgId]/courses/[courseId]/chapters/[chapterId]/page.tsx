@@ -23,7 +23,7 @@ import {
   User,
   Users,
 } from "lucide-react"
-import AssignmentModal from "./_components/AssignmentModal"
+import AssignmentModal from "./assignments/_components/AssignmentModal"
 import Assignments from "./assignments/Assignments"
 import { SignInRequired } from "@/components/SignInRequired"
 import { getUserName, parseYouTubeTime } from "@/lib/utils"
@@ -65,6 +65,7 @@ const Course = () => {
   const [hasShownPrompt, setHasShownPrompt] = useState(false)
   const [likes, setLikes] = useState(currentChapter?.likes ?? 0)
   const [dislikes, setDislikes] = useState(currentChapter?.dislikes ?? 0)
+  const isAuthorized = currentOrg?.admins.some((admin) => admin.userId === user?.id) || currentOrg?.instructors.some((instructor) => instructor.userId === user?.id)
 
   const [likeChapter] = useLikeChapterMutation()
   const [dislikeChapter] = useDislikeChapterMutation()
@@ -357,7 +358,7 @@ const Course = () => {
               </div>
 
               <div className="flex items-center gap-3">
-                {course?.instructors?.some((instructor) => instructor.userId === user.id) && (
+                {isAuthorized && (
                   <Button onClick={() => setIsModalOpen(true)} variant="outline" size="sm">
                     <Sparkles className="h-4 w-4 mr-2" />
                     Create Assignment
