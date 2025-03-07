@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import Cohort from "../models/cohortModel";
 import Course from "../models/courseModel";
-import Organization from "../models/organizationModel";
 import { clerkClient } from "..";
 import { getAuth } from "@clerk/express";
 
@@ -42,6 +41,7 @@ export const getMyOrganizationCohorts = async (req: Request, res: Response): Pro
 
     // TODO: getMyOrganizationCohorts
 };
+
 
 export const getCohort = async (req: Request, res: Response): Promise<void> => {
     const { cohortId } = req.params;
@@ -207,3 +207,4 @@ export const removeCourseFromCohort = async (req: Request, res: Response): Promi
         res.status(500).json({ message: "Error removing course from cohort", error });
     }
 };
+

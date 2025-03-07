@@ -39,7 +39,6 @@ const customBaseQuery = async (
     },
   });
 
-  // Check if this is an S3 upload URL request
   const isS3UrlRequest =
     typeof args === "object" && args.url?.includes("get-upload");
 
@@ -207,6 +206,10 @@ export const api = createApi({
       },
     }),
 
+    getMyOrganizationCourses: build.query<Course[], string>({
+      query: (organizationId) => `organizations/${organizationId}/my-courses`,
+    }),
+
     addCourseToOrganization: build.mutation<
       { message: string },
       { organizationId: string; courseId: string }
@@ -225,6 +228,14 @@ export const api = createApi({
         url: `organizations/${organizationId}/${courseId}`,
         method: "DELETE",
       }),
+    }),
+
+    getMyUserCourseProgresses: build.query<
+      UserCourseProgress[],
+      string
+    >({
+      query: (organizationId) =>
+        `organizations/${organizationId}/progresses`,
     }),
 
     inviteUserToOrganization: build.mutation<
@@ -909,8 +920,10 @@ export const {
   useJoinOrganizationMutation,
   useGetMyOrganizationsQuery,
   useGetOrganizationCoursesQuery,
+  useGetMyOrganizationCoursesQuery,
   useAddCourseToOrganizationMutation,
   useRemoveCourseFromOrganizationMutation,
+  useGetMyUserCourseProgressesQuery,
   useInviteUserToOrganizationMutation,
   useGetOrganizationUsersQuery,
   useRemoveUserFromOrganizationMutation,

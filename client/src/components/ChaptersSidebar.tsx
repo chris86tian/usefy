@@ -198,7 +198,7 @@ const Section = ({
 
   if (collapsed) {
     return (
-      <div className="border-b border-border last:border-0">
+      <div className="pb-2 border-b border-border last:border-0">
         {isReleased && (
           <ChaptersList
             section={section}
@@ -245,7 +245,7 @@ const Section = ({
         </div>
       </CollapsibleTrigger>
 
-      <CollapsibleContent className="px-4 pb-4 space-y-4">
+      <CollapsibleContent className="px-2 pb-2 space-y-4">
         <ProgressVisuals
           section={section}
           sectionProgress={sectionProgress}
@@ -420,7 +420,7 @@ const Chapter = ({
           <TooltipTrigger asChild>
             <li
               className={cn(
-                "flex items-center justify-center p-2 rounded-md cursor-pointer transition-colors my-1",
+                "flex items-center justify-center p-2 rounded-md cursor-pointer transition-colors my-2",
                 isCurrentChapter ? "bg-primary/10 text-primary" : "hover:bg-accent text-muted-foreground",
                 !isReleased && "opacity-50 cursor-not-allowed",
               )}

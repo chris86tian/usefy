@@ -137,7 +137,7 @@ export default function ChapterLayout({ children }: ChapterLayoutProps) {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col">
-        <div className="flex-1 px-4 py-6 md:px-8 lg:px-12">{children}</div>
+        {children}
 
         {/* Chapter Navigation */}
         <div className="sticky bottom-0 border-t border-border bg-background p-4 flex items-center justify-between">

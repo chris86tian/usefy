@@ -4,6 +4,7 @@ import { getAuth } from "@clerk/express";
 import { clerkClient } from "..";
 import Cohort from "../models/cohortModel";
 import Course from "../models/courseModel";
+import UserCourseProgress from "../models/userCourseProgressModel";
 import { sendMessage } from "../utils/utils";
 
 export const getOrganization = async (
@@ -196,6 +197,108 @@ export const getOrganizationCourses = async (
     return;
   }
 };
+
+// DOES NOT WORK
+export const getMyOrganizationCourses = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { userId } = getAuth(req);
+  const { organizationId } = req.params;
+
+  try {
+    const organization = await Organization.get(organizationId);
+    if (!organization) {
+      res.status(404).json({ message: "Organization not found" });
+      return;
+    }
+
+    const courses = await Course.scan()
+      .where("organizationId")
+      .eq(organizationId)
+      .exec();
+
+    const userCourses = courses.filter(course =>
+      course.enrollments?.some((enrollment: any) => enrollment.userId === userId)
+    );
+
+    res.json({ message: "Courses retrieved successfully", data: userCourses });
+  } catch (error) {
+    console.error("Error retrieving courses for organization:", error);
+    res.status(500).json({ message: "Error retrieving courses for organization", error });
+  }
+};
+
+export const getMyUserCourseProgresses = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { userId } = getAuth(req);
+  const { organizationId } = req.params;
+
+  console.log("Fetching course progresses for org:", organizationId);
+
+  try {
+    // Fetch all cohorts in the organization
+    const cohorts = await Cohort.scan().where("organizationId").eq(organizationId).exec();
+
+    console.log("Cohorts found:", cohorts);
+
+    if (!cohorts || cohorts.length === 0) {
+      res.json({ message: "No cohorts found for this organization", data: [] });
+      return;
+    }
+
+    // Collect all courseIds from the cohorts
+    const courseIds = cohorts.flatMap((cohort: any) => cohort.courses.map((course: { courseId: string }) => course.courseId));
+
+    console.log("Courses found in cohorts:", courseIds);
+
+    if (courseIds.length === 0) {
+      res.json({ message: "No courses found in any cohort", data: [] });
+      return;
+    }
+
+    // Fetch all courses
+    const courses = await Course.batchGet(courseIds.map((courseId: string) => ({ courseId })));
+
+    console.log("Courses found:", courses);
+
+    // Filter courses where the user is enrolled
+    const userCourses = courses.filter(course =>
+      course.enrollments?.some((enrollment: any) => enrollment.userId === userId)
+    );
+
+    const enrolledCourseIds = userCourses.map(course => course.courseId);
+
+    if (enrolledCourseIds.length === 0) {
+      res.json({ message: "No enrolled courses found", data: [] });
+      return;
+    }
+
+    console.log("Enrolled courses:", enrolledCourseIds);
+
+    // Ensure the batchGet request matches the schema
+    const progressKeys = enrolledCourseIds.map(courseId => ({
+      userId: String(userId),  // Ensure userId is a string
+      courseId: String(courseId), // Ensure courseId is a string
+    }));
+
+    console.log("Fetching progress for:", progressKeys);
+
+    const progresses = await UserCourseProgress.batchGet(progressKeys);
+
+    res.json({ 
+      message: "Course progresses retrieved successfully", 
+      data: progresses 
+    });
+
+  } catch (error) {
+    console.error("Error retrieving course progresses:", error);
+    res.status(500).json({ message: "Error retrieving course progresses", error });
+  }
+};
+
 
 export const addCourseToOrganization = async (
   req: Request,

@@ -440,7 +440,7 @@ declare global {
     organizationId: string
     learners: { userId: string }[]
     instructors: { userId: string }[]
-    courses: string[]
+    courses: { courseId: string }[]
   }
 }
 

@@ -6,10 +6,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 interface AdminDashboardProps {
   stats: any
   recentActivities: any[]
-  upcomingEvents: any[]
 }
 
-const AdminDashboard = ({ stats, recentActivities, upcomingEvents }: AdminDashboardProps) => {
+const AdminDashboard = ({ stats, recentActivities }: AdminDashboardProps) => {
     return (
       <div className="space-y-6 p-6">
         {/* Stats Overview */}
@@ -82,6 +81,30 @@ const AdminDashboard = ({ stats, recentActivities, upcomingEvents }: AdminDashbo
             </CardContent>
           </Card>
         </div>
+
+        {/* Quick Actions */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+            <CardDescription>Common administrative tasks</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-3">
+              <Button>
+                <PlusCircle className="mr-2 h-4 w-4" /> Create Course
+              </Button>
+              <Button variant="outline">
+                <Users className="mr-2 h-4 w-4" /> Manage Users
+              </Button>
+              <Button variant="outline">
+                <BookOpen className="mr-2 h-4 w-4" /> Course Analytics
+              </Button>
+              <Button variant="outline">
+                <Rocket className="mr-2 h-4 w-4" /> Publish Updates
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
         
         {/* Activities and Events */}
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -117,69 +140,7 @@ const AdminDashboard = ({ stats, recentActivities, upcomingEvents }: AdminDashbo
               </div>
             </CardContent>
           </Card>
-          
-          {/* Upcoming Events */}
-          <Card>
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle>Upcoming Events</CardTitle>
-                <Button variant="ghost" size="sm" className="text-blue-600 dark:text-blue-400">
-                  View calendar <ChevronRight className="ml-1 h-4 w-4" />
-                </Button>
-              </div>
-              <CardDescription>Scheduled events and deadlines</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {upcomingEvents.map((event) => (
-                  <div key={event.id} className="flex items-start gap-4">
-                    <div className="rounded-md bg-blue-100 p-2 dark:bg-blue-900">
-                      <CalendarDays className="h-5 w-5 text-blue-600 dark:text-blue-300" />
-                    </div>
-                    <div className="flex-1 space-y-1">
-                      <p className="font-medium">{event.title}</p>
-                      <div className="flex items-center gap-2 text-xs text-gray-500">
-                        <Clock className="h-3.5 w-3.5" />
-                        <span>{event.date} • {event.time}</span>
-                      </div>
-                      <div className="flex items-center text-xs text-gray-500">
-                        <Users className="mr-1 h-3.5 w-3.5" />
-                        <span>{event.participants} participants</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                <Button size="sm" variant="outline" className="w-full">
-                  <PlusCircle className="mr-2 h-4 w-4" /> Schedule New Event
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
         </div>
-        
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Common administrative tasks</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-3">
-              <Button>
-                <PlusCircle className="mr-2 h-4 w-4" /> Create Course
-              </Button>
-              <Button variant="outline">
-                <Users className="mr-2 h-4 w-4" /> Manage Users
-              </Button>
-              <Button variant="outline">
-                <BookOpen className="mr-2 h-4 w-4" /> Course Analytics
-              </Button>
-              <Button variant="outline">
-                <Rocket className="mr-2 h-4 w-4" /> Publish Updates
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     )
   }

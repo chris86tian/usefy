@@ -5,7 +5,6 @@ import Header from "@/components/Header"
 import { useUser } from "@clerk/nextjs"
 import AdminDashboard from "./_components/AdminDashboard"
 import { useOrganization } from "@/context/OrganizationContext"
-import { Spinner } from "@/components/ui/Spinner"
 
 export default function OrganizationDashboard() {
   const { user } = useUser()
@@ -18,9 +17,6 @@ export default function OrganizationDashboard() {
     completionRate: "78%",
     revenue: 24500
   }
-  
-  const loadingOrg = false;
-  const loadingStats = false;
   
   const recentActivities = [
     {
@@ -69,51 +65,22 @@ export default function OrganizationDashboard() {
     }
   ]
   
-  const upcomingEvents = [
-    {
-      id: 1,
-      title: "React Workshop",
-      date: "March 5, 2025",
-      time: "10:00 AM - 12:00 PM",
-      participants: 12
-    },
-    {
-      id: 2,
-      title: "TypeScript Code Review",
-      date: "March 8, 2025",
-      time: "2:00 PM - 3:30 PM",
-      participants: 8
-    },
-    {
-      id: 3, 
-      title: "New Course Planning",
-      date: "March 15, 2025",
-      time: "11:00 AM - 1:00 PM",
-      participants: 5
-    }
-  ]
-  
-  if (loadingOrg || loadingStats) return <Spinner />
-  
   return (
     <div>
-      {/* Organization Header */}
       <Header 
         title={isAdmin ? "Admin Dashboard" : "Organization Dashboard"} 
         subtitle={isAdmin ? "Manage your organization, courses, and users" : "Manage your courses and learning"} 
       />
       
-      {/* Render different dashboards based on user type */}
       {isAdmin ? (
         <AdminDashboard
           stats={stats}
           recentActivities={recentActivities}
-          upcomingEvents={upcomingEvents}
         />
       ) : (
         <UserDashboard 
+          orgId={currentOrg?.organizationId as string}
           recentActivities={recentActivities}
-          upcomingEvents={upcomingEvents}
         />
       )}
     </div>

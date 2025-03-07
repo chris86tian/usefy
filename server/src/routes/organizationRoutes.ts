@@ -8,6 +8,8 @@ import {
   joinOrganization,
   getMyOrganizations,
   getOrganizationCourses,
+  getMyOrganizationCourses,
+  getMyUserCourseProgresses,
   addCourseToOrganization,
   removeCourseFromOrganization,
   inviteUserToOrganization,
@@ -29,6 +31,8 @@ router.put("/:organizationId", requireAuth(), upload.any(), updateOrganization);
 router.delete("/:organizationId", requireAuth(), deleteOrganization);
 router.post("/:organizationId/join", requireAuth(), joinOrganization);
 router.get("/:organizationId/courses", getOrganizationCourses);
+router.get("/:organizationId/my-courses", requireAuth(), getMyOrganizationCourses);
+router.get("/:organizationId/progresses", requireAuth(), getMyUserCourseProgresses);
 router.post("/:organizationId/invite", requireAuth(), inviteUserToOrganization);
 router.post(
   "/:organizationId/:courseId",
