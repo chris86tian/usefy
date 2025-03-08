@@ -47,6 +47,7 @@ import {
 import type { User } from "@clerk/nextjs/server"
 import { useParams } from "next/navigation"
 import ManageUsersDialog from "./ManageUsersDialog"
+import Header from "@/components/Header"
 
 interface AdminCohortPageProps {
   orgUsers: { instructors: User[]; learners: User[]; admins: User[] }
@@ -261,9 +262,7 @@ const AdminCohortPage = ({ orgUsers, usersLoading, courses }: AdminCohortPagePro
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">{cohort.name}</h1>
-      </div>
+      <Header title={cohort.name} subtitle="Manage cohort learners and courses" />
 
       <Tabs defaultValue="learners" className="w-full">
         <TabsList>

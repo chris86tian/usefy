@@ -74,8 +74,7 @@ export default function OrganizationDashboard() {
       
       {isAdmin ? (
         <AdminDashboard
-          stats={stats}
-          recentActivities={recentActivities}
+          orgId={currentOrg?.organizationId as string}
         />
       ) : (
         <UserDashboard 

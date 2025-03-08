@@ -236,13 +236,9 @@ export const getMyUserCourseProgresses = async (
   const { userId } = getAuth(req);
   const { organizationId } = req.params;
 
-  console.log("Fetching course progresses for org:", organizationId);
-
   try {
     // Fetch all cohorts in the organization
     const cohorts = await Cohort.scan().where("organizationId").eq(organizationId).exec();
-
-    console.log("Cohorts found:", cohorts);
 
     if (!cohorts || cohorts.length === 0) {
       res.json({ message: "No cohorts found for this organization", data: [] });
@@ -252,8 +248,6 @@ export const getMyUserCourseProgresses = async (
     // Collect all courseIds from the cohorts
     const courseIds = cohorts.flatMap((cohort: any) => cohort.courses.map((course: { courseId: string }) => course.courseId));
 
-    console.log("Courses found in cohorts:", courseIds);
-
     if (courseIds.length === 0) {
       res.json({ message: "No courses found in any cohort", data: [] });
       return;
@@ -261,8 +255,6 @@ export const getMyUserCourseProgresses = async (
 
     // Fetch all courses
     const courses = await Course.batchGet(courseIds.map((courseId: string) => ({ courseId })));
-
-    console.log("Courses found:", courses);
 
     // Filter courses where the user is enrolled
     const userCourses = courses.filter(course =>
@@ -276,15 +268,11 @@ export const getMyUserCourseProgresses = async (
       return;
     }
 
-    console.log("Enrolled courses:", enrolledCourseIds);
-
     // Ensure the batchGet request matches the schema
     const progressKeys = enrolledCourseIds.map(courseId => ({
       userId: String(userId),  // Ensure userId is a string
       courseId: String(courseId), // Ensure courseId is a string
     }));
-
-    console.log("Fetching progress for:", progressKeys);
 
     const progresses = await UserCourseProgress.batchGet(progressKeys);
 
@@ -459,6 +447,7 @@ function generateTemporaryPassword(length = 12): string {
 export const getOrganizationUsers = async (req: Request, res: Response): Promise<void> => {
   const { organizationId } = req.params;
 
+  console.log("Fetching users for org:", organizationId);
   try {
     const organization = await Organization.get(organizationId);
     if (!organization) {

@@ -1,16 +1,60 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Users, BookOpen, BookCheck, BarChart3, Clock, CalendarDays, Rocket, PlusCircle, ChevronRight } from 'lucide-react'
+import { Users, BookOpen, BookCheck, BarChart3, PlusCircle, ChevronRight } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { 
+  useGetOrganizationUsersQuery,
+  useGetOrganizationCoursesQuery,
+  useGetTransactionStatsQuery,
+  useCreateCourseMutation,
+  useGetOrganizationQuery,
+  useCreateTransactionMutation,
+  useAddCourseToOrganizationMutation
+} from '@/state/api'
+import { useRouter } from 'next/navigation'
 
 interface AdminDashboardProps {
-  stats: any
-  recentActivities: any[]
+  orgId: string
 }
 
-const AdminDashboard = ({ stats, recentActivities }: AdminDashboardProps) => {
+const AdminDashboard = ({ orgId }: AdminDashboardProps) => {
+    const router = useRouter()
+    const { data: currentOrg } = useGetOrganizationQuery(orgId)
+    const { data: usersData } = useGetOrganizationUsersQuery(orgId)
+    const { data: coursesData } = useGetOrganizationCoursesQuery(orgId)
+    const { data: transactionStats } = useGetTransactionStatsQuery()
+
+    const totalUsers = usersData ? (usersData.admins.length + usersData.instructors.length + usersData.learners.length) : 0
+
+    // Mock completion rate and recent activities for now
+    const completionRate = '78%'
+    const recentActivities = [
+      {
+        id: 1,
+        user: {
+          name: 'John Doe',
+          avatar: '',
+          fallback: 'JD'
+        },
+        action: 'completed',
+        target: 'Introduction to Programming',
+        time: '2 hours ago'
+      },
+      {
+        id: 2,
+        user: {
+          name: 'Jane Smith',
+          avatar: '',
+          fallback: 'JS'
+        },
+        action: 'enrolled in',
+        target: 'Advanced Web Development',
+        time: '4 hours ago'
+      }
+    ]
+
     return (
-      <div className="space-y-6 p-6">
+      <div className="space-y-4 p-2">
         {/* Stats Overview */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
@@ -18,15 +62,12 @@ const AdminDashboard = ({ stats, recentActivities }: AdminDashboardProps) => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Users</p>
-                  <h3 className="text-2xl font-bold">{stats?.totalUsers || 120}</h3>
+                  <h3 className="text-2xl font-bold">{totalUsers}</h3>
                 </div>
                 <div className="rounded-full bg-blue-100 p-3 dark:bg-blue-900">
                   <Users className="h-5 w-5 text-blue-600 dark:text-blue-300" />
                 </div>
               </div>
-              <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                <span className="text-green-500">+5%</span> from last month
-              </p>
             </CardContent>
           </Card>
           
@@ -35,15 +76,12 @@ const AdminDashboard = ({ stats, recentActivities }: AdminDashboardProps) => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Active Courses</p>
-                  <h3 className="text-2xl font-bold">{stats?.activeCourses || 15}</h3>
+                  <h3 className="text-2xl font-bold">{coursesData?.length || 0}</h3>
                 </div>
                 <div className="rounded-full bg-purple-100 p-3 dark:bg-purple-900">
                   <BookOpen className="h-5 w-5 text-purple-600 dark:text-purple-300" />
                 </div>
               </div>
-              <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                <span className="text-green-500">+2</span> new this month
-              </p>
             </CardContent>
           </Card>
           
@@ -52,15 +90,12 @@ const AdminDashboard = ({ stats, recentActivities }: AdminDashboardProps) => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Completion Rate</p>
-                  <h3 className="text-2xl font-bold">{stats?.completionRate || '78%'}</h3>
+                  <h3 className="text-2xl font-bold">{completionRate}</h3>
                 </div>
                 <div className="rounded-full bg-green-100 p-3 dark:bg-green-900">
                   <BookCheck className="h-5 w-5 text-green-600 dark:text-green-300" />
                 </div>
               </div>
-              <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                <span className="text-green-500">+3%</span> from last quarter
-              </p>
             </CardContent>
           </Card>
           
@@ -69,15 +104,14 @@ const AdminDashboard = ({ stats, recentActivities }: AdminDashboardProps) => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Revenue</p>
-                  <h3 className="text-2xl font-bold">${stats?.revenue?.toLocaleString() || '24,500'}</h3>
+                  <h3 className="text-2xl font-bold">
+                    ${transactionStats?.amount?.toLocaleString() || '0'}
+                  </h3>
                 </div>
                 <div className="rounded-full bg-amber-100 p-3 dark:bg-amber-900">
                   <BarChart3 className="h-5 w-5 text-amber-600 dark:text-amber-300" />
                 </div>
               </div>
-              <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                <span className="text-green-500">+12%</span> from last month
-              </p>
             </CardContent>
           </Card>
         </div>
@@ -91,16 +125,19 @@ const AdminDashboard = ({ stats, recentActivities }: AdminDashboardProps) => {
           <CardContent>
             <div className="flex flex-wrap gap-3">
               <Button>
-                <PlusCircle className="mr-2 h-4 w-4" /> Create Course
+                <PlusCircle className="mr-2 h-4 w-4" /> TODO
               </Button>
-              <Button variant="outline">
+              <Button 
+                variant="outline" 
+                onClick={() => router.push(`/organizations/${orgId}/settings`)}
+              >
                 <Users className="mr-2 h-4 w-4" /> Manage Users
               </Button>
-              <Button variant="outline">
-                <BookOpen className="mr-2 h-4 w-4" /> Course Analytics
-              </Button>
-              <Button variant="outline">
-                <Rocket className="mr-2 h-4 w-4" /> Publish Updates
+              <Button 
+                variant="outline"
+                onClick={() => router.push(`/organizations/${orgId}/courses`)}
+              >
+                <BookOpen className="mr-2 h-4 w-4" /> View Courses
               </Button>
             </div>
           </CardContent>

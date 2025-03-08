@@ -15,6 +15,7 @@ import {
   useGetCohortQuery,
 } from "@/state/api"
 import { useParams } from "next/navigation"
+import Header from "@/components/Header"
 
 interface UserCohortPageProps {
   orgUsers: { instructors: User[], learners: User[], admins: User[] }
@@ -69,10 +70,7 @@ const UserCohortPage = ({ orgUsers, usersLoading, courses }: UserCohortPageProps
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">{cohort.name}</h1>
-        <p className="text-muted-foreground">View your cohort details and courses</p>
-      </div>
+      <Header title={cohort.name} subtitle="Manage your cohort" />
 
       <Tabs defaultValue="courses" className="w-full">
         <TabsList>

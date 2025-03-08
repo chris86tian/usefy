@@ -32,7 +32,7 @@ const Assignments = ({ course, chapterId, sectionId }: AssignmentsProps) => {
   }
 
   return (
-    <ScrollArea className="h-auto p-4">
+    <ScrollArea className="h-auto pt-4">
       {renderContent()}
     </ScrollArea>
   )

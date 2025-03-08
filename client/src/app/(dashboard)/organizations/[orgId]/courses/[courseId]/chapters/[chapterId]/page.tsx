@@ -480,22 +480,11 @@ const Course = () => {
             </CardContent>
           </Card>
         )}
-
-        <Card className="border shadow-sm">
-          <CardHeader className="border-b bg-muted/30">
-            <div className="flex items-center space-x-3">
-              <MessagesSquare className="h-5 w-5 text-primary" />
-              <CardTitle className="text-lg">Discussion</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <CourseComments
-              courseId={course.courseId}
-              sectionId={currentSection.sectionId}
-              chapterId={currentChapter.chapterId}
-            />
-          </CardContent>
-        </Card>
+        <CourseComments
+          courseId={course.courseId}
+          sectionId={currentSection.sectionId}
+          chapterId={currentChapter.chapterId}
+        />
       </div>
     </div>
   )

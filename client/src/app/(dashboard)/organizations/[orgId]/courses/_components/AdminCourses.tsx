@@ -42,6 +42,7 @@ const AdminCourses = () => {
   } = useGetOrganizationCoursesQuery(currentOrg?.organizationId ?? "", {
     skip: !currentOrg,
   });
+  console.log('courses:', courses)
   const { user } = useUser();
   const isAdmin = currentOrg?.admins.some((admin) => admin.userId === user?.id);
 

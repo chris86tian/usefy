@@ -51,9 +51,11 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { v4 as uuidv4 } from "uuid"
+import { useUser } from "@clerk/nextjs"
 
 const AdminSettings = () => {
   const router = useRouter()
+  const { user } = useUser()
   const { currentOrg } = useOrganization()
   const [updateOrganization] = useUpdateOrganizationMutation()
   const [deleteOrganization] = useDeleteOrganizationMutation()
@@ -87,6 +89,11 @@ const AdminSettings = () => {
   const [cohortSearchTerm, setCohortSearchTerm] = useState("")
 
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
+
+  // Add new state for batch emails
+  const [emailBatch, setEmailBatch] = useState<string[]>([]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -127,25 +134,49 @@ const AdminSettings = () => {
   }
 
   const handleInvite = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!inviteEmail) {
-      toast.error("Please enter an email address")
-      return
+    e.preventDefault();
+    if (emailBatch.length === 0) {
+      toast.error("Please enter at least one email address");
+      return;
     }
 
     try {
-      await inviteUser({
-        organizationId: currentOrg?.organizationId || "",
-        email: inviteEmail,
-        role: inviteRole,
-      }).unwrap()
-      toast.success(`Invitation sent to ${inviteEmail}`)
-      setInviteEmail("")
-      refetchMembers()
+      // Send invites for each email in batch
+      await Promise.all(
+        emailBatch.map((email) =>
+          inviteUser({
+            organizationId: currentOrg?.organizationId || "",
+            email: email.trim(),
+            role: inviteRole,
+          }).unwrap()
+        )
+      );
+      toast.success(`Invitations sent to ${emailBatch.length} users`);
+      setEmailBatch([]);
+      setInviteEmail("");
+      refetchMembers();
     } catch (error) {
-      toast.error("Failed to send invitation")
+      toast.error("Failed to send invitations");
     }
-  }
+  };
+
+  // Add email batch handler
+  const handleEmailInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setInviteEmail(value);
+
+    if (value.includes(',')) {
+      const emails = value
+        .split(/[,\s]+/)
+        .map(email => email.trim())
+        .filter(email => email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
+
+      if (emails.length > 0) {
+        setEmailBatch(prev => [...new Set([...prev, ...emails])]);
+        setInviteEmail('');
+      }
+    }
+  };
 
   const handleRemoveUser = async (userId: string, role: string) => {
     try {
@@ -304,12 +335,35 @@ const AdminSettings = () => {
             <CardContent>
               <form onSubmit={handleInvite} className="flex flex-col gap-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Input
-                    type="email"
-                    placeholder="Email address"
-                    value={inviteEmail}
-                    onChange={(e) => setInviteEmail(e.target.value)}
-                  />
+                  <div className="flex flex-col gap-2">
+                    <Input
+                      type="email"
+                      placeholder="Email addresses (comma separated)"
+                      value={inviteEmail}
+                      onChange={handleEmailInput}
+                    />
+                    {emailBatch.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {emailBatch.map((email, index) => (
+                          <Badge 
+                            key={index}
+                            variant="secondary"
+                            className="flex items-center gap-1"
+                          >
+                            {email}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-4 w-4 p-0"
+                              onClick={() => setEmailBatch(prev => prev.filter(e => e !== email))}
+                            >
+                              ×
+                            </Button>
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                   <Select
                     value={inviteRole}
                     onValueChange={(value: "admin" | "instructor" | "learner") => setInviteRole(value)}
@@ -323,7 +377,9 @@ const AdminSettings = () => {
                       <SelectItem value="learner">Learner</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Button type="submit">{isInviteLoading ? "Sending..." : "Invite"}</Button>
+                  <Button type="submit" disabled={isInviteLoading}>
+                    {isInviteLoading ? "Sending..." : `Invite ${emailBatch.length > 0 ? emailBatch.length : ''} Users`}
+                  </Button>
                 </div>
               </form>
             </CardContent>
@@ -395,7 +451,7 @@ const AdminSettings = () => {
                         </TableCell>
                         <TableCell>
                           <Badge variant={!user.banned || !user.locked ? "default" : "secondary"}>
-                            {!user.banned || !user.locked ? "Active" : "Inactive"}
+                            {!user.banned || !user.locked || user.passwordEnabled ? "Active" : "Pending"}
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -636,19 +692,35 @@ const AdminSettings = () => {
             <h2 className="text-xl font-semibold mb-4">Danger Zone</h2>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="destructive">Delete Organization</Button>
+                <Button 
+                  variant="destructive" 
+                  disabled={user?.publicMetadata?.userType !== "superadmin"}
+                >
+                  Delete Organization
+                </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This action cannot be undone. This will permanently delete your organization and remove all
-                    associated data from our servers.
+                    This action cannot be undone. To confirm, please type &quot;DELETE {currentOrg?.name}&quot;
                   </AlertDialogDescription>
                 </AlertDialogHeader>
+                <div className="my-4">
+                  <Input
+                    value={deleteConfirmation}
+                    onChange={(e) => setDeleteConfirmation(e.target.value)}
+                    placeholder={`DELETE ${currentOrg?.name}`}
+                  />
+                </div>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDelete}>Yes, delete organization</AlertDialogAction>
+                  <AlertDialogCancel onClick={() => setDeleteConfirmation("")}>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDelete}
+                    disabled={deleteConfirmation !== `DELETE ${currentOrg?.name}`}
+                  >
+                    Delete Organization
+                  </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
