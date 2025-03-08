@@ -217,6 +217,7 @@ interface CourseCardProps {
 }
 
 const CourseCard = ({ course, progress, onResume, onClick }: CourseCardProps) => {
+  console.log("Course", course)
   const progressPercentage = progress?.overallProgress || 0
   const lastAccessed = progress?.lastAccessedTimestamp
     ? formatDistanceToNow(new Date(progress.lastAccessedTimestamp), { addSuffix: true })
@@ -227,9 +228,9 @@ const CourseCard = ({ course, progress, onResume, onClick }: CourseCardProps) =>
       <CardContent className="p-4">
         <div className="flex items-start gap-4">
           <div className="h-16 w-16 rounded-md overflow-hidden flex-shrink-0">
-            {course.image ? (
+            {course.image === '' ? (
               <Image
-                src={course.image || "/placeholder.svg"}
+                src={course.image || "/placeholder.png"}
                 alt={course.title}
                 width={64}
                 height={64}
