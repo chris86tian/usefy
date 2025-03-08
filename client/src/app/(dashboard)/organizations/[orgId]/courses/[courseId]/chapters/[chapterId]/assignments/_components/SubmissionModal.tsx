@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import { FileUp, Loader2, LinkIcon, X } from "lucide-react"
+import { Loader2, LinkIcon, X, UploadCloud } from "lucide-react"
 
 interface SubmissionModalProps {
   assignment: {
@@ -97,22 +97,18 @@ export default function SubmissionModal({
         submissionId: uuidv4(),
         userId: user.id,
         comment,
-        files: files.map((file, index) => ({
-          name: file.name,
-          type: file.type,
-          content: fileContents[index],
-        })),
+        filesUrls: [], // TODO: Upload files to S3 and store URLs
         links,
         timestamp: new Date().toISOString(),
       }
 
-    //   await createSubmission({
-    //     courseId,
-    //     sectionId,
-    //     chapterId,
-    //     assignmentId: assignment.assignmentId,
-    //     submission: submissionData,
-    //   }).unwrap()
+      await createSubmission({
+        courseId,
+        sectionId,
+        chapterId,
+        assignmentId: assignment.assignmentId,
+        submission: submissionData,
+      }).unwrap()
 
       toast.success("Assignment submitted successfully!")
       onSubmissionComplete()
@@ -156,7 +152,7 @@ export default function SubmissionModal({
             </div>
             <Input ref={fileInputRef} type="file" onChange={handleFileChange} className="hidden" multiple />
             <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} className="w-full">
-              <FileUp className="mr-2 h-4 w-4" />
+              <UploadCloud className="h-4 w-4 mr-2" />
               Upload Files
             </Button>
           </div>

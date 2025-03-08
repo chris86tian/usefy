@@ -458,7 +458,6 @@ export const createAssignment = async (
   res: Response
 ): Promise<void> => {
   const { courseId, sectionId, chapterId } = req.params;
-  const { userId } = getAuth(req);
   const {
     title,
     description,
@@ -736,7 +735,7 @@ export const createSubmission = async (
 ): Promise<void> => {
   const { courseId, sectionId, chapterId, assignmentId } = req.params;
   const { userId } = getAuth(req);
-  const { submissionId, code, evaluation } = req.body;
+  const { submissionId, code, evaluation, fileUrls, links, comment } = req.body;
 
   try {
     const course = await Course.get(courseId);
@@ -774,21 +773,39 @@ export const createSubmission = async (
       return;
     }
 
-    const submission = assignment.submissions.find(
+    let submission = assignment.submissions.find(
       (submission: any) => submission.submissionId === submissionId
     );
 
     if (submission) {
-      submission.code = code;
-      submission.evaluation = evaluation;
+      // Update existing submission
+      if (assignment.isCoding) {
+        submission.code = code;
+        submission.evaluation = evaluation;
+      } else {
+        submission.fileUrls = fileUrls;
+        submission.links = links;
+        submission.comment = comment;
+      }
     } else {
-      assignment.submissions.push({
+      // Create new submission
+      const newSubmission: any = {
         submissionId: uuidv4(),
         userId,
-        code,
-        evaluation,
         submittedAt: new Date().toISOString(),
-      });
+      };
+
+      if (assignment.isCoding) {
+        newSubmission.code = code;
+        newSubmission.evaluation = evaluation;
+      } else {
+        newSubmission.fileUrls = fileUrls;
+        newSubmission.links = links;
+        newSubmission.comment = comment;
+      }
+
+      assignment.submissions.push(newSubmission);
+      submission = newSubmission;
     }
 
     try {
@@ -825,6 +842,7 @@ export const createSubmission = async (
       data: submission,
     });
   } catch (error) {
+    console.error("Error submitting assignment:", error);
     res.status(500).json({ message: "Error submitting assignment", error });
   }
 };

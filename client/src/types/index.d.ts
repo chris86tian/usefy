@@ -217,10 +217,10 @@ declare global {
   interface Submission {
     submissionId: string;
     userId: string;
-    code?: string;
     fileUrls?: string[];
     links?: string[];
     comment?: string;
+    code?: string;
     evaluation?: {
       passed: boolean;
       score: number;

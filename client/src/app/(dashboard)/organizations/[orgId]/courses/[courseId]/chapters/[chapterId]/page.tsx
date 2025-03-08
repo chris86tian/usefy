@@ -19,12 +19,10 @@ import {
   BookOpen,
   GraduationCap,
   Calendar,
-  MessagesSquare,
   User,
   Users,
 } from "lucide-react"
 import AssignmentModal from "./assignments/_components/AssignmentModal"
-import Assignments from "./assignments/Assignments"
 import { SignInRequired } from "@/components/SignInRequired"
 import { getUserName, parseYouTubeTime } from "@/lib/utils"
 import { CourseComments } from "./_components/CourseComments"
@@ -33,6 +31,7 @@ import AdaptiveQuiz from "./adaptive-quiz/AdaptiveQuiz"
 import { Spinner } from "@/components/ui/Spinner"
 import { useOrganization } from "@/context/OrganizationContext"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { AssignmentCard } from "./assignments/_components/AssignmentCard"
 
 const isSectionReleased = (section: Section) => {
   if (!section.releaseDate) return false
@@ -247,7 +246,6 @@ const Course = () => {
     } catch (error) {
       console.error("Failed to dislike chapter:", error)
       toast.error("Failed to dislike the chapter. Please try again.")
-
       setDislikes((prevDislikes) => prevDislikes - 1)
     }
   }
@@ -472,11 +470,19 @@ const Course = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <Assignments
-                chapterId={currentChapter.chapterId}
-                sectionId={currentSection?.sectionId}
-                course={course}
-              />
+              <ScrollArea className="h-auto pt-4">
+                <div className="grid grid-cols-3 gap-4">
+                  {currentChapter?.assignments?.map((assignment: Assignment) => (
+                    <AssignmentCard 
+                      key={assignment.assignmentId} 
+                      assignment={assignment}
+                      course={course}
+                      sectionId={currentSection.sectionId}
+                      chapterId={currentChapter.chapterId}
+                    />
+                  ))}
+                </div>
+              </ScrollArea>
             </CardContent>
           </Card>
         )}

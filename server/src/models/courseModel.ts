@@ -188,6 +188,17 @@ const chapterSchema = new Schema({
                 type: String,
                 required: true,
               },
+              fileUrls: {
+                type: Array,
+                schema: [String],
+              },
+              links: {
+                type: Array,
+                schema: [String],
+              },
+              comment: {
+                type: String,
+              },
               code: {
                 type: String,
               },

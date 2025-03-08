@@ -136,7 +136,7 @@ export default function OrganizationSidebar({
       className="border-r border-border"
       onCollapseChange={setCollapsed}
     >
-      <div className={cn("px-4 py-4 border-b", collapsed ? "flex justify-center" : "")}>
+      <div className={cn("p-4 border-b", collapsed ? "flex justify-center" : "")}>
         {currentOrg && (
           <DropdownMenu>
             <DropdownMenuTrigger

@@ -20,7 +20,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, UserPlus, BookOpen, Users, UserCheck, UserX, Edit, MoreHorizontal } from "lucide-react"
+import { Search, UserPlus, BookOpen, Users, UserCheck, MoreHorizontal } from "lucide-react"
 import { getUserName, handleEnroll } from "@/lib/utils"
 import {
   useGetOrganizationCoursesQuery,
@@ -80,15 +80,16 @@ const AdminCohortPage = ({ orgUsers, usersLoading, courses }: AdminCohortPagePro
   const [selectedLearnerId, setSelectedLearnerId] = useState("")
   const [selectedCourseId, setSelectedCourseId] = useState("")
   const [selectedInstructorId, setSelectedInstructorId] = useState("")
-  const [isAddLearnerDialogOpen, setIsAddLearnerDialogOpen] = useState(false)
-  const [isAddCourseDialogOpen, setIsAddCourseDialogOpen] = useState(false)
-  const [isChangeInstructorDialogOpen, setIsChangeInstructorDialogOpen] = useState(false)
+  const [activeDialog, setActiveDialog] = useState<
+    'none' | 'addLearner' | 'addCourse' | 'manageInstructors' | 'manageUsers'
+  >('none')
   const [courseToEdit, setCourseToEdit] = useState<Course | null>(null)
-  const [isRemoveInstructorAlertOpen, setIsRemoveInstructorAlertOpen] = useState(false)
   const [isManageUsersDialogOpen, setIsManageUsersDialogOpen] = useState(false)
   const [selectedCourseForUsers, setSelectedCourseForUsers] = useState<Course | null>(null)
 
   const availableCourses = orgCourses?.filter((course) => !courses?.some((c) => c.courseId === course.courseId)) || []
+
+  const REMOVE_INSTRUCTOR_VALUE = "remove_instructor"
 
   const handleAddLearner = async () => {
     if (!selectedLearnerId) {
@@ -104,12 +105,12 @@ const AdminCohortPage = ({ orgUsers, usersLoading, courses }: AdminCohortPagePro
       })
 
       toast.success("Learner added to cohort successfully")
-      setIsAddLearnerDialogOpen(false)
+      setActiveDialog('none')
       setSelectedLearnerId("")
       refetch()
     } catch (error) {
       toast.error("Failed to add learner to cohort")
-      setIsAddLearnerDialogOpen(false)
+      setActiveDialog('none')
       setSelectedLearnerId("")
     }
   }
@@ -140,98 +141,24 @@ const AdminCohortPage = ({ orgUsers, usersLoading, courses }: AdminCohortPagePro
       handleEnroll(selectedInstructorId, selectedCourseId, createTransaction)
 
       toast.success("Course added to cohort with instructor successfully")
-      setIsAddCourseDialogOpen(false)
+      setActiveDialog('none')
       setSelectedCourseId("")
       setSelectedInstructorId("")
       refetch()
     } catch (error) {
       toast.error("Failed to add course to cohort")
-      setIsAddCourseDialogOpen(false)
+      setActiveDialog('none')
       setSelectedCourseId("")
       setSelectedInstructorId("")
     }
   }
 
-  const handleChangeInstructor = async () => {
-    if (!courseToEdit || !selectedInstructorId) {
-      toast.error("Please select an instructor")
-      return
-    }
-
-    try {
-      if (courseToEdit.instructors && courseToEdit.instructors.length > 0) {
-        await removeCourseInstructor({
-          courseId: courseToEdit.courseId,
-          userId: courseToEdit.instructors[0].userId,
-        })
-
-        await unenrollUser({
-          courseId: courseToEdit.courseId,
-          userId: courseToEdit.instructors[0].userId,
-        })
-      }
-
-      await addCourseInstructor({
-        courseId: courseToEdit.courseId,
-        userId: selectedInstructorId,
-      })
-
-      handleEnroll(selectedInstructorId, courseToEdit.courseId, createTransaction)
-
-      toast.success("Course instructor updated successfully")
-      setIsChangeInstructorDialogOpen(false)
-      setCourseToEdit(null)
-      setSelectedInstructorId("")
-      refetch()
-    } catch (error) {
-      toast.error("Failed to update course instructor")
-      setIsChangeInstructorDialogOpen(false)
-      setCourseToEdit(null)
-      setSelectedInstructorId("")
-    }
-  }
-
-  const handleRemoveInstructor = async () => {
-    if (!courseToEdit || !courseToEdit.instructors || courseToEdit.instructors.length === 0) {
-      toast.error("No instructor to remove")
-      return
-    }
-
-    try {
-      await removeCourseInstructor({
-        courseId: courseToEdit.courseId,
-        userId: courseToEdit.instructors[0].userId,
-      })
-
-      await unenrollUser({
-        courseId: courseToEdit.courseId,
-        userId: courseToEdit.instructors[0].userId,
-      })
-
-      toast.success("Instructor removed successfully")
-      setIsRemoveInstructorAlertOpen(false)
-      setCourseToEdit(null)
-      refetch()
-    } catch (error) {
-      toast.error("Failed to remove instructor")
-      setIsRemoveInstructorAlertOpen(false)
-      setCourseToEdit(null)
-    }
-  }
-
-  const openChangeInstructorDialog = (course: Course) => {
+  const openManageInstructorsDialog = (course: Course) => {
     setCourseToEdit(course)
-    setSelectedInstructorId(course.instructors && course.instructors.length > 0 ? course.instructors[0].userId : "")
-    setIsChangeInstructorDialogOpen(true)
-  }
-
-  const openRemoveInstructorAlert = (course: Course) => {
-    if (!course.instructors || course.instructors.length === 0) {
-      toast.error("No instructor assigned to this course")
-      return
-    }
-    setCourseToEdit(course)
-    setIsRemoveInstructorAlertOpen(true)
+    setSelectedInstructorId(course.instructors && course.instructors.length > 0 
+      ? course.instructors[0].userId 
+      : "")
+    setActiveDialog('manageInstructors')
   }
 
   const openManageUsersDialog = (course: Course) => {
@@ -250,6 +177,60 @@ const AdminCohortPage = ({ orgUsers, usersLoading, courses }: AdminCohortPagePro
   const getInstructorName = (instructorId: string) => {
     const instructor = orgUsers?.instructors?.find((i: User) => i.id === instructorId)
     return instructor ? getUserName(instructor) : instructorId
+  }
+
+  const handleManageInstructors = async () => {
+    if (!courseToEdit) {
+      toast.error("No course selected")
+      return
+    }
+
+    const hasCurrentInstructor = courseToEdit.instructors && courseToEdit.instructors.length > 0
+    const isRemovingInstructor = hasCurrentInstructor && selectedInstructorId === REMOVE_INSTRUCTOR_VALUE
+
+    try {
+      if (hasCurrentInstructor) {
+        await removeCourseInstructor({
+          courseId: courseToEdit.courseId,
+          userId: courseToEdit?.instructors?.[0].userId as string,
+        })
+
+        await unenrollUser({
+          courseId: courseToEdit.courseId,
+          userId: courseToEdit?.instructors?.[0].userId as string,
+        })
+      }
+
+      if (selectedInstructorId && selectedInstructorId !== REMOVE_INSTRUCTOR_VALUE) {
+        await addCourseInstructor({
+          courseId: courseToEdit.courseId,
+          userId: selectedInstructorId,
+        })
+
+        handleEnroll(selectedInstructorId, courseToEdit.courseId, createTransaction)
+      }
+
+      toast.success(
+        isRemovingInstructor 
+          ? "Instructor removed successfully" 
+          : "Course instructor updated successfully"
+      )
+      closeAllDialogs()
+      refetch()
+    } catch (error) {
+      toast.error(
+        isRemovingInstructor 
+          ? "Failed to remove instructor" 
+          : "Failed to update course instructor"
+      )
+      closeAllDialogs()
+    }
+  }
+
+  const closeAllDialogs = () => {
+    setActiveDialog('none')
+    setCourseToEdit(null)
+    setSelectedInstructorId("")
   }
 
   if (cohortLoading || usersLoading || coursesLoading || cohortLearnersLoading) {
@@ -280,9 +261,9 @@ const AdminCohortPage = ({ orgUsers, usersLoading, courses }: AdminCohortPagePro
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold">Cohort Learners</h2>
             <Dialog
-              open={isAddLearnerDialogOpen}
+              open={activeDialog === 'addLearner'}
               onOpenChange={(open) => {
-                setIsAddLearnerDialogOpen(open)
+                setActiveDialog(open ? 'addLearner' : 'none')
                 if (!open) setSelectedLearnerId("")
               }}
             >
@@ -330,7 +311,7 @@ const AdminCohortPage = ({ orgUsers, usersLoading, courses }: AdminCohortPagePro
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsAddLearnerDialogOpen(false)}>
+                  <Button variant="outline" onClick={() => setActiveDialog('none')}>
                     Cancel
                   </Button>
                   <Button onClick={handleAddLearner}>Add to Cohort</Button>
@@ -373,9 +354,9 @@ const AdminCohortPage = ({ orgUsers, usersLoading, courses }: AdminCohortPagePro
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold">Cohort Courses</h2>
             <Dialog
-              open={isAddCourseDialogOpen}
+              open={activeDialog === 'addCourse'}
               onOpenChange={(open) => {
-                setIsAddCourseDialogOpen(open)
+                setActiveDialog(open ? 'addCourse' : 'none')
                 if (!open) {
                   setSelectedCourseId("")
                   setSelectedInstructorId("")
@@ -430,7 +411,7 @@ const AdminCohortPage = ({ orgUsers, usersLoading, courses }: AdminCohortPagePro
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsAddCourseDialogOpen(false)}>
+                  <Button variant="outline" onClick={() => setActiveDialog('none')}>
                     Cancel
                   </Button>
                   <Button onClick={handleAddCourse}>Add to Cohort</Button>
@@ -472,16 +453,10 @@ const AdminCohortPage = ({ orgUsers, usersLoading, courses }: AdminCohortPagePro
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => openChangeInstructorDialog(course)}>
-                                <Edit className="mr-2 h-4 w-4" />
-                                Change Instructor
+                              <DropdownMenuItem onClick={() => openManageInstructorsDialog(course)}>
+                                <Users className="mr-2 h-4 w-4" />
+                                Manage Instructors
                               </DropdownMenuItem>
-                              {course.instructors && course.instructors.length > 0 && (
-                                <DropdownMenuItem onClick={() => openRemoveInstructorAlert(course)}>
-                                  <UserX className="mr-2 h-4 w-4" />
-                                  Remove Instructor
-                                </DropdownMenuItem>
-                              )}
                               <DropdownMenuItem onClick={() => openManageUsersDialog(course)}>
                                 <Users className="mr-2 h-4 w-4" />
                                 Manage Enrollments
@@ -505,32 +480,42 @@ const AdminCohortPage = ({ orgUsers, usersLoading, courses }: AdminCohortPagePro
         </TabsContent>
       </Tabs>
 
-      {/* Change Instructor Dialog */}
-      <Dialog
-        open={isChangeInstructorDialogOpen}
-        onOpenChange={(open) => {
-          setIsChangeInstructorDialogOpen(open)
-          if (!open) {
-            setCourseToEdit(null)
-            setSelectedInstructorId("")
-          }
-        }}
+      {/* Manage Instructors Dialog */}
+      <Dialog 
+        open={activeDialog === 'manageInstructors'} 
+        onOpenChange={(open) => !open && closeAllDialogs()}
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Change Course Instructor</DialogTitle>
-            <DialogDescription>Select a new instructor for {courseToEdit?.title}.</DialogDescription>
+            <DialogTitle>Manage Course Instructors</DialogTitle>
+            <DialogDescription>
+              {courseToEdit?.instructors && courseToEdit.instructors.length > 0 
+                ? `Current instructor: ${getInstructorName(courseToEdit.instructors[0].userId)}`
+                : "No instructor currently assigned"}
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="newInstructor">Instructor</Label>
-              <Select value={selectedInstructorId} onValueChange={setSelectedInstructorId}>
-                <SelectTrigger id="newInstructor">
+              <Label htmlFor="instructor">Select Instructor</Label>
+              <Select 
+                value={selectedInstructorId} 
+                onValueChange={setSelectedInstructorId}
+              >
+                <SelectTrigger id="instructor">
                   <SelectValue placeholder="Select instructor">
-                    {selectedInstructorId ? getInstructorName(selectedInstructorId) : "Select instructor"}
+                    {selectedInstructorId === REMOVE_INSTRUCTOR_VALUE 
+                      ? "Remove instructor"
+                      : selectedInstructorId 
+                        ? getInstructorName(selectedInstructorId) 
+                        : "Select instructor"}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
+                  {courseToEdit?.instructors && courseToEdit.instructors.length > 0 && (
+                    <SelectItem value={REMOVE_INSTRUCTOR_VALUE}>
+                      <span className="text-destructive">Remove instructor</span>
+                    </SelectItem>
+                  )}
                   {orgUsers?.instructors?.map((instructor: User) => (
                     <SelectItem key={instructor.id} value={instructor.id}>
                       <span className="flex flex-col">
@@ -546,35 +531,22 @@ const AdminCohortPage = ({ orgUsers, usersLoading, courses }: AdminCohortPagePro
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsChangeInstructorDialogOpen(false)}>
+            <Button variant="outline" onClick={closeAllDialogs}>
               Cancel
             </Button>
-            <Button onClick={handleChangeInstructor}>Save Changes</Button>
+            <Button 
+              onClick={handleManageInstructors}
+              variant={selectedInstructorId === REMOVE_INSTRUCTOR_VALUE ? "destructive" : "default"}
+            >
+              {selectedInstructorId === REMOVE_INSTRUCTOR_VALUE
+                ? "Remove Instructor" 
+                : (courseToEdit?.instructors && courseToEdit.instructors.length > 0) 
+                  ? "Change Instructor" 
+                  : "Assign Instructor"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Remove Instructor Alert Dialog */}
-      <AlertDialog
-        open={isRemoveInstructorAlertOpen}
-        onOpenChange={(open) => {
-          setIsRemoveInstructorAlertOpen(open)
-          if (!open) setCourseToEdit(null)
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remove Instructor</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to remove the instructor from this course? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleRemoveInstructor}>Remove</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       {/* Manage Users Dialog */}
       <ManageUsersDialog

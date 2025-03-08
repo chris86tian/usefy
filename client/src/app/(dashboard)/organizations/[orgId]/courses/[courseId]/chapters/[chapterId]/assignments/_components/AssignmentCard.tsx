@@ -1,11 +1,10 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { FileText, Trash2, Edit, Code, LinkIcon, Users, ChevronDown, ExternalLink, Upload } from "lucide-react"
+import { FileText, Trash2, Edit, Code, LinkIcon, Users, ChevronDown, ExternalLink, UploadCloud, CheckCircle } from "lucide-react"
 import { useUser } from "@clerk/nextjs"
 import { useDeleteAssignmentMutation } from "@/state/api"
 import { useParams, useRouter } from "next/navigation"
@@ -38,7 +37,7 @@ const Description = ({ text }: { text: string }) => {
   const shouldCollapse = (text: string | string[]) => text.length > 100
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       {parts.map((part, index) => {
         if (index % 2 === 1) {
           const isOpen = openSections[index] ?? false
@@ -108,6 +107,10 @@ export function AssignmentCard({ assignment, course, sectionId, chapterId }: Ass
   const [isResourcesOpen, setIsResourcesOpen] = useState(false)
   const { orgId } = useParams()
 
+  const hasSubmitted = user && assignment.submissions.some(
+    (submission) => submission.userId === user.id
+  )
+
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation()
     try {
@@ -122,15 +125,12 @@ export function AssignmentCard({ assignment, course, sectionId, chapterId }: Ass
     }
   }
 
-  const handleStartAssignment = () => {
-    // Check if this is a coding assignment
+  const handleAssignment = () => {
     if (assignment.isCoding) {
-      // Navigate to code editor for coding assignments
       router.push(
         `/organizations/${orgId}/courses/${course.courseId}/chapters/${chapterId}/code?courseId=${course.courseId}&sectionId=${sectionId}&chapterId=${chapterId}&assignmentId=${assignment.assignmentId}`,
       )
     } else {
-      // Open submission modal for non-coding assignments
       setIsSubmissionModalOpen(true)
     }
   }
@@ -138,7 +138,7 @@ export function AssignmentCard({ assignment, course, sectionId, chapterId }: Ass
   return (
     <>
       <Card className="overflow-hidden border border-gray-200">
-        <CardHeader className="p-4 pb-2">
+        <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <FileText className="h-5 w-5 text-primary" />
@@ -165,7 +165,7 @@ export function AssignmentCard({ assignment, course, sectionId, chapterId }: Ass
           </div>
         </CardHeader>
 
-        <CardContent className="p-4 pt-2">
+        <CardContent>
           <Description text={assignment.description} />
 
           <div className="flex items-center space-x-2 text-sm text-muted-foreground my-4">
@@ -209,16 +209,25 @@ export function AssignmentCard({ assignment, course, sectionId, chapterId }: Ass
           )}
         </CardContent>
 
-        <CardFooter className="p-4 pt-0">
-          <Button onClick={handleStartAssignment} className="w-full">
-            {assignment.isCoding ? (
+        <CardFooter>
+          <Button 
+            onClick={handleAssignment} 
+            className="w-full"
+            variant={hasSubmitted ? "outline" : "default"}
+          >
+            {hasSubmitted ? (
+              <>
+                <CheckCircle className="h-4 w-4 mr-2" />
+                View Submission
+              </>
+            ) : assignment.isCoding ? (
               <>
                 <Code className="h-4 w-4 mr-2" />
                 Start Coding
               </>
             ) : (
               <>
-                <Upload className="h-4 w-4 mr-2" />
+                <UploadCloud className="h-4 w-4 mr-2" />
                 Submit Assignment
               </>
             )}
