@@ -115,6 +115,7 @@ export const createTransaction = async (req: Request, res: Response): Promise<vo
       "Course Enrollment",
       `You have been enrolled in ${course.title}`,
       `You have been enrolled in ${course.title}. You can start learning now!`,
+      null,
       { sendEmail: true, sendNotification: true, rateLimited: false }
     );
 
@@ -127,7 +128,7 @@ export const createTransaction = async (req: Request, res: Response): Promise<vo
   }
 };
 
-export const getTransactionStats = async ( req: Request, res: Response): Promise<void> => {
+export const getTransactionStats = async (req: Request, res: Response): Promise<void> => {
   try {
     const transactions = await Transaction.scan().exec();
     const totalAmountInCents = transactions.reduce((acc, curr) => acc + curr.amount, 0);

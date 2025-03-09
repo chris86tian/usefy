@@ -404,7 +404,13 @@ export const inviteUserToOrganization = async (req: Request, res: Response): Pro
     if (user) {
       if (!list.some((u) => u.userId === user?.id)) list.push({ userId: user.id });
 
-      await sendMessage(user.id, user.emailAddresses[0].emailAddress, title, message, { sendEmail: true, sendNotification: true, rateLimited: false });
+      await sendMessage(
+        user.id, 
+        user.emailAddresses[0].emailAddress, 
+        title, 
+        message, 
+        `/organizations/${organization.organizationId}/dashboard`,
+        { sendEmail: true, sendNotification: true, rateLimited: false });
     } else {
       user = await clerkClient.users.createUser({
         emailAddress: [email],
@@ -423,6 +429,7 @@ export const inviteUserToOrganization = async (req: Request, res: Response): Pro
         email,
         "You're invited to join an organization - Reset Your Password",
         `You've been invited to join the organization ${organization.name}. Click the link below to reset your password and activate your account:\n\n${resetPasswordLink}\n\nIf you did not request this, you can ignore this email.`,
+        null,
         { sendEmail: true, sendNotification: false, rateLimited: false }
       );
     }

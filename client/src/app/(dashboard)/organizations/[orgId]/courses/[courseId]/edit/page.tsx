@@ -29,7 +29,7 @@ import { v4 as uuid } from "uuid"
 import { useRouter } from "next/navigation"
 
 const CourseEditor = () => {
-  const { courseId } = useParams() as { courseId: string }
+  const { orgId, courseId } = useParams() as { orgId: string; courseId: string }
   const { data: course, isLoading, refetch } = useGetCourseQuery(courseId)
   const [updateCourse] = useUpdateCourseMutation()
   const [getUploadVideoUrl] = useGetUploadVideoUrlMutation()
@@ -257,7 +257,7 @@ const CourseEditor = () => {
 
       const formData = createCourseFormData(data, updatedSections, thumbnailUrl)
 
-      await updateCourse({ courseId, formData }).unwrap()
+      await updateCourse({ orgId, courseId, formData }).unwrap()
 
       toast.success("Course updated successfully!")
       refetch()

@@ -19,6 +19,9 @@ const notificationSchema = new Schema(
       type: String,
       required: true,
     },
+    link: {
+      type: String,
+    },
     timestamp: {
       type: String,
       required: true,

@@ -5,12 +5,21 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Bell } from 'lucide-react'
 import { Button } from "@/components/ui/button"
+import { useRouter } from "next/navigation"
 
 interface NotificationDropdownProps {
   notifications: UserNotification[]
 }
 
 const NotificationDropdown = ({ notifications }: NotificationDropdownProps) => {
+  const router = useRouter()
+  
+  const handleNotificationClick = (notification: UserNotification) => {
+    if (notification.link) {
+      router.push(notification.link)
+    }
+  }
+  
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -33,8 +42,9 @@ const NotificationDropdown = ({ notifications }: NotificationDropdownProps) => {
             {notifications.length > 0 ? (
               notifications.map((notification, index) => (
                 <div
-                  key={notification.id || index}
-                  className="mb-2 rounded-md border border-border bg-card p-3 last:mb-0 hover:bg-accent transition-colors"
+                  key={notification.notificationId || index}
+                  className={`mb-2 rounded-md border border-border bg-card p-3 last:mb-0 hover:bg-accent transition-colors ${notification.link ? 'cursor-pointer' : ''}`}
+                  onClick={() => handleNotificationClick(notification)}
                 >
                   <h4 className="text-sm font-semibold text-card-foreground">
                     {notification.title}

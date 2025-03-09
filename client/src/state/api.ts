@@ -384,20 +384,11 @@ export const api = createApi({
 
     updateCourse: build.mutation<
       Course,
-      { courseId: string; formData: FormData }
+      { orgId: string, courseId: string; formData: FormData }
     >({
-      query: ({ courseId, formData }) => {
-        console.log("Preparing update course request:", { courseId });
-        console.log("FormData contents:");
-        for (const [key, value] of formData.entries()) {
-          console.log(
-            `${key}:`,
-            key === "sections" ? JSON.parse(value as string) : value
-          );
-        }
-
+      query: ({ orgId, courseId, formData }) => {
         return {
-          url: `courses/${courseId}`,
+          url: `courses/${orgId}/${courseId}`,
           method: "PUT",
           body: formData,
           formData: true,

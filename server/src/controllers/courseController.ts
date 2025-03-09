@@ -6,7 +6,6 @@ import { mergeSections, calculateOverallProgress } from "../utils/utils";
 import Commit from "../models/commitModel";
 import Course from "../models/courseModel";
 import UserCourseProgress from "../models/userCourseProgressModel";
-import UserNotification from "../models/notificationModel";
 import { clerkClient } from "..";
 import { sendMessage } from "../utils/utils";
 
@@ -92,7 +91,7 @@ export const updateCourse = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const { courseId } = req.params;
+  const { orgId, courseId } = req.params;
   const updateData = { ...req.body };
   const { userId } = getAuth(req);
 
@@ -203,11 +202,39 @@ export const updateCourse = async (
     for (const enrollment of course.enrollments) {
       const user = await clerkClient.users.getUser(enrollment.userId);
       if (user.emailAddresses && user.emailAddresses.length > 0) {
+        // Create a detailed message about what was updated
+        let updateDetails = [];
+        
+        if (updateData.title || updateData.description) {
+          updateDetails.push("course information");
+        }
+        
+        if (updateData.sections) {
+          updateDetails.push("course content");
+        }
+        
+        if (updateData.image) {
+          updateDetails.push("course image");
+        }
+        
+        if (updateData.price !== undefined) {
+          updateDetails.push("pricing");
+        }
+        
+        let updateMessage = `The course "${course.title}" has been updated.`;
+        
+        if (updateDetails.length > 0) {
+          updateMessage += ` The following was updated: ${updateDetails.join(", ")}.`;
+        }
+        
+        updateMessage += " Check it out now!";
+        
         await sendMessage(
           enrollment.userId,
           user.emailAddresses[0].emailAddress,
           "Course Updated",
-          `The course ${course.title} has been updated. Check it out now!`,
+          updateMessage,
+          `/organizations/${orgId}/courses/${courseId}/chapters/${course.sections[0].chapters[0].chapterId}`,
           { sendEmail: true, sendNotification: true, rateLimited: true }
         );
       }
@@ -232,7 +259,6 @@ export const archiveCourse = async (
   res: Response
 ): Promise<void> => {
   const { courseId } = req.params;
-  const { userId } = getAuth(req);
 
   try {
     const course = await Course.get(courseId);
@@ -1324,7 +1350,9 @@ export const unenrollUser = async (
         userId,
         userEmail,
         "Course Unenrolled",
-        `You have been unenrolled from the course ${course.title}`
+        `You have been unenrolled from the course ${course.title}`,
+        null,
+        { sendEmail: true, sendNotification: true, rateLimited: true }
       );
     } catch (err) {
       console.error("Error sending notification:", err);

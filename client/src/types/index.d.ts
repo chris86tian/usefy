@@ -396,9 +396,11 @@ declare global {
   }
 
   interface UserNotification {
-    id: string
+    notificationId: string
+    userId: string
     title: string
     message: string
+    link?: string
     timestamp: string
   }
 

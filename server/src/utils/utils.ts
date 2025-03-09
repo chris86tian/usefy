@@ -188,6 +188,7 @@ export const sendMessage = async (
   email: string,
   title: string,
   message: string,
+  link: string | null = null,
   options: {
     sendEmail?: boolean;
     sendNotification?: boolean;
@@ -213,8 +214,6 @@ export const sendMessage = async (
         subject: title,
         text: message,
       });
-
-      console.log("✅ Email sent to", email);
       lastRequestTime = Date.now();
     }
 
@@ -224,11 +223,11 @@ export const sendMessage = async (
         userId,
         title,
         message,
+        link,
         timestamp: new Date().toISOString(),
       });
 
       await notification.save();
-      console.log("✅ Notification saved for user", userId);
     }
   } catch (error) {
     console.error("❌ Error sending message:", error);

@@ -56,8 +56,9 @@ router.get(
   getCourse
 );
 
+// orgId for notification link
 router.put(
-  "/:courseId", 
+  "/:orgId/:courseId", 
   requireAuth(), 
   upload.none(), 
   updateCourse
