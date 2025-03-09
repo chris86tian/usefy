@@ -1296,6 +1296,8 @@ export const unenrollUser = async (
   try {
     const { courseId, userId } = req.params;
 
+    const userEmail = (await clerkClient.users.getUser(userId)).emailAddresses[0].emailAddress;
+
     if (!courseId || !userId) {
       res.status(400).json({ message: "Missing courseId or userId" });
     }
@@ -1318,14 +1320,12 @@ export const unenrollUser = async (
     await UserCourseProgress.delete({ userId, courseId });
 
     try {
-      const notification = new UserNotification({
-        notificationId: uuidv4(),
+      await sendMessage(
         userId,
-        title: "Unenrollment",
-        message: "You have been unenrolled from the course: " + course.title,
-        timestamp: new Date().toISOString(),
-      });
-      await notification.save();
+        userEmail,
+        "Course Unenrolled",
+        `You have been unenrolled from the course ${course.title}`
+      );
     } catch (err) {
       console.error("Error sending notification:", err);
       res
