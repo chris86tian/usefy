@@ -24,6 +24,7 @@ import { useUser } from "@clerk/nextjs"
 import { cn } from "@/lib/utils"
 
 interface CourseCommentsProps {
+  orgId: string
   courseId: string
   sectionId: string
   chapterId: string
@@ -70,7 +71,7 @@ const formatDate = (dateString: string) => {
   return date.toLocaleDateString()
 }
 
-export function CourseComments({ courseId, sectionId, chapterId }: CourseCommentsProps) {
+export function CourseComments({ orgId, courseId, sectionId, chapterId }: CourseCommentsProps) {
   const { user } = useUser()
   const [newComment, setNewComment] = useState("")
   const [replyText, setReplyText] = useState<{ [key: string]: string }>({})
@@ -154,7 +155,9 @@ export function CourseComments({ courseId, sectionId, chapterId }: CourseComment
     }
 
     try {
+      console.log("reply", reply)
       await createReply({
+        orgId,
         courseId,
         sectionId,
         chapterId,

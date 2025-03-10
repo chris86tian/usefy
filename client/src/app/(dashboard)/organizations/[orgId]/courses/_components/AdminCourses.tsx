@@ -159,7 +159,7 @@ const AdminCourses = () => {
           isAdmin ? (
             <Button
               onClick={handleCreateCourse}
-              className="bg-blue-500 hover:bg-blue-600 text-white"
+              className="bg-blue-500 hover:bg-blue-600"
             >
               <WandSparkles className="w-5 h-5" />
               Create Course
@@ -207,7 +207,7 @@ const AdminCourses = () => {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleDeleteCourse}
-              className="bg-red-500 hover:bg-red-600 text-white"
+              className="bg-red-500 hover:bg-red-600"
             >
               Delete
             </AlertDialogAction>

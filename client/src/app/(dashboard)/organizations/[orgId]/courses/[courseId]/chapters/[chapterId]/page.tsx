@@ -487,6 +487,7 @@ const Course = () => {
           </Card>
         )}
         <CourseComments
+          orgId={currentOrg?.organizationId as string}
           courseId={course.courseId}
           sectionId={currentSection.sectionId}
           chapterId={currentChapter.chapterId}

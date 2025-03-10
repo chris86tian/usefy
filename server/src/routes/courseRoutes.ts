@@ -164,8 +164,10 @@ router.get(
   requireAuth(),
   getComments
 );
+
+// orgId for notification link
 router.post(
-  "/:courseId/sections/:sectionId/chapters/:chapterId/comments/:commentId/replies",
+  "/:orgId/:courseId/sections/:sectionId/chapters/:chapterId/comments/:commentId/replies",
   requireAuth(),
   createReply
 );
