@@ -13,6 +13,7 @@ import {
   addCourseToOrganization,
   removeCourseFromOrganization,
   inviteUserToOrganization,
+  inviteUserToCohort,
   getOrganizationUsers,
   removeUserFromOrganization,
   changeUserRole,
@@ -34,6 +35,7 @@ router.get("/:organizationId/courses", getOrganizationCourses);
 router.get("/:organizationId/my-courses", requireAuth(), getMyOrganizationCourses);
 router.get("/:organizationId/progresses", requireAuth(), getMyUserCourseProgresses);
 router.post("/:organizationId/invite", requireAuth(), inviteUserToOrganization);
+router.post("/:organizationId/cohort/:cohortId/invite", requireAuth(), inviteUserToCohort);
 router.post(
   "/:organizationId/:courseId",
   requireAuth(),

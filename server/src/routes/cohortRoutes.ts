@@ -23,7 +23,7 @@ router.put("/:organizationId/:cohortId", requireAuth(), updateCohort);
 router.delete("/:organizationId/:cohortId", requireAuth(), deleteCohort);
 router.get("/:organizationId/:cohortId/learners", getCohortLearners);
 router.post("/:organizationId/:cohortId/add-learner", addLearnerToCohort);
-router.post("/:organizationId/:cohortId/remove-learner", removeLearnerFromCohort);
+router.delete("/:organizationId/remove-learner/:cohortId", removeLearnerFromCohort);
 router.get("/:organizationId/:cohortId/courses", getCohortCourses);
 router.post("/:organizationId/:cohortId/add-course", addCourseToCohort);
 router.post("/:organizationId/:cohortId/remove-course", removeCourseFromCohort);

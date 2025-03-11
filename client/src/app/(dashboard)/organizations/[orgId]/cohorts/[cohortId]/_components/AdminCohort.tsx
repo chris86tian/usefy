@@ -20,11 +20,12 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, UserPlus, BookOpen, Users, UserCheck, MoreHorizontal } from "lucide-react"
+import { Search, UserPlus, BookOpen, Users, UserCheck, MoreHorizontal, MailPlusIcon } from "lucide-react"
 import { getUserName, handleEnroll } from "@/lib/utils"
 import {
   useGetOrganizationCoursesQuery,
   useAddLearnerToCohortMutation,
+  useRemoveLearnerFromCohortMutation,
   useAddCourseToCohortMutation,
   useAddCourseInstructorMutation,
   useRemoveCourseInstructorMutation,
@@ -32,18 +33,10 @@ import {
   useUnenrollUserMutation,
   useGetCohortQuery,
   useGetCohortLearnersQuery,
+  useInviteUserToOrganizationMutation,
+  useInviteUserToCohortMutation,
 } from "@/state/api"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 import type { User } from "@clerk/nextjs/server"
 import { useParams } from "next/navigation"
 import ManageUsersDialog from "./ManageUsersDialog"
@@ -70,22 +63,28 @@ const AdminCohortPage = ({ orgUsers, usersLoading, courses }: AdminCohortPagePro
   )
 
   const [addLearnerToCohort] = useAddLearnerToCohortMutation()
+  const [removeLearnerFromCohort] = useRemoveLearnerFromCohortMutation()
   const [addCourseToCohort] = useAddCourseToCohortMutation()
   const [addCourseInstructor] = useAddCourseInstructorMutation()
   const [removeCourseInstructor] = useRemoveCourseInstructorMutation()
   const [createTransaction] = useCreateTransactionMutation()
   const [unenrollUser] = useUnenrollUserMutation()
+  const [inviteUser] = useInviteUserToOrganizationMutation()
+  const [inviteUserToCohort] = useInviteUserToCohortMutation()
 
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedLearnerId, setSelectedLearnerId] = useState("")
   const [selectedCourseId, setSelectedCourseId] = useState("")
   const [selectedInstructorId, setSelectedInstructorId] = useState("")
   const [activeDialog, setActiveDialog] = useState<
-    'none' | 'addLearner' | 'addCourse' | 'manageInstructors' | 'manageUsers'
+    'none' | 'addLearner' | 'addCourse' | 'manageInstructors' | 'manageUsers' | 'inviteLearner'
   >('none')
   const [courseToEdit, setCourseToEdit] = useState<Course | null>(null)
   const [isManageUsersDialogOpen, setIsManageUsersDialogOpen] = useState(false)
   const [selectedCourseForUsers, setSelectedCourseForUsers] = useState<Course | null>(null)
+  const [inviteEmail, setInviteEmail] = useState("")
+  const [emailBatch, setEmailBatch] = useState<string[]>([])
+  const [inviteRole, setInviteRole] = useState<string>("learner")
 
   const availableCourses = orgCourses?.filter((course) => !courses?.some((c) => c.courseId === course.courseId)) || []
 
@@ -114,6 +113,45 @@ const AdminCohortPage = ({ orgUsers, usersLoading, courses }: AdminCohortPagePro
       setSelectedLearnerId("")
     }
   }
+
+  const handleAddByInvite = async () => {
+    if (emailBatch.length === 0) {
+      toast.error("Please enter at least one email address")
+      return
+    }
+
+    try {
+      for (const email of emailBatch) {
+        await inviteUserToCohort({
+          organizationId: cohort?.organizationId as string,
+          cohortId: cohort?.cohortId as string,
+          email: email.trim(),
+          role: inviteRole,
+        }).unwrap()
+      }
+
+      toast.success(`Invitations sent to ${emailBatch.join(", ")}`)
+      setEmailBatch([])
+      setInviteEmail("")
+      setActiveDialog('none')
+      refetch()
+    } catch (error) {
+      toast.error("Failed to send invitations")
+    }
+  }
+
+  const handleEmailInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setInviteEmail(value);
+
+    // Split the input by commas and trim whitespace
+    const emails = value.split(',')
+      .map(email => email.trim())
+      .filter(email => email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)); // Validate email format
+
+    // Update the emailBatch state with unique emails
+    setEmailBatch(emails);
+  };
 
   const handleAddCourse = async () => {
     if (!selectedCourseId) {
@@ -228,6 +266,41 @@ const AdminCohortPage = ({ orgUsers, usersLoading, courses }: AdminCohortPagePro
     setSelectedInstructorId("")
   }
 
+  const handleInviteUser = async () => {
+    if (!inviteEmail) {
+      toast.error("Please enter an email address")
+      return
+    }
+
+    try {
+      await inviteUser({
+        organizationId: cohort?.organizationId as string,
+        email: inviteEmail.trim(),
+        role: inviteRole,
+      }).unwrap()
+
+      toast.success(`Invitation sent to ${inviteEmail}`)
+      setInviteEmail("")
+    } catch (error) {
+      toast.error("Failed to send invitation")
+    }
+  }
+
+  const handleRemoveLearner = async (learnerId: string) => {
+    try {
+      await removeLearnerFromCohort({
+        organizationId: cohort?.organizationId as string,
+        cohortId: cohort?.cohortId as string,
+        learnerId,
+      }).unwrap();
+
+      toast.success("Learner removed from cohort successfully");
+      refetch();
+    } catch (error) {
+      toast.error("Failed to remove learner from cohort");
+    }
+  };
+
   if (cohortLoading || usersLoading || coursesLoading || cohortLearnersLoading) {
     return <Spinner />
   }
@@ -240,11 +313,11 @@ const AdminCohortPage = ({ orgUsers, usersLoading, courses }: AdminCohortPagePro
     <div className="space-y-6">
       <Header title={cohort.name} subtitle="Manage cohort learners and courses" />
 
-      <Tabs defaultValue="learners" className="w-full">
+      <Tabs defaultValue="members" className="w-full">
         <TabsList>
-          <TabsTrigger value="learners" className="flex items-center gap-2">
+          <TabsTrigger value="members" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
-            Learners
+            Members
           </TabsTrigger>
           <TabsTrigger value="courses" className="flex items-center gap-2">
             <BookOpen className="h-4 w-4" />
@@ -252,9 +325,9 @@ const AdminCohortPage = ({ orgUsers, usersLoading, courses }: AdminCohortPagePro
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="learners" className="space-y-4">
+        <TabsContent value="members" className="space-y-4">
           <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">Cohort Learners</h2>
+            <h2 className="text-xl font-semibold">Cohort Members</h2>
             <Dialog
               open={activeDialog === 'addLearner'}
               onOpenChange={(open) => {
@@ -322,6 +395,7 @@ const AdminCohortPage = ({ orgUsers, usersLoading, courses }: AdminCohortPagePro
                   <TableRow>
                     <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -330,11 +404,16 @@ const AdminCohortPage = ({ orgUsers, usersLoading, courses }: AdminCohortPagePro
                       <TableRow key={learner.id}>
                         <TableCell className="font-medium">{getUserName(learner)}</TableCell>
                         <TableCell>{learner.emailAddresses[0].emailAddress}</TableCell>
+                        <TableCell>
+                          <Button onClick={() => handleRemoveLearner(learner.id)} variant="outline" size="sm">
+                            Remove
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={2} className="text-center text-muted-foreground">
+                      <TableCell colSpan={3} className="text-center text-muted-foreground">
                         No learners in this cohort
                       </TableCell>
                     </TableRow>
@@ -558,6 +637,54 @@ const AdminCohortPage = ({ orgUsers, usersLoading, courses }: AdminCohortPagePro
           setIsManageUsersDialogOpen(false)
         }}
       />
+
+      {/* Invite User Section */}
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold">Invite Learner</h2>
+        <Dialog open={activeDialog === 'inviteLearner'} onOpenChange={(open) => {
+          setActiveDialog(open ? 'inviteLearner' : 'none')
+          if (!open) {
+            setEmailBatch([])
+            setInviteEmail("")
+          }
+        }}>
+          <DialogTrigger asChild>
+            <Button>
+              <MailPlusIcon className="mr-2 h-4 w-4" />
+              Invite Learner
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Invite Learners</DialogTitle>
+              <DialogDescription>Enter the email addresses of the learners you want to invite, separated by commas.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <Input
+                type="text"
+                placeholder="Enter email addresses (comma separated)"
+                value={inviteEmail}
+                onChange={handleEmailInput}
+              />
+              <Select value={inviteRole} onValueChange={(value) => setInviteRole(value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="learner">Learner</SelectItem>
+                  <SelectItem value="instructor">Instructor</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setActiveDialog('none')}>
+                Cancel
+              </Button>
+              <Button onClick={handleAddByInvite}>Send Invitations</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   )
 }

@@ -516,6 +516,110 @@ export const inviteUserToOrganization = async (req: Request, res: Response): Pro
   }
 };
 
+export const inviteUserToCohort = async (req: Request, res: Response): Promise<void> => {
+  const { organizationId, cohortId } = req.params;
+  const { email, role } = req.body;
+
+  try {
+    const users = await clerkClient.users.getUserList({ emailAddress: [email] });
+    let user = users.totalCount > 0 ? users.data[0] : null;
+
+    const organization = await Organization.get(organizationId);
+    if (!organization) {
+      res.status(404).json({ message: "Organization not found" });
+      return;
+    }
+
+    const cohort = await Cohort.get(cohortId);
+    if (!cohort) {
+      res.status(404).json({ message: "Cohort not found" });
+      return;
+    }
+
+    const roleMapping: Record<string, any[]> = {
+      learner: cohort.learners,
+      instructor: cohort.instructors,
+    };
+
+    if (!roleMapping[role]) {
+      res.status(400).json({ message: "Invalid role specified" });
+      return;
+    }
+
+    const list = roleMapping[role];
+
+    if (user) {
+      // If the user exists, add them to the cohort and organization
+      if (!list.some((u) => u.userId === user?.id)) {
+        list.push({ userId: user.id });
+
+        // Add user to organization members based on their role
+        if (role === 'learner') {
+          if (!organization.learners.some((member: any) => member.userId === user?.id)) {
+            organization.learners.push({ userId: user.id });
+          }
+        } else if (role === 'instructor') {
+          if (!organization.instructors.some((member: any) => member.userId === user?.id)) {
+            organization.instructors.push({ userId: user.id });
+          }
+        }
+
+        await cohort.save(); // Save the updated cohort
+        await organization.save(); // Save the updated organization
+
+        const message = `You've been added to the cohort ${cohort.name}. Click here to view: ${process.env.CLIENT_URL}/organizations/${organizationId}/cohorts/${cohortId}`;
+        await sendMessage(
+          user.id,
+          user.emailAddresses[0].emailAddress,
+          "You've been added to a cohort",
+          message,
+          null,
+          { sendEmail: true, sendNotification: true, rateLimited: false }
+        );
+
+        res.json({ message: "User added to cohort successfully", data: cohort });
+      } else {
+        res.status(400).json({ message: "User is already in the cohort" });
+      }
+    } else {
+      // If the user does not exist, create a new user
+      user = await clerkClient.users.createUser({
+        emailAddress: [email],
+        password: generateTemporaryPassword(),
+        skipPasswordChecks: true,
+      });
+
+      list.push({ userId: user.id });
+
+      // Add new user to organization based on their role
+      if (role === 'learner') {
+        organization.learners.push({ userId: user.id });
+      } else if (role === 'instructor') {
+        organization.instructors.push({ userId: user.id });
+      }
+
+      const resetPasswordLink = `${process.env.CLIENT_URL}/reset-password?email=${encodeURIComponent(email)}`;
+
+      await sendMessage(
+        user.id,
+        email,
+        "You're invited to join a cohort - Reset Your Password",
+        `You've been invited to join the cohort ${cohort.name}. Click the link below to reset your password and activate your account:\n\n${resetPasswordLink}\n\nIf you did not request this, you can ignore this email.`,
+        null,
+        { sendEmail: true, sendNotification: false, rateLimited: false }
+      );
+
+      await cohort.save(); // Save the updated cohort
+      await organization.save(); // Save the updated organization
+
+      res.json({ message: "User invitation processed successfully", data: cohort });
+    }
+  } catch (error) {
+    console.error("Error inviting user to cohort:", error);
+    res.status(500).json({ message: "Error inviting user to cohort", error });
+  }
+};
+
 function generateTemporaryPassword(length = 12): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()';
   let password = '';

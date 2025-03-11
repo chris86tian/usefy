@@ -241,7 +241,7 @@ export const api = createApi({
 
     inviteUserToOrganization: build.mutation<
       { message: string },
-      { organizationId: string; email: string ; role: string}
+      { organizationId: string; email: string; role: string}
     >({
       query: ({ organizationId, email, role }) => ({
         url: `organizations/${organizationId}/invite`,
@@ -249,6 +249,19 @@ export const api = createApi({
         body: { email, role },
       }),
     }),
+
+    inviteUserToCohort: build.mutation<
+      { message: string },
+      { organizationId: string; cohortId: string; email: string, role: string }
+    >({
+      query: ({ organizationId, cohortId, email, role }) => ({
+        url: `organizations/${organizationId}/cohort/${cohortId}/invite`,
+        method: "POST",
+        body: { email, role },
+      }),
+    }),
+
+
 
     getOrganizationUsers: build.query<{ admins: User[]; instructors: User[]; learners: User[] }, string>({
       query: (organizationId: string) => `organizations/${organizationId}/users`,
@@ -328,7 +341,7 @@ export const api = createApi({
       { organizationId: string; cohortId: string; learnerId: string }
     >({
       query: ({ organizationId, cohortId, learnerId }) => ({
-        url: `cohorts/${organizationId}/${cohortId}/remove-learner`,
+        url: `cohorts/${organizationId}/remove-learner/${cohortId}`,
         method: "DELETE",
         body: { learnerId },
       }),
@@ -923,6 +936,7 @@ export const {
   useRemoveCourseFromOrganizationMutation,
   useGetMyUserCourseProgressesQuery,
   useInviteUserToOrganizationMutation,
+  useInviteUserToCohortMutation,
   useGetOrganizationUsersQuery,
   useRemoveUserFromOrganizationMutation,
   useChangeUserRoleMutation,
