@@ -5,10 +5,11 @@ import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { KeyRound, Mail, ShieldCheck } from 'lucide-react'
+import { Mail, ShieldCheck, InfoIcon, ArrowLeftIcon } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
+import { Separator } from "@/components/ui/separator"
 
 const ForgotPasswordPage = () => {    
   const searchParams = useSearchParams()
@@ -19,6 +20,7 @@ const ForgotPasswordPage = () => {
   const [secondFactor, setSecondFactor] = useState(false)
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [emailSent, setEmailSent] = useState(false)
 
   const router = useRouter()
   const { isSignedIn } = useAuth()
@@ -45,6 +47,7 @@ const ForgotPasswordPage = () => {
         identifier: email,
       })
       setSuccessfulCreation(true)
+      setEmailSent(true)
     } catch (err: any) {
       setError(err.errors[0].longMessage)
     } finally {
@@ -79,6 +82,12 @@ const ForgotPasswordPage = () => {
     }
   }
 
+  const backToEmailForm = () => {
+    setSuccessfulCreation(false)
+    setEmailSent(false)
+    setError('')
+  }
+
   return (
     <div className="flex justify-center items-center min-h-screen">
       <Card className="w-full max-w-md">
@@ -86,21 +95,32 @@ const ForgotPasswordPage = () => {
           <CardTitle className="flex items-center gap-2">
             {!successfulCreation ? (
               <>
-                <KeyRound className="h-6 w-6" /> Forgot Password
+                Reset Your Password
               </>
             ) : (
               <>
-                <ShieldCheck className="h-6 w-6" /> Reset Password
+                <ShieldCheck className="h-6 w-6" /> Set New Password
               </>
             )}
           </CardTitle>
           <CardDescription>
             {!successfulCreation 
-              ? "Enter your email to reset your password" 
-              : "Enter your new password and reset code"}
+              ? "Enter your email to receive a password reset code" 
+              : `Enter the verification code sent to ${email} and create a new password`}
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {emailSent && successfulCreation && (
+            <Alert className="mb-6 bg-blue-50 border-blue-200 dark:bg-blue-900 dark:border-blue-800">
+              <InfoIcon className="h-4 w-4" />
+              <AlertTitle>Check your inbox</AlertTitle>
+              <AlertDescription>
+                We&apos;ve sent a verification code to <strong>{email}</strong>. 
+                Please check your email and enter the code below to reset your password.
+              </AlertDescription>
+            </Alert>
+          )}
+
           <form onSubmit={!successfulCreation ? create : reset}>
             {!successfulCreation ? (
               <>
@@ -134,6 +154,24 @@ const ForgotPasswordPage = () => {
               <>
                 <div className="grid w-full items-center gap-4">
                   <div className="flex flex-col space-y-1.5">
+                    <Label htmlFor="code">Verification Code</Label>
+                    <Input 
+                      id="code"
+                      type="text" 
+                      placeholder="Enter verification code from email"
+                      value={code}
+                      onChange={(e) => setCode(e.target.value)}
+                      required
+                      autoFocus
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      The code was sent to your email address. It may take a few minutes to arrive.
+                    </p>
+                  </div>
+                  
+                  <Separator className="my-2" />
+                  
+                  <div className="flex flex-col space-y-1.5">
                     <Label htmlFor="password">New Password</Label>
                     <Input 
                       id="password"
@@ -143,18 +181,9 @@ const ForgotPasswordPage = () => {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                     />
-                  </div>
-                  
-                  <div className="flex flex-col space-y-1.5">
-                    <Label htmlFor="code">Reset Code</Label>
-                    <Input 
-                      id="code"
-                      type="text" 
-                      placeholder="Enter reset code"
-                      value={code}
-                      onChange={(e) => setCode(e.target.value)}
-                      required
-                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Create a strong password with at least 8 characters.
+                    </p>
                   </div>
                   
                   <Button 
@@ -185,6 +214,25 @@ const ForgotPasswordPage = () => {
             </Alert>
           )}
         </CardContent>
+        
+        {successfulCreation && (
+          <CardFooter className="flex justify-between pt-0">
+            <Button 
+              variant="ghost" 
+              className="flex items-center gap-1 px-0" 
+              onClick={backToEmailForm}
+            >
+              <ArrowLeftIcon className="h-4 w-4" /> Back to email form
+            </Button>
+            <Button 
+              variant="link" 
+              className="text-sm" 
+              onClick={() => setEmailSent(true)}
+            >
+              Didn&apos;t receive the code? Resend
+            </Button>
+          </CardFooter>
+        )}
       </Card>
     </div>
   )

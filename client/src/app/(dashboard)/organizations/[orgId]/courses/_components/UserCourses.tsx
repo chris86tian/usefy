@@ -24,7 +24,6 @@ const Courses = () => {
   const router = useRouter()
   const { user, isLoaded } = useUser()
   const [searchTerm, setSearchTerm] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("all")
   const [showArchived, setShowArchived] = useState(false)
   const { currentOrg } = useOrganization()
 
@@ -41,11 +40,10 @@ const Courses = () => {
 
     return courses.filter((course) => {
       const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase())
-      const matchesCategory = selectedCategory === "all" || course.category === selectedCategory
       const matchesArchiveStatus = showArchived ? true : course.status !== "Archived"
-      return matchesSearch && matchesCategory && matchesArchiveStatus
+      return matchesSearch && matchesArchiveStatus
     })
-  }, [courses, searchTerm, selectedCategory, showArchived])
+  }, [courses, searchTerm, showArchived])
 
   const handleGoToCourse = (course: Course) => {
     if (course.status === "Archived") {
@@ -79,7 +77,7 @@ const Courses = () => {
   return (
     <div className="space-y-6">
       <Header title="My Courses" subtitle="View your enrolled courses" />
-      <Toolbar onSearch={setSearchTerm} onCategoryChange={setSelectedCategory} />
+      <Toolbar onSearch={setSearchTerm} />
       {archivedCount > 0 && (
         <button
           onClick={() => setShowArchived(!showArchived)}

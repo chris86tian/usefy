@@ -6,7 +6,6 @@ import {
   unarchiveCourse,
   deleteCourse,
   getCourse,
-  listCourses,
   updateCourse,
   addCourseInstructor,
   removeCourseInstructor,
@@ -36,10 +35,6 @@ import { requireAuth } from "@clerk/express";
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
-router.get(
-  "/", 
-  listCourses
-);
 router.post(
   "/", 
   requireAuth(), 

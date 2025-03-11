@@ -203,7 +203,6 @@ const ChapterModal = () => {
       chapterId: chapter?.chapterId || uuidv4(),
       title: data.title,
       content: data.content,
-      type: questions.length > 0 ? "Quiz" : data.video ? "Video" : "Text",
       video: data.video,
       quiz:
         questions.length > 0

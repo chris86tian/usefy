@@ -123,14 +123,11 @@ declare global {
     instructors?: { userId: string }[]
     title: string;
     description?: string;
-    category: string;
     image?: string;
     price?: number;
     status: "Draft" | "Published" | "Archived";
     sections: Section[];
-    enrollments?: Array<{
-      userId: string;
-    }>;
+    enrollments?: { userId: string }[]
   }
 
   interface Section {
@@ -143,9 +140,8 @@ declare global {
 
   interface Chapter {
     chapterId: string;
-    type: "Text" | "Quiz" | "Video";
     title: string;
-    content: string;
+    content?: string;
     video?: string | File;
     assignments?: Assignment[];
     comments?: ChapterComment[];
@@ -273,7 +269,6 @@ declare global {
   interface CourseFormData {
     courseTitle: string;
     courseDescription: string;
-    courseCategory: string;
     coursePrice: string;
     courseStatus: boolean;
     courseImage: string;
@@ -330,11 +325,6 @@ declare global {
     course: Course;
     handleEnrollNow: (courseId: string) => void;
     userId: string;
-  }
-
-  interface ToolbarProps {
-    onSearch: (search: string) => void;
-    onCategoryChange: (category: string) => void;
   }
 
   interface ChapterModalProps {

@@ -25,11 +25,11 @@ export default function LandingPage() {
     CheckCircle2
   };
 
-  const { user } = useUser();
+  // const { user } = useUser();
 
   return (
     <div className="min-h-screen bg-background">
-      <section
+      {/* <section
         className="relative flex flex-col items-center justify-center container mx-auto px-4 py-10 md:py-32"
         aria-label="Hero"
       >
@@ -225,7 +225,7 @@ export default function LandingPage() {
             </Button>
           </div>
         </div>
-      </section>
+      </section> */}
     </div>
   )
 }

@@ -180,7 +180,6 @@ const CourseEditor = () => {
     defaultValues: {
       courseTitle: "",
       courseDescription: "",
-      courseCategory: "",
       coursePrice: "0",
       courseStatus: false,
       courseImage: "",
@@ -192,7 +191,6 @@ const CourseEditor = () => {
       methods.reset({
         courseTitle: course.title,
         courseDescription: course.description,
-        courseCategory: course.category,
         coursePrice: centsToDollars(course.price),
         courseStatus: course.status === "Published",
         courseImage: course.image || "",
@@ -219,7 +217,6 @@ const CourseEditor = () => {
 
     formData.append("title", data.courseTitle)
     formData.append("description", data.courseDescription)
-    formData.append("category", data.courseCategory)
     formData.append("price", dollarsToCents(data.coursePrice).toString())
     formData.append("status", data.courseStatus ? "Published" : "Draft")
 
@@ -334,33 +331,6 @@ const CourseEditor = () => {
                   type="textarea"
                   placeholder="Write course description here"
                   initialValue={course?.description}
-                  className="dark:text-gray-100"
-                />
-
-                <CustomFormField
-                  name="courseCategory"
-                  label="Course Category"
-                  type="select"
-                  placeholder="Select category here"
-                  options={[
-                    { value: "technology", label: "Technology" },
-                    { value: "science", label: "Science" },
-                    { value: "mathematics", label: "Mathematics" },
-                    {
-                      value: "Artificial Intelligence",
-                      label: "Artificial Intelligence",
-                    },
-                  ]}
-                  initialValue={course?.category}
-                  className="dark:text-gray-100"
-                />
-
-                <CustomFormField
-                  name="coursePrice"
-                  label="Course Price"
-                  type="number"
-                  placeholder="0"
-                  initialValue={course?.price}
                   className="dark:text-gray-100"
                 />
 

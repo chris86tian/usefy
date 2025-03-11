@@ -31,6 +31,7 @@ import { toast } from "sonner"
 import { v4 as uuidv4 } from "uuid"
 import { useUser } from "@clerk/nextjs"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { useCreateCohortMutation } from "@/state/api"
 
 interface OrganizationSidebarProps {
   organizations: Organization[]
@@ -39,7 +40,6 @@ interface OrganizationSidebarProps {
   isUserAdmin: boolean
   orgId: string
   refetchCohorts: () => void
-  createCohort: (data: any) => Promise<any>
 }
 
 export default function OrganizationSidebar({
@@ -49,7 +49,6 @@ export default function OrganizationSidebar({
   isUserAdmin,
   orgId,
   refetchCohorts,
-  createCohort,
 }: OrganizationSidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
@@ -57,6 +56,9 @@ export default function OrganizationSidebar({
   const [collapsed, setCollapsed] = useState(false)
   const [isCreateCohortModalOpen, setIsCreateCohortModalOpen] = useState(false)
   const [cohortName, setCohortName] = useState("")
+
+  const [createCohort, { isLoading: isCreateCohortLoading }] = useCreateCohortMutation()
+  
 
   const baseNavItems = [
     {
@@ -290,8 +292,8 @@ export default function OrganizationSidebar({
                         </div>
                       </div>
                       <DialogFooter>
-                        <Button type="submit" onClick={handleCreateCohort}>
-                          Create Cohort
+                        <Button type="submit" onClick={handleCreateCohort} disabled={isCreateCohortLoading}>
+                          {isCreateCohortLoading ? "Creating..." : "Create Cohort"}
                         </Button>
                       </DialogFooter>
                     </DialogContent>

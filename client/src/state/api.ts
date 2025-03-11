@@ -361,14 +361,6 @@ export const api = createApi({
     COURSES
     =============== 
     */
-    getCourses: build.query<Course[], { category?: string }>({
-      query: ({ category }) => ({
-        url: "courses",
-        params: { category },
-      }),
-      providesTags: ["Courses"],
-    }),
-
     getCourse: build.query<Course, string>({
       query: (id) => `courses/${id}`,
       providesTags: (result, error, id) => [{ type: "Courses", id }],
@@ -953,7 +945,6 @@ export const {
   useGetCourseInstructorsQuery,
   useArchiveCourseMutation,
   useUnarchiveCourseMutation,
-  useGetCoursesQuery,
   useGetCourseQuery,
   useGetUploadVideoUrlMutation,
   useGetUploadImageUrlMutation,

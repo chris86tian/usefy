@@ -120,15 +120,7 @@ export function CourseCard({
         <div>
           <div className="flex items-start justify-between mb-1">
             <CardTitle className="line-clamp-1 text-lg">{course.title}</CardTitle>
-            {variant === "learner" && (
-              <Badge variant="secondary" className="ml-2">
-                {course.category}
-              </Badge>
-            )}
           </div>
-          <CardDescription className="line-clamp-1">
-            {variant === "admin" ? course.category : course.description}
-          </CardDescription>
         </div>
 
         {/* Enrollment badge for admin view */}

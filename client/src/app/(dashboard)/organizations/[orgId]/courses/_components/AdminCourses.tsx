@@ -54,7 +54,6 @@ const AdminCourses = () => {
   const [createTransaction] = useCreateTransactionMutation();
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
   const [courseToDelete, setCourseToDelete] = useState<Course | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
@@ -66,9 +65,8 @@ const AdminCourses = () => {
         const matchesSearch = course.title
           .toLowerCase()
           .includes(searchTerm.toLowerCase());
-        const matchesCategory =
-          selectedCategory === "all" || course.category === selectedCategory;
-        return matchesSearch && matchesCategory;
+
+        return matchesSearch;
       })
       .sort((a, b) => {
         const isUserInstructorA = a.instructors?.some(instructor => instructor.userId === user?.id);
@@ -77,7 +75,7 @@ const AdminCourses = () => {
         if (!isUserInstructorA && isUserInstructorB) return 1;
         return 0;
       });
-  }, [courses, searchTerm, selectedCategory, user?.id]);
+  }, [courses, searchTerm, user?.id]);
 
   const handleEdit = (course: Course) => {
     router.push(`/organizations/${currentOrg?.organizationId}/courses/${course.courseId}/edit`, { scroll: false });
@@ -151,7 +149,7 @@ const AdminCourses = () => {
 
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <Header
         title="Courses Management"
         subtitle="Manage your organization's courses"
@@ -169,7 +167,6 @@ const AdminCourses = () => {
       />
       <Toolbar
         onSearch={setSearchTerm}
-        onCategoryChange={setSelectedCategory}
       />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredCourses.map((course) => (

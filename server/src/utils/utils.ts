@@ -25,7 +25,6 @@ export const updateCourseVideoInfo = (
   }
 
   chapter.video = videoUrl;
-  chapter.type = "Video";
 };
 
 export const validateUploadedFiles = (files: any) => {

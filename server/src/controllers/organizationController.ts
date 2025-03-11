@@ -72,7 +72,7 @@ export const createOrganization = async (
         superadmin.id,
         superadmin.emailAddresses[0].emailAddress,
         "A new organization has been created",
-        `A new organization ${name} has been created. Click here to view: ${process.env.CLIENT_URL}/organizations/${organizationId}/dashboard`,
+        `A new organization ${name} has been created. Click here to view: ${process.env.CLIENT_URL}/organizations/${organizationId}`,
         `/organizations/${organizationId}/dashboard`,
         { sendEmail: true, sendNotification: true, rateLimited: true }
       );

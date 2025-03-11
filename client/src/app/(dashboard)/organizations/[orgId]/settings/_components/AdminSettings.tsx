@@ -80,7 +80,7 @@ const AdminSettings = () => {
   const [searchTerm, setSearchTerm] = useState("")
   const [roleFilter, setRoleFilter] = useState<"all" | "admin" | "instructor" | "learner">("all")
 
-  // Cohort state
+  
   const [isCreateCohortDialogOpen, setIsCreateCohortDialogOpen] = useState(false)
   const [isEditCohortDialogOpen, setIsEditCohortDialogOpen] = useState(false)
   const [newCohortName, setNewCohortName] = useState("")
@@ -92,7 +92,6 @@ const AdminSettings = () => {
 
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
 
-  // Add new state for batch emails
   const [emailBatch, setEmailBatch] = useState<string[]>([]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -179,25 +178,31 @@ const AdminSettings = () => {
   };
 
   const handleRemoveUser = async (userId: string, role: string) => {
+    if (role === "admin" && user?.publicMetadata.userType !== "superadmin") {
+      toast.error("You cannot remove another admin.");
+      return;
+    }
+
     try {
       await removeUser({
         organizationId: currentOrg?.organizationId || "",
         userId,
         role,
-      }).unwrap()
-      refetchMembers()
-      toast.success("User removed successfully")
+      }).unwrap();
+      refetchMembers();
+      toast.success("User removed successfully");
     } catch (error) {
-      toast.error("Failed to remove user")
+      toast.error("Failed to remove user");
     }
-  }
+  };
 
   const handleChangeRole = async (userId: string, currentRole: string, newRole: string) => {
+    if (currentRole === "admin" && newRole !== "admin" && members?.admins?.length === 1 && user?.publicMetadata.userType !== "superadmin") {
+      toast.error("You must have at least one admin in the organization");
+      return;
+    }
+
     try {
-      if (currentRole === "admin" && newRole !== "admin" && members?.admins?.length === 1) {
-        toast.error("You must have at least one admin in the organization");
-        return;
-      }
       await changeUserRole({
         organizationId: currentOrg?.organizationId || "",
         userId,
@@ -205,12 +210,12 @@ const AdminSettings = () => {
         newRole,
       }).unwrap();
       refetchMembers();
-      
+
       setRoleSelections(prev => ({
         ...prev,
         [userId]: ""
       }));
-      
+
       toast.success("User role changed successfully");
     } catch (error) {
       toast.error("Failed to change user role");

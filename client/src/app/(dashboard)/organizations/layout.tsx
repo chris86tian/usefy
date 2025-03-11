@@ -19,7 +19,6 @@ export default function OrganizationLayout({ children }: OrganizationLayoutProps
   const { data: organizations, isLoading } = useGetMyOrganizationsQuery()
   const { data: cohorts, refetch } = useGetCohortsQuery(orgId as string)
   const [currentOrg, setCurrentOrg] = useState<Organization | null>(null)
-  const [createCohort] = useCreateCohortMutation()
   const router = useRouter()
 
   useEffect(() => {
@@ -47,7 +46,6 @@ export default function OrganizationLayout({ children }: OrganizationLayoutProps
           isUserAdmin={!!isUserAdmin}
           orgId={orgId as string}
           refetchCohorts={refetch}
-          createCohort={(data) => createCohort(data).unwrap()}
         />
 
         <div className="flex-1 flex flex-col">

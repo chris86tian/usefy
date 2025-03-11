@@ -217,7 +217,6 @@ export async function POST(request: Request) {
               "chapterId": "c1",
               "title": "string",
               "content": "string",
-              "type": "Video",
               "video": "${videoUrl}",
               ${
                 generateQuizzes

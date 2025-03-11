@@ -121,11 +121,6 @@ const AdminCohortPage = ({ orgUsers, usersLoading, courses }: AdminCohortPagePro
       return
     }
 
-    if (!selectedInstructorId) {
-      toast.error("Please select an instructor")
-      return
-    }
-
     try {
       await addCourseToCohort({
         organizationId: cohort?.organizationId as string,

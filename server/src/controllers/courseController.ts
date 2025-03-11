@@ -11,22 +11,6 @@ import { sendMessage } from "../utils/utils";
 
 const s3 = new AWS.S3();
 
-export const listCourses = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  const { category } = req.query;
-  try {
-    const courses =
-      category && category !== "all"
-        ? await Course.scan("category").eq(category).exec()
-        : await Course.scan().exec();
-    res.json({ message: "Courses retrieved successfully", data: courses });
-  } catch (error) {
-    res.status(500).json({ message: "Error retrieving courses", error });
-  }
-};
-
 export const getCourse = async (req: Request, res: Response): Promise<void> => {
   const { courseId } = req.params;
   try {
@@ -54,7 +38,6 @@ export const createCourse = async (
       instructors: [],
       title: "Untitled Course",
       description: "",
-      category: "Uncategorized",
       image: "",
       price: 0,
       status: "Draft",
@@ -87,23 +70,21 @@ export const createCourse = async (
   }
 };
 
-export const updateCourse = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const updateCourse = async (req: Request, res: Response): Promise<void> => {
   const { orgId, courseId } = req.params;
-  const updateData = { ...req.body };
   const { userId } = getAuth(req);
+  const updateData = { ...req.body };
 
   try {
     if (!userId) {
-      res.status(401).json({ message: "User not authenticated" });
+      res.status(401).json({ code: "unauthorized", message: "User not authenticated" });
       return;
     }
 
+    // 🔹 Fetch Course
     const course = await Course.get(courseId);
     if (!course) {
-      res.status(404).json({ message: "Course not found" });
+      res.status(404).json({ code: "course_not_found", message: "Course not found" });
       return;
     }
 
@@ -111,10 +92,9 @@ export const updateCourse = async (
       const price = Number(updateData.price);
       if (isNaN(price) || price < 0) {
         res.status(400).json({
-          message: "Invalid price format",
-          error: "Price must be a non-negative number",
+          code: "invalid_price",
+          message: "Price must be a non-negative number",
         });
-        return;
       }
       updateData.price = price;
     }
@@ -127,9 +107,7 @@ export const updateCourse = async (
     if (updateData.sections) {
       try {
         const sectionsData =
-          typeof updateData.sections === "string"
-            ? JSON.parse(updateData.sections)
-            : updateData.sections;
+          typeof updateData.sections === "string" ? JSON.parse(updateData.sections) : updateData.sections;
 
         if (!Array.isArray(sectionsData)) {
           throw new Error("Sections must be an array");
@@ -146,9 +124,7 @@ export const updateCourse = async (
                   ? chapter.assignments.map((assignment: any) => ({
                       ...assignment,
                       assignmentId: assignment.assignmentId || uuidv4(),
-                      submissions: Array.isArray(assignment.submissions)
-                        ? assignment.submissions
-                        : [],
+                      submissions: Array.isArray(assignment.submissions) ? assignment.submissions : [],
                     }))
                   : [],
                 quiz: chapter.quiz
@@ -170,91 +146,76 @@ export const updateCourse = async (
       } catch (error) {
         console.error("Error processing sections data:", error);
         res.status(400).json({
+          code: "invalid_sections_format",
           message: "Invalid sections data format",
-          error: error instanceof Error ? error.message : "Unknown error",
+          details: error instanceof Error ? error.message : "Unknown error",
         });
-        return;
       }
     }
 
     const updatedCourse = await Course.update(courseId, updateData);
 
     if (updateData.sections) {
-      const progressList = await UserCourseProgress.query("courseId")
-        .eq(courseId)
-        .using("CourseIdIndex")
-        .exec();
+      const progressList = await UserCourseProgress.query("courseId").eq(courseId).using("CourseIdIndex").exec();
 
       for (const progress of progressList) {
-        const existingSections = JSON.parse(
-          JSON.stringify(progress.sections || [])
-        );
-        progress.sections = mergeSections(
-          existingSections,
-          updateData.sections
-        );
+        const existingSections = JSON.parse(JSON.stringify(progress.sections || []));
+        progress.sections = mergeSections(existingSections, updateData.sections);
         progress.lastAccessedTimestamp = new Date().toISOString();
         progress.overallProgress = calculateOverallProgress(progress.sections);
         await progress.save();
       }
     }
 
-    const allUsers = course.enrollments.map((enrollment: any) => enrollment.userId) + course.instructors.map((instructor: any) => instructor.userId);
+    const allUsers = [
+      ...course.enrollments.map((enrollment: any) => enrollment.userId),
+      ...course.instructors.map((instructor: any) => instructor.userId),
+    ];
 
     for (const userId of allUsers) {
-      const user = await clerkClient.users.getUser(userId);
-      if (user.emailAddresses && user.emailAddresses.length > 0) {
-        // Create a detailed message about what was updated
-        let updateDetails = [];
-        
-        if (updateData.title || updateData.description) {
-          updateDetails.push("course information");
+      try {
+        const user = await clerkClient.users.getUser(userId);
+        if (!user || !user.emailAddresses?.length) {
+          console.warn(`User not found or has no email: ${userId}`);
+          continue;
         }
-        
-        if (updateData.sections) {
-          updateDetails.push("course content");
-        }
-        
-        if (updateData.image) {
-          updateDetails.push("course image");
-        }
-        
-        if (updateData.price !== undefined) {
-          updateDetails.push("pricing");
-        }
-        
+
+        const updateDetails: string[] = [];
+        if (updateData.title || updateData.description) updateDetails.push("course information");
+        if (updateData.sections) updateDetails.push("course content");
+        if (updateData.image) updateDetails.push("course image");
+        if (updateData.price !== undefined) updateDetails.push("pricing");
+
         let updateMessage = `The course "${course.title}" has been updated.`;
-        
-        if (updateDetails.length > 0) {
+        if (updateDetails.length) {
           updateMessage += ` The following was updated: ${updateDetails.join(", ")}.`;
         }
-        
         updateMessage += " Check it out now!";
-        
+
         await sendMessage(
           userId,
           user.emailAddresses[0].emailAddress,
           "Course Updated",
           updateMessage,
-          `/organizations/${orgId}/courses/${courseId}/chapters/${course.sections[0].chapters[0].chapterId}`,
+          `/organizations/${orgId}/courses/${courseId}/chapters/${course.sections[0]?.chapters[0]?.chapterId || ""}`,
           { sendEmail: true, sendNotification: true, rateLimited: false }
         );
+      } catch (err) {
+        console.error(`Error notifying user ${userId}:`, err);
       }
     }
 
-    res.json({
-      message: "Course updated successfully",
-      data: updatedCourse,
-    });
+    res.json({ message: "Course updated successfully", data: updatedCourse });
   } catch (error) {
     console.error("Error updating course:", error);
     res.status(500).json({
+      code: "course_update_failed",
       message: "Failed to update course",
-      error: error instanceof Error ? error.message : "Unknown error",
-      stack: process.env.NODE_ENV === "development" ? error : undefined,
+      details: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };
+
 
 export const archiveCourse = async (
   req: Request,
