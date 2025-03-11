@@ -199,8 +199,10 @@ export const updateCourse = async (
       }
     }
 
-    for (const enrollment of course.enrollments) {
-      const user = await clerkClient.users.getUser(enrollment.userId);
+    const allUsers = course.enrollments.map((enrollment: any) => enrollment.userId) + course.instructors.map((instructor: any) => instructor.userId);
+
+    for (const userId of allUsers) {
+      const user = await clerkClient.users.getUser(userId);
       if (user.emailAddresses && user.emailAddresses.length > 0) {
         // Create a detailed message about what was updated
         let updateDetails = [];
@@ -230,12 +232,12 @@ export const updateCourse = async (
         updateMessage += " Check it out now!";
         
         await sendMessage(
-          enrollment.userId,
+          userId,
           user.emailAddresses[0].emailAddress,
           "Course Updated",
           updateMessage,
           `/organizations/${orgId}/courses/${courseId}/chapters/${course.sections[0].chapters[0].chapterId}`,
-          { sendEmail: true, sendNotification: true, rateLimited: true }
+          { sendEmail: true, sendNotification: true, rateLimited: false }
         );
       }
     }
@@ -269,6 +271,21 @@ export const archiveCourse = async (
 
     course.status = "Archived";
     await course.save();
+
+    // TODO: Send notification to org admins
+    for(const instructor of course.instructors) {
+      const user = await clerkClient.users.getUser(instructor.userId);
+      if (user.emailAddresses && user.emailAddresses.length > 0) {
+        await sendMessage(
+          instructor.userId,
+          user.emailAddresses[0].emailAddress,
+          "Course Archived",
+          `The course "${course.title}" has been archived.`,
+          null,
+          { sendEmail: true, sendNotification: true, rateLimited: true }
+        );
+      }
+    }
 
     res.json({ message: "Course archived successfully", data: course });
   } catch (error) {
@@ -321,6 +338,94 @@ export const unarchiveCourse = async (
   }
 };
 
+export const enrollUser = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { courseId, userId } = req.params;
+
+    if (!courseId || !userId) {
+      res.status(400).json({ message: "Missing courseId or userId" });
+    }
+
+    const course = await Course.get(courseId);
+    if (!course) {
+      res.status(404).json({ message: "Course not found" });
+    }
+
+    if (!Array.isArray(course.enrollments)) {
+      course.enrollments = [];
+    }
+
+    if (course.enrollments.find((enrollment: any) => enrollment.userId === userId)) {
+      res.status(400).json({ message: "User is already enrolled in this course" });
+    }
+
+    course.enrollments.push({ userId });
+
+    await course.save();
+
+    res.json({ message: "User enrolled successfully" });
+  } catch (error) {
+    console.error("Unhandled server error:", error);
+    res.status(500).json({ message: "Internal server error", error });
+  }
+};
+
+export const unenrollUser = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { courseId, userId } = req.params;
+
+    const userEmail = (await clerkClient.users.getUser(userId)).emailAddresses[0].emailAddress;
+
+    if (!courseId || !userId) {
+      res.status(400).json({ message: "Missing courseId or userId" });
+    }
+
+    const course = await Course.get(courseId);
+    if (!course) {
+      res.status(404).json({ message: "Course not found" });
+    }
+
+    if (!Array.isArray(course.enrollments)) {
+      res.status(404).json({ message: "No enrollments found for this course" });
+    }
+
+    course.enrollments = course.enrollments.filter(
+      (enrollment: any) => enrollment.userId !== userId
+    );
+
+    await course.save();
+
+    await UserCourseProgress.delete({ userId, courseId });
+
+    try {
+      await sendMessage(
+        userId,
+        userEmail,
+        "Course Unenrolled",
+        `You have been unenrolled from the course ${course.title}`,
+        null,
+        { sendEmail: true, sendNotification: true, rateLimited: false }
+      );
+    } catch (err) {
+      console.error("Error sending notification:", err);
+      res
+        .status(500)
+        .json({ message: "Error sending notification", error: err });
+    }
+
+    res.json({ message: "User unenrolled successfully" });
+  } catch (error) {
+    console.error("Unhandled server error:", error);
+    res.status(500).json({ message: "Internal server error", error });
+  }
+};
+
 export const addCourseInstructor = async (
   req: Request,
   res: Response
@@ -342,6 +447,21 @@ export const addCourseInstructor = async (
     course.instructors.push({ userId });
 
     await course.save();
+
+    // TODO: Send notification to org admins
+    for(const instructor of course.instructors) {
+      const user = await clerkClient.users.getUser(instructor.userId);
+      if (user.emailAddresses && user.emailAddresses.length > 0) {
+        await sendMessage(
+          instructor.userId,
+          user.emailAddresses[0].emailAddress,
+          "New Instructor Added",
+          `New instructor added to the course "${course.title}".`,
+          null,
+          { sendEmail: true, sendNotification: true, rateLimited: true }
+        );
+      }
+    }
 
     res.json({ message: "Instructor added to course successfully", data: course });
   } catch (error) {
@@ -926,14 +1046,14 @@ export const getUserCourseSubmissions = async (
   }
 };
 
+// COMMENTS
 export const createComment = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   const { courseId, sectionId, chapterId } = req.params;
   const { userId } = getAuth(req);
-  const { id, username, content, upvotes, downvotes, createdAt, replies } =
-    req.body;
+  const { id, username, content, upvotes, downvotes, createdAt, replies } = req.body;
 
   try {
     const course = await Course.get(courseId);
@@ -1097,9 +1217,13 @@ export const createReply = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const { courseId, sectionId, chapterId, commentId } = req.params;
+  const { orgId, courseId, sectionId, chapterId, commentId } = req.params;
   const { userId } = getAuth(req);
   const { id, username, content, createdAt } = req.body;
+
+  console.log("params", req.params);
+  console.log("body", req.body);
+
 
   try {
     const course = await Course.get(courseId);
@@ -1145,8 +1269,16 @@ export const createReply = async (
     }
 
     comment.replies.push(newReply);
-
     await course.save();
+
+    await sendMessage(
+      comment.userId,
+      (await clerkClient.users.getUser(comment.userId)).emailAddresses[0].emailAddress,
+      "New Reply",
+      `Your comment has a new reply: ${content}`,
+      `/organizations/${orgId}/courses/${courseId}/chapters/${chapterId}`,
+      { sendEmail: true, sendNotification: true, rateLimited: false }
+    );
     res.json({ message: "Reply created successfully", data: newReply });
   } catch (error) {
     res.status(500).json({ message: "Error creating reply", error });
@@ -1277,94 +1409,6 @@ export const dislikeChapter = async (
     res.json({ data: chapter });
   } catch (error) {
     res.status(500).json({ message: "Error disliking chapter", error });
-  }
-};
-
-export const enrollUser = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  try {
-    const { courseId, userId } = req.params;
-
-    if (!courseId || !userId) {
-      res.status(400).json({ message: "Missing courseId or userId" });
-    }
-
-    const course = await Course.get(courseId);
-    if (!course) {
-      res.status(404).json({ message: "Course not found" });
-    }
-
-    if (!Array.isArray(course.enrollments)) {
-      course.enrollments = [];
-    }
-
-    if (course.enrollments.find((enrollment: any) => enrollment.userId === userId)) {
-      res.status(400).json({ message: "User is already enrolled in this course" });
-    }
-
-    course.enrollments.push({ userId });
-
-    await course.save();
-
-    res.json({ message: "User enrolled successfully" });
-  } catch (error) {
-    console.error("Unhandled server error:", error);
-    res.status(500).json({ message: "Internal server error", error });
-  }
-};
-
-export const unenrollUser = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  try {
-    const { courseId, userId } = req.params;
-
-    const userEmail = (await clerkClient.users.getUser(userId)).emailAddresses[0].emailAddress;
-
-    if (!courseId || !userId) {
-      res.status(400).json({ message: "Missing courseId or userId" });
-    }
-
-    const course = await Course.get(courseId);
-    if (!course) {
-      res.status(404).json({ message: "Course not found" });
-    }
-
-    if (!Array.isArray(course.enrollments)) {
-      res.status(404).json({ message: "No enrollments found for this course" });
-    }
-
-    course.enrollments = course.enrollments.filter(
-      (enrollment: any) => enrollment.userId !== userId
-    );
-
-    await course.save();
-
-    await UserCourseProgress.delete({ userId, courseId });
-
-    try {
-      await sendMessage(
-        userId,
-        userEmail,
-        "Course Unenrolled",
-        `You have been unenrolled from the course ${course.title}`,
-        null,
-        { sendEmail: true, sendNotification: true, rateLimited: true }
-      );
-    } catch (err) {
-      console.error("Error sending notification:", err);
-      res
-        .status(500)
-        .json({ message: "Error sending notification", error: err });
-    }
-
-    res.json({ message: "User unenrolled successfully" });
-  } catch (error) {
-    console.error("Unhandled server error:", error);
-    res.status(500).json({ message: "Internal server error", error });
   }
 };
 

@@ -772,6 +772,7 @@ export const api = createApi({
     createReply: build.mutation<
       { message: string },
       {
+        orgId: string;
         courseId: string;
         sectionId: string;
         chapterId: string;
@@ -779,8 +780,8 @@ export const api = createApi({
         reply: Reply;
       }
     >({
-      query: ({ courseId, sectionId, chapterId, commentId, reply }) => ({
-        url: `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/comments/${commentId}/replies`,
+      query: ({ orgId, courseId, sectionId, chapterId, commentId, reply }) => ({
+        url: `courses/${orgId}/${courseId}/sections/${sectionId}/chapters/${chapterId}/comments/${commentId}/replies`,
         method: "POST",
         body: reply,
       }),

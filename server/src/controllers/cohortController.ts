@@ -1,8 +1,10 @@
 import { Request, Response } from "express";
 import Cohort from "../models/cohortModel";
 import Course from "../models/courseModel";
+import Organization from "../models/organizationModel";
 import { clerkClient } from "..";
-import { getAuth } from "@clerk/express";
+import { getAuth, User } from "@clerk/express";
+import { sendMessage } from "../utils/utils";
 
 export const createCohort = async (req: Request, res: Response): Promise<void> => {
     const { cohortId, name } = req.body;
@@ -18,6 +20,33 @@ export const createCohort = async (req: Request, res: Response): Promise<void> =
             courses: [],
         });
         await cohort.save();
+
+        const organization = await Organization.get(organizationId);
+        if (organization) {
+            const admins = organization.admins || [];
+            
+            for (const admin of admins) {
+                try {
+                    const clerkUser = await clerkClient.users.getUser(admin.userId);
+                    const userEmail = clerkUser.emailAddresses[0].emailAddress
+                    
+                    if (userEmail) {
+                        await sendMessage(
+                            admin.userId,
+                            userEmail,
+                            `Cohort ${name} created`, 
+                            `A new cohort ${name} has been created in your organization ${organization.name}`,
+                            `/organizations/${organizationId}/cohorts/${cohortId}`,
+                            { sendEmail: true, sendNotification: true, rateLimited: true }
+                        );
+                    } else {
+                        console.warn(`No email found for user ${admin.userId}`);
+                    }
+                } catch (error) {
+                    console.error(`Error sending message to user ${admin.userId}:`, error);
+                }
+            }
+        }
         res.json({ message: "Cohort created successfully", data: cohort });
     } catch (error) {
         res.status(500).json({ message: "Error creating cohort", error });
@@ -134,6 +163,34 @@ export const addLearnerToCohort = async (req: Request, res: Response): Promise<v
         }
         cohort.learners.push({ userId: learnerId });
         await cohort.save();
+
+        const organization = await Organization.get(cohort.organizationId);
+        if (organization) {
+            const admins = organization.admins || [];
+            const learners = cohort.learners || [];
+            const allUsers = [...admins, ...learners];
+            for (const user of allUsers) {
+                try {
+                    const clerkUser = await clerkClient.users.getUser(user.userId);
+                    const userEmail = clerkUser.emailAddresses[0].emailAddress
+                    
+                    if (userEmail) {
+                        await sendMessage(
+                            user.userId,
+                            userEmail,
+                            `Learner added to cohort ${cohort.name}`, 
+                            `A new learner has been added to cohort ${cohort.name}`,
+                            `/organizations/${organization.organizationId}/cohorts/${cohort.cohortId}`,
+                            { sendEmail: true, sendNotification: true, rateLimited: true }
+                        );
+                    } else {
+                        console.warn(`No email found for user ${user.userId}`);
+                    }
+                } catch (error) {
+                    console.error(`Error sending message to user ${user.userId}:`, error);
+                }
+            }
+        }
         res.json({ message: "Learner added to cohort successfully", data: cohort });
     } catch (error) {
         res.status(500).json({ message: "Error adding learner to cohort", error });
@@ -151,6 +208,34 @@ export const removeLearnerFromCohort = async (req: Request, res: Response): Prom
         }
         cohort.learners = cohort.learners.filter((learner: any) => learner.userId !== learnerId);
         await cohort.save();
+
+        const organization = await Organization.get(cohort.organizationId);
+        if (organization) {
+            const admins = organization.admins || [];
+            const learners = cohort.learners || [];
+            const allUsers = [...admins, ...learners];
+            for (const user of allUsers) {
+                try {
+                    const clerkUser = await clerkClient.users.getUser(user.userId);
+                    const userEmail = clerkUser.emailAddresses[0].emailAddress
+
+                    if (userEmail) {
+                        await sendMessage(
+                            user.userId,
+                            userEmail,
+                            `Learner removed from cohort ${cohort.name}.`, 
+                            `A learner has been removed from cohort ${cohort.name}`,
+                            `/organizations/${organization.organizationId}/cohorts/${cohort.cohortId}`,
+                            { sendEmail: true, sendNotification: true, rateLimited: true }
+                        );
+                    } else {
+                        console.warn(`No email found for user ${user.userId}`);
+                    }
+                } catch (error) {
+                    console.error(`Error sending message to user ${user.userId}:`, error);
+                }
+            }
+        }
         res.json({ message: "Learner removed from cohort successfully", data: cohort });
     } catch (error) {
         res.status(500).json({ message: "Error removing learner from cohort", error });
@@ -185,6 +270,41 @@ export const addCourseToCohort = async (req: Request, res: Response): Promise<vo
         }
         cohort.courses.push({ courseId });
         await cohort.save();
+
+        const course = await Course.get(courseId);
+        if (!course) {
+            res.status(404).json({ message: "Course not found" });
+            return;
+        }
+
+        const organization = await Organization.get(cohort.organizationId);
+        if (organization) {
+            const admins = organization.admins || [];
+            const learners = cohort.learners || [];
+            const instructors = course.instructors || [];
+            const allUsers = [...admins, ...learners, ...instructors];
+            for (const user of allUsers) {
+                try {
+                    const clerkUser = await clerkClient.users.getUser(user.userId);
+                    const userEmail = clerkUser.emailAddresses[0].emailAddress
+                    
+                    if (userEmail) {
+                        await sendMessage(
+                            user.userId,
+                            userEmail,
+                            `Course added to cohort ${cohort.name}`, 
+                            `A new course has been added to cohort ${cohort.name}`,
+                            `/organizations/${organization.organizationId}/cohorts/${cohort.cohortId}`,
+                            { sendEmail: true, sendNotification: true, rateLimited: true }
+                        );
+                    } else {
+                        console.warn(`No email found for user ${user.userId}`);
+                    }
+                } catch (error) {
+                    console.error(`Error sending message to user ${user.userId}:`, error);
+                }
+            }
+        }
         res.json({ message: "Course added to cohort successfully", data: cohort });
     } catch (error) {
         res.status(500).json({ message: "Error adding course to cohort", error });

@@ -326,11 +326,6 @@ declare global {
     rightElement?: ReactNode;
   }
 
-  interface SharedNotificationSettingsProps {
-    title?: string;
-    subtitle?: string;
-  }
-
   interface SelectedCourseProps {
     course: Course;
     handleEnrollNow: (courseId: string) => void;

@@ -78,7 +78,7 @@ export function SelectedOrganization({
           {!isUserMember ? (
             <Button
               size="lg"
-              className="bg-primary hover:bg-primary/90 transition-all text-white"
+              className="bg-primary hover:bg-primary/90 transition-all"
               onClick={() => handleJoinOrg(organization.organizationId)}
             >
               <CheckCircle className="h-4 w-4" />

@@ -47,6 +47,12 @@ export const createOrganization = async (
   const { organizationId, name, description, image } = req.body;
   const auth = getAuth(req);
 
+  const superadmins = (await clerkClient.users.getUserList()).data.filter(user => user.publicMetadata.userType === "superadmin");
+  if (superadmins.length === 0) {
+    res.status(400).json({ message: "No superadmins found" });
+    return;
+  }
+
   try {
     const organization = new Organization({
       organizationId,
@@ -60,6 +66,18 @@ export const createOrganization = async (
       courses: [],
     });
     await organization.save();
+
+    for (const superadmin of superadmins) {
+      await sendMessage(
+        superadmin.id,
+        superadmin.emailAddresses[0].emailAddress,
+        "A new organization has been created",
+        `A new organization ${name} has been created. Click here to view: ${process.env.CLIENT_URL}/organizations/${organizationId}/dashboard`,
+        `/organizations/${organizationId}/dashboard`,
+        { sendEmail: true, sendNotification: true, rateLimited: true }
+      );
+    }
+
     res.json({
       message: "Organization created successfully",
       data: organization,
@@ -402,22 +420,54 @@ export const inviteUserToOrganization = async (req: Request, res: Response): Pro
     const { list, title, message } = roleMapping[role];
 
     if (user) {
-      if (!list.some((u) => u.userId === user?.id)) list.push({ userId: user.id });
-
-      await sendMessage(
-        user.id, 
-        user.emailAddresses[0].emailAddress, 
-        title, 
-        message, 
-        `/organizations/${organization.organizationId}/dashboard`,
-        { sendEmail: true, sendNotification: true, rateLimited: false });
+      // Check if user is already in the list
+      if (!list.some((u) => u.userId === user?.id)) {
+        list.push({ userId: user.id });
+        
+        await sendMessage(
+          user.id, 
+          user.emailAddresses[0].emailAddress, 
+          title, 
+          message, 
+          `/organizations/${organization.organizationId}/dashboard`,
+          { sendEmail: true, sendNotification: true, rateLimited: false }
+        );
+        
+        if (role === 'admin') {
+          const userName = user.firstName && user.lastName 
+            ? `${user.firstName} ${user.lastName}`
+            : user.emailAddresses[0].emailAddress;
+            
+          for (const admin of organization.admins) {
+            if (admin.userId === user.id) continue;
+            
+            try {
+              const adminUser = await clerkClient.users.getUser(admin.userId);
+              const adminEmail = adminUser.emailAddresses && adminUser.emailAddresses.length > 0
+                ? adminUser.emailAddresses[0].emailAddress
+                : null;
+                
+              if (adminEmail) {
+                await sendMessage(
+                  admin.userId,
+                  adminEmail,
+                  "New Admin Added to Organization",
+                  `${userName} has been added as an admin to your organization ${organization.name}.`,
+                  `/organizations/${organization.organizationId}/settings/members`,
+                  { sendEmail: true, sendNotification: true, rateLimited: true }
+                );
+              }
+            } catch (error) {
+              console.error(`Error notifying admin ${admin.userId}:`, error);
+            }
+          }
+        }
+      }
     } else {
       user = await clerkClient.users.createUser({
         emailAddress: [email],
         password: generateTemporaryPassword(),
         skipPasswordChecks: true,
-        publicMetadata: { initialInvite: true, organizationId, invitedRole: role },
-        privateMetadata: { forcePasswordReset: true },
       });
 
       list.push({ userId: user.id });
@@ -432,6 +482,30 @@ export const inviteUserToOrganization = async (req: Request, res: Response): Pro
         null,
         { sendEmail: true, sendNotification: false, rateLimited: false }
       );
+      
+      if (role === 'admin' && organization.admins.length > 0) {
+        for (const admin of organization.admins) {
+          try {
+            const adminUser = await clerkClient.users.getUser(admin.userId);
+            const adminEmail = adminUser.emailAddresses && adminUser.emailAddresses.length > 0
+              ? adminUser.emailAddresses[0].emailAddress
+              : null;
+              
+            if (adminEmail) {
+              await sendMessage(
+                admin.userId,
+                adminEmail,
+                "New Admin Added to Organization",
+                `${email} has been invited as an admin to your organization ${organization.name}.`,
+                `/organizations/${organization.organizationId}/settings/members`,
+                { sendEmail: true, sendNotification: true, rateLimited: true }
+              );
+            }
+          } catch (error) {
+            console.error(`Error notifying admin ${admin.userId}:`, error);
+          }
+        }
+      }
     }
 
     await organization.save();
