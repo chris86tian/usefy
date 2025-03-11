@@ -52,6 +52,7 @@ import {
 } from "@/components/ui/dialog"
 import { v4 as uuidv4 } from "uuid"
 import { useUser } from "@clerk/nextjs"
+import { getUserName } from "@/lib/utils"
 
 const AdminSettings = () => {
   const router = useRouter()
@@ -440,15 +441,20 @@ const AdminSettings = () => {
 
                     return (
                       <TableRow key={user.id}>
-                        <TableCell>{user.emailAddresses?.[0]?.emailAddress || "N/A"}</TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{getUserName(user)}</span>
+                            <span className="text-sm text-muted-foreground">{user.emailAddresses?.[0]?.emailAddress || "N/A"}</span>
+                          </div>
+                        </TableCell>
                         <TableCell>
                           <Badge
                             className={
                               role === "admin"
                                 ? "bg-red-100 text-red-800"
                                 : role === "instructor"
-                                  ? "bg-yellow-100 text-yellow-800"
-                                  : "bg-green-100 text-green-800"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : "bg-green-100 text-green-800"
                             }
                           >
                             {role.charAt(0).toUpperCase() + role.slice(1)}
@@ -460,24 +466,24 @@ const AdminSettings = () => {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                        <Select 
-                          value={roleSelections[user.id] || ""}
-                          onValueChange={(newRole) => {
-                            setRoleSelections(prev => ({
-                              ...prev,
-                              [user.id]: newRole
-                            }));
-                            handleChangeRole(user.id, role, newRole);
-                          }}>
-                          <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder={role.charAt(0).toUpperCase() + role.slice(1)}/>
-                          </SelectTrigger>
-                          <SelectContent>
-                            {role !== "admin" && <SelectItem value="admin">Admin</SelectItem>}
-                            {role !== "instructor" && <SelectItem value="instructor">Instructor</SelectItem>}
-                            {role !== "learner" && <SelectItem value="learner">Learner</SelectItem>}
-                          </SelectContent>
-                        </Select>
+                          <Select 
+                            value={roleSelections[user.id] || ""}
+                            onValueChange={(newRole) => {
+                              setRoleSelections(prev => ({
+                                ...prev,
+                                [user.id]: newRole
+                              }));
+                              handleChangeRole(user.id, role, newRole);
+                            }}>
+                            <SelectTrigger className="w-[180px]">
+                              <SelectValue placeholder={role.charAt(0).toUpperCase() + role.slice(1)}/>
+                            </SelectTrigger>
+                            <SelectContent>
+                              {role !== "admin" && <SelectItem value="admin">Admin</SelectItem>}
+                              {role !== "instructor" && <SelectItem value="instructor">Instructor</SelectItem>}
+                              {role !== "learner" && <SelectItem value="learner">Learner</SelectItem>}
+                            </SelectContent>
+                          </Select>
                           <Button variant="ghost" size="sm" onClick={() => handleRemoveUser(user.id, role)}>
                             Remove
                           </Button>

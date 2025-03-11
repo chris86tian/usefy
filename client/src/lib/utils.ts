@@ -71,7 +71,9 @@ export const parseYouTubeTime = (url: string) => {
 };
 
 export const getUserName = (user: User) => {
-  return ((user.firstName + " " + user.lastName) === "null null" ? user.emailAddresses[0].emailAddress : user.firstName + " " + user.lastName) || user.username || user.fullName || user.emailAddresses[0].emailAddress || "Unknown";
+  const fullName = [user.firstName, user.lastName].filter(Boolean).join(" ");
+  
+  return fullName || user.username || user.fullName || user.emailAddresses?.[0]?.emailAddress || "Unknown";
 }
 
 export const handleEnroll = async (userId: string, courseId: string, createTransaction: any) => {
