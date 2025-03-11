@@ -1,7 +1,7 @@
 "use client"
 
-import { SignedIn, SignedOut, UserButton, useUser } from "@clerk/nextjs"
-import { Home, Menu, Sun, Moon, X } from "lucide-react"
+import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs"
+import { Menu, Sun, Moon, X } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet"
@@ -38,19 +38,6 @@ const Navbar = ({ isDashboard = false }: NavbarProps) => {
           <Link href="/" className="flex items-center gap-2 font-bold text-xl dark:text-white" scroll={false}>
             usefy.
           </Link>
-        
-          {/* {!isDashboard && (
-            <div className="hidden md:flex items-center gap-4 ml-6">
-              <Link
-                href="/explore"
-                className="flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors"
-                scroll={false}
-              >
-                <School className="h-4 w-4" />
-                <span>Browse</span>
-              </Link>
-            </div>
-          )} */}
         </div>
 
         <div className="flex items-center gap-4">
@@ -73,7 +60,7 @@ const Navbar = ({ isDashboard = false }: NavbarProps) => {
             <SignedIn>
               <div className="flex items-center gap-4">
                 <OrganizationsDropdown />
-                <NotificationDropdown notifications={notifications || []} />
+                {isDashboard &&  <NotificationDropdown notifications={notifications || []} />}
                 <UserButton />
               </div>
             </SignedIn>
