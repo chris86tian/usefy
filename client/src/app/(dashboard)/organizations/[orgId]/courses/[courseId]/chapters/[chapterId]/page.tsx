@@ -32,6 +32,7 @@ import { Spinner } from "@/components/ui/Spinner"
 import { useOrganization } from "@/context/OrganizationContext"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { AssignmentCard } from "./assignments/_components/AssignmentCard"
+import { useCallback } from "react"
 
 const isSectionReleased = (section: Section) => {
   if (!section.releaseDate) return false
@@ -84,6 +85,55 @@ const Course = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentChapter?.video, course?.sections])
+
+  const sendTimeTracking = useCallback(async (duration: number) => {
+    if (!user?.id || !course?.courseId || !currentSection?.sectionId || !currentChapter?.chapterId) return;
+  
+    try {
+      const timeData = {
+        userId: user.id,
+        courseId: course.courseId,
+        sectionId: currentSection.sectionId,
+        chapterId: currentChapter.chapterId,
+        durationMs: duration,
+      };
+  
+      // Use environment variable for API URL
+      const apiUrl = process.env.NEXT_PUBLIC_LOCAL_API_URL || 'http://localhost:8001';
+      
+      // Update to use full URL
+      const blob = new Blob([JSON.stringify(timeData)], { type: 'application/json' });
+      navigator.sendBeacon(`${apiUrl}/time-tracking`, blob);
+      
+      if (!navigator.sendBeacon) {
+        await fetch(`${apiUrl}/time-tracking`, {
+          method: 'POST',
+          body: JSON.stringify(timeData),
+          headers: { 'Content-Type': 'application/json' },
+          keepalive: true,
+        });
+      }
+    } catch (error) {
+      console.error('Error sending time tracking data:', error);
+    }
+  }, [user?.id, course?.courseId, currentSection?.sectionId, currentChapter?.chapterId])
+  
+  useEffect(() => {
+    const startTime = Date.now()
+    
+    const handleBeforeUnload = () => {
+      const duration = Date.now() - startTime
+      sendTimeTracking(duration)
+    }
+  
+    window.addEventListener('beforeunload', handleBeforeUnload)
+  
+    return () => {
+      const duration = Date.now() - startTime
+      sendTimeTracking(duration)
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+    }
+  }, [sendTimeTracking])
 
   const findNextAvailableChapter = (direction: "next" | "previous") => {
     if (!course?.sections || !currentSection || !currentChapter) return null

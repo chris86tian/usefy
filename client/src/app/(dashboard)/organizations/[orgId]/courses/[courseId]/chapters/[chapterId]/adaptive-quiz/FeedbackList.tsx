@@ -91,14 +91,14 @@ const FeedbackList = ({ courseId }: FeedbackListProps) => {
           ) : (
             <div className="space-y-4">
               {feedbacks?.map((feedback) => (
-                <div key={feedback.feedbackId} className="p-4 bg-gray-800 rounded-lg">
+                <div key={feedback.feedbackId} className="p-4 rounded-lg">
                   <div className="flex justify-between items-start mb-2">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <StatusBadge status={feedback.status} />
                         <h3 className="font-medium">{feedback.username}</h3>
                       </div>
-                      <p className="text-sm text-gray-400">
+                      <p className="text-sm">
                         Created: {new Date(feedback.createdAt).toLocaleDateString()}
                         {feedback.updatedAt && ` • Updated: ${new Date(feedback.updatedAt).toLocaleDateString()}`}
                       </p>
@@ -125,10 +125,10 @@ const FeedbackList = ({ courseId }: FeedbackListProps) => {
                           value={feedback.status}
                           onValueChange={(value) => handleStatusChange(feedback.feedbackId, value)}
                         >
-                          <SelectTrigger className="w-[180px] bg-gray-700 border-gray-600">
+                          <SelectTrigger className="w-[180px] border-gray-600">
                             <SelectValue placeholder="Select status" />
                           </SelectTrigger>
-                          <SelectContent className="bg-gray-800 border-gray-600">
+                          <SelectContent className="border-gray-600">
                             <SelectItem value="new" className="hover:bg-gray-700">
                               new
                             </SelectItem>
@@ -158,7 +158,7 @@ const FeedbackList = ({ courseId }: FeedbackListProps) => {
                         )}
                     </div>
                   </div>
-                  <p className="text-gray-300">{feedback.feedback}</p>
+                  <p className="">{feedback.feedback}</p>
                 </div>
               ))}
             </div>

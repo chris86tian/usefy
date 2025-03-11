@@ -8,7 +8,27 @@ declare global {
   interface UserStats {
     week: string
     progress: number
+  }
+
+  interface TimeTrackingRecord {
+    timeTrackingId: string;
+    userId: string;
+    courseId: string;
+    sectionId: string;
+    chapterId: string;
+    durationMs: number;
+    trackedAt: string;
+    date: string;
   }   
+
+  interface CourseAnalytics {
+    courseId: string;
+    averageChapterTimes: {
+      chapterId: string;
+      averageTimeMs: number;
+    }[];
+    totalTimeSpent: number;
+  }
   
   interface Snippet {
     _id: Id<"snippets">;
@@ -132,6 +152,8 @@ declare global {
     likes?: number;
     dislikes?: number;
     quiz?: Quiz;
+    timeTracking?: TimeTrackingRecord[];
+    averageCompletionTime?: number;
   }
 
   interface ChapterComment {

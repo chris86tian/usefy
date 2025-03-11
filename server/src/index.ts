@@ -18,6 +18,7 @@ import commitRoutes from "./routes/commitRoutes";
 import feedbackRoutes from "./routes/feedbackRoutes";
 import organizationRoutes from "./routes/organizationRoutes";
 import cohortRoutes from "./routes/cohortRoutes";
+import timeTrackingRoutes from "./routes/timeTrackingRoutes";
 
 dotenv.config();
 
@@ -120,6 +121,14 @@ app.use((req, res, next) => {
   next();
 });
 
+app.options('*', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Max-Age', '86400');
+  res.status(200).send();
+});
+
 /* ROUTES */
 app.get("/", (req, res) => {
   res.send("Hello World!");
@@ -134,6 +143,7 @@ app.use("/transactions", requireAuth(), transactionRoutes);
 app.use("/notifications", requireAuth(), notificationRoutes);
 app.use("/commits", requireAuth(), commitRoutes);
 app.use("/feedback", requireAuth(), feedbackRoutes);
+app.use('/time-tracking', timeTrackingRoutes);
 
 app.use(
   (

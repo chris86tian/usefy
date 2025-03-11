@@ -20,7 +20,7 @@ export default function UserList({ courseId, selectedUser, onUserSelect }: UserL
   const [isEnrollmentModalOpen, setIsEnrollmentModalOpen] = useState(false)
 
   return (
-    <Card className="bg-zinc-900">
+    <Card className="">
       <CardHeader className="flex flex-row items-center justify-between">
         <Button variant={"outline"}
           onClick={() => setIsEnrollmentModalOpen(true)}>

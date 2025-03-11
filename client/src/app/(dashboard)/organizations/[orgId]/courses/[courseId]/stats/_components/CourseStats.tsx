@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useGetCourseQuery } from "@/state/api"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Book, Users, Layers, FileText } from "lucide-react"
+import ChapterStats from "./ChapterStats";
 
 interface CourseStatsProps {
   courseId: string
@@ -21,26 +22,46 @@ export default function CourseStats({ courseId }: CourseStatsProps) {
   }
 
   return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-      <StatCard
-        title="Total Enrollments"
-        value={course.enrollments?.length || 0}
-        icon={<Users className="h-4 w-4 text-muted-foreground" />}
-        description="Students enrolled in the course"
-      />
-      <StatCard
-        title="Total Sections"
-        value={course.sections.length}
-        icon={<Book className="h-4 w-4 text-muted-foreground" />}
-        description="Number of course sections"
-      />
-      <StatCard
-        title="Total Chapters"
-        value={course.sections.reduce((acc, section) => acc + section.chapters.length, 0)}
-        icon={<FileText className="h-4 w-4 text-muted-foreground" />}
-        description="Total chapters across all sections"
-      />
-    </div>
+    <div>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          title="Total Enrollments"
+          value={course.enrollments?.length || 0}
+          icon={<Users className="h-4 w-4 text-muted-foreground" />}
+          description="Students enrolled in the course"
+        />
+        <StatCard
+          title="Total Sections"
+          value={course.sections.length}
+          icon={<Book className="h-4 w-4 text-muted-foreground" />}
+          description="Number of course sections"
+        />
+        <StatCard
+          title="Total Chapters"
+          value={course.sections.reduce((acc, section) => acc + section.chapters.length, 0)}
+          icon={<FileText className="h-4 w-4 text-muted-foreground" />}
+          description="Total chapters across all sections"
+        />
+      </div>
+      <div className="container py-8 space-y-8">
+        <h1 className="text-2xl font-bold">Statistics for Course: {course?.title}</h1>
+        
+        {course?.sections.map((section) => (
+          <div key={section.sectionId} className="space-y-6">
+            <h2 className="text-xl font-semibold">Section: {section.sectionTitle}</h2>
+            {section.chapters.map((chapter) => (
+              <div key={chapter.chapterId} className="bg-card p-6 rounded-lg">
+                <h3 className="text-lg font-medium mb-4">Chapter: {chapter.title}</h3>
+                <ChapterStats 
+                  courseId={course.courseId} 
+                  chapterId={chapter.chapterId} 
+                />
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div> 
   )
 }
 
@@ -53,7 +74,7 @@ interface StatCardProps {
 
 function StatCard({ title, value, icon, description }: StatCardProps) {
   return (
-    <Card className="bg-zinc-900">
+    <Card className="">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
         {icon}

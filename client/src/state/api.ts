@@ -88,6 +88,7 @@ export const api = createApi({
     "UserCourseProgress",
     "Feedback",
     "Cohorts",
+    "TimeTracking",
   ],
   endpoints: (build) => ({
     /* 
@@ -873,6 +874,19 @@ export const api = createApi({
 
     /*
     ===============
+    STATISTICS
+    ===============
+    */
+
+    getChapterStats: build.query({
+      query: ({ courseId, chapterId }) => ({
+        url: `time-tracking/stats?courseId=${courseId}&chapterId=${chapterId}`,
+      }),
+      providesTags: ['TimeTracking'],
+    }),
+
+    /*
+    ===============
     ENROLLMENTS
     ===============
     */
@@ -970,6 +984,7 @@ export const {
   useGetFeedbackQuery,
   useUpdateFeedbackStatusMutation,
   useDeleteFeedbackMutation,
+  useGetChapterStatsQuery,
   useEnrollUserMutation,
   useUnenrollUserMutation,
 } = api;

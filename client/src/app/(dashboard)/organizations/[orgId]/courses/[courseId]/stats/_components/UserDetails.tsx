@@ -33,7 +33,7 @@ export default function UserDetails({ user, courseId }: UserDetailsProps) {
   )
 
   return (
-    <Card className="h-auto bg-zinc-900 border-none shadow-md">
+    <Card className="h-auto border-none shadow-md">
       <CardHeader className="pb-2">
         <div className="flex items-center gap-4">
           <Avatar className="h-16 w-16 border-2 border-primary">
@@ -107,7 +107,7 @@ export default function UserDetails({ user, courseId }: UserDetailsProps) {
             {isLoading ? (
               <Skeleton className="h-64 w-full" />
             ) : progress ? (
-              <Card className="bg-zinc-800">
+              <Card className="">
                 <CardHeader>
                   <CardTitle className="text-xl">Course Progress Details</CardTitle>
                 </CardHeader>
@@ -146,7 +146,7 @@ export default function UserDetails({ user, courseId }: UserDetailsProps) {
               <Skeleton className="h-64 w-full" />
             ) : (
               submissions && (
-                <Card className="bg-zinc-800">
+                <Card className="">
                   <CardHeader>
                     <CardTitle className="text-xl">Assignment Submissions</CardTitle>
                     <div className="relative mt-2">
@@ -197,7 +197,7 @@ interface StatCardProps {
 
 function StatCard({ icon, title, value }: StatCardProps) {
   return (
-    <Card className="bg-gray-800">
+    <Card className="">
       <CardContent className="p-4 flex flex-col items-center text-center">
         <div className="rounded-full bg-primary/10 p-3 mb-2">{icon}</div>
         <p className="text-sm font-medium mb-1">{title}</p>
