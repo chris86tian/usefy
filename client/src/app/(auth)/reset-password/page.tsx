@@ -1,13 +1,13 @@
 'use client'
 import React, { useEffect, useState } from 'react'
-import { useAuth, useSignIn } from '@clerk/nextjs'
+import { useAuth, useSignIn, useUser } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Mail, ShieldCheck, InfoIcon, ArrowLeftIcon } from 'lucide-react'
+import { Mail, ShieldCheck, InfoIcon, ArrowLeftIcon, CheckCircle } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import { Separator } from "@/components/ui/separator"
 
@@ -17,20 +17,53 @@ const ForgotPasswordPage = () => {
   const [password, setPassword] = useState('')
   const [code, setCode] = useState('')
   const [successfulCreation, setSuccessfulCreation] = useState(false)
+  const [successfulReset, setSuccessfulReset] = useState(false)
   const [secondFactor, setSecondFactor] = useState(false)
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
 
+  // New state variables for firstName and lastName
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+
   const router = useRouter()
   const { isSignedIn } = useAuth()
   const { isLoaded, signIn, setActive } = useSignIn()
+  const { user, isLoaded: isUserLoaded } = useUser()
 
   useEffect(() => {
-    if (isSignedIn) {
+    if (isSignedIn && !successfulReset) {
       router.push('/')
     }
-  }, [isSignedIn, router])
+  }, [isSignedIn, router, successfulReset])
+
+  // This effect handles updating user profile after successful login
+  useEffect(() => {
+    const updateUserProfile = async () => {
+      // Only proceed if we've successfully reset the password and the user is loaded
+      if (successfulReset && isUserLoaded && user && firstName && lastName) {
+        try {
+          console.log("Attempting to update user with:", firstName, lastName)
+          await user.update({
+            firstName,
+            lastName,
+          })
+          console.log("User updated successfully:", user.firstName, user.lastName)
+          
+          // Redirect to home page or profile page after successful update
+          setTimeout(() => {
+            router.push('/')
+          }, 2000) // Small delay to show success message
+        } catch (error: any) {
+          console.error("Error updating user profile:", error)
+          setError(error.message || "Failed to update profile information")
+        }
+      }
+    }
+
+    updateUserProfile()
+  }, [successfulReset, isUserLoaded, user, firstName, lastName, router])
 
   if (!isLoaded) {
     return null
@@ -72,8 +105,8 @@ const ForgotPasswordPage = () => {
       } else if (result?.status === 'complete') {
         if (setActive) {
           await setActive({ session: result.createdSessionId })
+          setSuccessfulReset(true) // Mark reset as successful to trigger the useEffect
         }
-        router.push('/')
       }
     } catch (err: any) {
       setError(err.errors[0].longMessage)
@@ -97,6 +130,10 @@ const ForgotPasswordPage = () => {
               <>
                 Reset Your Password
               </>
+            ) : successfulReset ? (
+              <>
+                <CheckCircle className="h-6 w-6 text-green-500" /> Password Reset Successful
+              </>
             ) : (
               <>
                 <ShieldCheck className="h-6 w-6" /> Set New Password
@@ -106,11 +143,13 @@ const ForgotPasswordPage = () => {
           <CardDescription>
             {!successfulCreation 
               ? "Enter your email to receive a password reset code" 
+              : successfulReset
+              ? "Your password has been reset successfully"
               : `Enter the verification code sent to ${email} and create a new password`}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {emailSent && successfulCreation && (
+          {emailSent && successfulCreation && !successfulReset && (
             <Alert className="mb-6 bg-blue-50 border-blue-200 dark:bg-blue-900 dark:border-blue-800">
               <InfoIcon className="h-4 w-4" />
               <AlertTitle>Check your inbox</AlertTitle>
@@ -121,82 +160,117 @@ const ForgotPasswordPage = () => {
             </Alert>
           )}
 
-          <form onSubmit={!successfulCreation ? create : reset}>
-            {!successfulCreation ? (
-              <>
-                <div className="grid w-full items-center gap-4">
-                  <div className="flex flex-col space-y-1.5">
-                    <Label htmlFor="email">Email Address</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          {successfulReset ? (
+            <Alert className="mb-6 bg-green-50 border-green-200 dark:bg-green-900 dark:border-green-800">
+              <CheckCircle className="h-4 w-4 text-green-500" />
+              <AlertTitle>Success!</AlertTitle>
+              <AlertDescription>
+                Your password has been reset successfully and your profile information has been updated.
+                You will be redirected to the home page momentarily.
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <form onSubmit={!successfulCreation ? create : reset}>
+              {!successfulCreation ? (
+                <>
+                  <div className="grid w-full items-center gap-4">
+                    <div className="flex flex-col space-y-1.5">
+                      <Label htmlFor="email">Email Address</Label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <Input 
+                          id="email"
+                          type="email" 
+                          placeholder="Enter email address"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="pl-10"
+                          required
+                        />
+                      </div>
+                    </div>
+                    
+                    <Button 
+                      type="submit" 
+                      className="w-full" 
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Sending..." : "Send Reset Code"}
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="grid w-full items-center gap-4">
+                    <div className="flex flex-col space-y-1.5">
+                      <Label htmlFor="code">Verification Code</Label>
                       <Input 
-                        id="email"
-                        type="email" 
-                        placeholder="Enter email address"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="pl-10"
+                        id="code"
+                        type="text" 
+                        placeholder="Enter verification code from email"
+                        value={code}
+                        onChange={(e) => setCode(e.target.value)}
+                        required
+                        autoFocus
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        The code was sent to your email address. It may take a few minutes to arrive.
+                      </p>
+                    </div>
+                    
+                    <Separator className="my-2" />
+
+                    {/* New fields for first name and last name */}
+                    <div className="flex flex-col space-y-1.5">
+                      <Label htmlFor="firstName">First Name</Label>
+                      <Input 
+                        id="firstName"
+                        type="text" 
+                        placeholder="Enter your first name"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
                         required
                       />
                     </div>
+                    <div className="flex flex-col space-y-1.5">
+                      <Label htmlFor="lastName">Last Name</Label>
+                      <Input 
+                        id="lastName"
+                        type="text" 
+                        placeholder="Enter your last name"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        required
+                      />
+                    </div>
+                
+                    <div className="flex flex-col space-y-1.5">
+                      <Label htmlFor="password">New Password</Label>
+                      <Input 
+                        id="password"
+                        type="password" 
+                        placeholder="Enter new password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Create a strong password with at least 8 characters.
+                      </p>
+                    </div>
+                    
+                    <Button 
+                      type="submit" 
+                      className="w-full" 
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Resetting..." : "Reset Password"}
+                    </Button>
                   </div>
-                  
-                  <Button 
-                    type="submit" 
-                    className="w-full" 
-                    disabled={isLoading}
-                  >
-                    {isLoading ? "Sending..." : "Send Reset Code"}
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="grid w-full items-center gap-4">
-                  <div className="flex flex-col space-y-1.5">
-                    <Label htmlFor="code">Verification Code</Label>
-                    <Input 
-                      id="code"
-                      type="text" 
-                      placeholder="Enter verification code from email"
-                      value={code}
-                      onChange={(e) => setCode(e.target.value)}
-                      required
-                      autoFocus
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      The code was sent to your email address. It may take a few minutes to arrive.
-                    </p>
-                  </div>
-                  
-                  <Separator className="my-2" />
-                  
-                  <div className="flex flex-col space-y-1.5">
-                    <Label htmlFor="password">New Password</Label>
-                    <Input 
-                      id="password"
-                      type="password" 
-                      placeholder="Enter new password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Create a strong password with at least 8 characters.
-                    </p>
-                  </div>
-                  
-                  <Button 
-                    type="submit" 
-                    className="w-full" 
-                    disabled={isLoading}
-                  >
-                    {isLoading ? "Resetting..." : "Reset Password"}
-                  </Button>
-                </div>
-              </>
-            )}
-          </form>
+                </>
+              )}
+            </form>
+          )}
 
           {error && (
             <Alert variant="destructive" className="mt-4">
@@ -215,7 +289,7 @@ const ForgotPasswordPage = () => {
           )}
         </CardContent>
         
-        {successfulCreation && (
+        {successfulCreation && !successfulReset && (
           <CardFooter className="flex justify-between pt-0">
             <Button 
               variant="ghost" 

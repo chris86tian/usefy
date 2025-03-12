@@ -21,7 +21,7 @@ import {
 } from "@/state/api"
 import { v4 as uuidv4 } from "uuid"
 import { useUser } from "@clerk/nextjs"
-import { cn } from "@/lib/utils"
+import { cn, getUserName } from "@/lib/utils"
 
 interface CourseCommentsProps {
   orgId: string
@@ -105,11 +105,6 @@ export function CourseComments({ orgId, courseId, sectionId, chapterId }: Course
   const [upvoteComment] = useUpvoteCommentMutation()
   const [downvoteComment] = useDownvoteCommentMutation()
 
-  const getUsername = () => {
-    if (!user) return "Anonymous"
-    return user.username || user.fullName || user.emailAddresses?.[0]?.emailAddress || "Anonymous"
-  }
-
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newComment.trim() || !user) return
@@ -117,7 +112,7 @@ export function CourseComments({ orgId, courseId, sectionId, chapterId }: Course
     const chapterComment = {
       id: uuidv4(),
       userId: user.id,
-      username: getUsername(),
+      username: user.firstName + " " + user.lastName,
       content: newComment,
       upvotes: 0,
       downvotes: 0,
@@ -149,7 +144,7 @@ export function CourseComments({ orgId, courseId, sectionId, chapterId }: Course
     const reply = {
       id: uuidv4(),
       userId: user.id,
-      username: getUsername(),
+      username: user.firstName + " " + user.lastName,
       content: replyContent,
       createdAt: new Date().toISOString(),
     }
@@ -241,7 +236,7 @@ export function CourseComments({ orgId, courseId, sectionId, chapterId }: Course
 
         <div className="p-4">
           <form onSubmit={handleSubmitComment} className="flex items-start gap-2 mb-6">
-            {user && <UserAvatar userId={user.id} username={getUsername()} />}
+            {user && <UserAvatar userId={user.id} username={user.firstName + " " + user.lastName} size="sm" />}
             <div className="flex-1 flex gap-2">
               <Textarea
                 value={newComment}
@@ -271,7 +266,7 @@ export function CourseComments({ orgId, courseId, sectionId, chapterId }: Course
                   <div key={comment.id} className="group">
                     <div className="flex gap-3">
                       <UserAvatar userId={comment.userId} username={comment.username} />
-                      <div className="flex-1 space-y-1.5">
+                      <div className="flex-1">
                         <div className="flex items-center justify-between">
                           <p className="font-medium text-sm">{comment.username}</p>
                           <p className="text-xs text-muted-foreground">{formatDate(comment.createdAt)}</p>
@@ -314,7 +309,7 @@ export function CourseComments({ orgId, courseId, sectionId, chapterId }: Course
 
                         {showReplyInput[comment.id] && (
                           <div className="mt-3 flex items-start gap-2">
-                            {user && <UserAvatar userId={user.id} username={getUsername()} size="sm" />}
+                            {user && <UserAvatar userId={user.id} username={user.firstName + " " + user.lastName} size="sm" />}
                             <div className="flex-1 flex gap-2">
                               <Textarea
                                 value={replyText[comment.id] || ""}

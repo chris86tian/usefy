@@ -33,7 +33,6 @@ import {
   useUnenrollUserMutation,
   useGetCohortQuery,
   useGetCohortLearnersQuery,
-  useInviteUserToOrganizationMutation,
   useInviteUserToCohortMutation,
 } from "@/state/api"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -69,8 +68,9 @@ const AdminCohortPage = ({ orgUsers, usersLoading, courses }: AdminCohortPagePro
   const [removeCourseInstructor] = useRemoveCourseInstructorMutation()
   const [createTransaction] = useCreateTransactionMutation()
   const [unenrollUser] = useUnenrollUserMutation()
-  const [inviteUser] = useInviteUserToOrganizationMutation()
-  const [inviteUserToCohort] = useInviteUserToCohortMutation()
+  const [inviteUserToCohort, {
+    isLoading: inviteUserToCohortLoading,
+  }] = useInviteUserToCohortMutation()
 
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedLearnerId, setSelectedLearnerId] = useState("")
@@ -266,26 +266,6 @@ const AdminCohortPage = ({ orgUsers, usersLoading, courses }: AdminCohortPagePro
     setSelectedInstructorId("")
   }
 
-  const handleInviteUser = async () => {
-    if (!inviteEmail) {
-      toast.error("Please enter an email address")
-      return
-    }
-
-    try {
-      await inviteUser({
-        organizationId: cohort?.organizationId as string,
-        email: inviteEmail.trim(),
-        role: inviteRole,
-      }).unwrap()
-
-      toast.success(`Invitation sent to ${inviteEmail}`)
-      setInviteEmail("")
-    } catch (error) {
-      toast.error("Failed to send invitation")
-    }
-  }
-
   const handleRemoveLearner = async (learnerId: string) => {
     try {
       await removeLearnerFromCohort({
@@ -398,13 +378,13 @@ const AdminCohortPage = ({ orgUsers, usersLoading, courses }: AdminCohortPagePro
                 <DialogTrigger asChild>
                   <Button>
                     <MailPlusIcon className="mr-2 h-4 w-4" />
-                    Invite Learner
+                    Invite Member
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Invite Learners</DialogTitle>
-                    <DialogDescription>Enter the email addresses of the learners you want to invite, separated by commas.</DialogDescription>
+                    <DialogTitle>Invite Members</DialogTitle>
+                    <DialogDescription>Enter the email addresses of the members you want to invite, separated by commas.</DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4 py-4">
                     <Input
@@ -427,7 +407,12 @@ const AdminCohortPage = ({ orgUsers, usersLoading, courses }: AdminCohortPagePro
                     <Button variant="outline" onClick={() => setActiveDialog('none')}>
                       Cancel
                     </Button>
-                    <Button onClick={handleAddByInvite}>Send Invitations</Button>
+                    <Button 
+                      disabled={inviteUserToCohortLoading}
+                      onClick={handleAddByInvite}
+                    >
+                      {inviteUserToCohortLoading ? "Sending..." : "Send Invitations"}
+                    </Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
@@ -552,7 +537,7 @@ const AdminCohortPage = ({ orgUsers, usersLoading, courses }: AdminCohortPagePro
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {courses.length > 0 ? (
+                  {courses?.length > 0 ? (
                     courses.map((course) => (
                       <TableRow key={course.courseId}>
                         <TableCell className="font-medium">{course.title}</TableCell>
