@@ -89,11 +89,11 @@ const ChaptersSidebar = () => {
   }
 
   return (
-    <div className="w-full overflow-hidden flex flex-col h-full relative">
+    <div className="w-full max-w-[250px] overflow-y-auto flex flex-col h-full relative">
       <div className="px-3 pb-3 border-b border-border flex items-center justify-between">
         {!sidebarCollapsed ? (
           <>
-            <h2 className="text-xl font-semibold truncate">{course.title}</h2>
+            <h2 className="text-lg font-semibold overflow-y-auto">{course.title}</h2>
             <Button
               variant="ghost"
               size="icon"
@@ -348,23 +348,28 @@ const ChaptersList = ({
 
   return (
     <ul className={cn("space-y-1", collapsed && "flex flex-col items-center")}>
-      {section.chapters.map((chapter, index: number) => (
-        <Chapter
-          key={chapter.chapterId}
-          chapter={chapter}
-          index={index}
-          sectionId={section.sectionId}
-          sectionProgress={sectionProgress}
-          chapterId={chapterId}
-          courseId={courseId}
-          handleChapterClick={handleChapterClick}
-          updateChapterProgress={updateChapterProgress}
-          isReleased={isReleased}
-          isChapterCompleted={isChapterCompleted}
-          isQuizCompleted={isQuizCompleted}
-          collapsed={collapsed}
-        />
-      ))}
+      {section.chapters.map((chapter, index: number) => {
+        const hasAssignments = chapter.assignments && chapter.assignments.length > 0;
+        const hasQuiz = chapter.quiz;
+
+        return (
+          <Chapter
+            key={chapter.chapterId}
+            chapter={chapter}
+            index={index}
+            sectionId={section.sectionId}
+            sectionProgress={sectionProgress}
+            chapterId={chapterId}
+            courseId={courseId}
+            handleChapterClick={handleChapterClick}
+            updateChapterProgress={updateChapterProgress}
+            isReleased={isReleased}
+            isChapterCompleted={isChapterCompleted}
+            isQuizCompleted={isQuizCompleted}
+            collapsed={collapsed}
+          />
+        )
+      })}
     </ul>
   )
 }
@@ -447,9 +452,9 @@ const Chapter = ({
           </TooltipTrigger>
           <TooltipContent side="right">
             <p className="font-medium">{chapter.title}</p>
-            {!quizCompleted || !isCurrentChapterAssignmentsSubmitted ? (
+            {(quizCompleted || !isCurrentChapterAssignmentsSubmitted) && (
               <p className="text-xs text-amber-500 mt-1">Complete the {quizCompleted ? "assignments" : "quiz"}</p>
-            ) : null}
+            )}
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -491,7 +496,7 @@ const Chapter = ({
 
         {isReleased && (
           <div className="flex items-center ml-auto">
-            {!quizCompleted || !isCurrentChapterAssignmentsSubmitted ? (
+            {(quizCompleted || !isCurrentChapterAssignmentsSubmitted) && (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -500,12 +505,18 @@ const Chapter = ({
                     </div>
                   </TooltipTrigger>
                   <TooltipContent side="right">
-                    <p>Complete the {quizCompleted ? "assignments" : "quiz"}</p>
+                    {chapter.quiz && (
+                      !quizCompleted || !isCurrentChapterAssignmentsSubmitted ? (
+                        <p className="text-xs text-amber-300 dark:text-amber-300">
+                          Complete the {quizCompleted ? "assignments" : "quiz"}
+                        </p>
+                      ) : (
+                        null
+                      )
+                    )}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-            ) : (
-              <CheckCircle className="w-4 h-4 text-green-500" />
             )}
           </div>
         )}

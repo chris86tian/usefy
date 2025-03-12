@@ -481,7 +481,6 @@ const Course = () => {
             mode="create"
             courseId={course.courseId}
             sectionId={currentSection?.sectionId as string}
-            chapterId={currentChapter.chapterId}
             chapter={currentChapter}
             open={isModalOpen}
             onOpenChange={setIsModalOpen}
@@ -522,15 +521,22 @@ const Course = () => {
             <CardContent>
               <ScrollArea className="h-auto pt-4">
                 <div className="grid grid-cols-3 gap-4">
-                  {currentChapter?.assignments?.map((assignment: Assignment) => (
-                    <AssignmentCard 
-                      key={assignment.assignmentId} 
-                      assignment={assignment}
-                      course={course}
-                      sectionId={currentSection.sectionId}
-                      chapterId={currentChapter.chapterId}
-                    />
-                  ))}
+                  {currentChapter?.assignments && currentChapter.assignments.length > 0 ? (
+                    currentChapter.assignments.map((assignment) => (
+                      <AssignmentCard 
+                        key={assignment.assignmentId} 
+                        isAuthorized={isAuthorized as boolean}
+                        sectionId={currentSection.sectionId}
+                        chapter={currentChapter}
+                        course={course}
+                        assignment={assignment}
+                      />
+                    ))
+                  ) : (
+                    <div className="col-span-3 text-center text-muted-foreground">
+                      No assignments available for this chapter
+                    </div>
+                  )}
                 </div>
               </ScrollArea>
             </CardContent>

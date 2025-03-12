@@ -467,7 +467,7 @@ const ChapterModal = () => {
                             value={assignment.title}
                             onChange={(e) => updateAssignment(assignmentIndex, "title", e.target.value)}
                             placeholder="Assignment Title"
-                            className="mb-2 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:placeholder-gray-400"
+                            className="mb-2 text-black dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:placeholder-gray-400"
                           />
                           <textarea
                             value={assignment.description}
@@ -488,7 +488,7 @@ const ChapterModal = () => {
                                 }}
                                 size="sm"
                                 variant="outline"
-                                className="border-gray-300 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
+                                className="text-black dark:text-white border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
                               >
                                 Add Hint
                               </Button>

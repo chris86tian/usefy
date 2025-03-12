@@ -18,8 +18,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface AssignmentModalProps {
-  chapterId: string
-  chapter?: Chapter
+  chapter: Chapter
   sectionId: string
   courseId: string
   assignment?: Assignment
@@ -30,7 +29,6 @@ interface AssignmentModalProps {
 }
 
 const AssignmentModal = ({
-  chapterId,
   chapter,
   sectionId,
   courseId,
@@ -82,14 +80,14 @@ const AssignmentModal = ({
 
       if (mode === "create") {
         await createAssignment({
-          chapterId,
+          chapterId: chapter.chapterId,
           courseId,
           sectionId,
           assignment: assignmentData,
         })
       } else if (mode === "edit" && assignment) {
         await updateAssignment({
-          chapterId,
+          chapterId: chapter.chapterId,
           courseId,
           sectionId,
           assignmentId: assignment.assignmentId,
@@ -224,8 +222,8 @@ const AssignmentModal = ({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          assignmentTitle: chapter?.title,
-          assignmentDescription: chapter?.content,
+          assignmentTitle: chapter.title,
+          assignmentDescription: chapter.content,
         }),
       })
 
@@ -449,27 +447,25 @@ const AssignmentModal = ({
               Cancel
             </Button>
 
-            {mode === "create" && (
-              <Button
-                type="button"
-                onClick={generateAssignment}
-                disabled={isGeneratingAI || isSubmitting}
-                variant="outline"
-                size="sm"
-              >
-                {isGeneratingAI ? (
-                  <>
-                    <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <Wand2 className="h-3 w-3 mr-1" />
-                    Generate
-                  </>
-                )}
-              </Button>
-            )}
+            <Button
+              type="button"
+              onClick={generateAssignment}
+              disabled={isGeneratingAI || isSubmitting}
+              variant="outline"
+              size="sm"
+            >
+              {isGeneratingAI ? (
+                <>
+                  <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Wand2 className="h-3 w-3 mr-1" />
+                  Generate
+                </>
+              )}
+            </Button>
 
             <Button type="submit" disabled={isSubmitting || isUploading} size="sm">
               {isSubmitting ? (
