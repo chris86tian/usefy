@@ -108,9 +108,7 @@ export function AssignmentCard({ assignment, isAuthorized, course, sectionId, ch
   const [isSubmissionModalOpen, setIsSubmissionModalOpen] = useState(false)
   const [isResourcesOpen, setIsResourcesOpen] = useState(false)
 
-  const hasSubmitted = user && assignment.submissions.some(
-    (submission) => submission.userId === user.id
-  )
+  const hasSubmitted = assignment.submissions.some((submission) => submission.userId === user?.id)
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -214,7 +212,7 @@ export function AssignmentCard({ assignment, isAuthorized, course, sectionId, ch
             {hasSubmitted ? (
               <>
                 <CheckCircle className="h-4 w-4 mr-2" />
-                View Submission
+                Submitted
               </>
             ) : assignment.isCoding ? (
               <>

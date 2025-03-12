@@ -49,12 +49,14 @@ const Course = () => {
     isLoading,
     isChapterCompleted,
     isQuizCompleted,
-    isCurrentChapterAssignemtsCompleted,
+    isAssignmentsCompleted,
     updateChapterProgress,
     hasMarkedComplete,
     courseInstructors,
     setHasMarkedComplete,
   } = useCourseProgressData()
+
+  console.log(isAssignmentsCompleted)
 
   const playerRef = useRef<ReactPlayer>(null)
   const quizRef = useRef<HTMLDivElement>(null)
@@ -233,7 +235,7 @@ const Course = () => {
   const handleGoToNextChapter = () => {
     if (!course) return
 
-    if (currentChapter?.quiz && (!isQuizCompleted() || !isCurrentChapterAssignemtsCompleted())) {
+    if (currentChapter?.quiz && (!isQuizCompleted() || !isAssignmentsCompleted())) {
       toast.error(
         `Please complete the chapter ${isQuizCompleted() ? "assignments" : "quiz"} before moving to the next chapter.`,
         {

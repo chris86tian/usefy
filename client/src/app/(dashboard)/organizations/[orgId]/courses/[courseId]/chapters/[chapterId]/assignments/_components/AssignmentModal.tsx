@@ -49,6 +49,7 @@ const AssignmentModal = ({
   const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({})
   const [isGeneratingAI, setIsGeneratingAI] = useState(false)
   const [activeTab, setActiveTab] = useState<"edit" | "preview">("edit")
+  const [isCoding, setIsCoding] = useState(false)
 
   const [createAssignment] = useCreateAssignmentMutation()
   const [updateAssignment] = useUpdateAssignmentMutation()
@@ -60,6 +61,7 @@ const AssignmentModal = ({
       setDescription(assignment.description)
       setResources(assignment.resources?.map((r) => ({ ...r, type: r.url ? "file" : "link" })) || [])
       setHints(assignment.hints || [])
+      setIsCoding(assignment.isCoding || false)
     }
   }, [assignment, mode])
 
@@ -71,7 +73,7 @@ const AssignmentModal = ({
       const assignmentData = {
         assignmentId: mode === "create" ? uuidv4() : assignment!.assignmentId,
         title,
-        isCoding: false,
+        isCoding,
         description,
         resources,
         hints,
@@ -97,7 +99,6 @@ const AssignmentModal = ({
 
       onOpenChange(false)
       if (mode === "create") resetForm()
-      onAssignmentChange?.()
     } catch (error) {
       console.error(`Failed to ${mode} assignment:`, error)
     } finally {
@@ -433,6 +434,17 @@ const AssignmentModal = ({
                   accept={selectedResourceType === "image" ? "image/*" : undefined}
                 />
               </div>
+            </div>
+
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="isCoding"
+                checked={isCoding}
+                onChange={() => setIsCoding(!isCoding)}
+                className="mr-2"
+              />
+              <Label htmlFor="isCoding" className="text-sm font-medium">Create as Coding Assignment</Label>
             </div>
           </div>
 

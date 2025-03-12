@@ -547,7 +547,7 @@ const AdminCohortPage = ({ orgUsers, usersLoading, courses }: AdminCohortPagePro
                             : "No instructor assigned"}
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline">Active</Badge>
+                          <Badge variant="outline">{course.status}</Badge>
                         </TableCell>
                         <TableCell>
                           <DropdownMenu>
