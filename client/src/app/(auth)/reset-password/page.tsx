@@ -73,7 +73,7 @@ const ForgotPasswordPage = () => {
         if (setActive) {
           await setActive({ session: result.createdSessionId })
         }
-        router.push('/dashboard')
+        router.push('/')
       }
     } catch (err: any) {
       setError(err.errors[0].longMessage)

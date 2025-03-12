@@ -438,7 +438,7 @@ export const inviteUserToOrganization = async (req: Request, res: Response): Pro
         user.emailAddresses[0].emailAddress, 
         title, 
         message, 
-        `/organizations/${organization.organizationId}/dashboard`,
+        `/organizations/${organization.organizationId}`,
         { sendEmail: true, sendNotification: true, rateLimited: false }
       );
     } else {
