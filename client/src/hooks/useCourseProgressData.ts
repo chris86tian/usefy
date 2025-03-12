@@ -42,7 +42,7 @@ export const useCourseProgressData = () => {
     if (!currentSection || !currentChapter || !userProgress?.sections) return false;
 
     const submissions = currentChapter?.assignments?.map((a) => a.submissions.some((s) => s.userId === user?.id));
-    return submissions?.every((s) => s);
+    return submissions?.every((s) => s) ?? false;
   }
 
   const updateChapterProgress = (
