@@ -73,7 +73,7 @@ const UserCohortPage = ({ orgUsers, usersLoading, courses }: UserCohortPageProps
 
   return (
     <div className="space-y-6">
-      <Header title={cohort.name} subtitle="Manage your cohort" />
+      <Header title={cohort.name} subtitle="Your cohort courses" />
 
       <Tabs defaultValue="courses" className="w-full">
         <TabsList>

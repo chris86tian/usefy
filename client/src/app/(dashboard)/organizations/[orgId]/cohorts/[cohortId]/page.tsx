@@ -3,13 +3,13 @@
 import React from "react";
 import { useUser } from "@clerk/nextjs";
 import { useOrganization } from "@/context/OrganizationContext";
-import AdminCohortPage from "./_components/AdminCohort";
-import UserCohortPage from "./_components/UserCohort";
+import AdminCohortPage from "./_components/(admin)/AdminCohort";
 import { 
     useGetOrganizationUsersQuery,
     useGetCohortCoursesQuery
 } from "@/state/api";
 import { useParams } from "next/navigation";
+import UserCourses from "../../courses/_components/UserCourses";
 
 export default function CohortPage() {
     const { user } = useUser()
@@ -28,11 +28,7 @@ export default function CohortPage() {
                     usersLoading={usersLoading}
                     courses={cohortCourses as Course[]}
                 /> : 
-                <UserCohortPage 
-                    orgUsers={orgUsers as any}
-                    usersLoading={usersLoading}
-                    courses={cohortCourses as Course[]}
-                />
+                <UserCourses />
             }
         </>
     )

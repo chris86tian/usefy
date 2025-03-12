@@ -20,7 +20,7 @@ const ArchivedOverlay = () => (
   </div>
 )
 
-const Courses = () => {
+const UserCourses = () => {
   const router = useRouter()
   const { user, isLoaded } = useUser()
   const [searchTerm, setSearchTerm] = useState("")
@@ -104,5 +104,5 @@ const Courses = () => {
   )
 }
 
-export default Courses
+export default UserCourses
 

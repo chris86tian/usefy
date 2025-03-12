@@ -68,15 +68,15 @@ export default function OrganizationSidebar({
       icon: Home,
       active: pathname === `/organizations/${orgId}`,
     },
+  ]
+
+  const adminNavItems = [
     {
       label: "Courses",
       href: `/organizations/${orgId}/courses`,
       icon: BookOpen,
       active: pathname.includes(`/organizations/${orgId}/courses`),
     },
-  ]
-
-  const adminNavItems = [
     {
       label: "Settings",
       href: `/organizations/${orgId}/settings`,

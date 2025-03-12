@@ -99,7 +99,7 @@ const ChaptersSidebar = () => {
 
   return (
     <div className="w-full max-w-[250px] overflow-y-auto flex flex-col h-full relative border-r border-border">
-      <div className="px-3 py-3 border-b border-border flex items-center justify-between">
+      <div className="px-3 py-1.5 border-b border-border flex items-center justify-between">
         {!sidebarCollapsed ? (
           <>
             <h2 className="text-lg font-semibold truncate">{course.title}</h2>
