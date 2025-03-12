@@ -328,64 +328,110 @@ const AdminCohortPage = ({ orgUsers, usersLoading, courses }: AdminCohortPagePro
         <TabsContent value="members" className="space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold">Cohort Members</h2>
-            <Dialog
-              open={activeDialog === 'addLearner'}
-              onOpenChange={(open) => {
-                setActiveDialog(open ? 'addLearner' : 'none')
-                if (!open) setSelectedLearnerId("")
-              }}
-            >
-              <DialogTrigger asChild>
-                <Button>
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  Add Learner
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add Learner to Cohort</DialogTitle>
-                  <DialogDescription>Select a learner to add to this cohort.</DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="relative">
-                    <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      placeholder="Search learners..."
-                      className="pl-8"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                  </div>
-                  <div className="max-h-[300px] overflow-y-auto border rounded-md">
-                    {filteredLearners?.length > 0 ? (
-                      filteredLearners?.map((learner) => (
-                        <div
-                          key={learner.id}
-                          className={`flex items-center justify-between p-3 hover:bg-accent cursor-pointer ${
-                            selectedLearnerId === learner.id ? "bg-accent" : ""
-                          }`}
-                          onClick={() => setSelectedLearnerId(learner.id)}
-                        >
-                          <div>
-                            <p className="font-medium">{getUserName(learner)}</p>
-                            <p className="text-sm text-muted-foreground">{learner.emailAddresses[0].emailAddress}</p>
-                          </div>
-                          {selectedLearnerId === learner.id && <UserCheck className="h-5 w-5 text-primary" />}
-                        </div>
-                      ))
-                    ) : (
-                      <p className="p-3 text-center text-muted-foreground">No learners found</p>
-                    )}
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setActiveDialog('none')}>
-                    Cancel
+            <div className="flex gap-2">
+              <Dialog
+                open={activeDialog === 'addLearner'}
+                onOpenChange={(open) => {
+                  setActiveDialog(open ? 'addLearner' : 'none');
+                  if (!open) setSelectedLearnerId("");
+                }}
+              >
+                <DialogTrigger asChild>
+                  <Button>
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Add Learner
                   </Button>
-                  <Button onClick={handleAddLearner}>Add to Cohort</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add Learner to Cohort</DialogTitle>
+                    <DialogDescription>Select a learner to add to this cohort.</DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="relative">
+                      <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        placeholder="Search learners..."
+                        className="pl-8"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                      />
+                    </div>
+                    <div className="max-h-[300px] overflow-y-auto border rounded-md">
+                      {filteredLearners?.length > 0 ? (
+                        filteredLearners?.map((learner) => (
+                          <div
+                            key={learner.id}
+                            className={`flex items-center justify-between p-3 hover:bg-accent cursor-pointer ${
+                              selectedLearnerId === learner.id ? "bg-accent" : ""
+                            }`}
+                            onClick={() => setSelectedLearnerId(learner.id)}
+                          >
+                            <div>
+                              <p className="font-medium">{getUserName(learner)}</p>
+                              <p className="text-sm text-muted-foreground">{learner.emailAddresses[0].emailAddress}</p>
+                            </div>
+                            {selectedLearnerId === learner.id && <UserCheck className="h-5 w-5 text-primary" />}
+                          </div>
+                        ))
+                      ) : (
+                        <p className="p-3 text-center text-muted-foreground">No learners found</p>
+                      )}
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setActiveDialog('none')}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleAddLearner}>Add to Cohort</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
+              <Dialog open={activeDialog === 'inviteLearner'} onOpenChange={(open) => {
+                setActiveDialog(open ? 'inviteLearner' : 'none');
+                if (!open) {
+                  setEmailBatch([]);
+                  setInviteEmail("");
+                }
+              }}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <MailPlusIcon className="mr-2 h-4 w-4" />
+                    Invite Learner
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Invite Learners</DialogTitle>
+                    <DialogDescription>Enter the email addresses of the learners you want to invite, separated by commas.</DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <Input
+                      type="text"
+                      placeholder="Enter email addresses (comma separated)"
+                      value={inviteEmail}
+                      onChange={handleEmailInput}
+                    />
+                    <Select value={inviteRole} onValueChange={(value) => setInviteRole(value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="learner">Learner</SelectItem>
+                        <SelectItem value="instructor">Instructor</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setActiveDialog('none')}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleAddByInvite}>Send Invitations</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
 
           <Card>
@@ -637,54 +683,6 @@ const AdminCohortPage = ({ orgUsers, usersLoading, courses }: AdminCohortPagePro
           setIsManageUsersDialogOpen(false)
         }}
       />
-
-      {/* Invite User Section */}
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Invite Learner</h2>
-        <Dialog open={activeDialog === 'inviteLearner'} onOpenChange={(open) => {
-          setActiveDialog(open ? 'inviteLearner' : 'none')
-          if (!open) {
-            setEmailBatch([])
-            setInviteEmail("")
-          }
-        }}>
-          <DialogTrigger asChild>
-            <Button>
-              <MailPlusIcon className="mr-2 h-4 w-4" />
-              Invite Learner
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Invite Learners</DialogTitle>
-              <DialogDescription>Enter the email addresses of the learners you want to invite, separated by commas.</DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <Input
-                type="text"
-                placeholder="Enter email addresses (comma separated)"
-                value={inviteEmail}
-                onChange={handleEmailInput}
-              />
-              <Select value={inviteRole} onValueChange={(value) => setInviteRole(value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="learner">Learner</SelectItem>
-                  <SelectItem value="instructor">Instructor</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setActiveDialog('none')}>
-                Cancel
-              </Button>
-              <Button onClick={handleAddByInvite}>Send Invitations</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
     </div>
   )
 }

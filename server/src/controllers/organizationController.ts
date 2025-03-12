@@ -5,7 +5,7 @@ import { clerkClient } from "..";
 import Cohort from "../models/cohortModel";
 import Course from "../models/courseModel";
 import UserCourseProgress from "../models/userCourseProgressModel";
-import { sendMessage } from "../utils/utils";
+import { generateTemporaryPassword, sendMessage } from "../utils/utils";
 
 export const getOrganization = async (
   req: Request,
@@ -54,6 +54,12 @@ export const createOrganization = async (
   }
 
   try {
+    const existingOrganization = await Organization.get(organizationId);
+    if (existingOrganization) {
+      res.status(400).json({ message: "Organization already exists" });
+      return;
+    }
+
     const organization = new Organization({
       organizationId,
       name,
@@ -89,18 +95,19 @@ export const createOrganization = async (
 
 export const updateOrganization = async (req: Request, res: Response): Promise<void> => {
   const { organizationId } = req.params;
-  const name = req.body.name;
-  const description = req.body.description;
-  const image = req.body.image;
+  const { name, description, image } = req.body;
 
   try {
-    const organization = await Organization.update(organizationId, {
-      $SET: {
-        name,
-        description,
-        image,
-      },
-    });
+    const organization = await Organization.get(organizationId);
+    if (!organization) {
+      res.status(404).json({ message: "Organization not found" });
+      return;
+    }
+
+    organization.name = name;
+    organization.description = description;
+    organization.image = image;
+    await organization.save();
     res.json({
       message: "Organization updated successfully",
       data: organization,
@@ -421,48 +428,19 @@ export const inviteUserToOrganization = async (req: Request, res: Response): Pro
 
     if (user) {
       // Check if user is already in the list
-      if (!list.some((u) => u.userId === user?.id)) {
-        list.push({ userId: user.id });
-        
-        await sendMessage(
-          user.id, 
-          user.emailAddresses[0].emailAddress, 
-          title, 
-          message, 
-          `/organizations/${organization.organizationId}/dashboard`,
-          { sendEmail: true, sendNotification: true, rateLimited: false }
-        );
-        
-        if (role === 'admin') {
-          const userName = user.firstName && user.lastName 
-            ? `${user.firstName} ${user.lastName}`
-            : user.emailAddresses[0].emailAddress;
-            
-          for (const admin of organization.admins) {
-            if (admin.userId === user.id) continue;
-            
-            try {
-              const adminUser = await clerkClient.users.getUser(admin.userId);
-              const adminEmail = adminUser.emailAddresses && adminUser.emailAddresses.length > 0
-                ? adminUser.emailAddresses[0].emailAddress
-                : null;
-                
-              if (adminEmail) {
-                await sendMessage(
-                  admin.userId,
-                  adminEmail,
-                  "New Admin Added to Organization",
-                  `${userName} has been added as an admin to your organization ${organization.name}.`,
-                  `/organizations/${organization.organizationId}/settings/members`,
-                  { sendEmail: true, sendNotification: true, rateLimited: true }
-                );
-              }
-            } catch (error) {
-              console.error(`Error notifying admin ${admin.userId}:`, error);
-            }
-          }
-        }
+      if (list.some((u) => u.userId === user?.id)) {
+        res.status(400).json({ message: "User is already in the organization" });
+        return;
       }
+      list.push({ userId: user.id });
+      await sendMessage(
+        user.id, 
+        user.emailAddresses[0].emailAddress, 
+        title, 
+        message, 
+        `/organizations/${organization.organizationId}/dashboard`,
+        { sendEmail: true, sendNotification: true, rateLimited: false }
+      );
     } else {
       user = await clerkClient.users.createUser({
         emailAddress: [email],
@@ -482,30 +460,6 @@ export const inviteUserToOrganization = async (req: Request, res: Response): Pro
         null,
         { sendEmail: true, sendNotification: false, rateLimited: false }
       );
-      
-      if (role === 'admin' && organization.admins.length > 0) {
-        for (const admin of organization.admins) {
-          try {
-            const adminUser = await clerkClient.users.getUser(admin.userId);
-            const adminEmail = adminUser.emailAddresses && adminUser.emailAddresses.length > 0
-              ? adminUser.emailAddresses[0].emailAddress
-              : null;
-              
-            if (adminEmail) {
-              await sendMessage(
-                admin.userId,
-                adminEmail,
-                "New Admin Added to Organization",
-                `${email} has been invited as an admin to your organization ${organization.name}.`,
-                `/organizations/${organization.organizationId}/settings/members`,
-                { sendEmail: true, sendNotification: true, rateLimited: true }
-              );
-            }
-          } catch (error) {
-            console.error(`Error notifying admin ${admin.userId}:`, error);
-          }
-        }
-      }
     }
 
     await organization.save();
@@ -549,38 +503,38 @@ export const inviteUserToCohort = async (req: Request, res: Response): Promise<v
     const list = roleMapping[role];
 
     if (user) {
-      // If the user exists, add them to the cohort and organization
-      if (!list.some((u) => u.userId === user?.id)) {
-        list.push({ userId: user.id });
-
-        // Add user to organization members based on their role
-        if (role === 'learner') {
-          if (!organization.learners.some((member: any) => member.userId === user?.id)) {
-            organization.learners.push({ userId: user.id });
-          }
-        } else if (role === 'instructor') {
-          if (!organization.instructors.some((member: any) => member.userId === user?.id)) {
-            organization.instructors.push({ userId: user.id });
-          }
-        }
-
-        await cohort.save(); // Save the updated cohort
-        await organization.save(); // Save the updated organization
-
-        const message = `You've been added to the cohort ${cohort.name}. Click here to view: ${process.env.CLIENT_URL}/organizations/${organizationId}/cohorts/${cohortId}`;
-        await sendMessage(
-          user.id,
-          user.emailAddresses[0].emailAddress,
-          "You've been added to a cohort",
-          message,
-          null,
-          { sendEmail: true, sendNotification: true, rateLimited: false }
-        );
-
-        res.json({ message: "User added to cohort successfully", data: cohort });
-      } else {
+      // If the user exists, check if they are already in the cohort
+      if (list.some((u) => u.userId === user?.id)) {
         res.status(400).json({ message: "User is already in the cohort" });
+        return;
       }
+      list.push({ userId: user.id });
+
+      // Add user to organization members based on their role
+      if (role === 'learner') {
+        if (!organization.learners.some((member: any) => member.userId === user?.id)) {
+          organization.learners.push({ userId: user.id });
+        }
+      } else if (role === 'instructor') {
+        if (!organization.instructors.some((member: any) => member.userId === user?.id)) {
+          organization.instructors.push({ userId: user.id });
+        }
+      }
+
+      await cohort.save(); // Save the updated cohort
+      await organization.save(); // Save the updated organization
+
+      const message = `You've been added to the cohort ${cohort.name}. Click here to view: ${process.env.CLIENT_URL}/organizations/${organizationId}/cohorts/${cohortId}`;
+      await sendMessage(
+        user.id,
+        user.emailAddresses[0].emailAddress,
+        "You've been added to a cohort",
+        message,
+        null,
+        { sendEmail: true, sendNotification: true, rateLimited: false }
+      );
+
+      res.json({ message: "User added to cohort successfully", data: cohort });
     } else {
       // If the user does not exist, create a new user
       user = await clerkClient.users.createUser({
@@ -619,15 +573,6 @@ export const inviteUserToCohort = async (req: Request, res: Response): Promise<v
     res.status(500).json({ message: "Error inviting user to cohort", error });
   }
 };
-
-function generateTemporaryPassword(length = 12): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()';
-  let password = '';
-  for (let i = 0; i < length; i++) {
-    password += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return password;
-}
 
 export const getOrganizationUsers = async (req: Request, res: Response): Promise<void> => {
   const { organizationId } = req.params;
@@ -672,6 +617,7 @@ export const removeUserFromOrganization = async (req: Request, res: Response): P
       return;
     }
 
+    // Remove user from the specified role in the organization
     switch (role) {
       case "admin":
         organization.admins = organization.admins.filter((admin: { userId: string }) => admin.userId !== userId);
@@ -687,8 +633,15 @@ export const removeUserFromOrganization = async (req: Request, res: Response): P
         return;
     }
 
+    const cohorts = await Cohort.scan().where("organizationId").eq(organizationId).exec();
+    for (const cohort of cohorts) {
+      cohort.learners = cohort.learners.filter((learner: { userId: string }) => learner.userId !== userId);
+      cohort.instructors = cohort.instructors.filter((instructor: { userId: string }) => instructor.userId !== userId);
+      await cohort.save();
+    }
+
     await organization.save();
-    res.json({ message: "User removed from organization successfully", data: organization });
+    res.json({ message: "User removed from organization and all cohorts successfully", data: organization });
   } catch (error) {
     console.error("Error removing user from organization:", error);
     res.status(500).json({ message: "Error removing user from organization", error });

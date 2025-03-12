@@ -11,6 +11,12 @@ export const createCohort = async (req: Request, res: Response): Promise<void> =
     const organizationId = req.params.organizationId;
 
     try {
+        const existingCohort = await Cohort.get(cohortId);
+        if (existingCohort) {
+            res.status(400).json({ message: "Cohort already exists" });
+            return;
+        }
+
         const cohort = new Cohort({
             cohortId,
             name,
@@ -70,7 +76,6 @@ export const getMyOrganizationCohorts = async (req: Request, res: Response): Pro
 
     // TODO: getMyOrganizationCohorts
 };
-
 
 export const getCohort = async (req: Request, res: Response): Promise<void> => {
     const { cohortId } = req.params;
@@ -161,6 +166,13 @@ export const addLearnerToCohort = async (req: Request, res: Response): Promise<v
             res.status(404).json({ message: "Cohort not found" });
             return;
         }
+
+        // Check if the learner is already in the cohort
+        if (cohort.learners.some((learner: any) => learner.userId === learnerId)) {
+            res.status(400).json({ message: "Learner is already in the cohort" });
+            return;
+        }
+
         cohort.learners.push({ userId: learnerId });
         await cohort.save();
 
@@ -206,6 +218,13 @@ export const removeLearnerFromCohort = async (req: Request, res: Response): Prom
             res.status(404).json({ message: "Cohort not found" });
             return;
         }
+
+        // Check if the learner is in the cohort
+        if (!cohort.learners.some((learner: any) => learner.userId === learnerId)) {
+            res.status(400).json({ message: "Learner is not in the cohort" });
+            return;
+        }
+
         cohort.learners = cohort.learners.filter((learner: any) => learner.userId !== learnerId);
         await cohort.save();
 
@@ -246,6 +265,11 @@ export const getCohortCourses = async (req: Request, res: Response): Promise<voi
     const { cohortId } = req.params;
     try {
         const cohort = await Cohort.get(cohortId);
+        if (!cohort) {
+            res.status(404).json({ message: "Cohort not found" });
+            return;
+        }
+
         const courses = await Promise.all(
             cohort.courses.map(async (course: any) => {
                 const courseData = await Course.get(course.courseId);
@@ -268,6 +292,13 @@ export const addCourseToCohort = async (req: Request, res: Response): Promise<vo
             res.status(404).json({ message: "Cohort not found" });
             return;
         }
+
+        // Check if the course is already in the cohort
+        if (cohort.courses.some((course: any) => course.courseId === courseId)) {
+            res.status(400).json({ message: "Course is already in the cohort" });
+            return;
+        }
+
         cohort.courses.push({ courseId });
         await cohort.save();
 
@@ -320,6 +351,13 @@ export const removeCourseFromCohort = async (req: Request, res: Response): Promi
             res.status(404).json({ message: "Cohort not found" });
             return;
         }
+
+        // Check if the course is in the cohort
+        if (!cohort.courses.some((course: any) => course.courseId === courseId)) {
+            res.status(400).json({ message: "Course is not in the cohort" });
+            return;
+        }
+
         cohort.courses = cohort.courses.filter((course: any) => course.courseId !== courseId);
         await cohort.save();
         res.json({ message: "Course removed from cohort successfully", data: cohort });
