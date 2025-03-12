@@ -32,6 +32,7 @@ import { v4 as uuidv4 } from "uuid"
 import { useUser } from "@clerk/nextjs"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useCreateCohortMutation } from "@/state/api"
+import Image from "next/image"
 
 interface OrganizationSidebarProps {
   organizations: Organization[]
@@ -149,13 +150,17 @@ export default function OrganizationSidebar({
             >
               <div className={cn("flex items-center", collapsed ? "gap-0" : "gap-2")}>
                 <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-primary/10 text-primary">
-                    {currentOrg.name
-                      .split(" ")
-                      .map((n: string) => n[0])
-                      .join("")
-                      .toUpperCase()}
-                  </AvatarFallback>
+                  {currentOrg.image ? (
+                    <Image src={currentOrg.image} alt={currentOrg.name} className="h-8 w-8 rounded-full" />
+                  ) : (
+                    <AvatarFallback className="bg-primary/10 text-primary">
+                      {currentOrg.name
+                        .split(" ")
+                        .map((n: string) => n[0])
+                        .join("")
+                        .toUpperCase()}
+                    </AvatarFallback>
+                  )}
                 </Avatar>
                 {!collapsed && <span className="font-medium truncate max-w-[120px]">{currentOrg.name}</span>}
               </div>

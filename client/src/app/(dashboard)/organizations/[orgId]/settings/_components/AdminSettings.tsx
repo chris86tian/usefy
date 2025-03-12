@@ -52,7 +52,8 @@ import {
 } from "@/components/ui/dialog"
 import { v4 as uuidv4 } from "uuid"
 import { useUser } from "@clerk/nextjs"
-import { getUserName } from "@/lib/utils"
+import { getUserName, uploadThumbnail } from "@/lib/utils"
+import { useGetUploadImageUrlMutation } from "@/state/api"
 
 const AdminSettings = () => {
   const router = useRouter()
@@ -80,7 +81,6 @@ const AdminSettings = () => {
   const [inviteRole, setInviteRole] = useState<"admin" | "instructor" | "learner">("learner")
   const [searchTerm, setSearchTerm] = useState("")
   const [roleFilter, setRoleFilter] = useState<"all" | "admin" | "instructor" | "learner">("all")
-
   
   const [isCreateCohortDialogOpen, setIsCreateCohortDialogOpen] = useState(false)
   const [isEditCohortDialogOpen, setIsEditCohortDialogOpen] = useState(false)
@@ -90,6 +90,7 @@ const AdminSettings = () => {
   const [cohortSearchTerm, setCohortSearchTerm] = useState("")
 
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [getUploadImageUrl] = useGetUploadImageUrlMutation()
 
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
 
@@ -108,8 +109,14 @@ const AdminSettings = () => {
       const formData = new FormData()
       formData.append("name", orgName || "")
       formData.append("description", orgDescription || "")
+      
       if (orgImage) {
-        formData.append("image", orgImage)
+        const imageFormData = new FormData()
+        imageFormData.append("file", orgImage)
+        
+        // Upload the image and get the URL
+        const imageUrl = await uploadThumbnail(currentOrg?.organizationId || "", getUploadImageUrl, imageFormData.get("file") as File)
+        formData.append("image", imageUrl)
       }
 
       await updateOrganization({
@@ -656,19 +663,6 @@ const AdminSettings = () => {
 
         <TabsContent value="settings">
           <div className="space-y-4 p-4">
-            <div className="space-y-2">
-              <Label htmlFor="orgName">Organization Name</Label>
-              <Input id="orgName" value={orgName} onChange={(e) => setOrgName(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="orgDescription">Description</Label>
-              <Textarea
-                id="orgDescription"
-                value={orgDescription}
-                onChange={(e) => setOrgDescription(e.target.value)}
-                rows={4}
-              />
-            </div>
             <div className="space-x-2">
               <Label htmlFor="orgImage">Organization Image</Label>
               <Input
@@ -688,12 +682,25 @@ const AdminSettings = () => {
                 <Image
                   src={orgImagePreview || "/placeholder.svg"}
                   alt="Organization Image"
-                  width={200}
-                  height={200}
+                  width={100}
+                  height={100}
                   className="rounded-lg object-cover"
                 />
               </div>
             )}
+            <div className="space-y-2">
+              <Label htmlFor="orgName">Organization Name</Label>
+              <Input id="orgName" value={orgName} onChange={(e) => setOrgName(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="orgDescription">Description</Label>
+              <Textarea
+                id="orgDescription"
+                value={orgDescription}
+                onChange={(e) => setOrgDescription(e.target.value)}
+                rows={4}
+              />
+            </div>
             <Button onClick={handleSave}>Save Changes</Button>
           </div>
         </TabsContent>
