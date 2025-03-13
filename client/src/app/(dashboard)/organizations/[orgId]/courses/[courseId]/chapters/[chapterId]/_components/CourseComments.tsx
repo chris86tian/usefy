@@ -150,7 +150,6 @@ export function CourseComments({ orgId, courseId, sectionId, chapterId }: Course
     }
 
     try {
-      console.log("reply", reply)
       await createReply({
         orgId,
         courseId,

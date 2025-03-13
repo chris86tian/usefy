@@ -44,12 +44,10 @@ const ForgotPasswordPage = () => {
       // Only proceed if we've successfully reset the password and the user is loaded
       if (successfulReset && isUserLoaded && user && firstName && lastName) {
         try {
-          console.log("Attempting to update user with:", firstName, lastName)
           await user.update({
             firstName,
             lastName,
           })
-          console.log("User updated successfully:", user.firstName, user.lastName)
           
           // Redirect to home page or profile page after successful update
           setTimeout(() => {
