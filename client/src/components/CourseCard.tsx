@@ -1,17 +1,19 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import Image from "next/image"
 import { cn, getUserName } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Archive, BarChartBig, ChevronDown, ChevronUp, Pencil, Trash2, Users, Lock } from "lucide-react"
+import { Archive, BarChartBig, ChevronDown, ChevronUp, Pencil, Trash2, Users, Lock, BookOpen, Clock } from 'lucide-react'
 import { useUser } from "@clerk/nextjs"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useGetCourseInstructorsQuery } from "@/state/api"
+import { Progress } from "@/components/ui/progress"
+import { 
+  useGetCourseInstructorsQuery,
+} from "@/state/api"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import {
   AlertDialog,
@@ -30,6 +32,7 @@ interface CourseCardProps {
   variant?: "admin" | "learner"
   isOwner?: boolean
   isEnrolled?: boolean
+  progress?: UserCourseProgress
   onView?: (course: Course) => void
   onEdit?: (course: Course) => void
   onDelete?: (course: Course) => void
@@ -44,6 +47,7 @@ export function CourseCard({
   variant = "learner",
   isOwner = false,
   isEnrolled = false,
+  progress,
   onView,
   onEdit,
   onDelete,
@@ -53,6 +57,7 @@ export function CourseCard({
   onEnroll,
 }: CourseCardProps) {
   const { user } = useUser()
+  
   const [isInstructorsOpen, setIsInstructorsOpen] = useState(false)
   const [isEnrollDialogOpen, setIsEnrollDialogOpen] = useState(false)
 
@@ -69,7 +74,6 @@ export function CourseCard({
   } as const
 
   const handleClick = () => {
-    // If user is not enrolled and not an admin/instructor, show enrollment dialog
     if (!isEnrolled && variant === "learner" && !canEdit) {
       setIsEnrollDialogOpen(true)
     } else if (onView && !showViewOnly) {
@@ -92,15 +96,23 @@ export function CourseCard({
     }
   }
 
+  // Format the last accessed date if available
+  const formatLastAccessed = (timestamp: string) => {
+    if (!timestamp) return null;
+    const date = new Date(timestamp);
+    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  const lastAccessed = progress?.lastAccessedTimestamp ? formatLastAccessed(progress.lastAccessedTimestamp) : null;
+
   return (
     <>
       <Card
         className={cn(
-          "overflow-hidden transition-colors hover:bg-accent/50 border border-gray-200 group",
+          "overflow-hidden transition-colors hover:bg-accent/50 border border-gray-200 group h-full flex flex-col",
           (onView || variant === "learner") && "cursor-pointer",
           showViewOnly && "opacity-70",
         )}
-
       >
         <CardHeader className={cn("p-0", variant === "admin" && !showViewOnly && "cursor-pointer")} onClick={handleClick}>
           <div className="aspect-video relative overflow-hidden">
@@ -125,7 +137,7 @@ export function CourseCard({
           </div>
         </CardHeader>
 
-        <CardContent className="p-4 space-y-3">
+        <CardContent className="p-4 space-y-3 flex-grow">
           <div>
             <div className="flex items-start justify-between mb-1">
               <CardTitle className="line-clamp-1 text-lg">{course.title}</CardTitle>
@@ -136,6 +148,36 @@ export function CourseCard({
             <Badge variant="outline" className="bg-primary/5">
               {course.enrollments.length} Enrolled
             </Badge>
+          )}
+
+          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            {course.sections && (
+              <div className="flex items-center gap-1">
+                <BookOpen className="h-3.5 w-3.5" />
+                <span>{course.sections.length} sections</span>
+              </div>
+            )}
+            {/* {course.estimatedHours && (
+              <div className="flex items-center gap-1">
+                <Clock className="h-3.5 w-3.5" />
+                <span>{course.estimatedHours} hours</span>
+              </div>
+            )} */}
+          </div>
+
+          {isEnrolled && progress && (
+            <div className="space-y-1.5 mt-2">
+              <div className="flex justify-between items-center text-xs">
+                <span className="font-medium">Progress</span>
+                <span className="text-primary font-medium">{Math.round(progress.overallProgress)}%</span>
+              </div>
+              <Progress value={progress.overallProgress} className="h-1.5" />
+              {lastAccessed && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Last accessed: {lastAccessed}
+                </p>
+              )}
+            </div>
           )}
 
           <Collapsible open={isInstructorsOpen} onOpenChange={setIsInstructorsOpen} className="border rounded-md p-2">
@@ -268,11 +310,16 @@ export function CourseCard({
               )}
             </div>
           ) : (
-            !isEnrolled &&
-            onEnroll && (
-              <Button onClick={handleEnroll} variant="outline" className="w-full font-semibold">
-                Enroll
+            isEnrolled ? (
+              <Button onClick={handleClick} variant="default" className="w-full">
+                {progress && progress.overallProgress > 0 ? "Continue Learning" : "Start Course"}
               </Button>
+            ) : (
+              onEnroll && (
+                <Button onClick={handleEnroll} variant="outline" className="w-full font-semibold">
+                  Enroll
+                </Button>
+              )
             )
           )}
         </CardFooter>
@@ -300,4 +347,3 @@ export function CourseCard({
 }
 
 export default CourseCard
-

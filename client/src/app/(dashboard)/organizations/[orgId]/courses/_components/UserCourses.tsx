@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useRouter } from "next/navigation"
 import Header from "@/components/Header"
 import { Toolbar } from "@/components/Toolbar"
 import CourseCard from "@/components/CourseCard"
@@ -10,7 +10,7 @@ import { toast } from "sonner"
 import { useOrganization } from "@/context/OrganizationContext"
 import { useUser } from "@clerk/nextjs"
 import { handleEnroll } from "@/lib/utils"
-import { useCreateTransactionMutation } from "@/state/api"
+import { useCreateTransactionMutation, useGetMyUserCourseProgressesQuery } from "@/state/api"
 
 interface UserCoursesProps {
   courses: Course[]
@@ -27,13 +27,27 @@ const ArchivedOverlay = () => (
 
 const UserCourses = ({ courses, refetch }: UserCoursesProps) => {
   const { user } = useUser()
-  const { orgId } = useParams()
+  const { currentOrg } = useOrganization()
   const router = useRouter()
   const [searchTerm, setSearchTerm] = useState("")
   const [showArchived, setShowArchived] = useState(false)
-  const { currentOrg } = useOrganization()
+
+  const { data: progresses } = useGetMyUserCourseProgressesQuery(currentOrg?.organizationId as string)
 
   const [createTransaction] = useCreateTransactionMutation()
+
+  // Create a map of course progresses by courseId for easy lookup
+  const progressesByCourseId = useMemo(() => {
+    if (!progresses) return {}
+
+    return progresses.reduce(
+      (acc, progress) => {
+        acc[progress.courseId] = progress
+        return acc
+      },
+      {} as Record<string, (typeof progresses)[0]>,
+    )
+  }, [progresses])
 
   const filteredCourses = useMemo(() => {
     if (!courses) return []
@@ -78,13 +92,17 @@ const UserCourses = ({ courses, refetch }: UserCoursesProps) => {
       handleEnroll(user.id, course.courseId, createTransaction)
         .then(() => {
           toast.success(`Successfully enrolled in ${course.title}`)
+          if (course.sections && course.sections.length > 0 && course.sections[0].chapters.length > 0) {
+            router.push(
+              `/organizations/${currentOrg?.organizationId}/courses/${course.courseId}/chapters/${course.sections[0].chapters[0].chapterId}`,
+            )
+          }
+          refetch()
         })
         .catch((error) => {
           console.error("Enrollment error:", error)
           toast.error("Failed to enroll in course")
         })
-        router.push(`/organizations/${orgId}/courses/${course.courseId}/chapters/${course.sections[0].chapters[0].chapterId}`)
-        refetch()
     } else {
       toast.info("You are already enrolled in this course")
     }
@@ -100,34 +118,47 @@ const UserCourses = ({ courses, refetch }: UserCoursesProps) => {
   return (
     <div className="space-y-6">
       <Header title="My Courses" subtitle="View your enrolled courses" />
-      <Toolbar onSearch={setSearchTerm} />
-      {archivedCount > 0 && (
-        <button
-          onClick={() => setShowArchived(!showArchived)}
-          className="flex items-center mb-4 ml-4 text-muted-foreground hover:text-foreground focus:outline-none"
-        >
-          <Archive className="h-6 w-6" />
-        </button>
-      )}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-6">
-        {filteredCourses.map((course) => (
-          <div key={course.courseId} className="relative">
-            <CourseCard 
-              course={course} 
-              onView={handleGoToCourse} 
-              onEnroll={handleCourseEnroll}
-              isEnrolled={course?.enrollments?.some((enrollment) => enrollment.userId === user?.id)}
-            />
-            {course.status === "Archived" && <ArchivedOverlay />}
-          </div>
-        ))}
+
+      <div className="flex justify-between items-center">
+        <Toolbar onSearch={setSearchTerm} />
+
+        {archivedCount > 0 && (
+          <button
+            onClick={() => setShowArchived(!showArchived)}
+            className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground"
+          >
+            <Archive className="h-4 w-4" />
+            {showArchived ? "Hide archived" : "Show archived"}
+          </button>
+        )}
       </div>
-      {filteredCourses.length === 0 && (
-        <div className="col-span-full flex flex-col items-center justify-center min-h-[400px] text-muted-foreground">
-          <p className="text-lg font-medium">No courses found</p>
-          <p className="text-sm">Try adjusting your search or filters</p>
-        </div>
-      )}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {filteredCourses.length > 0 ? (
+          filteredCourses.map((course) => {
+            const isEnrolled = course?.enrollments?.some((enrollment) => enrollment.userId === user?.id)
+            const courseProgress = progressesByCourseId[course.courseId]
+
+            return (
+              <div key={course.courseId} className="relative">
+                <CourseCard
+                  course={course}
+                  onView={handleGoToCourse}
+                  onEnroll={handleCourseEnroll}
+                  isEnrolled={isEnrolled}
+                  progress={courseProgress}
+                />
+                {course.status === "Archived" && <ArchivedOverlay />}
+              </div>
+            )
+          })
+        ) : (
+          <div className="col-span-full flex flex-col items-center justify-center min-h-[400px] text-muted-foreground">
+            <p className="text-lg font-medium">No courses found</p>
+            <p className="text-sm">Try adjusting your search or filters</p>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
