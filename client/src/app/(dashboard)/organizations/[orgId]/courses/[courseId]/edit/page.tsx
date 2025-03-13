@@ -31,7 +31,7 @@ import { useRouter } from "next/navigation"
 const CourseEditor = () => {
   const { orgId, courseId } = useParams() as { orgId: string; courseId: string }
   const { data: course, isLoading, refetch } = useGetCourseQuery(courseId)
-  const [updateCourse] = useUpdateCourseMutation()
+  const [updateCourse, { isLoading: isUpdating }] = useUpdateCourseMutation()
   const [getUploadVideoUrl] = useGetUploadVideoUrlMutation()
   const [getUploadImageUrl] = useGetUploadImageUrlMutation()
   const [isUploading, setIsUploading] = useState(false)
@@ -296,9 +296,13 @@ const CourseEditor = () => {
                   }`}
                   inputClassName="data-[state=checked]:bg-green-500"
                 />
-                <Button type="submit" className="bg-blue-700 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700">
+                <Button 
+                  type="submit" 
+                  className="bg-blue-700 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700"
+                  disabled={isUploading || isUpdating}
+                >
                   <CheckCircle className="w-5 h-5" />
-                  Save
+                  {isUpdating ? "Updating..." : "Save"}
                 </Button>
               </div>
             }

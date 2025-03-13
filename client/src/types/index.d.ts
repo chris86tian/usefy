@@ -408,6 +408,7 @@ declare global {
     title: string
     message: string
     link?: string
+    isRead: boolean
     timestamp: string
   }
 

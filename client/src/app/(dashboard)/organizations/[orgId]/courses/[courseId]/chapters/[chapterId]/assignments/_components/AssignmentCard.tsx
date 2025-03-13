@@ -164,7 +164,7 @@ export function AssignmentCard({ assignment, isAuthorized, course, sectionId, ch
           </div>
         </CardHeader>
 
-        <CardContent className="p-4">
+        <CardContent className="space-y-4 p-4">
           <Description text={assignment.description} />
 
           {assignment.resources && assignment.resources.length > 0 ? (

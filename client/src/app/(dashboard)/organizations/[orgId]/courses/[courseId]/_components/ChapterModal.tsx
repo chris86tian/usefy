@@ -500,7 +500,7 @@ const ChapterModal = () => {
                                   value={hint}
                                   onChange={(e) => updateHint(assignmentIndex, hintIndex, e.target.value)}
                                   placeholder={`Hint ${hintIndex + 1}`}
-                                  className="dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:placeholder-gray-400"
+                                  className="text-black dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:placeholder-gray-400"
                                 />
                                 <Button
                                   type="button"

@@ -629,6 +629,16 @@ export const api = createApi({
     getNotifications: build.query<UserNotification[], void>({
       query: () => "notifications",
     }),
+    markNotificationAsRead: build.mutation<
+      { message: string },
+      string
+    >({
+      query: (notificationId) => ({
+        url: `notifications/${notificationId}`,
+        method: "PUT",
+      }),
+    }),
+
 
     /* 
     ===============
@@ -978,6 +988,7 @@ export const {
   useUpdateQuizProgressMutation,
   useGetUserCourseSubmissionsQuery,
   useGetNotificationsQuery,
+  useMarkNotificationAsReadMutation,
   useGetCommitsQuery,
   useCreateCommentMutation,
   useUpvoteCommentMutation,
