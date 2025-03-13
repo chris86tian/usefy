@@ -57,8 +57,6 @@ const Course = () => {
     setHasMarkedComplete,
   } = useCourseProgressData()
 
-  console.log(isAssignmentsCompleted)
-
   const playerRef = useRef<ReactPlayer>(null)
   const quizRef = useRef<HTMLDivElement>(null)
   const router = useRouter()

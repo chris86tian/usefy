@@ -49,8 +49,8 @@ const CohortCoursesTab = ({ cohort, orgUsers, courses, refetch }: CohortCoursesT
     { skip: !cohort },
   )
 
-  const [addCourseToCohort] = useAddCourseToCohortMutation()
-  const [addCourseInstructor] = useAddCourseInstructorMutation()
+  const [addCourseToCohort, { isLoading: addCourseLoading }] = useAddCourseToCohortMutation()
+  const [addCourseInstructor, { isLoading: addInstructorLoading }] = useAddCourseInstructorMutation()
   const [removeCourseInstructor] = useRemoveCourseInstructorMutation()
   const [createTransaction] = useCreateTransactionMutation()
   const [unenrollUser] = useUnenrollUserMutation()
@@ -228,7 +228,12 @@ const CohortCoursesTab = ({ cohort, orgUsers, courses, refetch }: CohortCoursesT
               <Button variant="outline" onClick={() => setActiveDialog("none")}>
                 Cancel
               </Button>
-              <Button onClick={handleAddCourse}>Add to Cohort</Button>
+              <Button 
+                onClick={handleAddCourse}
+                disabled={addCourseLoading || addInstructorLoading}
+              >
+                {addCourseLoading || addInstructorLoading ? "Adding..." : "Add Course"}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

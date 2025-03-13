@@ -16,7 +16,7 @@ export default function CohortPage() {
     const { orgId, cohortId } = useParams()
     const { currentOrg } = useOrganization()
     const { data: orgUsers, isLoading: usersLoading } = useGetOrganizationUsersQuery(orgId as string)
-    const { data: cohortCourses } = useGetCohortCoursesQuery({ organizationId: orgId as string, cohortId: cohortId as string })
+    const { data: cohortCourses, refetch } = useGetCohortCoursesQuery({ organizationId: orgId as string, cohortId: cohortId as string })
 
     const isAdmin= currentOrg?.admins.some((admin) => admin.userId === user?.id)
 
@@ -28,7 +28,10 @@ export default function CohortPage() {
                     usersLoading={usersLoading}
                     courses={cohortCourses as Course[]}
                 /> : 
-                <UserCourses />
+                <UserCourses
+                    courses={cohortCourses as Course[]}
+                    refetch={refetch}
+                />
             }
         </>
     )

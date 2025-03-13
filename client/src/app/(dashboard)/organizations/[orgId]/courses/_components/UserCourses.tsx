@@ -1,16 +1,21 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { useRouter } from "next/navigation"
-import { useUser } from "@clerk/nextjs"
-import { useGetUserEnrolledCoursesQuery } from "@/state/api"
+import { useParams, useRouter } from "next/navigation"
 import Header from "@/components/Header"
 import { Toolbar } from "@/components/Toolbar"
 import CourseCard from "@/components/CourseCard"
 import { Archive } from "lucide-react"
-import toast from "react-hot-toast"
-import { Spinner } from "@/components/ui/Spinner"
+import { toast } from "sonner"
 import { useOrganization } from "@/context/OrganizationContext"
+import { useUser } from "@clerk/nextjs"
+import { handleEnroll } from "@/lib/utils"
+import { useCreateTransactionMutation } from "@/state/api"
+
+interface UserCoursesProps {
+  courses: Course[]
+  refetch: () => void
+}
 
 const ArchivedOverlay = () => (
   <div className="absolute inset-0 bg-black/90 flex items-center justify-center flex-col gap-2 p-4 text-center rounded-lg">
@@ -20,20 +25,15 @@ const ArchivedOverlay = () => (
   </div>
 )
 
-const UserCourses = () => {
+const UserCourses = ({ courses, refetch }: UserCoursesProps) => {
+  const { user } = useUser()
+  const { orgId } = useParams()
   const router = useRouter()
-  const { user, isLoaded } = useUser()
   const [searchTerm, setSearchTerm] = useState("")
   const [showArchived, setShowArchived] = useState(false)
   const { currentOrg } = useOrganization()
 
-  const {
-    data: courses,
-    isLoading,
-    isError,
-  } = useGetUserEnrolledCoursesQuery(user?.id ?? "", {
-    skip: !isLoaded || !user,
-  })
+  const [createTransaction] = useCreateTransactionMutation()
 
   const filteredCourses = useMemo(() => {
     if (!courses) return []
@@ -66,8 +66,31 @@ const UserCourses = () => {
     }
   }
 
-  if (isLoading) return <Spinner />
-  if (isError || !courses)
+  const handleCourseEnroll = (course: Course) => {
+    if (!user) {
+      toast.error("You must be logged in to enroll in courses")
+      return
+    }
+
+    const isEnrolled = course?.enrollments?.some((enrollment) => enrollment.userId === user.id)
+
+    if (!isEnrolled) {
+      handleEnroll(user.id, course.courseId, createTransaction)
+        .then(() => {
+          toast.success(`Successfully enrolled in ${course.title}`)
+        })
+        .catch((error) => {
+          console.error("Enrollment error:", error)
+          toast.error("Failed to enroll in course")
+        })
+        router.push(`/organizations/${orgId}/courses/${course.courseId}/chapters/${course.sections[0].chapters[0].chapterId}`)
+        refetch()
+    } else {
+      toast.info("You are already enrolled in this course")
+    }
+  }
+
+  if (!courses)
     return (
       <div className="flex items-center justify-center h-[600px] text-muted-foreground">Error loading courses.</div>
     )
@@ -89,7 +112,12 @@ const UserCourses = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-6">
         {filteredCourses.map((course) => (
           <div key={course.courseId} className="relative">
-            <CourseCard course={course} onView={handleGoToCourse} onEnroll={() => {}} isEnrolled />
+            <CourseCard 
+              course={course} 
+              onView={handleGoToCourse} 
+              onEnroll={handleCourseEnroll}
+              isEnrolled={course?.enrollments?.some((enrollment) => enrollment.userId === user?.id)}
+            />
             {course.status === "Archived" && <ArchivedOverlay />}
           </div>
         ))}
