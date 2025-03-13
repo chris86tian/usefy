@@ -12,6 +12,7 @@ import AssignmentModal from "../_components/AssignmentModal"
 import SubmissionModal from "../_components/SubmissionModal"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import FeedbackButton from "../../adaptive-quiz/FeedbackButton"
 
 interface AssignmentCardProps {
   assignment: Assignment
@@ -145,6 +146,13 @@ export function AssignmentCard({ assignment, isAuthorized, course, sectionId, ch
             </div>
             {isAuthorized && (
               <div className="flex items-center space-x-2">
+                <FeedbackButton
+                    feedbackType="assignment"
+                    itemId={assignment.assignmentId}
+                    courseId={course.courseId}
+                    sectionId={sectionId}
+                    chapterId={chapter.chapterId}>
+                </FeedbackButton>  
                 <Button
                   variant="outline"
                   size="icon"
