@@ -56,6 +56,12 @@ const ChapterModal = () => {
     )
   }
 
+  const toggleFile = (fileId: string) => {
+    setExpandedFiles((prev) =>
+      prev.includes(fileId) ? prev.filter((id) => id !== fileId) : [...prev, fileId]
+    );
+  };
+
   useEffect(() => {
     if (chapter) {
       methods.reset({
@@ -192,6 +198,46 @@ const ChapterModal = () => {
     })
   }
 
+  const [files, setFiles] = useState<FileResource[]>([]);
+  const [isFileSectionOpen, setIsFileSectionOpen] = useState(true);
+  const [expandedFiles, setExpandedFiles] = useState<string[]>([]);
+
+  // Function to add a new file entry
+  const addFile = () => {
+    setFiles([
+      ...files,
+      {
+        fileId: uuidv4(),
+        title: "",
+        description: "",
+        file: undefined,
+      },
+    ]);
+  };
+
+  // Function to remove a file entry
+  const removeFile = (index: number) => {
+    setFiles(files.filter((_, i) => i !== index));
+  };
+
+  // Function to update file details
+  const updateFile = (index: number, field: keyof FileResource, value: string | File) => {
+    const updatedFiles = [...files];
+    updatedFiles[index] = {
+      ...updatedFiles[index],
+      [field]: value,
+    };
+    setFiles(updatedFiles);
+  };
+
+  useEffect(() => {
+    if (chapter) {
+      setFiles(chapter.files || []);
+    } else {
+      setFiles([]);
+    }
+  }, [chapter, methods]);
+
   const onClose = () => {
     dispatch(closeChapterModal())
   }
@@ -212,6 +258,10 @@ const ChapterModal = () => {
             }
           : undefined,
       assignments: assignments,
+      files: files.map(file => ({
+        ...file,
+        file: undefined // Remove temporary file object before saving
+      })),
     }
 
     if (selectedChapterIndex === null) {
@@ -514,6 +564,106 @@ const ChapterModal = () => {
                               </div>
                             ))}
                           </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 border border-gray-200 dark:border-gray-700 rounded-lg">
+              <div
+                className="flex items-center justify-between p-4 cursor-pointer bg-gray-50 dark:bg-gray-700 rounded-t-lg"
+                onClick={() => setIsFileSectionOpen(!isFileSectionOpen)}
+              >
+                <div className="flex items-center gap-2">
+                  {/* <File className="w-5 h-5 text-gray-600 dark:text-gray-300" /> */}
+                  <FormLabel className="text-gray-600 dark:text-gray-300 text-sm mb-0">
+                    Uploaded Files ({files.length})
+                  </FormLabel>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      addFile();
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white"
+                  >
+                    Add File
+                  </Button>
+                  {isFileSectionOpen ? (
+                    <ChevronUp className="text-gray-600 dark:text-gray-300" />
+                  ) : (
+                    <ChevronDown className="text-gray-600 dark:text-gray-300" />
+                  )}
+                </div>
+              </div>
+
+              {isFileSectionOpen && (
+                <div className="p-4 dark:bg-gray-800">
+                  {files.map((file, fileIndex) => (
+                    <div key={file.fileId} className="mb-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+                      <div
+                        className="flex items-center justify-between p-3 cursor-pointer bg-gray-50 dark:bg-gray-700 rounded-t-lg"
+                        onClick={() => toggleFile(file.fileId)}
+                      >
+                        <span className="font-medium text-gray-700 dark:text-gray-200">
+                          {file.title || `File ${fileIndex + 1}`}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeFile(fileIndex);
+                            }}
+                            variant="destructive"
+                            size="sm"
+                            className="dark:bg-red-600 dark:hover:bg-red-700"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                          {expandedFiles.includes(file.fileId) ? (
+                            <ChevronUp className="text-gray-600 dark:text-gray-300" />
+                          ) : (
+                            <ChevronDown className="text-gray-600 dark:text-gray-300" />
+                          )}
+                        </div>
+                      </div>
+
+                      {expandedFiles.includes(file.fileId) && (
+                        <div className="p-4 bg-white dark:bg-gray-800">
+                          <Input
+                            value={file.title}
+                            onChange={(e) => updateFile(fileIndex, "title", e.target.value)}
+                            placeholder="File Title"
+                            className="mb-2 text-gray-600 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:placeholder-gray-400"
+                          />
+
+                          <div className="mb-4">
+                            <FormLabel className="text-gray-600 dark:text-gray-300 text-sm">
+                              Upload File
+                            </FormLabel>
+                            <Input
+                              type="file"
+                              accept=".pdf,.pptx"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) updateFile(fileIndex, "file", file);
+                              }}
+                              className="dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                            />
+                          </div>
+
+                          <textarea
+                            value={file.description}
+                            onChange={(e) => updateFile(fileIndex, "description", e.target.value)}
+                            placeholder="File Description"
+                            className="w-full min-h-[100px] p-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md text-gray-900 dark:text-gray-200 dark:placeholder-gray-400"
+                          />
                         </div>
                       )}
                     </div>

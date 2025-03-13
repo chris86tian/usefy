@@ -138,6 +138,14 @@ declare global {
     releaseDate?: string;
   }
 
+  interface FileResource {
+    fileId: string;
+    title: string;
+    description: string;
+    fileUrl?: string;
+    file?: File;
+  }
+
   interface Chapter {
     chapterId: string;
     title: string;
@@ -150,6 +158,7 @@ declare global {
     quiz?: Quiz;
     timeTracking?: TimeTrackingRecord[];
     averageCompletionTime?: number;
+    files?: FileResource[]
   }
 
   interface ChapterComment {
