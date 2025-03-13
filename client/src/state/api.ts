@@ -637,6 +637,12 @@ export const api = createApi({
         url: `notifications/${notificationId}`,
         method: "PUT",
       }),
+      transformResponse: (response: any) => {
+        if (!response || typeof response !== "object") {
+          return { message: response };
+        }
+        return { message: response.message, data: response.data };
+      },
     }),
 
 
