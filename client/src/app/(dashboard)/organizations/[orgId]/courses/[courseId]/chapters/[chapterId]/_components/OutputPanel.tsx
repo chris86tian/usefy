@@ -4,7 +4,7 @@ import { useCodeEditorStore } from "@/hooks/useCodeEditorStore"
 import { AlertTriangle, CheckCircle, Clock, Copy, Terminal, Code2 } from "lucide-react"
 import { useState } from "react"
 import RunningCodeSkeleton from "./RunningCodeSkeleton"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
@@ -27,18 +27,17 @@ function OutputPanel() {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-md font-medium">Output</CardTitle>
+      <CardHeader className="flex items-center justify-between p-1">
         {hasContent && (
           <Button variant="outline" size="sm" onClick={handleCopy}>
             {isCopied ? (
               <>
-                <CheckCircle className="w-4 h-4 mr-2" />
+                <CheckCircle className="w-4 h-4 mr-1" />
                 Copied
               </>
             ) : (
               <>
-                <Copy className="w-4 h-4 mr-2" />
+                <Copy className="w-4 h-4 mr-1" />
                 Copy
               </>
             )}
@@ -46,23 +45,23 @@ function OutputPanel() {
         )}
       </CardHeader>
       <CardContent>
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="py-4">
           <TabsList>
             <TabsTrigger value="output">
-              <Terminal className="w-4 h-4 mr-2" />
+              <Terminal className="w-4 h-4 mr-1" />
               Output
             </TabsTrigger>
             <TabsTrigger value="evaluation">
-              <Code2 className="w-4 h-4 mr-2" />
+              <Code2 className="w-4 h-4 mr-1" />
               Evaluation
             </TabsTrigger>
           </TabsList>
-          <TabsContent value="output" className="mt-4">
-            <div className="relative bg-muted p-4 rounded-lg h-[600px] overflow-auto font-mono text-sm">
+          <TabsContent value="output" className="mt-2">
+            <div className="relative bg-muted p-2 rounded-lg h-[600px] overflow-auto font-mono text-sm">
               {isRunning || isSubmitting ? (
                 <RunningCodeSkeleton />
               ) : error ? (
-                <div className="flex items-start gap-3 text-destructive">
+                <div className="flex items-start gap-2 text-destructive">
                   <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-1" />
                   <div className="space-y-1">
                     <div className="font-medium">Execution Error</div>
@@ -71,7 +70,7 @@ function OutputPanel() {
                 </div>
               ) : output ? (
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-primary mb-3">
+                  <div className="flex items-center gap-2 text-primary mb-2">
                     <CheckCircle className="w-5 h-5" />
                     <span className="font-medium">Execution Successful</span>
                   </div>
@@ -79,7 +78,7 @@ function OutputPanel() {
                 </div>
               ) : (
                 <div className="h-full flex flex-col items-center justify-center text-muted-foreground">
-                  <div className="flex items-center justify-center w-12 h-12 rounded-full bg-muted-foreground/20 mb-4">
+                  <div className="flex items-center justify-center w-12 h-12 rounded-full bg-muted-foreground/20 mb-2">
                     <Clock className="w-6 h-6" />
                   </div>
                   <p className="text-center">Run your code to see the output here...</p>
@@ -87,10 +86,10 @@ function OutputPanel() {
               )}
             </div>
           </TabsContent>
-          <TabsContent value="evaluation" className="mt-4">
-            <div className="relative bg-muted p-4 rounded-lg h-[600px] overflow-auto font-mono text-sm">
+          <TabsContent value="evaluation" className="mt-2">
+            <div className="relative bg-muted p-2 rounded-lg h-[600px] overflow-auto font-mono text-sm">
               {evaluation ? (
-                <div className="space-y-6">
+                <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       {evaluation.passed ? (
@@ -119,7 +118,7 @@ function OutputPanel() {
                 </div>
               ) : (
                 <div className="h-full flex flex-col items-center justify-center text-muted-foreground">
-                  <div className="flex items-center justify-center w-12 h-12 rounded-full bg-muted-foreground/20 mb-4">
+                  <div className="flex items-center justify-center w-12 h-12 rounded-full bg-muted-foreground/20 mb-2">
                     <Clock className="w-6 h-6" />
                   </div>
                   <p className="text-center">Submit your code to see the evaluation here...</p>

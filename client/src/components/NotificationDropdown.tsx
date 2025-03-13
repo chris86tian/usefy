@@ -77,7 +77,7 @@ const NotificationDropdown = ({ notifications, refetch }: NotificationDropdownPr
                 return (
                   <div
                     key={notification.notificationId || index}
-                    className={`space-x-2 mb-2 rounded-md border border-border bg-card p-3 last:mb-0 hover:bg-accent transition-colors ${isLinkValid ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'}`}
+                    className={`space-x-2 mb-2 rounded-md border border-border bg-card p-2 last:mb-0 hover:bg-accent transition-colors ${isLinkValid ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'}`}
                     onClick={() => isLinkValid && handleNotificationClick(notification)}
                   >
                     <h4 className="text-sm font-semibold text-card-foreground">
