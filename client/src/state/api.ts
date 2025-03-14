@@ -592,6 +592,30 @@ export const api = createApi({
         body: submission,
       }),
     }),
+
+    /* 
+    ===============
+    FILE UPLOADS (PDF)
+    =============== 
+    */
+
+    getUploadFileUrl: build.mutation<
+      { uploadUrl: string; fileUrl: string },
+      {
+        courseId: string;
+        sectionId: string;
+        chapterId: string;
+        fileName: string;
+        fileType: string;
+      }
+    >({
+      query: ({ courseId, sectionId, chapterId, fileName, fileType }) => ({
+        url: `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/get-upload-file-url`,
+        method: "POST",
+        body: { fileName, fileType },
+      }),
+    }),
+
     /* 
     ===============
     TRANSACTIONS
@@ -629,6 +653,22 @@ export const api = createApi({
     getNotifications: build.query<UserNotification[], void>({
       query: () => "notifications",
     }),
+    markNotificationAsRead: build.mutation<
+      { message: string },
+      string
+    >({
+      query: (notificationId) => ({
+        url: `notifications/${notificationId}`,
+        method: "PUT",
+      }),
+      transformResponse: (response: any) => {
+        if (!response || typeof response !== "object") {
+          return { message: response };
+        }
+        return { message: response.message, data: response.data };
+      },
+    }),
+
 
     /* 
     ===============
@@ -968,6 +1008,7 @@ export const {
   useUpdateAssignmentMutation,
   useGetAssignmentQuery,
   useCreateSubmissionMutation,
+  useGetUploadFileUrlMutation,
   useGetTransactionsQuery,
   useCreateTransactionMutation,
   useCreateStripePaymentIntentMutation,
@@ -978,6 +1019,7 @@ export const {
   useUpdateQuizProgressMutation,
   useGetUserCourseSubmissionsQuery,
   useGetNotificationsQuery,
+  useMarkNotificationAsReadMutation,
   useGetCommitsQuery,
   useCreateCommentMutation,
   useUpvoteCommentMutation,

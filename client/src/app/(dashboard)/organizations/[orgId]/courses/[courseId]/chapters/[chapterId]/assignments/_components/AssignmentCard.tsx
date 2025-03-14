@@ -4,7 +4,7 @@ import type React from "react"
 import { useState } from "react"
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { FileText, Trash2, Edit, Code, LinkIcon, Users, ChevronDown, ExternalLink, UploadCloud, CheckCircle } from "lucide-react"
+import { FileText, Trash2, Edit, Code, Link as LinkIcon, ChevronDown, ExternalLink, UploadCloud, CheckCircle } from "lucide-react"
 import { useUser } from "@clerk/nextjs"
 import { useDeleteAssignmentMutation } from "@/state/api"
 import { useParams, useRouter } from "next/navigation"
@@ -12,15 +12,17 @@ import AssignmentModal from "../_components/AssignmentModal"
 import SubmissionModal from "../_components/SubmissionModal"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import FeedbackButton from "../../adaptive-quiz/FeedbackButton"
 
 interface AssignmentCardProps {
   assignment: Assignment
+  isAuthorized: boolean
+  sectionId: string
+  chapter: Chapter
   course: {
     courseId: string
     instructors?: { userId: string }[]
   }
-  sectionId: string
-  chapterId: string
 }
 
 const Description = ({ text }: { text: string }) => {
@@ -37,7 +39,7 @@ const Description = ({ text }: { text: string }) => {
   const shouldCollapse = (text: string | string[]) => text.length > 100
 
   return (
-    <div className="space-y-2">
+    <>
       {parts.map((part, index) => {
         if (index % 2 === 1) {
           const isOpen = openSections[index] ?? false
@@ -94,22 +96,20 @@ const Description = ({ text }: { text: string }) => {
         }
         return null
       })}
-    </div>
+    </>
   )
 }
 
-export function AssignmentCard({ assignment, course, sectionId, chapterId }: AssignmentCardProps) {
+export function AssignmentCard({ assignment, isAuthorized, course, sectionId, chapter }: AssignmentCardProps) {
   const { user } = useUser()
+  const { orgId } = useParams()
   const router = useRouter()
   const [deleteAssignment, { isLoading: isDeleting }] = useDeleteAssignmentMutation()
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isSubmissionModalOpen, setIsSubmissionModalOpen] = useState(false)
   const [isResourcesOpen, setIsResourcesOpen] = useState(false)
-  const { orgId } = useParams()
 
-  const hasSubmitted = user && assignment.submissions.some(
-    (submission) => submission.userId === user.id
-  )
+  const hasSubmitted = assignment.submissions.some((submission) => submission.userId === user?.id)
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -118,7 +118,7 @@ export function AssignmentCard({ assignment, course, sectionId, chapterId }: Ass
         assignmentId: assignment.assignmentId,
         courseId: course.courseId,
         sectionId,
-        chapterId,
+        chapterId: chapter.chapterId,
       }).unwrap()
     } catch (error) {
       console.error("Failed to delete assignment:", error)
@@ -128,7 +128,7 @@ export function AssignmentCard({ assignment, course, sectionId, chapterId }: Ass
   const handleAssignment = () => {
     if (assignment.isCoding) {
       router.push(
-        `/organizations/${orgId}/courses/${course.courseId}/chapters/${chapterId}/code?courseId=${course.courseId}&sectionId=${sectionId}&chapterId=${chapterId}&assignmentId=${assignment.assignmentId}`,
+        `/organizations/${orgId}/courses/${course.courseId}/chapters/${chapter.chapterId}/code?courseId=${course.courseId}&sectionId=${sectionId}&chapterId=${chapter.chapterId}&assignmentId=${assignment.assignmentId}`,
       )
     } else {
       setIsSubmissionModalOpen(true)
@@ -137,15 +137,22 @@ export function AssignmentCard({ assignment, course, sectionId, chapterId }: Ass
 
   return (
     <>
-      <Card className="overflow-hidden border border-gray-200">
-        <CardHeader>
+      <Card className="overflow-hidden border border-gray-200 shadow-md hover:shadow-lg transition-shadow duration-200">
+        <CardHeader className="bg-gray-100 p-4 dark:bg-gray-800">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <FileText className="h-5 w-5 text-primary" />
               <h3 className="font-semibold text-lg">{assignment.title}</h3>
             </div>
-            {course?.instructors?.some((instructor) => instructor.userId === user?.id) && (
+            {isAuthorized && (
               <div className="flex items-center space-x-2">
+                <FeedbackButton
+                    feedbackType="assignment"
+                    itemId={assignment.assignmentId}
+                    courseId={course.courseId}
+                    sectionId={sectionId}
+                    chapterId={chapter.chapterId}>
+                </FeedbackButton>  
                 <Button
                   variant="outline"
                   size="icon"
@@ -165,18 +172,13 @@ export function AssignmentCard({ assignment, course, sectionId, chapterId }: Ass
           </div>
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="space-y-4 p-4">
           <Description text={assignment.description} />
 
-          <div className="flex items-center space-x-2 text-sm text-muted-foreground my-4">
-            <Users className="h-4 w-4" />
-            <span>{assignment.submissions.length} Submissions</span>
-          </div>
-
           {assignment.resources && assignment.resources.length > 0 ? (
-            <Collapsible open={isResourcesOpen} onOpenChange={setIsResourcesOpen} className="mt-4">
+            <Collapsible open={isResourcesOpen} onOpenChange={setIsResourcesOpen}>
               <CollapsibleTrigger asChild>
-                <Button variant="outline" className="w-full justify-between">
+                <Button variant="outline" className="w-full justify-between mt-2">
                   Resources & Materials
                   <ChevronDown
                     className={`h-4 w-4 transition-transform ${isResourcesOpen ? "transform rotate-180" : ""}`}
@@ -185,10 +187,10 @@ export function AssignmentCard({ assignment, course, sectionId, chapterId }: Ass
               </CollapsibleTrigger>
               <CollapsibleContent className="mt-4 space-y-3">
                 {assignment.resources.map((resource, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 rounded-lg bg-muted">
+                  <div key={index} className="flex items-center justify-between p-2 rounded-lg bg-gray-50">
                     <div className="flex items-center space-x-2">
                       <LinkIcon className="h-4 w-4 text-primary" />
-                      <span className="text-sm">{resource.title}</span>
+                      <span className="text-sm text-gray-600">{resource.title}</span>
                     </div>
                     <Button
                       variant="ghost"
@@ -209,7 +211,7 @@ export function AssignmentCard({ assignment, course, sectionId, chapterId }: Ass
           )}
         </CardContent>
 
-        <CardFooter>
+        <CardFooter className="border-t bg-gray-100 py-3 flex justify-between dark:bg-gray-800">
           <Button 
             onClick={handleAssignment} 
             className="w-full"
@@ -218,7 +220,7 @@ export function AssignmentCard({ assignment, course, sectionId, chapterId }: Ass
             {hasSubmitted ? (
               <>
                 <CheckCircle className="h-4 w-4 mr-2" />
-                View Submission
+                Submitted
               </>
             ) : assignment.isCoding ? (
               <>
@@ -239,9 +241,9 @@ export function AssignmentCard({ assignment, course, sectionId, chapterId }: Ass
         <AssignmentModal
           mode="edit"
           assignment={assignment}
+          chapter={chapter}
           courseId={course.courseId}
           sectionId={sectionId}
-          chapterId={chapterId}
           onAssignmentChange={() => {
             setIsEditModalOpen(false)
             router.refresh()
@@ -256,7 +258,7 @@ export function AssignmentCard({ assignment, course, sectionId, chapterId }: Ass
           assignment={assignment}
           courseId={course.courseId}
           sectionId={sectionId}
-          chapterId={chapterId}
+          chapterId={chapter.chapterId}
           open={isSubmissionModalOpen}
           onOpenChange={setIsSubmissionModalOpen}
           onSubmissionComplete={() => {
@@ -268,4 +270,6 @@ export function AssignmentCard({ assignment, course, sectionId, chapterId }: Ass
     </>
   )
 }
+
+export default AssignmentCard
 

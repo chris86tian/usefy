@@ -11,6 +11,7 @@ import {
   useUpdateCourseMutation,
   useGetUploadVideoUrlMutation,
   useGetUploadImageUrlMutation,
+  useGetUploadFileUrlMutation,
 } from "@/state/api"
 import { useAppDispatch, useAppSelector } from "@/state/redux"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -27,11 +28,12 @@ import Image from "next/image"
 import YouTubeDialog from "@/components/YouTubeDialog"
 import { v4 as uuid } from "uuid"
 import { useRouter } from "next/navigation"
+import { uploadAllFiles } from "@/lib/utils";
 
 const CourseEditor = () => {
   const { orgId, courseId } = useParams() as { orgId: string; courseId: string }
   const { data: course, isLoading, refetch } = useGetCourseQuery(courseId)
-  const [updateCourse] = useUpdateCourseMutation()
+  const [updateCourse, { isLoading: isUpdating }] = useUpdateCourseMutation()
   const [getUploadVideoUrl] = useGetUploadVideoUrlMutation()
   const [getUploadImageUrl] = useGetUploadImageUrlMutation()
   const [isUploading, setIsUploading] = useState(false)
@@ -40,6 +42,7 @@ const CourseEditor = () => {
   const [isGenerating, setIsGenerating] = useState(false)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const router = useRouter()
+  const [getUploadFileUrl] = useGetUploadFileUrlMutation();
 
   const handleURLSubmit = async (videoUrl: string, options: ProcessOptions) => {
     setIsDialogOpen(false)
@@ -243,16 +246,26 @@ const CourseEditor = () => {
     setProgress(0)
 
     try {
-      const updatedSections = await uploadAllVideos(sections, courseId, getUploadVideoUrl, (currentProgress) =>
-        setProgress(currentProgress),
-      )
+      const updatedSectionsAfterVideos = await uploadAllVideos(
+        sections,
+        courseId,
+        getUploadVideoUrl,
+        (p) => setProgress(p)
+      );
+
+      const updatedSectionsAfterFiles = await uploadAllFiles(
+        updatedSectionsAfterVideos,
+        courseId,
+        getUploadFileUrl,
+        (p) => setProgress(p)
+      );
 
       let thumbnailUrl = course?.image || ""
       if (image) {
         thumbnailUrl = await uploadThumbnail(courseId, getUploadImageUrl, image)
       }
 
-      const formData = createCourseFormData(data, updatedSections, thumbnailUrl)
+      const formData = createCourseFormData(data, updatedSectionsAfterFiles, thumbnailUrl)
 
       await updateCourse({ orgId, courseId, formData }).unwrap()
 
@@ -296,9 +309,13 @@ const CourseEditor = () => {
                   }`}
                   inputClassName="data-[state=checked]:bg-green-500"
                 />
-                <Button type="submit" className="bg-blue-700 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700">
+                <Button 
+                  type="submit" 
+                  className="bg-blue-700 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700"
+                  disabled={isUploading || isUpdating}
+                >
                   <CheckCircle className="w-5 h-5" />
-                  Save
+                  {isUpdating ? "Updating..." : "Save"}
                 </Button>
               </div>
             }

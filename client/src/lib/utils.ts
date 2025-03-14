@@ -351,6 +351,83 @@ export const uploadAssignmentFile = async (
   }
 };
 
+export const uploadAllFiles = async (
+  sections: Section[],
+  courseId: string,
+  getUploadFileUrl: any,
+  progressCallback: (progress: number) => void
+) => {
+  let totalFiles = 0;
+  let uploadedFiles = 0;
+  const uploadErrors: string[] = [];
+
+  // Calculate total files to upload
+  sections.forEach((section) => {
+    section.chapters.forEach((chapter) => {
+      if (chapter.files) {
+        totalFiles += chapter.files.filter((file) => file.file).length;
+      }
+    });
+  });
+
+  const updatedSections = JSON.parse(JSON.stringify(sections));
+
+  for (const section of updatedSections) {
+    for (const chapter of section.chapters) {
+      if (chapter.files) {
+        const updatedFiles = [];
+        for (const file of chapter.files) {
+          // Skip already uploaded files
+          if (file.fileUrl) {
+            updatedFiles.push(file);
+            continue;
+          }
+
+          if (file.file) {
+            try {
+              // Get upload URL from backend
+              const { uploadUrl, fileUrl } = await getUploadFileUrl({
+                courseId,
+                sectionId: section.sectionId,
+                chapterId: chapter.chapterId,
+                fileName: file.file.name,
+                fileType: file.file.type,
+              }).unwrap();
+
+              // Upload file to S3
+              await fetch(uploadUrl, {
+                method: "PUT",
+                body: file.file,
+                headers: { "Content-Type": file.file.type },
+              });
+
+              updatedFiles.push({ 
+                ...file,
+                fileUrl,
+                file: undefined // Remove the File object
+              });
+              uploadedFiles++;
+              progressCallback((uploadedFiles / totalFiles) * 100);
+            } catch (error) {
+              uploadErrors.push(`Failed to upload: ${file.title || file.file.name}`);
+            }
+          } else {
+            uploadErrors.push(`Missing file for: ${file.title}`);
+          }
+        }
+        
+        if (uploadErrors.length > 0) {
+          throw new Error(uploadErrors.join('\n'));
+        }
+        
+        chapter.files = updatedFiles;
+      }
+    }
+  }
+
+  return updatedSections;
+};
+
 export const countries = [
   "Afghanistan",
   "Albania",

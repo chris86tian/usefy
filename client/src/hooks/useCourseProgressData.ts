@@ -10,77 +10,39 @@ import { useUser } from "@clerk/nextjs";
 
 export const useCourseProgressData = () => {
   const { courseId, chapterId } = useParams();
-  const { user, isLoaded } = useUser();
+  const { user } = useUser();
   const [hasMarkedComplete, setHasMarkedComplete] = useState(false);
   const [updateProgress] = useUpdateUserCourseProgressMutation();
 
   const { data: courseInstructors } = useGetCourseInstructorsQuery((courseId as string) ?? "", { skip: !courseId});
+  const { data: course, isLoading: courseLoading } = useGetCourseQuery((courseId as string) ?? "", { skip: !courseId });
+  const { data: userProgress, isLoading: progressLoading } = useGetUserCourseProgressQuery({ userId: user?.id ?? "", courseId: (courseId as string) ?? "" },{ skip: !user || !courseId });
 
-  const { data: course, isLoading: courseLoading } = useGetCourseQuery(
-    (courseId as string) ?? "",
-    {
-      skip: !courseId,
-    }
-  );
+  const isLoading = courseLoading || progressLoading;
 
-  const { data: userProgress, isLoading: progressLoading } =
-    useGetUserCourseProgressQuery(
-      {
-        userId: user?.id ?? "",
-        courseId: (courseId as string) ?? "",
-      },
-      {
-        skip: !isLoaded || !user || !courseId,
-      }
-    );
+  const currentSection = course?.sections.find((s) => s.chapters.some((c) => c.chapterId === chapterId));
 
-  const isLoading = !isLoaded || courseLoading || progressLoading;
-
-  const currentSection = course?.sections.find((s) =>
-    s.chapters.some((c) => c.chapterId === chapterId)
-  );
-
-  const currentChapter = currentSection?.chapters.find(
-    (c) => c.chapterId === chapterId
-  );
+  const currentChapter = currentSection?.chapters.find((c) => c.chapterId === chapterId);
 
   const isChapterCompleted = () => {
-    if (!currentSection || !currentChapter || !userProgress?.sections)
-      return false;
+    if (!currentSection || !currentChapter || !userProgress?.sections) return false;
 
-    const section = userProgress.sections.find(
-      (s) => s.sectionId === currentSection.sectionId
-    );
-    return (
-      section?.chapters.some(
-        (c) => c.chapterId === currentChapter.chapterId && c.completed
-      ) ?? false
-    );
-    
+    const section = userProgress.sections.find((s) => s.sectionId === currentSection.sectionId);
+    return (section?.chapters.some((c) => c.chapterId === currentChapter.chapterId && c.completed) ?? false);
   };
 
   const isQuizCompleted = () => {
-    if (!currentSection || !currentChapter || !userProgress?.sections)
-      return false;
+    if (!currentSection || !currentChapter || !userProgress?.sections) return false;
 
-    const section = userProgress.sections.find(
-      (s) => s.sectionId === currentSection.sectionId
-    );
-
-    return (
-      section?.chapters.some(
-        (c) => c.chapterId === currentChapter.chapterId && c.quizCompleted ) ?? false
-    );
+    const section = userProgress.sections.find((s) => s.sectionId === currentSection.sectionId);
+    return (section?.chapters.some((c) => c.chapterId === currentChapter.chapterId && c.quizCompleted ) ?? false);
   }
 
-  const isCurrentChapterAssignemtsCompleted = () => {
-    if (!currentChapter) return false;
+  const isAssignmentsCompleted = () => {
+    if (!currentSection || !currentChapter || !userProgress?.sections) return false;
 
-    if (!currentChapter.assignments) return true;
-
-    return currentChapter.assignments?.every(
-      (assignment: Assignment) => assignment.submissions?.length > 0 
-    ) ?? false;
+    const submissions = currentChapter?.assignments?.map((a) => a.submissions.some((s) => s.userId === user?.id));
+    return submissions?.every((s) => s) ?? false;
   }
 
   const updateChapterProgress = (
@@ -89,24 +51,22 @@ export const useCourseProgressData = () => {
     completed: boolean
   ) => {
     if (!user) return;
-
-    const updatedSections = [
-      {
-        sectionId,
-        chapters: [
-          {
-            chapterId,
-            completed,
-          },
-        ],
-      },
-    ];
-
+    
     updateProgress({
       userId: user.id,
       courseId: (courseId as string) ?? "",
       progressData: {
-        sections: updatedSections,
+        sections: [
+          {
+            sectionId,
+            chapters: [
+              {
+                chapterId,
+                completed,
+              },
+            ],
+          },
+        ],
       },
     });
   };
@@ -123,7 +83,7 @@ export const useCourseProgressData = () => {
     isLoading,
     isChapterCompleted,
     isQuizCompleted,
-    isCurrentChapterAssignemtsCompleted,
+    isAssignmentsCompleted,
     updateChapterProgress,
     hasMarkedComplete,
     setHasMarkedComplete,

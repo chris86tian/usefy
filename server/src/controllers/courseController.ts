@@ -560,6 +560,31 @@ export const getUploadImageUrl = async (
   }
 };
 
+export const getUploadFileUrl = async (req: Request, res: Response) => {
+  const { courseId, sectionId, chapterId } = req.params;
+  const { fileName, fileType } = req.body;
+
+  try {
+    const fileExtension = fileName.split('.').pop();
+    const uniqueFileName = `${uuidv4()}.${fileExtension}`;
+    const fileKey = `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/files/${uniqueFileName}`;
+
+    const s3Params = {
+      Bucket: process.env.AWS_BUCKET_NAME!,
+      Key: fileKey,
+      ContentType: fileType,
+      Expires: 60 * 5,
+    };
+
+    const uploadUrl = await s3.getSignedUrlPromise('putObject', s3Params);
+    const fileUrl = `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileKey}`;
+
+    res.status(200).json({ uploadUrl, fileUrl });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to generate file upload URL' });
+  }
+};
+
 export const createAssignment = async (
   req: Request,
   res: Response

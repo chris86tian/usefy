@@ -223,6 +223,7 @@ export const sendMessage = async (
         title,
         message,
         link,
+        isRead: false,
         timestamp: new Date().toISOString(),
       });
 

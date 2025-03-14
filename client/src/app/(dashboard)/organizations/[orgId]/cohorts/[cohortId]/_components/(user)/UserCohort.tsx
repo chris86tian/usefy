@@ -10,12 +10,13 @@ import type { User } from "@clerk/nextjs/server"
 import { useUser } from "@clerk/nextjs"
 import { useCreateTransactionMutation } from "@/state/api"
 import { toast } from "sonner"
+import { useParams } from "next/navigation"
+import Header from "@/components/Header"
+import { useRouter } from "next/navigation"
 import { 
   useGetCohortLearnersQuery,
   useGetCohortQuery,
 } from "@/state/api"
-import { useParams } from "next/navigation"
-import Header from "@/components/Header"
 
 interface UserCohortPageProps {
   orgUsers: { instructors: User[], learners: User[], admins: User[] }
@@ -25,6 +26,7 @@ interface UserCohortPageProps {
 
 const UserCohortPage = ({ orgUsers, usersLoading, courses }: UserCohortPageProps) => {
   const { user } = useUser()
+  const router = useRouter()
   const { orgId, cohortId } = useParams()
   
   const { data: cohort, isLoading: cohortLoading, refetch } = useGetCohortQuery({ organizationId: orgId as string, cohortId: cohortId as string }, { skip: !orgId || !cohortId })
@@ -55,6 +57,7 @@ const UserCohortPage = ({ orgUsers, usersLoading, courses }: UserCohortPageProps
           console.error("Enrollment error:", error)
           toast.error("Failed to enroll in course")
         })
+        router.push(`/organizations/${orgId}/courses/${course.courseId}/chapters/${course.sections[0].chapters[0].chapterId}`)
     } else {
       toast.info("You are already enrolled in this course")
     }
@@ -70,7 +73,7 @@ const UserCohortPage = ({ orgUsers, usersLoading, courses }: UserCohortPageProps
 
   return (
     <div className="space-y-6">
-      <Header title={cohort.name} subtitle="Manage your cohort" />
+      <Header title={cohort.name} subtitle="Your cohort courses" />
 
       <Tabs defaultValue="courses" className="w-full">
         <TabsList>

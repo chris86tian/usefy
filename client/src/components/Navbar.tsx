@@ -18,7 +18,7 @@ interface NavbarProps {
 const Navbar = ({ isDashboard = false }: NavbarProps) => {
   const pathname = usePathname()
   if (pathname.startsWith("/organizations")) isDashboard = true
-  const { data: notifications = null } = useGetNotificationsQuery(undefined, { skip: !isDashboard })
+  const { data: notifications = null, refetch } = useGetNotificationsQuery(undefined, { skip: !isDashboard })
   const { theme, setTheme } = useTheme()
 
   const toggleTheme = () => {
@@ -60,7 +60,12 @@ const Navbar = ({ isDashboard = false }: NavbarProps) => {
             <SignedIn>
               <div className="flex items-center gap-4">
                 <OrganizationsDropdown />
-                {isDashboard &&  <NotificationDropdown notifications={notifications || []} />}
+                {isDashboard &&  
+                  <NotificationDropdown 
+                    notifications={notifications || []}
+                    refetch={refetch}
+                  />
+                }
                 <UserButton />
               </div>
             </SignedIn>
@@ -96,7 +101,10 @@ const Navbar = ({ isDashboard = false }: NavbarProps) => {
             </Button>
 
             <SignedIn>
-              <NotificationDropdown notifications={notifications || []} />
+              <NotificationDropdown 
+                notifications={notifications || []}
+                refetch={refetch}
+              />
               <UserButton />
             </SignedIn>
 

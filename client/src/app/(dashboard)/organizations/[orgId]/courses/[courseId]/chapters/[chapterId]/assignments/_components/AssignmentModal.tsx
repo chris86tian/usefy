@@ -18,8 +18,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface AssignmentModalProps {
-  chapterId: string
-  chapter?: Chapter
+  chapter: Chapter
   sectionId: string
   courseId: string
   assignment?: Assignment
@@ -30,7 +29,6 @@ interface AssignmentModalProps {
 }
 
 const AssignmentModal = ({
-  chapterId,
   chapter,
   sectionId,
   courseId,
@@ -51,6 +49,7 @@ const AssignmentModal = ({
   const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({})
   const [isGeneratingAI, setIsGeneratingAI] = useState(false)
   const [activeTab, setActiveTab] = useState<"edit" | "preview">("edit")
+  const [isCoding, setIsCoding] = useState(false)
 
   const [createAssignment] = useCreateAssignmentMutation()
   const [updateAssignment] = useUpdateAssignmentMutation()
@@ -62,6 +61,7 @@ const AssignmentModal = ({
       setDescription(assignment.description)
       setResources(assignment.resources?.map((r) => ({ ...r, type: r.url ? "file" : "link" })) || [])
       setHints(assignment.hints || [])
+      setIsCoding(assignment.isCoding || false)
     }
   }, [assignment, mode])
 
@@ -73,7 +73,7 @@ const AssignmentModal = ({
       const assignmentData = {
         assignmentId: mode === "create" ? uuidv4() : assignment!.assignmentId,
         title,
-        isCoding: false,
+        isCoding,
         description,
         resources,
         hints,
@@ -82,14 +82,14 @@ const AssignmentModal = ({
 
       if (mode === "create") {
         await createAssignment({
-          chapterId,
+          chapterId: chapter.chapterId,
           courseId,
           sectionId,
           assignment: assignmentData,
         })
       } else if (mode === "edit" && assignment) {
         await updateAssignment({
-          chapterId,
+          chapterId: chapter.chapterId,
           courseId,
           sectionId,
           assignmentId: assignment.assignmentId,
@@ -99,7 +99,6 @@ const AssignmentModal = ({
 
       onOpenChange(false)
       if (mode === "create") resetForm()
-      onAssignmentChange?.()
     } catch (error) {
       console.error(`Failed to ${mode} assignment:`, error)
     } finally {
@@ -224,8 +223,8 @@ const AssignmentModal = ({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          assignmentTitle: chapter?.title,
-          assignmentDescription: chapter?.content,
+          assignmentTitle: chapter.title,
+          assignmentDescription: chapter.content,
         }),
       })
 
@@ -436,6 +435,17 @@ const AssignmentModal = ({
                 />
               </div>
             </div>
+
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="isCoding"
+                checked={isCoding}
+                onChange={() => setIsCoding(!isCoding)}
+                className="mr-2"
+              />
+              <Label htmlFor="isCoding" className="text-sm font-medium">Create as Coding Assignment</Label>
+            </div>
           </div>
 
           <div className="flex justify-end space-x-2 pt-2">
@@ -449,27 +459,25 @@ const AssignmentModal = ({
               Cancel
             </Button>
 
-            {mode === "create" && (
-              <Button
-                type="button"
-                onClick={generateAssignment}
-                disabled={isGeneratingAI || isSubmitting}
-                variant="outline"
-                size="sm"
-              >
-                {isGeneratingAI ? (
-                  <>
-                    <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <Wand2 className="h-3 w-3 mr-1" />
-                    Generate
-                  </>
-                )}
-              </Button>
-            )}
+            <Button
+              type="button"
+              onClick={generateAssignment}
+              disabled={isGeneratingAI || isSubmitting}
+              variant="outline"
+              size="sm"
+            >
+              {isGeneratingAI ? (
+                <>
+                  <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Wand2 className="h-3 w-3 mr-1" />
+                  Generate
+                </>
+              )}
+            </Button>
 
             <Button type="submit" disabled={isSubmitting || isUploading} size="sm">
               {isSubmitting ? (

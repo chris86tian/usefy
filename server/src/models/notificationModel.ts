@@ -22,6 +22,10 @@ const notificationSchema = new Schema(
     link: {
       type: String,
     },
+    isRead: {
+      type: Boolean,
+      required: true,
+    },
     timestamp: {
       type: String,
       required: true,

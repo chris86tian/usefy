@@ -63,15 +63,6 @@ const SignInComponent = () => {
           },
         }}
       />
-      
-      <div className="absolute left-0 right-0 mt-2 text-center">
-        <Link 
-          href="/reset-password" 
-          className="text-sm text-muted-foreground hover:underline"
-        >
-          Forgot Password?
-        </Link>
-      </div>
     </div>
   );
 };

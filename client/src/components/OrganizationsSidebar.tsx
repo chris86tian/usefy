@@ -68,15 +68,15 @@ export default function OrganizationSidebar({
       icon: Home,
       active: pathname === `/organizations/${orgId}`,
     },
+  ]
+
+  const adminNavItems = [
     {
       label: "Courses",
       href: `/organizations/${orgId}/courses`,
       icon: BookOpen,
       active: pathname.includes(`/organizations/${orgId}/courses`),
     },
-  ]
-
-  const adminNavItems = [
     {
       label: "Settings",
       href: `/organizations/${orgId}/settings`,
@@ -151,7 +151,12 @@ export default function OrganizationSidebar({
               <div className={cn("flex items-center", collapsed ? "gap-0" : "gap-2")}>
                 <Avatar className="h-8 w-8">
                   {currentOrg.image ? (
-                    <Image src={currentOrg.image} alt={currentOrg.name} className="h-8 w-8 rounded-full" />
+                    <Image 
+                      src={currentOrg.image} 
+                      alt={currentOrg.name} 
+                      width={32}
+                      height={32}
+                      className="h-8 w-8 rounded-full" />
                   ) : (
                     <AvatarFallback className="bg-primary/10 text-primary">
                       {currentOrg.name
@@ -181,13 +186,22 @@ export default function OrganizationSidebar({
                     onClick={() => handleOrgChange(org.organizationId)}
                   >
                     <Avatar className="h-6 w-6">
-                      <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                        {org.name
-                          .split(" ")
-                          .map((n: string) => n[0])
-                          .join("")
-                          .toUpperCase()}
-                      </AvatarFallback>
+                      {org.image ? (
+                        <Image 
+                          src={org.image} 
+                          alt={org.name} 
+                          width={24}
+                          height={24}
+                          className="h-6 w-6 rounded-full" />
+                      ) : (
+                        <AvatarFallback className="bg-primary/10 text-primary">
+                          {org.name
+                            .split(" ")
+                            .map((n: string) => n[0])
+                            .join("")
+                            .toUpperCase()}
+                        </AvatarFallback>
+                      )}
                     </Avatar>
                     <span className="truncate">{org.name}</span>
                   </DropdownMenuItem>

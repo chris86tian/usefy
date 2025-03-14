@@ -33,6 +33,7 @@ import { useOrganization } from "@/context/OrganizationContext"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { AssignmentCard } from "./assignments/_components/AssignmentCard"
 import { useCallback } from "react"
+import FeedbackButton from "./adaptive-quiz/FeedbackButton"
 
 const isSectionReleased = (section: Section) => {
   if (!section.releaseDate) return false
@@ -49,7 +50,7 @@ const Course = () => {
     isLoading,
     isChapterCompleted,
     isQuizCompleted,
-    isCurrentChapterAssignemtsCompleted,
+    isAssignmentsCompleted,
     updateChapterProgress,
     hasMarkedComplete,
     courseInstructors,
@@ -233,7 +234,7 @@ const Course = () => {
   const handleGoToNextChapter = () => {
     if (!course) return
 
-    if (currentChapter?.quiz && (!isQuizCompleted() || !isCurrentChapterAssignemtsCompleted())) {
+    if (currentChapter?.quiz && (!isQuizCompleted() || !isAssignmentsCompleted())) {
       toast.error(
         `Please complete the chapter ${isQuizCompleted() ? "assignments" : "quiz"} before moving to the next chapter.`,
         {
@@ -406,6 +407,13 @@ const Course = () => {
               </div>
 
               <div className="flex items-center gap-3">
+                <FeedbackButton
+                    feedbackType="question"
+                    itemId={currentChapter?.chapterId as string}  
+                    courseId={course?.courseId as string}
+                    sectionId={currentSection?.sectionId as string}
+                    chapterId={currentChapter?.chapterId as string}>
+                </FeedbackButton>
                 {isAuthorized && (
                   <Button onClick={() => setIsModalOpen(true)} variant="outline" size="sm">
                     <Sparkles className="h-4 w-4 mr-2" />
@@ -481,7 +489,6 @@ const Course = () => {
             mode="create"
             courseId={course.courseId}
             sectionId={currentSection?.sectionId as string}
-            chapterId={currentChapter.chapterId}
             chapter={currentChapter}
             open={isModalOpen}
             onOpenChange={setIsModalOpen}
@@ -521,16 +528,23 @@ const Course = () => {
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-auto pt-4">
-                <div className="grid grid-cols-3 gap-4">
-                  {currentChapter?.assignments?.map((assignment: Assignment) => (
-                    <AssignmentCard 
-                      key={assignment.assignmentId} 
-                      assignment={assignment}
-                      course={course}
-                      sectionId={currentSection.sectionId}
-                      chapterId={currentChapter.chapterId}
-                    />
-                  ))}
+                <div className="grid grid-cols-2 gap-4">
+                  {currentChapter?.assignments && currentChapter.assignments.length > 0 ? (
+                    currentChapter.assignments.map((assignment) => (
+                      <AssignmentCard
+                        key={assignment.assignmentId} 
+                        isAuthorized={isAuthorized as boolean}
+                        sectionId={currentSection.sectionId}
+                        chapter={currentChapter}
+                        course={course}
+                        assignment={assignment}
+                      />
+                    ))
+                  ) : (
+                    <div className="col-span-3 text-center text-muted-foreground">
+                      No assignments available for this chapter
+                    </div>
+                  )}
                 </div>
               </ScrollArea>
             </CardContent>

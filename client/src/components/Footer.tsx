@@ -16,7 +16,7 @@ const Footer = () => {
           </div>
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-white">Quick Links</h3>
-            <ul className="space-y-2">
+            {/* <ul className="space-y-2">
               {["Courses", "Instructors", "Pricing", "FAQ"].map((item) => (
                 <li key={item}>
                   <Link
@@ -28,11 +28,11 @@ const Footer = () => {
                   </Link>
                 </li>
               ))}
-            </ul>
+            </ul> */}
           </div>
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-white">Legal</h3>
-            <ul className="space-y-2">
+            {/* <ul className="space-y-2">
               {["Terms of Service", "Privacy Policy"].map((item) => (
                 <li key={item}>
                   <Link
@@ -44,7 +44,7 @@ const Footer = () => {
                   </Link>
                 </li>
               ))}
-            </ul>
+            </ul> */}
           </div>
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-white">Connect With Us</h3>

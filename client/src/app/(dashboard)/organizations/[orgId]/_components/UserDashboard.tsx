@@ -217,7 +217,6 @@ interface CourseCardProps {
 }
 
 const CourseCard = ({ course, progress, onResume, onClick }: CourseCardProps) => {
-  console.log("Course", course)
   const progressPercentage = progress?.overallProgress || 0
   const lastAccessed = progress?.lastAccessedTimestamp
     ? formatDistanceToNow(new Date(progress.lastAccessedTimestamp), { addSuffix: true })

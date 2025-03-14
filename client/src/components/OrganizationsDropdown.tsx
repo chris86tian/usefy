@@ -37,7 +37,7 @@ const formSchema = z.object({
   description: z.string().min(10, {
     message: "Description must be at least 10 characters.",
   }),
-  image: z.instanceof(File).optional(),
+  image: z.any().optional(),
 })
 
 export function OrganizationsDropdown() {

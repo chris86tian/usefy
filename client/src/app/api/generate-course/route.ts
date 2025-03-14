@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { extractVideoId } from "@/lib/utils";
 import { console } from "inspector";
+import { YoutubeTranscript } from "youtube-transcript";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
@@ -12,66 +13,67 @@ interface TranscriptSegment {
   duration: number;
 }
 
-async function fetchCaptionsAndTranscript(videoId: string) {
+async function fetchCaptionsAndTranscript(videoId: string): Promise<TranscriptSegment[]> {
   try {
-    const videoResponse = await fetch(
-      `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${YOUTUBE_API_KEY}`
-    );
-    const videoData = await videoResponse.json();
+    console.log(`🔍 Fetching transcript for video: ${videoId}`);
 
-    if (!videoData.items?.length) {
-      throw new Error("Video not found or is private");
-    }
-
+    // 🔹 Step 1: Try YouTube API first
     const captionsResponse = await fetch(
       `https://www.googleapis.com/youtube/v3/captions?part=snippet&videoId=${videoId}&key=${YOUTUBE_API_KEY}`
     );
     const captionsData = await captionsResponse.json();
 
-    if (!captionsResponse.ok) {
-      throw new Error(
-        captionsData.error?.message || "Failed to fetch captions"
-      );
-    }
-
-    const captionTrack =
-      captionsData.items?.find((item: any) => item.snippet.language === "en") ||
-      captionsData.items?.[0];
-    if (captionTrack) {
+    if (captionsData.items?.length) {
+      console.log("✅ Captions found using YouTube API.");
+      return await processTranscriptUsingAPI(videoId);
     } else {
-      console.log("⚠️ No caption track found");
+      console.log("⚠️ No captions found via YouTube API, trying fallback...");
     }
 
-    if (!captionTrack) {
-      throw new Error("No captions available for this video");
+    // 🔹 Step 2: Fallback to `youtube-transcript` if API fails
+    const transcript = await YoutubeTranscript.fetchTranscript(videoId);
+    console.log("📜 Fetched transcript:", transcript);
+
+    if (!transcript || transcript.length === 0) {
+      throw new Error("No transcript available for this video");
     }
 
-    const transcriptResponse = await fetch(
-      `https://www.youtube.com/watch?v=${videoId}`
-    );
+    console.log("✅ Transcript retrieved using fallback method!");
+
+    return transcript.map((segment: any) => ({
+      text: segment.text,
+      offset: segment.offset,
+      duration: segment.duration || 5000,
+    }));
+  } catch (error) {
+    console.log("❌ Error fetching transcript:", error);
+    throw error;
+  }
+}
+
+async function processTranscriptUsingAPI(videoId: string): Promise<TranscriptSegment[]> {
+  try {
+    const transcriptResponse = await fetch(`https://www.youtube.com/watch?v=${videoId}`);
     const html = await transcriptResponse.text();
 
     const transcriptMatches = html.match(/"text":"([^"]+)"/g) || [];
     const timestampMatches = html.match(/"start":"([^"]+)"/g) || [];
+
     console.log("📊 Found matches:", {
       transcriptMatchesCount: transcriptMatches.length,
       timestampMatchesCount: timestampMatches.length,
     });
 
-    const transcript: TranscriptSegment[] = transcriptMatches.map(
-      (match, index) => {
-        const text = match.match(/"text":"([^"]+)"/)?.[1] || "";
-        const offset = parseInt(
-          timestampMatches[index]?.match(/"start":"(\d+)"/)?.[1] || "0"
-        );
+    const transcript: TranscriptSegment[] = transcriptMatches.map((match, index) => {
+      const text = match.match(/"text":"([^"]+)"/)?.[1] || "";
+      const offset = parseInt(timestampMatches[index]?.match(/"start":"(\d+)"/)?.[1] || "0");
 
-        return {
-          text: text.replace(/\\n/g, " ").replace(/\\"/g, '"'),
-          offset,
-          duration: 5000,
-        };
-      }
-    );
+      return {
+        text: text.replace(/\\n/g, " ").replace(/\\"/g, '"'),
+        offset,
+        duration: 5000,
+      };
+    });
 
     if (transcript.length === 0) {
       throw new Error("Could not extract transcript from video");
@@ -79,6 +81,7 @@ async function fetchCaptionsAndTranscript(videoId: string) {
 
     return transcript;
   } catch (error) {
+    console.error("❌ Error extracting transcript from YouTube page:", error);
     throw error;
   }
 }
@@ -153,6 +156,7 @@ export async function POST(request: Request) {
     let transcript
     try {
       transcript = await fetchCaptionsAndTranscript(videoId)
+      console.log("📜 Transcript:", transcript)
     } catch (error) {
       return NextResponse.json(
         {
@@ -163,6 +167,8 @@ export async function POST(request: Request) {
         { status: 400 },
       )
     }
+
+    console.log("📜 Transcript:", transcript)
 
     const formattedTranscript = transcript.map(({ text, offset }) => `[${formatTimestamp(offset)}] ${text}`).join("\n")
 
