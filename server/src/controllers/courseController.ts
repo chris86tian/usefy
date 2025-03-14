@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import AWS from "aws-sdk";
 import { v4 as uuidv4 } from "uuid";
-import { getAuth } from "@clerk/express";
+import { getAuth, User } from "@clerk/express";
 import { mergeSections, calculateOverallProgress } from "../utils/utils";
 import Commit from "../models/commitModel";
 import Course from "../models/courseModel";
@@ -387,13 +387,10 @@ export const unenrollUser = async (
   }
 };
 
-export const addCourseInstructor = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const addCourseInstructor = async (req: Request, res: Response): Promise<void> => {
   const { courseId } = req.params;
-  const { userId } = req.body;
-
+  const { userId, email } = req.body;
+  
   try {
     const course = await Course.get(courseId);
     if (!course) {
@@ -401,27 +398,48 @@ export const addCourseInstructor = async (
       return;
     }
 
+    let instructorUserId = userId;
+
+    if (!userId && email) {
+      // Fetch user by email if userId is not provided
+      const users = (await clerkClient.users.getUserList({ emailAddress: [email] })).data;
+
+      if (users.length === 0) {
+        res.status(404).json({ message: "User with provided email not found" });
+        return;
+      }
+
+      instructorUserId = users[0].id;
+    }
+
+    if (!instructorUserId) {
+      res.status(400).json({ message: "Either userId or email is required" });
+      return;
+    }
+
     if (!course.instructors) {
       course.instructors = [];
     }
 
-    course.instructors.push({ userId });
+    const alreadyAdded = course.instructors.some((inst: User) => inst.id === instructorUserId);
+    if (alreadyAdded) {
+      res.status(400).json({ message: "Instructor is already added to the course" });
+      return;
+    }
 
+    course.instructors.push({ userId: instructorUserId });
     await course.save();
 
-    // TODO: Send notification to org admins
-    for(const instructor of course.instructors) {
-      const user = await clerkClient.users.getUser(instructor.userId);
-      if (user.emailAddresses && user.emailAddresses.length > 0) {
-        await sendMessage(
-          instructor.userId,
-          user.emailAddresses[0].emailAddress,
-          "New Instructor Added",
-          `New instructor added to the course "${course.title}".`,
-          null,
-          { sendEmail: true, sendNotification: true, rateLimited: true }
-        );
-      }
+    const user = await clerkClient.users.getUser(instructorUserId);
+    if (user.emailAddresses && user.emailAddresses.length > 0) {
+      await sendMessage(
+        instructorUserId,
+        user.emailAddresses[0].emailAddress,
+        "New Instructor Added",
+        `You have been added as an instructor to the course "${course.title}".`,
+        null,
+        { sendEmail: true, sendNotification: true, rateLimited: true }
+      );
     }
 
     res.json({ message: "Instructor added to course successfully", data: course });
@@ -429,6 +447,7 @@ export const addCourseInstructor = async (
     res.status(500).json({ message: "Error adding instructor to course", error });
   }
 };
+
 
 export const removeCourseInstructor = async (
   req: Request,
@@ -780,7 +799,7 @@ export const updateAssignment = async (
 ): Promise<void> => {
   const { courseId, sectionId, chapterId, assignmentId } = req.params;
   const { userId } = getAuth(req);
-  const { title, description, resources, hints } = req.body;
+  const { title, description, resources, hints, starterCode, isCoding } = req.body;
 
   try {
     const course = await Course.get(courseId);
@@ -828,6 +847,8 @@ export const updateAssignment = async (
     assignment.description = description;
     assignment.resources = resources || [];
     assignment.hints = hints || [];
+    assignment.starterCode = starterCode || "";
+    assignment.isCoding = isCoding;
 
     await course.save();
     res.json({ message: "Assignment updated successfully", data: assignment });

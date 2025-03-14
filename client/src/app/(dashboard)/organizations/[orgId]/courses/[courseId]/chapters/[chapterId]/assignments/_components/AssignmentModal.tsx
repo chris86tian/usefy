@@ -50,6 +50,7 @@ const AssignmentModal = ({
   const [isGeneratingAI, setIsGeneratingAI] = useState(false)
   const [activeTab, setActiveTab] = useState<"edit" | "preview">("edit")
   const [isCoding, setIsCoding] = useState(false)
+  const [starterCode, setStarterCode] = useState("")
 
   const [createAssignment] = useCreateAssignmentMutation()
   const [updateAssignment] = useUpdateAssignmentMutation()
@@ -62,6 +63,7 @@ const AssignmentModal = ({
       setResources(assignment.resources?.map((r) => ({ ...r, type: r.url ? "file" : "link" })) || [])
       setHints(assignment.hints || [])
       setIsCoding(assignment.isCoding || false)
+      setStarterCode(assignment.starterCode || "")
     }
   }, [assignment, mode])
 
@@ -77,6 +79,7 @@ const AssignmentModal = ({
         description,
         resources,
         hints,
+        starterCode: isCoding ? starterCode : "",
         submissions: mode === "create" ? [] : assignment!.submissions,
       }
 
@@ -111,6 +114,7 @@ const AssignmentModal = ({
     setDescription("")
     setResources([])
     setHints([])
+    setStarterCode("")
     setUploadProgress({})
   }
 
@@ -323,7 +327,7 @@ const AssignmentModal = ({
                     id="description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Enter assignment description. Use ``` to create code blocks."
+                    placeholder="Enter assignment description. Use \`\`\` to create code blocks."
                     className="min-h-[8rem] resize-y"
                     required
                   />
@@ -444,8 +448,46 @@ const AssignmentModal = ({
                 onChange={() => setIsCoding(!isCoding)}
                 className="mr-2"
               />
-              <Label htmlFor="isCoding" className="text-sm font-medium">Create as Coding Assignment</Label>
+              <Label htmlFor="isCoding" className="text-sm font-medium">
+                Create as Coding Assignment
+              </Label>
             </div>
+
+            {isCoding && (
+              <div className="mt-4">
+                <Label htmlFor="starterCode" className="text-sm font-medium">
+                  Starter Code
+                </Label>
+                <Tabs defaultValue="edit" className="w-full mt-1">
+                  <TabsList className="grid w-full grid-cols-2 mb-2">
+                    <TabsTrigger value="edit">Edit</TabsTrigger>
+                    <TabsTrigger value="preview">Preview</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="edit" className="mt-0">
+                    <Textarea
+                      id="starterCode"
+                      value={starterCode}
+                      onChange={(e) => setStarterCode(e.target.value)}
+                      placeholder="Enter starter code for students..."
+                      className="font-mono min-h-[12rem] resize-y"
+                    />
+                  </TabsContent>
+                  <TabsContent value="preview" className="mt-0">
+                    <Card>
+                      <CardContent className="p-4 min-h-[12rem]">
+                        {starterCode ? (
+                          <pre className="bg-muted p-4 rounded-md overflow-x-auto">
+                            <code className="font-mono text-sm">{starterCode}</code>
+                          </pre>
+                        ) : (
+                          <p className="text-muted-foreground">No starter code to preview</p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                </Tabs>
+              </div>
+            )}
           </div>
 
           <div className="flex justify-end space-x-2 pt-2">

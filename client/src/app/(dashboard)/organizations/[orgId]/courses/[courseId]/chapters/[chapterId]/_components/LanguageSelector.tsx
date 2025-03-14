@@ -97,7 +97,7 @@ function LanguageSelector({ assignment }: LanguageSelectorProps) {
 
             <div className="max-h-[280px] overflow-y-auto overflow-x-hidden">
               {Object.values(LANGUAGE_CONFIG).map((lang, index) => {
-                const isDisabled = lang.id !== assignment.language;
+                const isDisabled = lang.id !== assignment.language?.toLowerCase();
 
                 return (
                   <motion.div

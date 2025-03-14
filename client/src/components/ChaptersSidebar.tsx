@@ -57,7 +57,6 @@ const ChaptersSidebar = () => {
     }
   }, [course, chapterId, expandedSections])
 
-  // Check if sidebar should be collapsed based on screen size
   useEffect(() => {
     const checkScreenSize = () => {
       setSidebarCollapsed(window.innerWidth < 1024)
@@ -168,7 +167,7 @@ const ChaptersSidebar = () => {
 
 const Section = ({
   section,
-  index,
+  index, // This is already the section index
   sectionProgress,
   chapterId,
   courseId,
@@ -219,6 +218,7 @@ const Section = ({
             isQuizCompleted={isQuizCompleted}
             isAssignmentsCompleted={isAssignmentsCompleted}
             collapsed={collapsed}
+            sectionIndex={index} // Pass the section index
           />
         )}
       </div>
@@ -275,6 +275,7 @@ const Section = ({
           isQuizCompleted={isQuizCompleted}
           isAssignmentsCompleted={isAssignmentsCompleted}
           collapsed={collapsed}
+          sectionIndex={index} // Pass the section index
         />
       </CollapsibleContent>
     </Collapsible>
@@ -340,6 +341,7 @@ const ChaptersList = ({
   isQuizCompleted,
   isAssignmentsCompleted,
   collapsed,
+  sectionIndex, // Add this new prop
 }: {
   section: Section
   sectionProgress: any
@@ -352,6 +354,7 @@ const ChaptersList = ({
   isQuizCompleted: (chapterId: string) => boolean
   isAssignmentsCompleted: (chapterId: string) => boolean
   collapsed?: boolean
+  sectionIndex: number // Add this new prop type
 }) => {
   if (!isReleased) {
     return null
@@ -375,6 +378,7 @@ const ChaptersList = ({
           isQuizCompleted={isQuizCompleted}
           isAssignmentsCompleted={isAssignmentsCompleted}
           collapsed={collapsed}
+          sectionIndex={sectionIndex} // Pass the section index
         />
       ))}
     </ul>
@@ -395,6 +399,7 @@ const Chapter = ({
   isQuizCompleted,
   isAssignmentsCompleted,
   collapsed,
+  sectionIndex, // Add this new prop
 }: {
   chapter: Chapter
   index: number
@@ -409,6 +414,7 @@ const Chapter = ({
   isQuizCompleted: (chapterId: string) => boolean
   isAssignmentsCompleted: (chapterId: string) => boolean
   collapsed?: boolean
+  sectionIndex: number // Add this new prop type
 }) => {
   const completed = isChapterCompleted(sectionId, chapter.chapterId)
   const quizCompleted = isQuizCompleted(chapter.chapterId)
@@ -428,6 +434,9 @@ const Chapter = ({
     if (!isReleased) return
     handleChapterClick(sectionId, chapter.chapterId)
   }
+
+  // Create section.chapter format (e.g., 1.1, 1.2, etc.)
+  const chapterNumber = `${sectionIndex + 1}.${index + 1}`
 
   if (collapsed) {
     return (
@@ -456,7 +465,7 @@ const Chapter = ({
                     isCurrentChapter ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground",
                   )}
                 >
-                  {!isReleased ? <Lock className="h-4 w-4" /> : index + 1}
+                  {!isReleased ? <Lock className="h-4 w-4" /> : chapterNumber}
                 </div>
               )}
             </li>
@@ -515,7 +524,7 @@ const Chapter = ({
               isCurrentChapter ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground",
             )}
           >
-            {!isReleased ? <Lock className="h-3 w-3" /> : index + 1}
+            {!isReleased ? <Lock className="h-3 w-3" /> : chapterNumber}
           </div>
         )}
 

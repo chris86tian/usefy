@@ -321,10 +321,10 @@ const Course = () => {
         <div className="flex items-center gap-2 text-muted-foreground">
           <Calendar className="h-4 w-4" />
           <p>
-            Available on{" "}
+            Available {" "}
             {currentSection.releaseDate
               ? new Date(currentSection.releaseDate).toLocaleDateString()
-              : "Unknown release date"}
+              : "soon"}
           </p>
         </div>
         {hasPreviousChapter && (

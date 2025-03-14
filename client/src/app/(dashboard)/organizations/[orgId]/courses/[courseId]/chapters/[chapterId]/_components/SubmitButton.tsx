@@ -71,7 +71,6 @@ function SubmitButton({ courseId, sectionId, chapterId, assignmentId, assignment
 
     try {
       const result = await handleCodeExecution();
-      console.error("Execution result:", result);
       if (!result) return;
 
       await createAssignmentSubmission(result);

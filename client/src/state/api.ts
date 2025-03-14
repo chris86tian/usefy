@@ -435,12 +435,12 @@ export const api = createApi({
 
     addCourseInstructor: build.mutation<
       { message: string },
-      { courseId: string; userId: string }
+      { courseId: string; userId?: string; email?: string }
     >({
-      query: ({ courseId, userId }) => ({
+      query: ({ courseId, userId, email }) => ({
         url: `courses/${courseId}/instructors`,
         method: "POST",
-        body: { userId },
+        body: userId ? { userId } : { email },
       }),
     }),
 

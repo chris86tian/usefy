@@ -37,7 +37,7 @@ function EditorPanel({ assignment }: EditorPanelProps) {
   }, [setFontSize])
 
   const handleRefresh = () => {
-    const defaultCode = LANGUAGE_CONFIG[language].defaultCode
+    const defaultCode = LANGUAGE_CONFIG[language.toLowerCase()].defaultCode
     if (editor) editor.setValue(defaultCode)
     localStorage.removeItem(`editor-code-${language}`)
   }

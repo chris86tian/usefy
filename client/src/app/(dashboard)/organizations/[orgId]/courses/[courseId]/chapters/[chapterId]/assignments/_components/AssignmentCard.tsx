@@ -49,14 +49,14 @@ const Description = ({ text }: { text: string }) => {
                 variant="outline"
                 size="sm"
                 onClick={() => toggleSection(index)}
-                className="w-full mb-1 flex items-center justify-between text-sm"
+                className="w-full flex items-center justify-between text-sm"
               >
                 <span>Code Block {Math.ceil(index / 2)}</span>
                 <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? "transform rotate-180" : ""}`} />
               </Button>
               <Collapsible open={isOpen}>
                 <CollapsibleContent>
-                  <pre className="bg-muted p-4 rounded-lg overflow-x-auto font-mono text-sm">
+                  <pre className="bg-muted rounded-lg overflow-x-auto font-mono text-sm">
                     <code>{part.trim()}</code>
                   </pre>
                 </CollapsibleContent>
@@ -88,7 +88,7 @@ const Description = ({ text }: { text: string }) => {
               </Button>
               <Collapsible open={isOpen}>
                 <CollapsibleContent>
-                  <p className="text-sm text-muted-foreground whitespace-pre-wrap mt-2">{part}</p>
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">{part}</p>
                 </CollapsibleContent>
               </Collapsible>
             </div>
@@ -172,7 +172,7 @@ export function AssignmentCard({ assignment, isAuthorized, course, sectionId, ch
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-4 p-4">
+        <CardContent className="space-y-2 p-4">
           <Description text={assignment.description} />
 
           {assignment.resources && assignment.resources.length > 0 ? (

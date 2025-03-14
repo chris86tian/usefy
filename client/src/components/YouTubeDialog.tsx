@@ -52,7 +52,7 @@ const YouTubeDialog = ({ isOpen, onClose, onSubmit }: YouTubeDialogProps) => {
           generateQuizzes,
           generateAssignments,
           codingAssignments,
-          language: codingAssignments ? language : undefined,
+          language: codingAssignments ? language : "python",
         }),
       })
 

@@ -11,6 +11,9 @@ import {
   useUpdateCourseMutation,
   useGetUploadVideoUrlMutation,
   useGetUploadImageUrlMutation,
+  useAddCourseInstructorMutation,
+  useRemoveCourseInstructorMutation,
+  useGetCourseInstructorsQuery,
 } from "@/state/api"
 import { useAppDispatch, useAppSelector } from "@/state/redux"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -27,13 +30,17 @@ import Image from "next/image"
 import YouTubeDialog from "@/components/YouTubeDialog"
 import { v4 as uuid } from "uuid"
 import { useRouter } from "next/navigation"
+import InstructorEmailInput from "./EmailInvite"
 
 const CourseEditor = () => {
   const { orgId, courseId } = useParams() as { orgId: string; courseId: string }
   const { data: course, isLoading, refetch } = useGetCourseQuery(courseId)
+  const { data: instructors, refetch: refetchInstructors } = useGetCourseInstructorsQuery(courseId)
   const [updateCourse, { isLoading: isUpdating }] = useUpdateCourseMutation()
   const [getUploadVideoUrl] = useGetUploadVideoUrlMutation()
   const [getUploadImageUrl] = useGetUploadImageUrlMutation()
+  const [addCourseInstructor] = useAddCourseInstructorMutation()
+  const [removeCourseInstructor] = useRemoveCourseInstructorMutation()
   const [isUploading, setIsUploading] = useState(false)
   const [progress, setProgress] = useState(0)
   const [image, setImage] = useState<File | null>(null)
@@ -95,10 +102,11 @@ const CourseEditor = () => {
                   quiz: newChapter.quiz
                     ? {
                         quizId: existingChapter.quiz?.quizId || uuid(),
-                        questions: existingChapter?.quiz?.questions?.map((question) => ({
-                          ...question,
-                          questionId: uuid(),
-                        })) || [],
+                        questions:
+                          existingChapter?.quiz?.questions?.map((question) => ({
+                            ...question,
+                            questionId: uuid(),
+                          })) || [],
                       }
                     : existingChapter.quiz || undefined,
                   assignments:
@@ -116,10 +124,11 @@ const CourseEditor = () => {
                   quiz: newChapter.quiz
                     ? {
                         quizId: uuid(),
-                        questions: newChapter.quiz.questions?.map((question) => ({
-                          ...question,
-                          questionId: uuid(),
-                        })) || [],
+                        questions:
+                          newChapter.quiz.questions?.map((question) => ({
+                            ...question,
+                            questionId: uuid(),
+                          })) || [],
                       }
                     : undefined,
                   assignments:
@@ -145,10 +154,11 @@ const CourseEditor = () => {
               quiz: chapter.quiz
                 ? {
                     quizId: uuid(),
-                    questions: chapter.quiz.questions?.map((question) => ({
-                      ...question,
-                      questionId: uuid(),
-                    })) || [],
+                    questions:
+                      chapter.quiz.questions?.map((question) => ({
+                        ...question,
+                        questionId: uuid(),
+                      })) || [],
                   }
                 : undefined,
               assignments:
@@ -169,6 +179,32 @@ const CourseEditor = () => {
       toast.error("An error occurred while generating course content.")
     } finally {
       setIsGenerating(false)
+    }
+  }
+
+  const handleAddInstructor = async (email: string) => {
+    try {
+      await addCourseInstructor({
+        courseId,
+        email,
+      }).unwrap()
+      refetchInstructors()
+    } catch (error) {
+      console.error("Failed to add instructor:", error)
+      throw error
+    }
+  }
+
+  const handleRemoveInstructor = async (instructorId: string) => {
+    try {
+      await removeCourseInstructor({
+        courseId,
+        userId: instructorId,
+      }).unwrap()
+      refetchInstructors()
+    } catch (error) {
+      console.error("Failed to remove instructor:", error)
+      throw error
     }
   }
 
@@ -267,6 +303,13 @@ const CourseEditor = () => {
     }
   }
 
+  // Format instructors data for the InstructorEmailInput component
+  const formattedInstructors =
+    instructors?.map((instructor) => ({
+      id: instructor.id,
+      email: instructor.emailAddresses[0]?.emailAddress || "Unknown email",
+    })) || []
+
   return (
     <div className="dark:text-gray-100">
       <div className="flex items-center gap-5 mb-5">
@@ -296,8 +339,8 @@ const CourseEditor = () => {
                   }`}
                   inputClassName="data-[state=checked]:bg-green-500"
                 />
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   className="bg-blue-700 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700"
                   disabled={isUploading || isUpdating}
                 >
@@ -340,7 +383,9 @@ const CourseEditor = () => {
 
                 <div className="space-y-2 flex flex-between">
                   <div className="flex flex-col">
-                    <label className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Upload Thumbnail</label>
+                    <label className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
+                      Upload Thumbnail
+                    </label>
                     <input
                       type="file"
                       accept="image/*"
@@ -348,6 +393,15 @@ const CourseEditor = () => {
                       className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border file:border-gray-300 dark:file:border-gray-600 file:bg-gray-100 dark:file:bg-gray-700 dark:file:text-gray-200"
                     />
                   </div>
+                </div>
+
+                {/* Instructor Email Input */}
+                <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <InstructorEmailInput
+                    existingInstructors={formattedInstructors}
+                    onAddInstructor={handleAddInstructor}
+                    onRemoveInstructor={handleRemoveInstructor}
+                  />
                 </div>
               </div>
             </div>
@@ -366,7 +420,9 @@ const CourseEditor = () => {
                     disabled={isGenerating}
                   >
                     <Plus className="h-4 w-4 text-blue-700 dark:text-blue-400 group-hover:text-blue-800 dark:group-hover:text-blue-300" />
-                    <span className="text-blue-700 dark:text-blue-400 group-hover:text-blue-800 dark:group-hover:text-blue-300">Add Section</span>
+                    <span className="text-blue-700 dark:text-blue-400 group-hover:text-blue-800 dark:group-hover:text-blue-300">
+                      Add Section
+                    </span>
                   </Button>
                   <Button
                     type="button"
@@ -400,7 +456,9 @@ const CourseEditor = () => {
                     />
                     <p className="text-gray-800 dark:text-gray-200">Generating course content from video...</p>
                   </div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">This may take a few moments as we analyze the video content.</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    This may take a few moments as we analyze the video content.
+                  </p>
 
                   <Button
                     type="button"
@@ -437,3 +495,4 @@ const CourseEditor = () => {
 }
 
 export default CourseEditor
+

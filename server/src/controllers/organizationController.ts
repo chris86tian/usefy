@@ -427,7 +427,6 @@ export const inviteUserToOrganization = async (req: Request, res: Response): Pro
     const { list, title, message } = roleMapping[role];
 
     if (user) {
-      // Check if user is already in the list
       if (list.some((u) => u.userId === user?.id)) {
         res.status(400).json({ message: "User is already in the organization" });
         return;
@@ -503,7 +502,6 @@ export const inviteUserToCohort = async (req: Request, res: Response): Promise<v
     const list = roleMapping[role];
 
     if (user) {
-      // If the user exists, check if they are already in the cohort
       if (list.some((u) => u.userId === user?.id)) {
         res.status(400).json({ message: "User is already in the cohort" });
         return;
@@ -536,7 +534,6 @@ export const inviteUserToCohort = async (req: Request, res: Response): Promise<v
 
       res.json({ message: "User added to cohort successfully", data: cohort });
     } else {
-      // If the user does not exist, create a new user
       user = await clerkClient.users.createUser({
         emailAddress: [email],
         password: generateTemporaryPassword(),
@@ -545,7 +542,6 @@ export const inviteUserToCohort = async (req: Request, res: Response): Promise<v
 
       list.push({ userId: user.id });
 
-      // Add new user to organization based on their role
       if (role === 'learner') {
         organization.learners.push({ userId: user.id });
       } else if (role === 'instructor') {
@@ -617,7 +613,6 @@ export const removeUserFromOrganization = async (req: Request, res: Response): P
       return;
     }
 
-    // Remove user from the specified role in the organization
     switch (role) {
       case "admin":
         organization.admins = organization.admins.filter((admin: { userId: string }) => admin.userId !== userId);

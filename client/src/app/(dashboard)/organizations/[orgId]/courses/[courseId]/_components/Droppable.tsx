@@ -19,6 +19,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { cn } from "@/lib/utils"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Switch } from "@/components/ui/switch"
 
 export default function DroppableComponent() {
   const dispatch = useAppDispatch()
@@ -50,19 +51,10 @@ export default function DroppableComponent() {
     dispatch(setSections(updatedSections))
   }
 
-  const releaseAllSections = () => {
-    const releaseDate = new Date().toISOString()
+  const toggleSectionLock = () => {
     const updatedSections = sections.map((section) => ({
       ...section,
-      releaseDate,
-    }))
-    dispatch(setSections(updatedSections))
-  }
-
-  const lockAllSections = () => {
-    const updatedSections = sections.map((section) => ({
-      ...section,
-      releaseDate: "",
+      releaseDate: section.releaseDate ? "" : new Date().toISOString(),
     }))
     dispatch(setSections(updatedSections))
   }
@@ -70,14 +62,15 @@ export default function DroppableComponent() {
   return (
     <div className="space-y-6">
       <div className="flex justify-end gap-2">
-        <Button onClick={lockAllSections} variant="outline" size="sm">
-          <Lock className="h-4 w-4 mr-2" />
-          Lock All Sections
-        </Button>
-        <Button onClick={releaseAllSections} variant="outline" size="sm">
-          <Unlock className="h-4 w-4 mr-2" />
-          Unlock All Sections
-        </Button>
+        <Switch
+          checked={sections.every(section => section.releaseDate === "")}
+          onCheckedChange={toggleSectionLock}
+        >
+          {sections.every(section => section.releaseDate === "") ? "Unlock All Sections" : "Lock All Sections"}
+        </Switch>
+        <p className="text-muted-foreground text-sm">
+          {sections.every(section => section.releaseDate === "") ? "All sections are unlocked" : "All sections are locked"}
+        </p>
       </div>
 
       <DragDropContext onDragEnd={handleSectionDragEnd}>
