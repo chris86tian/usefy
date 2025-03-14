@@ -46,11 +46,22 @@ const ChapterModal = () => {
   const [videoType, setVideoType] = useState<"file" | "link">("file");
   const [questions, setQuestions] = useState<Question[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [files, setFiles] = useState<
+    {
+      fileId: string;
+      title: string;
+      fileUrl?: string;
+      description?: string;
+      file?: File;
+    }[]
+  >([]);
 
   const [isQuizSectionOpen, setIsQuizSectionOpen] = useState(true);
   const [isAssignmentSectionOpen, setIsAssignmentSectionOpen] = useState(true);
+  const [isFileSectionOpen, setIsFileSectionOpen] = useState(true);
   const [expandedAssignments, setExpandedAssignments] = useState<string[]>([]);
   const [expandedQuestions, setExpandedQuestions] = useState<number[]>([]);
+  const [expandedFiles, setExpandedFiles] = useState<string[]>([]);
 
   const methods = useForm<ChapterFormData>({
     resolver: zodResolver(chapterSchema),
@@ -278,6 +289,33 @@ const ChapterModal = () => {
       `Chapter updated successfully but you need to save the course to apply the changes`
     );
     onClose();
+  };
+
+  const addFile = () => {
+    const newFile = {
+      fileId: uuidv4(),
+      title: "",
+    };
+    setFiles((prev) => [...prev, newFile]);
+    setExpandedFiles((prev) => [...prev, newFile.fileId]);
+  };
+
+  const removeFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const toggleFile = (fileId: string) => {
+    setExpandedFiles((prev) =>
+      prev.includes(fileId)
+        ? prev.filter((id) => id !== fileId)
+        : [...prev, fileId]
+    );
+  };
+
+  const updateFile = (index: number, field: string, value: string | File) => {
+    setFiles((prev) =>
+      prev.map((file, i) => (i === index ? { ...file, [field]: value } : file))
+    );
   };
 
   return (
