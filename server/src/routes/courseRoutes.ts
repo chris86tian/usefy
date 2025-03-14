@@ -18,6 +18,7 @@ import {
   getAssignment,
   updateAssignment,
   createSubmission,
+  getUploadFileUrl,
   createComment,
   upvoteComment,
   downvoteComment,
@@ -137,6 +138,12 @@ router.post(
   "/:courseId/sections/:sectionId/chapters/:chapterId/assignments/:assignmentId/submit",
   requireAuth(),
   createSubmission
+);
+
+router.post(
+  "/:courseId/sections/:sectionId/chapters/:chapterId/get-upload-file-url",
+  requireAuth(),
+  getUploadFileUrl
 );
 
 router.post(

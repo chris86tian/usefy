@@ -142,8 +142,8 @@ declare global {
     fileId: string;
     title: string;
     description: string;
-    fileUrl?: string;
     file?: File;
+    fileUrl?: string;
   }
 
   interface Chapter {

@@ -222,6 +222,28 @@ const chapterSchema = new Schema({
       }),
     ],
   },
+  files: {
+    type: Array,
+    schema: [
+      new Schema({
+        fileId: {
+          type: String,
+          required: true,
+        },
+        title: {
+          type: String,
+          required: true,
+        },
+        description: {
+          type: String,
+        },
+        fileUrl: {
+          type: String,
+          required: true,
+        },
+      }),
+    ],
+  },
 });
 
 const sectionSchema = new Schema({
