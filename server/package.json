@@ -54,6 +54,7 @@
     "env-cmd": "^10.1.0",
     "nodemon": "^3.1.9",
     "rimraf": "^5.0.10",
+    "serverless": "^4.8.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.2"
   }

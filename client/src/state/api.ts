@@ -592,6 +592,30 @@ export const api = createApi({
         body: submission,
       }),
     }),
+
+    /* 
+    ===============
+    FILE UPLOADS (PDF)
+    =============== 
+    */
+
+    getUploadFileUrl: build.mutation<
+      { uploadUrl: string; fileUrl: string },
+      {
+        courseId: string;
+        sectionId: string;
+        chapterId: string;
+        fileName: string;
+        fileType: string;
+      }
+    >({
+      query: ({ courseId, sectionId, chapterId, fileName, fileType }) => ({
+        url: `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/get-upload-file-url`,
+        method: "POST",
+        body: { fileName, fileType },
+      }),
+    }),
+
     /* 
     ===============
     TRANSACTIONS
@@ -984,6 +1008,7 @@ export const {
   useUpdateAssignmentMutation,
   useGetAssignmentQuery,
   useCreateSubmissionMutation,
+  useGetUploadFileUrlMutation,
   useGetTransactionsQuery,
   useCreateTransactionMutation,
   useCreateStripePaymentIntentMutation,
