@@ -4,10 +4,9 @@ import { Id } from "../../convex/_generated/dataModel";
 import monaco from "monaco-editor";
 
 declare global {
-
   interface UserStats {
-    week: string
-    progress: number
+    week: string;
+    progress: number;
   }
 
   interface TimeTrackingRecord {
@@ -19,7 +18,7 @@ declare global {
     durationMs: number;
     trackedAt: string;
     date: string;
-  }   
+  }
 
   interface CourseAnalytics {
     courseId: string;
@@ -29,7 +28,7 @@ declare global {
     }[];
     totalTimeSpent: number;
   }
-  
+
   interface Snippet {
     _id: Id<"snippets">;
     _creationTime: number;
@@ -39,7 +38,7 @@ declare global {
     title: string;
     userName: string;
   }
-  
+
   interface ExecutionResult {
     code: string;
     output: string;
@@ -50,7 +49,7 @@ declare global {
       explanation: string;
     };
   }
-  
+
   interface CodeEditorState {
     language: string;
     output: string;
@@ -62,7 +61,7 @@ declare global {
     editor: monaco.editor.IStandaloneCodeEditor | null;
     task: string;
     executionResult: ExecutionResult | null;
-  
+
     setEditor: (editor: monaco.editor.IStandaloneCodeEditor) => void;
     getCode: () => string;
     setLanguage: (language: string) => void;
@@ -70,8 +69,8 @@ declare global {
     setFontSize: (fontSize: number) => void;
     runCode: () => Promise<void>;
     submitCode: (task: string) => Promise<void>;
-  }  
-  
+  }
+
   interface PaymentMethod {
     methodId: string;
     type: string;
@@ -85,13 +84,13 @@ declare global {
     displayMode?: "light" | "dark" | "system";
     language?: "english" | "spanish" | "french";
     timeZone?: "UTC" | "EST" | "PST";
-    
+
     // Notification Settings
     emailAlerts?: boolean;
     smsAlerts?: boolean;
     courseNotifications?: boolean;
     notificationFrequency?: "immediate" | "daily" | "weekly";
-    
+
     // Course Notifications
     assignmentReminders?: boolean;
     dueDateAlerts?: boolean;
@@ -99,18 +98,18 @@ declare global {
     courseAnnouncements?: boolean;
     instructorMessages?: boolean;
     peerInteractions?: boolean;
-    
+
     // Learning Preferences
     contentDifficulty?: "beginner" | "intermediate" | "advanced" | "adaptive";
     autoPlayVideos?: boolean;
     showCaptions?: boolean;
-    
+
     // Privacy Settings
     profileVisibility?: "all" | "coursemates" | "private";
     showOnlineStatus?: boolean;
     shareProgress?: boolean;
     allowMessageFromPeers?: boolean;
-    
+
     // Study Preferences
     dailyGoalHours?: number;
     preferredStudyTime?: "morning" | "afternoon" | "evening" | "anytime";
@@ -120,14 +119,14 @@ declare global {
 
   interface Course {
     courseId: string;
-    instructors?: { userId: string }[]
+    instructors?: { userId: string }[];
     title: string;
     description?: string;
     image?: string;
     price?: number;
     status: "Draft" | "Published" | "Archived";
     sections: Section[];
-    enrollments?: { userId: string }[]
+    enrollments?: { userId: string }[];
   }
 
   interface Section {
@@ -153,22 +152,22 @@ declare global {
   }
 
   interface ChapterComment {
-    id: string
-    userId: string
-    username: string
-    content: string
-    upvotes?: number
-    downvotes?: number
-    createdAt: string
-    replies: Reply[]
+    id: string;
+    userId: string;
+    username: string;
+    content: string;
+    upvotes?: number;
+    downvotes?: number;
+    createdAt: string;
+    replies: Reply[];
   }
-  
+
   interface Reply {
-    id: string
-    userId: string
-    username: string
-    content: string
-    createdAt: string
+    id: string;
+    userId: string;
+    username: string;
+    content: string;
+    createdAt: string;
   }
 
   interface Transaction {
@@ -252,11 +251,11 @@ declare global {
   }
 
   interface Question {
-    questionId: string
-    question: string
-    difficulty?: "easy" | "medium" | "hard"
-    options: string[]
-    correctAnswer: number
+    questionId: string;
+    question: string;
+    difficulty?: "easy" | "medium" | "hard";
+    options: string[];
+    correctAnswer: number;
   }
 
   interface Commit {
@@ -364,18 +363,18 @@ declare global {
   }
 
   interface CodeProps {
-    searchParams: Promise<{ 
+    searchParams: Promise<{
       courseId: string;
       sectionId: string;
       chapterId: string;
       assignmentId: string;
     }>;
-  }  
+  }
 
   interface UserListProps {
-    courseId: string
-    selectedUser: User | undefined
-    onUserSelect: (user: User) => void
+    courseId: string;
+    selectedUser: User | undefined;
+    onUserSelect: (user: User) => void;
   }
 
   interface SubmitButtonProps {
@@ -403,53 +402,53 @@ declare global {
   }
 
   interface UserNotification {
-    notificationId: string
-    userId: string
-    title: string
-    message: string
-    link?: string
-    timestamp: string
+    notificationId: string;
+    userId: string;
+    title: string;
+    message: string;
+    link?: string;
+    timestamp: string;
   }
 
   interface NotificationModalProps {
-    isOpen: boolean
-    onClose: () => void
-    notifications: UserNotification[]
+    isOpen: boolean;
+    onClose: () => void;
+    notifications: UserNotification[];
   }
 
   type ProcessOptions = {
-    generateQuizzes: boolean
-    generateAssignments: boolean
-    codingAssignments: boolean
-    language: string
-  }
-  
+    generateQuizzes: boolean;
+    generateAssignments: boolean;
+    codingAssignments: boolean;
+    language: string;
+  };
+
   interface AssignmentCardProps {
-    assignment: Assignment
-    course: Course
-    sectionId: string
-    chapterId: string
+    assignment: Assignment;
+    course: Course;
+    sectionId: string;
+    chapterId: string;
   }
 
   interface Organization {
-    organizationId: string
-    name: string
-    description: string
-    image: string | null
-    cohorts?: string[]
-    admins: { userId: string }[]
-    instructors: { userId: string }[]
-    learners: { userId: string }[]
-    courses: string[]
+    organizationId: string;
+    name: string;
+    description: string;
+    image: string | null;
+    cohorts?: string[];
+    admins: { userId: string }[];
+    instructors: { userId: string }[];
+    learners: { userId: string }[];
+    courses: string[];
   }
 
   interface Cohort {
-    cohortId: string
-    name: string
-    organizationId: string
-    learners: { userId: string }[]
-    instructors: { userId: string }[]
-    courses: { courseId: string }[]
+    cohortId: string;
+    name: string;
+    organizationId: string;
+    learners: { userId: string }[];
+    instructors: { userId: string }[];
+    courses: { courseId: string }[];
   }
 }
 
