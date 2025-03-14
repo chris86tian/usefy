@@ -417,6 +417,7 @@ declare global {
     message: string;
     link?: string;
     timestamp: string;
+    isRead?: boolean;
   }
 
   interface NotificationModalProps {
