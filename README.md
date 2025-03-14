@@ -148,6 +148,8 @@ The backend is deployed using AWS Lambda and API Gateway with the Serverless Fra
 
 ---
 
+S3 bucket= expertize-bucket-migration-migration
+
 ## OAuth Configuration
 
 To enable Google OAuth, configure the following settings in the Google Cloud Console :
