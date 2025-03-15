@@ -69,14 +69,6 @@ export const getCohorts = async (req: Request, res: Response): Promise<void> => 
     }
 };
 
-export const getMyOrganizationCohorts = async (req: Request, res: Response): Promise<void> => {
-    const organizationId = req.params.organizationId;
-    const auth = getAuth(req);
-    const userId = auth.userId;
-
-    // TODO: getMyOrganizationCohorts
-};
-
 export const getCohort = async (req: Request, res: Response): Promise<void> => {
     const { cohortId } = req.params;
     try {
@@ -154,8 +146,7 @@ export const getCohortLearners = async (req: Request, res: Response): Promise<vo
         console.error("Error retrieving cohort learners:", error);
         res.status(500).json({ message: "Error retrieving cohort learners", error });
     }
-};
-        
+}; 
 
 export const addLearnerToCohort = async (req: Request, res: Response): Promise<void> => {
     const { cohortId } = req.params;
@@ -167,7 +158,6 @@ export const addLearnerToCohort = async (req: Request, res: Response): Promise<v
             return;
         }
 
-        // Check if the learner is already in the cohort
         if (cohort.learners.some((learner: any) => learner.userId === learnerId)) {
             res.status(400).json({ message: "Learner is already in the cohort" });
             return;
@@ -219,7 +209,6 @@ export const removeLearnerFromCohort = async (req: Request, res: Response): Prom
             return;
         }
 
-        // Check if the learner is in the cohort
         if (!cohort.learners.some((learner: any) => learner.userId === learnerId)) {
             res.status(400).json({ message: "Learner is not in the cohort" });
             return;
@@ -293,7 +282,6 @@ export const addCourseToCohort = async (req: Request, res: Response): Promise<vo
             return;
         }
 
-        // Check if the course is already in the cohort
         if (cohort.courses.some((course: any) => course.courseId === courseId)) {
             res.status(400).json({ message: "Course is already in the cohort" });
             return;
@@ -352,7 +340,6 @@ export const removeCourseFromCohort = async (req: Request, res: Response): Promi
             return;
         }
 
-        // Check if the course is in the cohort
         if (!cohort.courses.some((course: any) => course.courseId === courseId)) {
             res.status(400).json({ message: "Course is not in the cohort" });
             return;

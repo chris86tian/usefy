@@ -1,19 +1,28 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import Image from "next/image"
 import { cn, getUserName } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Archive, BarChartBig, ChevronDown, ChevronUp, Pencil, Trash2, Users, Lock, BookOpen, Clock } from 'lucide-react'
+import {
+  Archive,
+  BarChartBig,
+  ChevronDown,
+  ChevronUp,
+  Pencil,
+  Trash2,
+  Users,
+  Lock,
+  BookOpen,
+  CheckCircle,
+} from "lucide-react"
 import { useUser } from "@clerk/nextjs"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Progress } from "@/components/ui/progress"
-import { 
-  useGetCourseInstructorsQuery,
-} from "@/state/api"
+import { useGetCourseInstructorsQuery } from "@/state/api"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import {
   AlertDialog,
@@ -40,6 +49,11 @@ interface CourseCardProps {
   onUnarchive?: (course: Course) => void
   onStats?: (course: Course) => void
   onEnroll?: (course: Course) => void
+  customActions?: Array<{
+    label: string
+    icon?: React.ReactNode
+    onClick: (course: Course) => void
+  }>
 }
 
 export function CourseCard({
@@ -55,9 +69,10 @@ export function CourseCard({
   onUnarchive,
   onStats,
   onEnroll,
+  customActions = [],
 }: CourseCardProps) {
   const { user } = useUser()
-  
+
   const [isInstructorsOpen, setIsInstructorsOpen] = useState(false)
   const [isEnrollDialogOpen, setIsEnrollDialogOpen] = useState(false)
 
@@ -67,11 +82,65 @@ export function CourseCard({
   const canEdit = isOwner || isInstructor
   const showViewOnly = variant === "admin" && !canEdit && !isEnrolled
 
-  const statusVariants = {
-    Published: "default",
-    Draft: "outline",
-    Archived: "secondary",
-  } as const
+  const statusVariants = { Published: "default", Draft: "outline", Archived: "secondary" } as const
+
+  const courseProgress = useMemo(() => {
+    if (!progress || !course.sections || !isEnrolled || !user) return 0
+
+    let totalItems = 0
+    let completedItems = 0
+
+    course.sections.forEach((section) => {
+      section.chapters?.forEach((chapter) => {
+        if (chapter.quiz) {
+          totalItems++
+
+          const sectionProgress = progress.sections?.find((s) => s.sectionId === section.sectionId)
+          const chapterProgress = sectionProgress?.chapters?.find((c) => c.chapterId === chapter.chapterId)
+
+          if (chapterProgress?.quizCompleted) {
+            completedItems++
+          }
+        }
+      })
+    })
+
+    course.sections.forEach((section) => {
+      section.chapters?.forEach((chapter) => {
+        if (chapter.assignments && chapter.assignments.length > 0) {
+          chapter.assignments.forEach((assignment) => {
+            totalItems++
+
+            if (assignment.submissions && assignment.submissions.some((sub) => sub.userId === user.id)) {
+              completedItems++
+            }
+          })
+        }
+      })
+    })
+
+    return totalItems > 0 ? (completedItems / totalItems) * 100 : 0
+  }, [course, progress, user, isEnrolled])
+
+  const totalActivities = useMemo(() => {
+    if (!course.sections) return 0
+
+    let total = 0
+
+    course.sections.forEach((section) => {
+      section.chapters?.forEach((chapter) => {
+        if (chapter.quiz) {
+          total++
+        }
+
+        if (chapter.assignments) {
+          total += chapter.assignments.length
+        }
+      })
+    })
+
+    return total
+  }, [course])
 
   const handleClick = () => {
     if (!isEnrolled && variant === "learner" && !canEdit) {
@@ -96,14 +165,13 @@ export function CourseCard({
     }
   }
 
-  // Format the last accessed date if available
   const formatLastAccessed = (timestamp: string) => {
-    if (!timestamp) return null;
-    const date = new Date(timestamp);
-    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-  };
+    if (!timestamp) return null
+    const date = new Date(timestamp)
+    return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
+  }
 
-  const lastAccessed = progress?.lastAccessedTimestamp ? formatLastAccessed(progress.lastAccessedTimestamp) : null;
+  const lastAccessed = progress?.lastAccessedTimestamp ? formatLastAccessed(progress.lastAccessedTimestamp) : null
 
   return (
     <>
@@ -114,7 +182,10 @@ export function CourseCard({
           showViewOnly && "opacity-70",
         )}
       >
-        <CardHeader className={cn("p-0", variant === "admin" && !showViewOnly && "cursor-pointer")} onClick={handleClick}>
+        <CardHeader
+          className={cn("p-0", variant === "admin" && !showViewOnly && "cursor-pointer")}
+          onClick={handleClick}
+        >
           <div className="aspect-video relative overflow-hidden">
             <Image
               src={course.image || "/placeholder.png"}
@@ -157,26 +228,22 @@ export function CourseCard({
                 <span>{course.sections.length} sections</span>
               </div>
             )}
-            {/* {course.estimatedHours && (
+            {totalActivities > 0 && (
               <div className="flex items-center gap-1">
-                <Clock className="h-3.5 w-3.5" />
-                <span>{course.estimatedHours} hours</span>
+                <CheckCircle className="h-3.5 w-3.5" />
+                <span>{totalActivities} activities</span>
               </div>
-            )} */}
+            )}
           </div>
 
-          {isEnrolled && progress && (
+          {isEnrolled && (
             <div className="space-y-1.5 mt-2">
               <div className="flex justify-between items-center text-xs">
-                <span className="font-medium">Progress</span>
-                <span className="text-primary font-medium">{Math.round(progress.overallProgress)}%</span>
+                <span className="font-medium">Activities completed</span>
+                <span className="text-primary font-medium">{Math.round(courseProgress)}%</span>
               </div>
-              <Progress value={progress.overallProgress} className="h-1.5" />
-              {lastAccessed && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  Last accessed: {lastAccessed}
-                </p>
-              )}
+              <Progress value={courseProgress} className="h-1.5" />
+              {lastAccessed && <p className="text-xs text-muted-foreground mt-1">Last accessed: {lastAccessed}</p>}
             </div>
           )}
 
@@ -279,7 +346,7 @@ export function CourseCard({
                   {isOwner && onDelete && (
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="sm" onClick={(e) => e.stopPropagation()}>
+                        <Button variant="secondary" size="sm" onClick={(e) => e.stopPropagation()}>
                           <Trash2 className="w-4 h-4 mr-2" />
                           Delete
                         </Button>
@@ -304,28 +371,41 @@ export function CourseCard({
                       </AlertDialogContent>
                     </AlertDialog>
                   )}
+
+                  {/* Custom Actions */}
+                  {customActions.map((action, index) => (
+                    <Button
+                      key={`custom-action-${index}`}
+                      variant="secondary"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        action.onClick(course)
+                      }}
+                    >
+                      {action.icon}
+                      {action.label}
+                    </Button>
+                  ))}
                 </>
               ) : (
                 showViewOnly && <p className="text-sm text-muted-foreground italic text-center w-full">View Only</p>
               )}
             </div>
+          ) : isEnrolled ? (
+            <Button onClick={handleClick} variant="default" className="w-full">
+              {courseProgress > 0 ? "Continue Learning" : "Start Course"}
+            </Button>
           ) : (
-            isEnrolled ? (
-              <Button onClick={handleClick} variant="default" className="w-full">
-                {progress && progress.overallProgress > 0 ? "Continue Learning" : "Start Course"}
+            onEnroll && (
+              <Button onClick={handleEnroll} variant="outline" className="w-full font-semibold">
+                Enroll
               </Button>
-            ) : (
-              onEnroll && (
-                <Button onClick={handleEnroll} variant="outline" className="w-full font-semibold">
-                  Enroll
-                </Button>
-              )
             )
           )}
         </CardFooter>
       </Card>
 
-      {/* Enrollment Dialog */}
       <AlertDialog open={isEnrollDialogOpen} onOpenChange={setIsEnrollDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -346,4 +426,3 @@ export function CourseCard({
   )
 }
 
-export default CourseCard

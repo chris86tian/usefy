@@ -61,7 +61,16 @@ export function OrganizationsDropdown() {
   if (!organizations) return null
 
   const handleOrganizationClick = (orgId: string) => {
-    router.push(`/organizations/${orgId}`, { scroll: false })
+    const isAdmin = organizations.find((org) => org.organizationId === orgId)?.admins?.some((admin) => admin.userId === user?.id)
+    const firstCohort = organizations.find((org) => org.organizationId === orgId)?.cohorts?.[0]
+
+    if (isAdmin || isSuperAdmin) {
+      router.push(`/organizations/${orgId}`, { scroll: false })
+    } else if (firstCohort) {
+      router.push(`/organizations/${orgId}/cohorts/${firstCohort}`, { scroll: false })
+    } else {
+      router.push(`/organizations/${orgId}`, { scroll: false })
+    }
   }
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {

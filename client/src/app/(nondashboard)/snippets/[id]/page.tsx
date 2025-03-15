@@ -7,7 +7,7 @@ import { Id } from "../../../../../convex/_generated/dataModel";
 import SnippetLoadingSkeleton from "./_components/SnippetLoadingSkeleton";
 import { Clock, Code, MessageSquare, User } from "lucide-react";
 import { Editor } from "@monaco-editor/react";
-import { defineMonacoThemes, LANGUAGE_CONFIG } from "@/app/(dashboard)/organizations/[orgId]/courses/[courseId]/chapters/[chapterId]/_constants";
+import { defineMonacoThemes, LANGUAGE_CONFIG } from "@/lib/constants";
 import CopyButton from "./_components/CopyButton";
 import Comments from "./_components/Comments";
 import Image from "next/image";

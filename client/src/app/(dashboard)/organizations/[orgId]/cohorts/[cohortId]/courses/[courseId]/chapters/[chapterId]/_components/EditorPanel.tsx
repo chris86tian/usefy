@@ -2,7 +2,7 @@
 
 import { useCodeEditorStore } from "@/hooks/useCodeEditorStore"
 import { useEffect, useState } from "react"
-import { defineMonacoThemes, LANGUAGE_CONFIG } from "../_constants"
+import { defineMonacoThemes, LANGUAGE_CONFIG } from "@/lib/constants"
 import { Editor } from "@monaco-editor/react"
 import Image from "next/image"
 import { RotateCcwIcon, TypeIcon } from "lucide-react"

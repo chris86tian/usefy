@@ -1,45 +1,83 @@
 "use client"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Spinner } from "@/components/ui/Spinner"
-import { BookOpen, Users } from "lucide-react"
-import { getUserName, handleEnroll } from "@/lib/utils"
-import type { User } from "@clerk/nextjs/server"
-import { useUser } from "@clerk/nextjs"
-import { useCreateTransactionMutation } from "@/state/api"
-import { toast } from "sonner"
-import { useParams } from "next/navigation"
-import Header from "@/components/Header"
-import { useRouter } from "next/navigation"
-import { 
-  useGetCohortLearnersQuery,
-  useGetCohortQuery,
-} from "@/state/api"
 
-interface UserCohortPageProps {
-  orgUsers: { instructors: User[], learners: User[], admins: User[] }
-  usersLoading: boolean
+import { useState, useMemo } from "react"
+import { useRouter, useParams } from "next/navigation"
+import Header from "@/components/Header"
+import { Toolbar } from "@/components/Toolbar"
+import { CourseCard } from "@/components/CourseCard"
+import { Archive } from "lucide-react"
+import { toast } from "sonner"
+import { useUser } from "@clerk/nextjs"
+import { getUserName, handleEnroll } from "@/lib/utils"
+import { useCreateTransactionMutation, useGetMyUserCourseProgressesQuery, useGetCohortQuery } from "@/state/api"
+import { Spinner } from "@/components/ui/Spinner"
+import type { User } from "@clerk/nextjs/server"
+import ArchivedOverlay from "./_components/ArchivedOverlay"
+
+interface UserCohortProps {
+  orgUsers: { instructors: User[]; learners: User[]; admins: User[] }
+  coursesLoading: boolean
   courses: Course[]
+  refetch: () => void
 }
 
-const UserCohortPage = ({ orgUsers, usersLoading, courses }: UserCohortPageProps) => {
+const UserCohort = ({ orgUsers, coursesLoading, courses, refetch }: UserCohortProps) => {
   const { user } = useUser()
   const router = useRouter()
   const { orgId, cohortId } = useParams()
-  
-  const { data: cohort, isLoading: cohortLoading, refetch } = useGetCohortQuery({ organizationId: orgId as string, cohortId: cohortId as string }, { skip: !orgId || !cohortId })
-  const { data: learners, isLoading: cohortLearnersLoading } = useGetCohortLearnersQuery({ organizationId: cohort?.organizationId as string, cohortId: cohort?.cohortId as string }, { skip: !cohort })
 
+  const { data: cohort, isLoading: cohortLoading } = useGetCohortQuery(
+    { organizationId: orgId as string, cohortId: cohortId as string },
+    { skip: !orgId || !cohortId },
+  )
+
+  const [searchTerm, setSearchTerm] = useState("")
+  const [showArchived, setShowArchived] = useState(false)
+
+  const { data: progresses } = useGetMyUserCourseProgressesQuery(orgId as string)
   const [createTransaction] = useCreateTransactionMutation()
 
-  const getInstructorName = (instructorId: string) => {
-    const instructor = orgUsers?.instructors?.find((i: User) => i.id === instructorId)
-    return instructor ? getUserName(instructor) : instructorId
+  const progressesByCourseId = useMemo(() => {
+    if (!progresses) return {}
+
+    return progresses.reduce(
+      (acc, progress) => {
+        acc[progress.courseId] = progress
+        return acc
+      },
+      {} as Record<string, UserCourseProgress>,
+    )
+  }, [progresses])
+
+  const filteredCourses = useMemo(() => {
+    if (!courses) return []
+
+    return courses.filter((course) => {
+      const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase())
+      const matchesArchiveStatus = showArchived ? true : course.status !== "Archived"
+      return matchesSearch && matchesArchiveStatus
+    })
+  }, [courses, searchTerm, showArchived])
+
+  const handleGoToCourse = (course: Course) => {
+    if (course.status === "Archived") {
+      toast.error("This course is archived and no longer available")
+      return
+    }
+
+    if (course.sections && course.sections.length > 0 && course.sections[0].chapters.length > 0) {
+      const firstChapter = course.sections[0].chapters[0]
+      router.push(`/organizations/${orgId}/cohorts/${cohortId}/courses/${course.courseId}/chapters/${firstChapter.chapterId}`, {
+        scroll: false,
+      })
+    } else {
+      router.push(`/organizations/${orgId}/cohorts/${cohortId}/courses/${course.courseId}`, {
+        scroll: false,
+      })
+    }
   }
 
-  const handleCourseClick = (course: Course) => {
+  const handleCourseEnroll = (course: Course) => {
     if (!user) {
       toast.error("You must be logged in to enroll in courses")
       return
@@ -51,19 +89,23 @@ const UserCohortPage = ({ orgUsers, usersLoading, courses }: UserCohortPageProps
       handleEnroll(user.id, course.courseId, createTransaction)
         .then(() => {
           toast.success(`Successfully enrolled in ${course.title}`)
+          if (course.sections && course.sections.length > 0 && course.sections[0].chapters.length > 0) {
+            router.push(
+              `/organizations/${orgId}/cohorts/${cohortId}/courses/${course.courseId}/chapters/${course.sections[0].chapters[0].chapterId}`,
+            )
+          }
           refetch()
         })
         .catch((error) => {
           console.error("Enrollment error:", error)
           toast.error("Failed to enroll in course")
         })
-        router.push(`/organizations/${orgId}/courses/${course.courseId}/chapters/${course.sections[0].chapters[0].chapterId}`)
     } else {
       toast.info("You are already enrolled in this course")
     }
   }
 
-  if (cohortLoading || usersLoading) {
+  if (coursesLoading || cohortLoading) {
     return <Spinner />
   }
 
@@ -71,105 +113,55 @@ const UserCohortPage = ({ orgUsers, usersLoading, courses }: UserCohortPageProps
     return <div>Cohort not found</div>
   }
 
+  const archivedCount = courses?.filter((course) => course.status === "Archived").length
+
   return (
-    <div className="space-y-6">
-      <Header title={cohort.name} subtitle="Your cohort courses" />
+    <div className="space-y-4">
+      <Header title={cohort.name} subtitle={`${cohort.name} courses`} />
 
-      <Tabs defaultValue="courses" className="w-full">
-        <TabsList>
-          <TabsTrigger value="courses" className="flex items-center gap-2">
-            <BookOpen className="h-4 w-4" />
-            Courses
-          </TabsTrigger>
-          <TabsTrigger value="members" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Members
-          </TabsTrigger>
-        </TabsList>
+      <div className="flex justify-between items-center">
+        <Toolbar onSearch={setSearchTerm} />
 
-        <TabsContent value="courses" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Enrolled Courses</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Instructor</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {courses?.length > 0 ? (
-                    courses.map((course) => {
-                      const isEnrolled = course?.enrollments?.some((enrollment) => enrollment.userId === user?.id)
-                      return (
-                        <TableRow
-                          key={course.courseId}
-                          className="cursor-pointer hover:bg-accent/50"
-                        >
-                          <TableCell className="font-medium">{course.title}</TableCell>
-                          <TableCell>{getInstructorName(course?.instructors?.[0]?.userId || "")}</TableCell>
-                          <TableCell>
-                            <Badge variant={isEnrolled ? "outline" : "default"} onClick={() => handleCourseClick(course)}>
-                              {isEnrolled ? "In Progress" : "Enroll"}
-                            </Badge>
-                          </TableCell>
-                        </TableRow>
-                      )
-                    })
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={3} className="text-center text-muted-foreground">
-                        No courses in this cohort
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
+        {archivedCount > 0 && (
+          <button
+            onClick={() => setShowArchived(!showArchived)}
+            className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground"
+          >
+            <Archive className="h-4 w-4" />
+            {showArchived ? "Hide archived" : "Show archived"}
+          </button>
+        )}
+      </div>
 
-        <TabsContent value="members" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Cohort Members</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {learners && learners.length > 0 ? (
-                    learners.map((learner: User) => (
-                      <TableRow key={learner.id}>
-                        <TableCell className="font-medium">{getUserName(learner)}</TableCell>
-                        <TableCell>{learner.emailAddresses[0].emailAddress}</TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={2} className="text-center text-muted-foreground">
-                        No members in this cohort
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredCourses.length > 0 ? (
+          filteredCourses.map((course) => {
+            const isEnrolled = course?.enrollments?.some((enrollment) => enrollment.userId === user?.id)
+            const courseProgress = progressesByCourseId[course.courseId]
+
+            return (
+              <div key={course.courseId} className="relative">
+                <CourseCard
+                  course={course}
+                  onView={handleGoToCourse}
+                  onEnroll={handleCourseEnroll}
+                  isEnrolled={isEnrolled}
+                  progress={courseProgress}
+                />
+                {course.status === "Archived" && <ArchivedOverlay />}
+              </div>
+            )
+          })
+        ) : (
+          <div className="col-span-full flex flex-col items-center justify-center min-h-[300px] text-muted-foreground">
+            <p className="text-lg font-medium">No courses found</p>
+            <p className="text-sm">Try adjusting your search or filters</p>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
 
-export default UserCohortPage
+export default UserCohort
 

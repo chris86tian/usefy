@@ -17,11 +17,20 @@ const NotificationDropdown = ({ notifications, refetch }: NotificationDropdownPr
   const router = useRouter()
   const [markAsRead] = useMarkNotificationAsReadMutation()
 
-  const handleNotificationClick = (notification: UserNotification) => {
-    if (notification.link) {
-      router.push(notification.link)
+  const handleNotificationClick = async (notification: UserNotification) => {
+    if (!notification.link) return;
+  
+    try {
+      const response = await fetch(notification.link, { method: "HEAD" });
+      if (response.ok) {
+        router.push(notification.link);
+      } else {
+        console.warn("Invalid link:", notification.link);
+      }
+    } catch (error) {
+      console.error("Error checking link validity:", error);
     }
-  }
+  };
 
   const unreadNotifications = notifications.filter(notification => !notification.isRead);
 

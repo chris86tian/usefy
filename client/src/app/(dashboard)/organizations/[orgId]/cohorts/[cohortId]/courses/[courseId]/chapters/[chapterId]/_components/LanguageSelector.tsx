@@ -1,7 +1,7 @@
 "use client";
 import { useCodeEditorStore } from "@/hooks/useCodeEditorStore";
 import { useEffect, useRef, useState } from "react";
-import { LANGUAGE_CONFIG } from "../_constants";
+import { LANGUAGE_CONFIG } from "@/lib/constants";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { ChevronDownIcon } from 'lucide-react';

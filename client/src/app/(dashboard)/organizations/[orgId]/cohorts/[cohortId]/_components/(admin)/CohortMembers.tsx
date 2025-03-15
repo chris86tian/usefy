@@ -26,13 +26,13 @@ import {
 } from "@/state/api"
 import type { User } from "@clerk/nextjs/server"
 
-interface CohortMembersTabProps {
+interface CohortMembersProps {
   cohort: any
   orgUsers: { instructors: User[]; learners: User[]; admins: User[] }
   refetch: () => void
 }
 
-const CohortMembersTab = ({ cohort, orgUsers, refetch }: CohortMembersTabProps) => {
+const CohortMembers = ({ cohort, orgUsers, refetch }: CohortMembersProps) => {
   const { data: learners, isLoading: cohortLearnersLoading } = useGetCohortLearnersQuery(
     { organizationId: cohort?.organizationId as string, cohortId: cohort?.cohortId as string },
     { skip: !cohort },
@@ -137,8 +137,7 @@ const CohortMembersTab = ({ cohort, orgUsers, refetch }: CohortMembersTabProps) 
 
   return (
     <>
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Cohort Members</h2>
+      <div className="flex justify-end items-center">
         <div className="flex gap-2">
           <Dialog
             open={activeDialog === 'addLearner'}
@@ -288,4 +287,4 @@ const CohortMembersTab = ({ cohort, orgUsers, refetch }: CohortMembersTabProps) 
   )
 }
 
-export default CohortMembersTab
+export default CohortMembers

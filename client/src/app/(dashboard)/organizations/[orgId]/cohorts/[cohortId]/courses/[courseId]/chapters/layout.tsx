@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
-import { usePathname, useRouter } from "next/navigation"
+import { useParams, usePathname, useRouter } from "next/navigation"
 import { Menu, ArrowLeft, ArrowRight, CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -16,6 +16,7 @@ interface ChapterLayoutProps {
 }
 
 export default function ChapterLayout({ children }: ChapterLayoutProps) {
+  const { orgId, cohortId } = useParams()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const pathname = usePathname()
@@ -41,14 +42,14 @@ export default function ChapterLayout({ children }: ChapterLayoutProps) {
   useEffect(() => {
     if (course && chapterId) {
       // Flatten all chapters from all sections
-      const allChapters = course.sections.flatMap((section: any) =>
+      const allChapters = course.sections.flatMap((section) =>
         section.chapters.map((chapter: any) => ({
           ...chapter,
           sectionId: section.sectionId,
         })),
       )
 
-      const currentIndex = allChapters.findIndex((c: any) => c.chapterId === chapterId)
+      const currentIndex = allChapters.findIndex((c) => c.chapterId === chapterId)
 
       if (currentIndex > 0) {
         setPrevChapter(allChapters[currentIndex - 1])
@@ -88,9 +89,9 @@ export default function ChapterLayout({ children }: ChapterLayoutProps) {
     }
   }
 
-  const navigateToChapter = (chapter: any) => {
+  const navigateToChapter = (chapter: Chapter) => {
     if (chapter) {
-      router.push(`/organizations/${currentOrg?.organizationId}/courses/${courseId}/chapters/${chapter.chapterId}`)
+      router.push(`/organizations/${currentOrg?.organizationId}/cohorts/${cohortId}/courses/${courseId}/chapters/${chapter.chapterId}`)
     }
   }
 

@@ -15,7 +15,7 @@ import {
   useGetOrganizationCoursesQuery,
   useGetCohortsQuery,
  } from "@/state/api";
-import CourseCard from "@/components/CourseCard";
+import { CourseCard } from "@/components/CourseCard";
 import { Spinner } from "@/components/ui/Spinner";
 import { useEffect } from "react";
 

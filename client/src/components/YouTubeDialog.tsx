@@ -12,11 +12,10 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Youtube } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { LANGUAGE_CONFIG } from "../app/(dashboard)/organizations/[orgId]/courses/[courseId]/chapters/[chapterId]/_constants";
+import { LANGUAGE_CONFIG } from "@/lib/constants"
 
 type YouTubeDialogProps = {
   isOpen: boolean
@@ -31,7 +30,7 @@ const YouTubeDialog = ({ isOpen, onClose, onSubmit }: YouTubeDialogProps) => {
   const [generateQuizzes, setGenerateQuizzes] = useState(false)
   const [generateAssignments, setGenerateAssignments] = useState(false)
   const [codingAssignments, setCodingAssignments] = useState(false)
-  const [language, setLanguage] = useState(LANGUAGE_CONFIG.python.label)
+  const [language, setLanguage] = useState("Python")
 
   const handleSubmit = async () => {
     if (!isValidYouTubeUrl(youtubeURL)) {
@@ -98,7 +97,6 @@ const YouTubeDialog = ({ isOpen, onClose, onSubmit }: YouTubeDialogProps) => {
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Youtube size={24} />
             Process YouTube Video
           </DialogTitle>
           <DialogDescription>

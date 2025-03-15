@@ -2,7 +2,7 @@
 
 import { useCodeEditorStore } from "@/hooks/useCodeEditorStore";
 import React, { useEffect, useRef, useState } from "react";
-import { THEMES } from "../_constants";
+import { THEMES } from "@/lib/constants";
 import { AnimatePresence, motion } from "framer-motion";
 import { CircleOff, Cloud, Github, Laptop, Moon, Palette, Sun } from 'lucide-react';
 import useMounted from "@/hooks/useMounted";

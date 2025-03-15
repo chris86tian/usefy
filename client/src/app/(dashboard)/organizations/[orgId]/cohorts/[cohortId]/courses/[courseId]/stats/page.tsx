@@ -7,7 +7,7 @@ import UserDetails from './_components/UserDetails';
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { User } from '@clerk/nextjs/server';
-import FeedbackList from '@/app/(dashboard)/organizations/[orgId]/courses/[courseId]/chapters/[chapterId]/adaptive-quiz/FeedbackList';
+import FeedbackList from '../chapters/[chapterId]/adaptive-quiz/FeedbackList';
 
 export default function CourseStatsPage() {
     const pathname = usePathname();

@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import AWS from "aws-sdk";
 import { v4 as uuidv4 } from "uuid";
 import { getAuth, User } from "@clerk/express";
-import { mergeSections, calculateOverallProgress } from "../utils/utils";
+import { mergeSections, calculateOverallProgress, generateTemporaryPassword } from "../utils/utils";
 import Commit from "../models/commitModel";
 import Course from "../models/courseModel";
 import UserCourseProgress from "../models/userCourseProgressModel";
@@ -36,7 +36,7 @@ export const createCourse = async (
     const course = new Course({
       courseId: uuidv4(),
       instructors: [],
-      title: "Untitled Course",
+      title: "",
       description: "",
       image: "",
       price: 0,
@@ -390,7 +390,7 @@ export const unenrollUser = async (
 export const addCourseInstructor = async (req: Request, res: Response): Promise<void> => {
   const { courseId } = req.params;
   const { userId, email } = req.body;
-  
+
   try {
     const course = await Course.get(courseId);
     if (!course) {
@@ -401,15 +401,29 @@ export const addCourseInstructor = async (req: Request, res: Response): Promise<
     let instructorUserId = userId;
 
     if (!userId && email) {
-      // Fetch user by email if userId is not provided
       const users = (await clerkClient.users.getUserList({ emailAddress: [email] })).data;
 
-      if (users.length === 0) {
-        res.status(404).json({ message: "User with provided email not found" });
-        return;
-      }
+      if (users.length > 0) {
+        instructorUserId = users[0].id;
+      } else {
+        const newUser = await clerkClient.users.createUser({
+          emailAddress: [email],
+          password: generateTemporaryPassword(),
+          skipPasswordChecks: true,
+        });
 
-      instructorUserId = users[0].id;
+        instructorUserId = newUser.id;
+
+        const resetPasswordLink = `${process.env.CLIENT_URL}/reset-password?email=${encodeURIComponent(email)}`;
+        await sendMessage(
+          instructorUserId,
+          email,
+          "You're Invited as an Instructor - Reset Your Password",
+          `You've been added as an instructor to the course "${course.title}". Click below to reset your password:\n\n${resetPasswordLink}`,
+          null,
+          { sendEmail: true, sendNotification: false, rateLimited: false }
+        );
+      }
     }
 
     if (!instructorUserId) {
@@ -438,7 +452,7 @@ export const addCourseInstructor = async (req: Request, res: Response): Promise<
         "New Instructor Added",
         `You have been added as an instructor to the course "${course.title}".`,
         null,
-        { sendEmail: true, sendNotification: true, rateLimited: true }
+        { sendEmail: true, sendNotification: true, rateLimited: false }
       );
     }
 
@@ -522,7 +536,7 @@ export const getUploadVideoUrl = async (
   try {
     const uniqueId = uuidv4();
     const s3Key = `videos/${uniqueId}/${fileName}`;
-    const bucketName = process.env.S3_BUCKET_NAME || "expertize-bucket";
+    const bucketName = process.env.S3_BUCKET_NAME;
 
     const s3Params = {
       Bucket: bucketName,
@@ -557,7 +571,7 @@ export const getUploadImageUrl = async (
   try {
     const uniqueId = uuidv4();
     const s3Key = `images/${uniqueId}/${fileName}`;
-    const bucketName = process.env.S3_BUCKET_NAME || "expertize-bucket";
+    const bucketName = process.env.S3_BUCKET_NAME;
 
     const s3Params = {
       Bucket: bucketName,
@@ -1425,7 +1439,7 @@ export const fixCourseImageUrls = async (
 ): Promise<void> => {
   try {
     const courses = await Course.scan().exec();
-    const bucketName = process.env.S3_BUCKET_NAME || "expertize-bucket";
+    const bucketName = process.env.S3_BUCKET_NAME;
 
     for (const course of courses) {
       if (

@@ -52,7 +52,7 @@ export default function DroppableComponent() {
   }
 
   const toggleSectionLock = () => {
-    const updatedSections = sections.map((section) => ({
+    const updatedSections = sections.map((section: Section) => ({
       ...section,
       releaseDate: section.releaseDate ? "" : new Date().toISOString(),
     }))
@@ -69,7 +69,7 @@ export default function DroppableComponent() {
           {sections.every(section => section.releaseDate === "") ? "Unlock All Sections" : "Lock All Sections"}
         </Switch>
         <p className="text-muted-foreground text-sm">
-          {sections.every(section => section.releaseDate === "") ? "All sections are unlocked" : "All sections are locked"}
+          {sections.every(section => section.releaseDate === "") ? "All sections are locked" : "All sections are unlocked"}
         </p>
       </div>
 

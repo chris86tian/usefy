@@ -14,7 +14,7 @@ import {
   FileText,
   PenTool,
 } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { useCourseProgressData } from "@/hooks/useCourseProgressData"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -31,6 +31,7 @@ const ChaptersSidebar = () => {
   const [expandedSections, setExpandedSections] = useState<string[]>([])
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const { currentOrg } = useOrganization()
+  const { orgId, cohortId } = useParams()
 
   const {
     user,
@@ -83,13 +84,13 @@ const ChaptersSidebar = () => {
   }
 
   const handleChapterClick = (sectionId: string, chapterId: string) => {
-    router.push(`/organizations/${currentOrg?.organizationId}/courses/${courseId}/chapters/${chapterId}`, {
+    router.push(`/organizations/${orgId}/cohorts/${cohortId}/courses/${courseId}/chapters/${chapterId}`, {
       scroll: false,
     })
   }
 
   const handleBackToCourses = () => {
-    router.push(`/organizations/${currentOrg?.organizationId}/courses`)
+    router.push(`/organizations/${orgId}/cohorts/${cohortId}`)
   }
 
   const toggleSidebarCollapse = () => {
@@ -167,7 +168,7 @@ const ChaptersSidebar = () => {
 
 const Section = ({
   section,
-  index, // This is already the section index
+  index,
   sectionProgress,
   chapterId,
   courseId,

@@ -218,6 +218,7 @@ export async function POST(request: Request) {
           "sectionId": "s1",
           "sectionTitle": "string",
           "sectionDescription": "string",
+          "releaseDate": "",
           "chapters": [
             {
               "chapterId": "c1",

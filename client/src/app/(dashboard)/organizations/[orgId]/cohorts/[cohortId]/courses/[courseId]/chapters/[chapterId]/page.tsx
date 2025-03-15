@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import toast from "react-hot-toast"
 import ReactPlayer from "react-player"
 import { useCourseProgressData } from "@/hooks/useCourseProgressData"
-import { useRouter } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import {
   ChevronLeft,
   ChevronRight,
@@ -61,12 +61,15 @@ const Course = () => {
   const quizRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
   const { currentOrg } = useOrganization()
+  const { orgId, cohortId } = useParams()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [videoEndTime, setVideoEndTime] = useState<number | null>(null)
   const [hasShownPrompt, setHasShownPrompt] = useState(false)
   const [likes, setLikes] = useState(currentChapter?.likes ?? 0)
   const [dislikes, setDislikes] = useState(currentChapter?.dislikes ?? 0)
-  const isAuthorized = currentOrg?.admins.some((admin) => admin.userId === user?.id) || currentOrg?.instructors.some((instructor) => instructor.userId === user?.id)
+  const isAuthorized =
+    currentOrg?.admins.some((admin) => admin.userId === user?.id) ||
+    currentOrg?.instructors.some((instructor) => instructor.userId === user?.id)
 
   const [likeChapter] = useLikeChapterMutation()
   const [dislikeChapter] = useDislikeChapterMutation()
@@ -80,6 +83,7 @@ const Course = () => {
 
       if (nextChapter?.video) {
         const nextVideoStartTime = parseYouTubeTime(nextChapter.video as string)
+        console.log(nextVideoStartTime)
         setVideoEndTime(nextVideoStartTime > 0 ? nextVideoStartTime : null)
         setHasShownPrompt(false)
       }
@@ -87,52 +91,55 @@ const Course = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentChapter?.video, course?.sections])
 
-  const sendTimeTracking = useCallback(async (duration: number) => {
-    if (!user?.id || !course?.courseId || !currentSection?.sectionId || !currentChapter?.chapterId) return;
-  
-    try {
-      const timeData = {
-        userId: user.id,
-        courseId: course.courseId,
-        sectionId: currentSection.sectionId,
-        chapterId: currentChapter.chapterId,
-        durationMs: duration,
-      };
-  
-      // Use environment variable for API URL
-      const apiUrl = process.env.NEXT_PUBLIC_LOCAL_API_URL || 'http://localhost:8001';
-      
-      // Update to use full URL
-      const blob = new Blob([JSON.stringify(timeData)], { type: 'application/json' });
-      navigator.sendBeacon(`${apiUrl}/time-tracking`, blob);
-      
-      if (!navigator.sendBeacon) {
-        await fetch(`${apiUrl}/time-tracking`, {
-          method: 'POST',
-          body: JSON.stringify(timeData),
-          headers: { 'Content-Type': 'application/json' },
-          keepalive: true,
-        });
+  const sendTimeTracking = useCallback(
+    async (duration: number) => {
+      if (!user?.id || !course?.courseId || !currentSection?.sectionId || !currentChapter?.chapterId) return
+
+      try {
+        const timeData = {
+          userId: user.id,
+          courseId: course.courseId,
+          sectionId: currentSection.sectionId,
+          chapterId: currentChapter.chapterId,
+          durationMs: duration,
+        }
+
+        // Use environment variable for API URL
+        const apiUrl = process.env.NEXT_PUBLIC_LOCAL_API_URL || "http://localhost:8001"
+
+        // Update to use full URL
+        const blob = new Blob([JSON.stringify(timeData)], { type: "application/json" })
+        navigator.sendBeacon(`${apiUrl}/time-tracking`, blob)
+
+        if (!navigator.sendBeacon) {
+          await fetch(`${apiUrl}/time-tracking`, {
+            method: "POST",
+            body: JSON.stringify(timeData),
+            headers: { "Content-Type": "application/json" },
+            keepalive: true,
+          })
+        }
+      } catch (error) {
+        console.error("Error sending time tracking data:", error)
       }
-    } catch (error) {
-      console.error('Error sending time tracking data:', error);
-    }
-  }, [user?.id, course?.courseId, currentSection?.sectionId, currentChapter?.chapterId])
-  
+    },
+    [user?.id, course?.courseId, currentSection?.sectionId, currentChapter?.chapterId],
+  )
+
   useEffect(() => {
     const startTime = Date.now()
-    
+
     const handleBeforeUnload = () => {
       const duration = Date.now() - startTime
       sendTimeTracking(duration)
     }
-  
-    window.addEventListener('beforeunload', handleBeforeUnload)
-  
+
+    window.addEventListener("beforeunload", handleBeforeUnload)
+
     return () => {
       const duration = Date.now() - startTime
       sendTimeTracking(duration)
-      window.removeEventListener('beforeunload', handleBeforeUnload)
+      window.removeEventListener("beforeunload", handleBeforeUnload)
     }
   }, [sendTimeTracking])
 
@@ -203,23 +210,45 @@ const Course = () => {
       updateChapterProgress(currentSection.sectionId, currentChapter.chapterId, true)
     }
 
+    console.log(videoEndTime)
     if (videoEndTime && Math.floor(playedSeconds) === videoEndTime && !hasShownPrompt) {
       setHasShownPrompt(true)
 
-      if (currentChapter?.quiz && !isQuizCompleted()) {
-        toast.error("Please complete the quiz before moving to the next chapter.", {
-          duration: 10000,
-          icon: <GraduationCap className="w-6 h-6 mr-2" />,
-        })
+      if (currentChapter?.quiz !== undefined || (currentChapter?.assignments && currentChapter.assignments.length > 0)) {
+        if (!isQuizCompleted()) {
+          toast.error("Please complete the quiz before moving to the next chapter.", {
+            duration: 10000,
+            icon: <GraduationCap className="w-6 h-6 mr-2" />,
+          })
 
-        quizRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+          quizRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
 
-        if (playerRef.current) {
-          const player = playerRef.current.getInternalPlayer()
-          if (player) {
-            player.pauseVideo()
-            player.seekTo(videoEndTime - 1)
+          if (playerRef.current) {
+            const player = playerRef.current.getInternalPlayer()
+            if (player) {
+              player.pauseVideo()
+              player.seekTo(videoEndTime - 1)
+            }
           }
+        } else if (!isAssignmentsCompleted()) {
+          toast.error("Please complete all assignments before moving to the next chapter.", {
+            duration: 10000,
+            icon: <BookOpen className="w-6 h-6 mr-2" />,
+          })
+
+          if (playerRef.current) {
+            const player = playerRef.current.getInternalPlayer()
+            if (player) {
+              player.pauseVideo()
+              player.seekTo(videoEndTime - 1)
+            }
+          }
+        } else {
+          toast.error("You've reached the end of this chapter. Moving to the next one.", {
+            duration: 5000,
+            icon: <ChevronRight className="w-6 h-6 mx-1 text-green-500" />,
+          })
+          handleGoToNextChapter()
         }
       } else {
         toast.error("You've reached the end of this chapter. Moving to the next one.", {
@@ -234,21 +263,28 @@ const Course = () => {
   const handleGoToNextChapter = () => {
     if (!course) return
 
-    if (currentChapter?.quiz && (!isQuizCompleted() || !isAssignmentsCompleted())) {
-      toast.error(
-        `Please complete the chapter ${isQuizCompleted() ? "assignments" : "quiz"} before moving to the next chapter.`,
-        {
+    if (currentChapter?.quiz) {
+      if (!isQuizCompleted()) {
+        toast.error("Please complete the chapter quiz before moving to the next chapter.", {
           duration: 5000,
           icon: <GraduationCap className="w-6 h-6 mx-1 text-green-500" />,
-        },
-      )
-      return
+        })
+        return
+      }
+
+      if (!isAssignmentsCompleted()) {
+        toast.error("Please complete all chapter assignments before moving to the next chapter.", {
+          duration: 5000,
+          icon: <BookOpen className="w-6 h-6 mx-1 text-green-500" />,
+        })
+        return
+      }
     }
 
     const nextChapterId = findNextAvailableChapter("next")
     if (nextChapterId) {
       setHasShownPrompt(false)
-      router.push(`/organizations/${currentOrg?.organizationId}/courses/${course.courseId}/chapters/${nextChapterId}`)
+      router.push(`/organizations/${currentOrg?.organizationId}/cohorts/${cohortId}/courses/${course.courseId}/chapters/${nextChapterId}`)
     }
   }
 
@@ -256,7 +292,9 @@ const Course = () => {
     if (!course) return
     const previousChapterId = findNextAvailableChapter("previous")
     if (previousChapterId) {
-      router.push(`/organizations/${currentOrg?.organizationId}/courses/${course.courseId}/chapters/${previousChapterId}`)
+      router.push(
+        `/organizations/${currentOrg?.organizationId}/cohorts/${cohortId}/courses/${course.courseId}/chapters/${previousChapterId}`,
+      )
     }
   }
 
@@ -321,10 +359,7 @@ const Course = () => {
         <div className="flex items-center gap-2 text-muted-foreground">
           <Calendar className="h-4 w-4" />
           <p>
-            Available {" "}
-            {currentSection.releaseDate
-              ? new Date(currentSection.releaseDate).toLocaleDateString()
-              : "soon"}
+            Available {currentSection.releaseDate ? new Date(currentSection.releaseDate).toLocaleDateString() : "soon"}
           </p>
         </div>
         {hasPreviousChapter && (
@@ -374,25 +409,25 @@ const Course = () => {
       <Card className="max-w-5xl mx-auto overflow-hidden border shadow-sm">
         <CardContent className="p-0" style={{ aspectRatio: "16/9" }}>
           {currentChapter?.video ? (
-        <ReactPlayer
-          ref={playerRef}
-          url={currentChapter.video as string}
-          controls
-          width="100%"
-          height="100%"
-          onProgress={handleProgress}
-          config={{
-            file: {
-          attributes: {
-            controlsList: "nodownload",
-          },
-            },
-          }}
-        />
+            <ReactPlayer
+              ref={playerRef}
+              url={currentChapter.video as string}
+              controls
+              width="100%"
+              height="100%"
+              onProgress={handleProgress}
+              config={{
+                file: {
+                  attributes: {
+                    controlsList: "nodownload",
+                  },
+                },
+              }}
+            />
           ) : (
-        <div className="flex items-center justify-center h-full bg-muted">
-          <p className="text-muted-foreground">No video available for this chapter.</p>
-        </div>
+            <div className="flex items-center justify-center h-full bg-muted">
+              <p className="text-muted-foreground">No video available for this chapter.</p>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -408,12 +443,12 @@ const Course = () => {
 
               <div className="flex items-center gap-3">
                 <FeedbackButton
-                    feedbackType="question"
-                    itemId={currentChapter?.chapterId as string}  
-                    courseId={course?.courseId as string}
-                    sectionId={currentSection?.sectionId as string}
-                    chapterId={currentChapter?.chapterId as string}>
-                </FeedbackButton>
+                  feedbackType="question"
+                  itemId={currentChapter?.chapterId as string}
+                  courseId={course?.courseId as string}
+                  sectionId={currentSection?.sectionId as string}
+                  chapterId={currentChapter?.chapterId as string}
+                ></FeedbackButton>
                 {isAuthorized && (
                   <Button onClick={() => setIsModalOpen(true)} variant="outline" size="sm">
                     <Sparkles className="h-4 w-4 mr-2" />
@@ -475,6 +510,14 @@ const Course = () => {
                 <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
                   Completed
                 </Badge>
+              ) : !isQuizCompleted() && currentChapter.quiz ? (
+                <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-200">
+                  Quiz Pending
+                </Badge>
+              ) : !isAssignmentsCompleted() && currentChapter.assignments && currentChapter.assignments.length > 0 ? (
+                <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">
+                  Assignments Pending
+                </Badge>
               ) : (
                 <Badge variant="outline" className="bg-muted">
                   In Progress
@@ -532,7 +575,7 @@ const Course = () => {
                   {currentChapter?.assignments && currentChapter.assignments.length > 0 ? (
                     currentChapter.assignments.map((assignment) => (
                       <AssignmentCard
-                        key={assignment.assignmentId} 
+                        key={assignment.assignmentId}
                         isAuthorized={isAuthorized as boolean}
                         sectionId={currentSection.sectionId}
                         chapter={currentChapter}
@@ -562,3 +605,4 @@ const Course = () => {
 }
 
 export default Course
+

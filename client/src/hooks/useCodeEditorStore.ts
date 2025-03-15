@@ -1,4 +1,4 @@
-import { LANGUAGE_CONFIG } from "@/app/(dashboard)/organizations/[orgId]/courses/[courseId]/chapters/[chapterId]/_constants";
+import { LANGUAGE_CONFIG } from "@/lib/constants";
 import { create } from "zustand";
 
 const getInitialState = () => {

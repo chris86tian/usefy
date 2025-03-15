@@ -322,13 +322,7 @@ declare global {
     onClose: () => void;
     children: ReactNode;
   }
-
-  interface HeaderProps {
-    title: string;
-    subtitle: string;
-    rightElement?: ReactNode;
-  }
-
+  
   interface SelectedCourseProps {
     course: Course;
     handleEnrollNow: (courseId: string) => void;

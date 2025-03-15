@@ -79,7 +79,7 @@ const CourseEditor = () => {
 
       const { sections: newSections, courseTitle, courseDescription } = data
 
-      if (course?.title === "Untitled Course" || course?.title === "") {
+      if (course?.title === "" || course?.title === "Untitled Course") {
         methods.setValue("courseTitle", courseTitle)
         methods.setValue("courseDescription", courseDescription)
       }
@@ -217,7 +217,7 @@ const CourseEditor = () => {
   const methods = useForm<CourseFormData>({
     resolver: zodResolver(courseSchema),
     defaultValues: {
-      courseTitle: "",
+      courseTitle: "Untitled Course",
       courseDescription: "",
       coursePrice: "0",
       courseStatus: false,
@@ -316,7 +316,6 @@ const CourseEditor = () => {
     }
   }
 
-  // Format instructors data for the InstructorEmailInput component
   const formattedInstructors =
     instructors?.map((instructor) => ({
       id: instructor.id,
@@ -472,14 +471,6 @@ const CourseEditor = () => {
                   <p className="text-sm text-gray-500 dark:text-gray-400">
                     This may take a few moments as we analyze the video content.
                   </p>
-
-                  <Button
-                    type="button"
-                    onClick={() => setIsGenerating(false)}
-                    className="bg-blue-700 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700"
-                  >
-                    Cancel
-                  </Button>
                 </div>
               ) : sections.length > 0 ? (
                 <DroppableComponent />
