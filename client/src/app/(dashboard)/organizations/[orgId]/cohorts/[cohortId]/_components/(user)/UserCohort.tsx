@@ -64,19 +64,28 @@ const UserCohort = ({ orgUsers, coursesLoading, courses, refetch }: UserCohortPr
     if (!courses) return []
   
     return courses.filter((course) => {
-      // Base filters for search and archive status
+      // Base filter for search term
       const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase())
-      const matchesArchiveStatus = showArchived ? true : course.status !== "Archived"
+      
+      // Status filtering based on user role
+      let statusFilter = true;
+      if (isInstructor) {
+        // Instructors can see archived courses if they toggle the option
+        statusFilter = showArchived ? true : course.status !== "Archived"
+      } else {
+        // Regular users can only see published courses
+        statusFilter = course.status === "Published"
+      }
       
       // Instructor filter - only show courses where the user is an instructor
       const isInstructorForCourse = isInstructor ? 
         course.instructors?.some(instructor => instructor.userId === user?.id) : 
         true // If not an instructor, don't apply this filter
       
-      return matchesSearch && matchesArchiveStatus && isInstructorForCourse
+      return matchesSearch && statusFilter && isInstructorForCourse
     })
   }, [courses, searchTerm, showArchived, isInstructor, user?.id])
-
+  
   const handleGoToCourse = (course: Course) => {
     if (course.status === "Archived") {
       toast.error("This course is archived and no longer available")
