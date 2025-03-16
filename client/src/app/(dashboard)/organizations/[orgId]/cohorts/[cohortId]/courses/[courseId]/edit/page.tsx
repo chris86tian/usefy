@@ -349,7 +349,7 @@ const CourseEditor = () => {
       <div className="flex items-center gap-5 mb-5">
         <button
           className="flex items-center border border-gray-400 dark:border-gray-600 px-4 py-2 gap-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-200"
-          onClick={() => router.back()}
+          onClick={() => window.location.href = `/organizations/${orgId}/cohorts/${cohortId}`}
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to Courses</span>

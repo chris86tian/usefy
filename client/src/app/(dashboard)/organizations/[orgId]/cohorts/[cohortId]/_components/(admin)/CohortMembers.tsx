@@ -25,20 +25,22 @@ import {
   useInviteUserToCohortMutation,
 } from "@/state/api"
 import type { User } from "@clerk/nextjs/server"
+import { Spinner } from "@/components/ui/Spinner"
+import NotFound from "@/components/NotFound"
 
 interface CohortMembersProps {
   cohort: Cohort
   orgUsers: { instructors: User[]; learners: User[]; admins: User[] }
-  refetch: () => void
 }
 
-const CohortMembers = ({ cohort, orgUsers, refetch }: CohortMembersProps) => {
-  const { data: learners, isLoading: cohortLearnersLoading } = useGetCohortLearnersQuery(
-    { organizationId: cohort?.organizationId as string, cohortId: cohort?.cohortId as string },
-    { skip: !cohort },
-  )
+const CohortMembers = ({ cohort, orgUsers }: CohortMembersProps) => {
+  const { 
+    data: learners, 
+    isLoading: cohortLearnersLoading,
+    refetch
+  } = useGetCohortLearnersQuery({ organizationId: cohort.organizationId, cohortId: cohort.cohortId })
 
-  const [addLearnerToCohort] = useAddLearnerToCohortMutation()
+  const [addLearnerToCohort, { isLoading: addLearnerToCohortLoading }] = useAddLearnerToCohortMutation()
   const [removeLearnerFromCohort, { isLoading: removeLearnerFromCohortLoading }] = useRemoveLearnerFromCohortMutation()
   const [inviteUserToCohort, { isLoading: inviteUserToCohortLoading }] = useInviteUserToCohortMutation()
 
@@ -49,6 +51,9 @@ const CohortMembers = ({ cohort, orgUsers, refetch }: CohortMembersProps) => {
   const [emailBatch, setEmailBatch] = useState<string[]>([])
   const [inviteRole, setInviteRole] = useState<string>("learner")
 
+  if (cohortLearnersLoading) return <Spinner />
+  if (!learners) return <NotFound message="Learners not found" />
+
   const handleAddLearner = async () => {
     if (!selectedLearnerId) {
       toast.error("Please select a learner")
@@ -57,8 +62,8 @@ const CohortMembers = ({ cohort, orgUsers, refetch }: CohortMembersProps) => {
 
     try {
       await addLearnerToCohort({
-        organizationId: cohort?.organizationId as string,
-        cohortId: cohort?.cohortId as string,
+        organizationId: cohort.organizationId,
+        cohortId: cohort.cohortId,
         learnerId: selectedLearnerId,
       })
 
@@ -82,8 +87,8 @@ const CohortMembers = ({ cohort, orgUsers, refetch }: CohortMembersProps) => {
     try {
       for (const email of emailBatch) {
         await inviteUserToCohort({
-          organizationId: cohort?.organizationId as string,
-          cohortId: cohort?.cohortId as string,
+          organizationId: cohort.organizationId,
+          cohortId: cohort.cohortId,
           email: email.trim(),
           role: inviteRole,
         }).unwrap()
@@ -113,8 +118,8 @@ const CohortMembers = ({ cohort, orgUsers, refetch }: CohortMembersProps) => {
   const handleRemoveLearner = async (learnerId: string) => {
     try {
       await removeLearnerFromCohort({
-        organizationId: cohort?.organizationId as string,
-        cohortId: cohort?.cohortId as string,
+        organizationId: cohort.organizationId,
+        cohortId: cohort.cohortId,
         learnerId,
       }).unwrap();
 
@@ -126,12 +131,11 @@ const CohortMembers = ({ cohort, orgUsers, refetch }: CohortMembersProps) => {
   };
 
   const filteredLearners =
-    orgUsers?.learners?.filter(
+    orgUsers.learners.filter(
       (learner) =>
-        !learners?.some((l) => l.id === learner.id) &&
-        (getUserName(learner)?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          learner.emailAddresses[0].emailAddress?.toLowerCase().includes(searchTerm.toLowerCase())),
-    ) || []
+        !learners.some((l) => l.id === learner.id) &&
+        (getUserName(learner).toLowerCase().includes(searchTerm.toLowerCase()) ||
+          learner.emailAddresses[0].emailAddress.toLowerCase().includes(searchTerm.toLowerCase())))
 
   return (
     <>
@@ -191,7 +195,12 @@ const CohortMembers = ({ cohort, orgUsers, refetch }: CohortMembersProps) => {
                 <Button variant="outline" onClick={() => setActiveDialog('none')}>
                   Cancel
                 </Button>
-                <Button onClick={handleAddLearner}>Add to Cohort</Button>
+                <Button 
+                  disabled={addLearnerToCohortLoading}
+                  onClick={handleAddLearner}
+                >
+                  {addLearnerToCohortLoading ? "Adding..." : "Add Learner"}
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -258,7 +267,7 @@ const CohortMembers = ({ cohort, orgUsers, refetch }: CohortMembersProps) => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {learners && learners.length > 0 ? (
+              {learners.length > 0 ? (
                 learners.map((learner) => (
                   <TableRow key={learner.id}>
                     <TableCell className="font-medium">{getUserName(learner)}</TableCell>

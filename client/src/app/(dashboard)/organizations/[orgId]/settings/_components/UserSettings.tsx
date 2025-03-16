@@ -8,9 +8,10 @@ import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useUser } from "@clerk/nextjs"
 import { toast } from "sonner"
+import { SignInRequired } from "@/components/SignInRequired"
 
 const UserSettings = () => {
-  const { user, isLoaded, isSignedIn } = useUser()
+  const { user } = useUser()
   const [name, setName] = useState(user?.fullName || "")
   const [email, setEmail] = useState(user?.primaryEmailAddress?.emailAddress || "")
   const [receiveNotifications, setReceiveNotifications] = useState(true)
@@ -28,9 +29,7 @@ const UserSettings = () => {
     toast.success("Preferences updated successfully")
   }
 
-  if (!isLoaded || !isSignedIn) {
-    return <div>Loading...</div>
-  }
+  if (!user) return <SignInRequired />
 
   return (
     <div className="space-y-6">

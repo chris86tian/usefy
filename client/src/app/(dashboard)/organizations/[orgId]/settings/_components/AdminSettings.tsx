@@ -21,7 +21,7 @@ import {
   useCreateCohortMutation,
 } from "@/state/api"
 import Image from "next/image"
-import { useRouter } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -54,29 +54,52 @@ import { v4 as uuidv4 } from "uuid"
 import { useUser } from "@clerk/nextjs"
 import { getUserName, uploadThumbnail } from "@/lib/utils"
 import { useGetUploadImageUrlMutation } from "@/state/api"
+import NotFound from "@/components/NotFound"
+import { SignInRequired } from "@/components/SignInRequired"
+import { Spinner } from "@/components/ui/Spinner"
 
 const AdminSettings = () => {
   const router = useRouter()
   const { user } = useUser()
   const { currentOrg } = useOrganization()
-  const [updateOrganization] = useUpdateOrganizationMutation()
-  const [deleteOrganization] = useDeleteOrganizationMutation()
+  const { orgId } = useParams() as { orgId: string; cohortId: string }
 
-  const { data: cohorts, refetch: refetchCohorts } = useGetCohortsQuery(currentOrg?.organizationId || "")
-  const [updateCohort] = useUpdateCohortMutation()
-  const [deleteCohort] = useDeleteCohortMutation()
-  const [createCohort] = useCreateCohortMutation()
+  const [updateOrganization, { isLoading: isUpdateLoading } ] = useUpdateOrganizationMutation()
+  const [deleteOrganization, { isLoading: isDeleteLoading } ] = useDeleteOrganizationMutation()
 
-  const { data: members, refetch: refetchMembers } = useGetOrganizationUsersQuery(currentOrg?.organizationId || "")
+  const { 
+    data: cohorts,
+    isLoading: isCohortsLoading,
+    refetch: refetchCohorts
+  } = useGetCohortsQuery(orgId)
+  const [updateCohort,
+    { isLoading: isUpdateCohortLoading }
+  ] = useUpdateCohortMutation()
+  const [deleteCohort,
+    { isLoading: isDeleteCohortLoading }
+  ] = useDeleteCohortMutation()
+  const [createCohort,
+    { isLoading: isCreateCohortLoading }
+  ] = useCreateCohortMutation()
+
+  const { 
+    data: members, 
+    isLoading: isMembersLoading,
+    refetch: refetchMembers 
+  } = useGetOrganizationUsersQuery(orgId)
   const [inviteUser, { isLoading: isInviteLoading }] = useInviteUserToOrganizationMutation()
-  const [removeUser] = useRemoveUserFromOrganizationMutation()
-  const [changeUserRole] = useChangeUserRoleMutation()
+  const [removeUser,
+    { isLoading: isRemoveUserLoading }
+  ] = useRemoveUserFromOrganizationMutation()
+  const [changeUserRole,
+    { isLoading: isChangeUserRoleLoading }
+  ] = useChangeUserRoleMutation()
   const [roleSelections, setRoleSelections] = useState<Record<string, string>>({});
 
   const [orgName, setOrgName] = useState(currentOrg?.name)
   const [orgDescription, setOrgDescription] = useState(currentOrg?.description)
   const [orgImage, setOrgImage] = useState<File | null>(null)
-  const [orgImagePreview, setOrgImagePreview] = useState(currentOrg?.image || "")
+  const [orgImagePreview, setOrgImagePreview] = useState(currentOrg?.image)
   const [inviteEmail, setInviteEmail] = useState("")
   const [inviteRole, setInviteRole] = useState<"admin" | "instructor" | "learner">("learner")
   const [searchTerm, setSearchTerm] = useState("")
@@ -96,6 +119,31 @@ const AdminSettings = () => {
 
   const [emailBatch, setEmailBatch] = useState<string[]>([]);
 
+  const filteredUsers = useMemo(() => {
+    const allUsers = [...(members?.admins || []), ...(members?.instructors || []), ...(members?.learners || [])]
+
+    return allUsers.filter((user) => {
+      const matchesSearch = user.emailAddresses?.[0]?.emailAddress?.toLowerCase().includes(searchTerm.toLowerCase())
+      const matchesRole =
+        roleFilter === "all" ||
+        (roleFilter === "admin" && members?.admins?.some((admin) => admin.id === user.id)) ||
+        (roleFilter === "instructor" && members?.instructors?.some((instructor) => instructor.id === user.id)) ||
+        (roleFilter === "learner" && members?.learners?.some((learner) => learner.id === user.id))
+
+      return matchesSearch && matchesRole
+    })
+  }, [members, searchTerm, roleFilter])
+
+  const filteredCohorts = useMemo(() => {
+    if (!cohorts) return []
+    return cohorts.filter((cohort) => cohort.name.toLowerCase().includes(cohortSearchTerm.toLowerCase()))
+  }, [cohorts, cohortSearchTerm])
+
+  if (isMembersLoading || isCohortsLoading) return <Spinner />
+  if (!user) return <SignInRequired />
+  if (!members) return <NotFound message="Members not found" />
+  if (!currentOrg) return <NotFound message="Organization not found" />
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
@@ -113,17 +161,11 @@ const AdminSettings = () => {
       if (orgImage) {
         const imageFormData = new FormData()
         imageFormData.append("file", orgImage)
-        
-        // Upload the image and get the URL
-        const imageUrl = await uploadThumbnail(currentOrg?.organizationId || "", getUploadImageUrl, imageFormData.get("file") as File)
+        const imageUrl = await uploadThumbnail(orgId, getUploadImageUrl, imageFormData.get("file") as File)
         formData.append("image", imageUrl)
       }
 
-      await updateOrganization({
-        organizationId: currentOrg?.organizationId || "",
-        formData,
-      }).unwrap()
-
+      await updateOrganization({ organizationId: orgId, formData }).unwrap()
       toast.success("Organization updated successfully")
     } catch (error) {
       toast.error("Failed to update organization")
@@ -132,7 +174,11 @@ const AdminSettings = () => {
 
   const handleDelete = async () => {
     try {
-      await deleteOrganization(currentOrg?.organizationId || "").unwrap()
+      if (user?.publicMetadata?.userType !== "superadmin") {
+        toast.error("You are not authorized to delete this organization")
+        return
+      }
+      await deleteOrganization(orgId).unwrap()
       toast.success("Organization deleted successfully")
       router.push("/")
     } catch (error) {
@@ -148,11 +194,10 @@ const AdminSettings = () => {
     }
 
     try {
-      // Send invites for each email in batch
       await Promise.all(
         emailBatch.map((email) =>
           inviteUser({
-            organizationId: currentOrg?.organizationId || "",
+            organizationId: orgId,
             email: email.trim(),
             role: inviteRole,
           }).unwrap()
@@ -167,7 +212,6 @@ const AdminSettings = () => {
     }
   };
 
-  // Add email batch handler
   const handleEmailInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setInviteEmail(value);
@@ -186,38 +230,33 @@ const AdminSettings = () => {
   };
 
   const handleRemoveUser = async (userId: string, role: string) => {
-    if (role === "admin" && user?.publicMetadata.userType !== "superadmin") {
+    if (role === "admin") {
       toast.error("You cannot remove another admin.");
       return;
     }
 
     try {
-      await removeUser({
-        organizationId: currentOrg?.organizationId || "",
-        userId,
-        role,
-      }).unwrap();
-      refetchMembers();
+      await removeUser({ organizationId: orgId, userId, role }).unwrap();
       toast.success("User removed successfully");
+      refetchMembers();
     } catch (error) {
       toast.error("Failed to remove user");
     }
   };
 
   const handleChangeRole = async (userId: string, currentRole: string, newRole: string) => {
-    if (currentRole === "admin" && newRole !== "admin" && members?.admins?.length === 1 && user?.publicMetadata.userType !== "superadmin") {
+    if (currentRole === "admin" && newRole !== "admin" && members.admins.length === 1) {
       toast.error("You must have at least one admin in the organization");
       return;
     }
 
     try {
       await changeUserRole({
-        organizationId: currentOrg?.organizationId || "",
+        organizationId: orgId,
         userId,
         currentRole,
         newRole,
       }).unwrap();
-      refetchMembers();
 
       setRoleSelections(prev => ({
         ...prev,
@@ -225,13 +264,13 @@ const AdminSettings = () => {
       }));
 
       toast.success("User role changed successfully");
+      refetchMembers();
     } catch (error) {
       toast.error("Failed to change user role");
     }
   };
   
 
-  // Cohort handlers
   const handleCreateCohort = async () => {
     if (!newCohortName.trim()) {
       toast.error("Please enter a cohort name")
@@ -293,27 +332,6 @@ const AdminSettings = () => {
     setEditCohortName(cohort.name)
     setIsEditCohortDialogOpen(true)
   }
-
-  const filteredUsers = useMemo(() => {
-    const allUsers = [...(members?.admins || []), ...(members?.instructors || []), ...(members?.learners || [])]
-
-    return allUsers.filter((user) => {
-      const matchesSearch = user.emailAddresses?.[0]?.emailAddress?.toLowerCase().includes(searchTerm.toLowerCase())
-      const matchesRole =
-        roleFilter === "all" ||
-        (roleFilter === "admin" && members?.admins?.some((admin) => admin.id === user.id)) ||
-        (roleFilter === "instructor" && members?.instructors?.some((instructor) => instructor.id === user.id)) ||
-        (roleFilter === "learner" && members?.learners?.some((learner) => learner.id === user.id))
-
-      return matchesSearch && matchesRole
-    })
-  }, [members, searchTerm, roleFilter])
-
-  const filteredCohorts = useMemo(() => {
-    if (!cohorts) return []
-
-    return cohorts.filter((cohort) => cohort.name.toLowerCase().includes(cohortSearchTerm.toLowerCase()))
-  }, [cohorts, cohortSearchTerm])
 
   return (
     <div className="space-y-4">
@@ -474,6 +492,7 @@ const AdminSettings = () => {
                         </TableCell>
                         <TableCell>
                           <Select 
+                            disabled={role === "admin" || isChangeUserRoleLoading}
                             value={roleSelections[user.id] || ""}
                             onValueChange={(newRole) => {
                               setRoleSelections(prev => ({
@@ -491,8 +510,13 @@ const AdminSettings = () => {
                               {role !== "learner" && <SelectItem value="learner">Learner</SelectItem>}
                             </SelectContent>
                           </Select>
-                          <Button variant="ghost" size="sm" onClick={() => handleRemoveUser(user.id, role)}>
-                            Remove
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            disabled={role === "admin" || isRemoveUserLoading}
+                            onClick={() => handleRemoveUser(user.id, role)}
+                          >
+                            {isRemoveUserLoading ? "Removing..." : "Remove"}
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -542,8 +566,12 @@ const AdminSettings = () => {
                     <Button variant="outline" onClick={() => setIsCreateCohortDialogOpen(false)}>
                       Cancel
                     </Button>
-                    <Button type="submit" onClick={handleCreateCohort}>
-                      Create Cohort
+                    <Button 
+                      type="submit" 
+                      disabled={isCreateCohortLoading}
+                      onClick={handleCreateCohort}
+                    >
+                      {isCreateCohortLoading ? "Creating..." : "Create Cohort"}
                     </Button>
                   </DialogFooter>
                 </DialogContent>
@@ -576,8 +604,8 @@ const AdminSettings = () => {
                     filteredCohorts.map((cohort) => (
                       <TableRow key={cohort.cohortId}>
                         <TableCell className="font-medium">{cohort.name}</TableCell>
-                        <TableCell>{cohort.learners?.length || 0}</TableCell>
-                        <TableCell>{cohort.courses?.length || 0}</TableCell>
+                        <TableCell>{cohort.learners.length}</TableCell>
+                        <TableCell>{cohort.courses.length}</TableCell>
                         <TableCell>
                           <div className="flex space-x-2">
                             <Button
@@ -607,8 +635,11 @@ const AdminSettings = () => {
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => handleDeleteCohort(cohort.cohortId)}>
-                                    Delete
+                                  <AlertDialogAction 
+                                    onClick={() => handleDeleteCohort(cohort.cohortId)}
+                                    disabled={isDeleteCohortLoading}
+                                  >
+                                    {isDeleteCohortLoading ? "Deleting..." : "Delete Cohort"}
                                   </AlertDialogAction>
                                 </AlertDialogFooter>
                               </AlertDialogContent>
@@ -629,7 +660,6 @@ const AdminSettings = () => {
             </CardContent>
           </Card>
 
-          {/* Edit Cohort Dialog */}
           <Dialog open={isEditCohortDialogOpen} onOpenChange={setIsEditCohortDialogOpen}>
             <DialogContent>
               <DialogHeader>
@@ -653,8 +683,12 @@ const AdminSettings = () => {
                 <Button variant="outline" onClick={() => setIsEditCohortDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button type="submit" onClick={handleEditCohort}>
-                  Save Changes
+                <Button 
+                  type="submit" 
+                  disabled={isUpdateCohortLoading}
+                  onClick={handleEditCohort}
+                >
+                  {isUpdateCohortLoading ? "Updating..." : "Update Cohort"}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -701,7 +735,12 @@ const AdminSettings = () => {
                 rows={4}
               />
             </div>
-            <Button onClick={handleSave}>Save Changes</Button>
+            <Button 
+              disabled={isUpdateLoading}
+              onClick={handleSave}
+            >
+              {isUpdateLoading ? "Saving..." : "Save Changes"}
+            </Button>
           </div>
         </TabsContent>
 
@@ -712,9 +751,9 @@ const AdminSettings = () => {
               <AlertDialogTrigger asChild>
                 <Button 
                   variant="destructive" 
-                  disabled={user?.publicMetadata?.userType !== "superadmin"}
+                  disabled={user?.publicMetadata?.userType !== "superadmin" || isDeleteLoading}
                 >
-                  Delete Organization
+                  {isDeleteLoading ? "Deleting..." : "Delete Organization"}
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
@@ -735,9 +774,9 @@ const AdminSettings = () => {
                   <AlertDialogCancel onClick={() => setDeleteConfirmation("")}>Cancel</AlertDialogCancel>
                   <AlertDialogAction
                     onClick={handleDelete}
-                    disabled={deleteConfirmation !== `DELETE ${currentOrg?.name}`}
+                    disabled={deleteConfirmation !== `DELETE ${currentOrg?.name}` || isDeleteLoading}
                   >
-                    Delete Organization
+                    {isDeleteLoading ? "Deleting..." : "Delete Organization"}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>

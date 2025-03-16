@@ -8,6 +8,8 @@ import { useUser } from "@clerk/nextjs"
 import { Spinner } from "@/components/ui/Spinner"
 import { OrganizationContext } from "@/context/OrganizationContext"
 import OrganizationSidebar from "@/components/OrganizationsSidebar"
+import NotFound from "@/components/NotFound"
+import { SignInRequired } from "@/components/SignInRequired"
 
 interface OrganizationLayoutProps {
   children: React.ReactNode
@@ -15,11 +17,11 @@ interface OrganizationLayoutProps {
 
 export default function OrganizationLayout({ children }: OrganizationLayoutProps) {
   const router = useRouter()
-  const { orgId } = useParams()
+  const { orgId } = useParams() as { orgId: string }
   const { user } = useUser()
 
   const { data: organizations, isLoading } = useGetMyOrganizationsQuery()
-  const { data: cohorts, refetch } = useGetCohortsQuery(orgId as string)
+  const { data: cohorts, refetch } = useGetCohortsQuery(orgId)
 
   const [currentOrg, setCurrentOrg] = useState<Organization | null>(null)
 
@@ -34,19 +36,21 @@ export default function OrganizationLayout({ children }: OrganizationLayoutProps
     }
   }, [organizations, orgId, router])
 
-  const isUserAdmin = currentOrg?.admins?.some((admin: { userId: string }) => admin.userId === user?.id)
-
   if (isLoading) return <Spinner />
+  if (!user) return <SignInRequired />
+  if (!currentOrg || !cohorts || !organizations) return <NotFound message={!currentOrg ? "Organization not found" : "Cohorts not found"} />
+  
+  const isAuthorized = currentOrg.admins.some((admin) => admin.userId === user.id)
 
   return (
     <OrganizationContext.Provider value={{ currentOrg }}>
       <div className="flex h-screen w-full">
         <OrganizationSidebar
-          organizations={organizations || []}
-          cohorts={cohorts || []}
-          currentOrg={currentOrg as Organization}
-          isUserAdmin={!!isUserAdmin}
-          orgId={orgId as string}
+          organizations={organizations}
+          cohorts={cohorts}
+          currentOrg={currentOrg}
+          isAuthorized={!!isAuthorized}
+          orgId={orgId}
           refetchCohorts={refetch}
         />
 
