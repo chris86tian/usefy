@@ -1,13 +1,13 @@
 import { Router } from "express";
 import {
-  listNotifications,
+  getNotifications,
   markNotificationAsRead,
 } from "../controllers/notificationController";
 import { requireAuth } from "@clerk/express";
 
 const router = Router();
 
-router.get("/", requireAuth(), listNotifications);
+router.get("/", requireAuth(), getNotifications);
 router.put("/:notificationId", requireAuth(), markNotificationAsRead);
 
 export default router;

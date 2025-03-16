@@ -390,11 +390,11 @@ export const api = createApi({
 
     updateCourse: build.mutation<
       Course,
-      { orgId: string, courseId: string; formData: FormData }
+      { orgId: string, cohortId: string, courseId: string; formData: FormData }
     >({
-      query: ({ orgId, courseId, formData }) => {
+      query: ({ orgId, courseId, cohortId, formData }) => {
         return {
-          url: `courses/${orgId}/${courseId}`,
+          url: `courses/${orgId}/cohorts/${cohortId}/${courseId}`,
           method: "PUT",
           body: formData,
           formData: true,
@@ -661,14 +661,7 @@ export const api = createApi({
         url: `notifications/${notificationId}`,
         method: "PUT",
       }),
-      transformResponse: (response: any) => {
-        if (!response || typeof response !== "object") {
-          return { message: response };
-        }
-        return { message: response.message, data: response.data };
-      },
     }),
-
 
     /* 
     ===============

@@ -325,7 +325,7 @@ const CourseEditor = () => {
 
       const formData = createCourseFormData(data, updatedSectionsAfterFiles, thumbnailUrl)
 
-      await updateCourse({ orgId, courseId, formData }).unwrap()
+      await updateCourse({ orgId, cohortId, courseId, formData }).unwrap()
 
       toast.success("Course updated successfully!")
       refetch()
