@@ -434,7 +434,7 @@ export const api = createApi({
     }),
 
     addCourseInstructor: build.mutation<
-      { message: string },
+      { message: string, id: string },
       { courseId: string; userId?: string; email?: string }
     >({
       query: ({ courseId, userId, email }) => ({

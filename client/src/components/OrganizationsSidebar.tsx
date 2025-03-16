@@ -115,7 +115,7 @@ export default function OrganizationSidebar({
   const canAccessCohort = (cohort: Cohort) => {
     if (isUserAdmin) return true
     if (!user) return false
-    return cohort.learners?.some((learner) => learner.userId === user.id)
+    return cohort.learners?.some((learner) => learner.userId === user.id) || cohort.instructors?.some((instructor) => instructor.userId === user.id)
   }
 
   const handleCohortClick = (cohort: Cohort) => {

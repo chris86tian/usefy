@@ -4,7 +4,7 @@ import { CustomFormField } from "@/components/CustomFormField"
 import Header from "@/components/Header"
 import { Button } from "@/components/ui/button"
 import { Form } from "@/components/ui/form"
-import { centsToDollars, dollarsToCents, uploadAllVideos, uploadThumbnail } from "@/lib/utils"
+import { centsToDollars, dollarsToCents, handleEnroll, uploadAllVideos, uploadThumbnail } from "@/lib/utils"
 import { openSectionModal, setSections } from "@/state"
 import {
   useGetCourseQuery,
@@ -15,6 +15,8 @@ import {
   useRemoveCourseInstructorMutation,
   useGetCourseInstructorsQuery,
   useGetUploadFileUrlMutation,
+  useInviteUserToCohortMutation,
+  useCreateTransactionMutation
 } from "@/state/api"
 import { useAppDispatch, useAppSelector } from "@/state/redux"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -35,21 +37,27 @@ import { uploadAllFiles } from "@/lib/utils";
 import InstructorEmailInput from "./EmailInvite"
 
 const CourseEditor = () => {
-  const { orgId, courseId } = useParams() as { orgId: string; courseId: string }
+  const { orgId, cohortId, courseId } = useParams() as { orgId: string; cohortId: string; courseId: string }
+
   const { data: course, isLoading, refetch } = useGetCourseQuery(courseId)
   const { data: instructors, refetch: refetchInstructors } = useGetCourseInstructorsQuery(courseId)
+
   const [updateCourse, { isLoading: isUpdating }] = useUpdateCourseMutation()
   const [getUploadVideoUrl] = useGetUploadVideoUrlMutation()
   const [getUploadImageUrl] = useGetUploadImageUrlMutation()
+  const [getUploadFileUrl] = useGetUploadFileUrlMutation();
+  const [inviteUserToCohort] = useInviteUserToCohortMutation()
   const [addCourseInstructor] = useAddCourseInstructorMutation()
+  const [createTransaction] = useCreateTransactionMutation()
   const [removeCourseInstructor] = useRemoveCourseInstructorMutation()
+
   const [isUploading, setIsUploading] = useState(false)
   const [progress, setProgress] = useState(0)
   const [image, setImage] = useState<File | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const router = useRouter()
-  const [getUploadFileUrl] = useGetUploadFileUrlMutation();
+
 
   const handleURLSubmit = async (videoUrl: string, options: ProcessOptions) => {
     setIsDialogOpen(false)
@@ -187,10 +195,20 @@ const CourseEditor = () => {
 
   const handleAddInstructor = async (email: string) => {
     try {
-      await addCourseInstructor({
+      await inviteUserToCohort({
+        organizationId: orgId,
+        cohortId,
+        email,
+        role: "instructor",
+      }).unwrap()
+
+      const result = await addCourseInstructor({
         courseId,
         email,
       }).unwrap()
+
+      handleEnroll(result.id, courseId, createTransaction)
+      
       refetchInstructors()
     } catch (error) {
       console.error("Failed to add instructor:", error)

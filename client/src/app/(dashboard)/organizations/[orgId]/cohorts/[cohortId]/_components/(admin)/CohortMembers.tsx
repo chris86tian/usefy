@@ -27,7 +27,7 @@ import {
 import type { User } from "@clerk/nextjs/server"
 
 interface CohortMembersProps {
-  cohort: any
+  cohort: Cohort
   orgUsers: { instructors: User[]; learners: User[]; admins: User[] }
   refetch: () => void
 }
@@ -40,9 +40,7 @@ const CohortMembers = ({ cohort, orgUsers, refetch }: CohortMembersProps) => {
 
   const [addLearnerToCohort] = useAddLearnerToCohortMutation()
   const [removeLearnerFromCohort] = useRemoveLearnerFromCohortMutation()
-  const [inviteUserToCohort, {
-    isLoading: inviteUserToCohortLoading,
-  }] = useInviteUserToCohortMutation()
+  const [inviteUserToCohort, { isLoading: inviteUserToCohortLoading }] = useInviteUserToCohortMutation()
 
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedLearnerId, setSelectedLearnerId] = useState("")

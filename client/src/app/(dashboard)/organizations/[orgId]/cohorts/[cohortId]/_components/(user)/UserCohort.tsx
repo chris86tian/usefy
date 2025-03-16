@@ -8,11 +8,12 @@ import { CourseCard } from "@/components/CourseCard"
 import { Archive } from "lucide-react"
 import { toast } from "sonner"
 import { useUser } from "@clerk/nextjs"
-import { getUserName, handleEnroll } from "@/lib/utils"
+import { handleEnroll } from "@/lib/utils"
 import { useCreateTransactionMutation, useGetMyUserCourseProgressesQuery, useGetCohortQuery } from "@/state/api"
 import { Spinner } from "@/components/ui/Spinner"
 import type { User } from "@clerk/nextjs/server"
 import ArchivedOverlay from "./_components/ArchivedOverlay"
+import NotFound from "@/components/NotFound"
 
 interface UserCohortProps {
   orgUsers: { instructors: User[]; learners: User[]; admins: User[] }
@@ -30,6 +31,9 @@ const UserCohort = ({ orgUsers, coursesLoading, courses, refetch }: UserCohortPr
     { organizationId: orgId as string, cohortId: cohortId as string },
     { skip: !orgId || !cohortId },
   )
+
+  const isInstructor = orgUsers.instructors.some((instructor) => instructor.id === user?.id)
+  const isLearner = orgUsers.learners.some((learner) => learner.id === user?.id)
 
   const [searchTerm, setSearchTerm] = useState("")
   const [showArchived, setShowArchived] = useState(false)
@@ -110,7 +114,7 @@ const UserCohort = ({ orgUsers, coursesLoading, courses, refetch }: UserCohortPr
   }
 
   if (!cohort) {
-    return <div>Cohort not found</div>
+    return <NotFound message="Cohort not found" />
   }
 
   const archivedCount = courses?.filter((course) => course.status === "Archived").length
@@ -143,10 +147,12 @@ const UserCohort = ({ orgUsers, coursesLoading, courses, refetch }: UserCohortPr
               <div key={course.courseId} className="relative">
                 <CourseCard
                   course={course}
-                  onView={handleGoToCourse}
-                  onEnroll={handleCourseEnroll}
+                  variant={isInstructor ? "instructor" : isLearner ? "learner" : "learner"}
                   isEnrolled={isEnrolled}
                   progress={courseProgress}
+                  onView={handleGoToCourse}
+                  onEnroll={handleCourseEnroll}
+                  onEdit={isInstructor ? () => router.push(`/organizations/${orgId}/cohorts/${cohortId}/courses/${course.courseId}/edit`) : undefined}
                 />
                 {course.status === "Archived" && <ArchivedOverlay />}
               </div>

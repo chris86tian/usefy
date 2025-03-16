@@ -15,10 +15,10 @@ import { Spinner } from "@/components/ui/Spinner";
 
 export default function CohortPage() {
     const { user } = useUser()
-    const { orgId, cohortId } = useParams()
+    const { orgId, cohortId } = useParams() as { orgId: string, cohortId: string }
     const { currentOrg } = useOrganization()
     const { data: orgUsers, isLoading: usersLoading } = useGetOrganizationUsersQuery(orgId as string)
-    const { data: cohortCourses, isLoading: coursesLoading, refetch } = useGetCohortCoursesQuery({ organizationId: orgId as string, cohortId: cohortId as string })
+    const { data: cohortCourses, isLoading: coursesLoading, refetch } = useGetCohortCoursesQuery({ organizationId: orgId, cohortId })
 
     const isAdmin = currentOrg?.admins.some((admin) => admin.userId === user?.id)
 

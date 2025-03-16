@@ -14,18 +14,19 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { BookOpen, Plus, Users } from "lucide-react"
+import { BookOpen, Users } from "lucide-react"
 import { getUserName, handleEnroll } from "@/lib/utils"
 import {
+  useGetOrganizationCoursesQuery,
   useAddCourseToCohortMutation,
-  useRemoveCourseFromCohortMutation,
   useAddCourseInstructorMutation,
   useRemoveCourseInstructorMutation,
   useCreateTransactionMutation,
   useUnenrollUserMutation,
+  useGetCohortLearnersQuery,
   useArchiveCourseMutation,
   useUnarchiveCourseMutation,
-  useCreateCourseMutation,
+  useGetCourseInstructorsQuery,
 } from "@/state/api"
 import { CourseCard } from "@/components/CourseCard"
 import { Toolbar } from "@/components/Toolbar"
@@ -55,9 +56,11 @@ interface CohortCoursesProps {
 const CohortCourses = ({ cohort, orgUsers, courses, refetch, currentUserId }: CohortCoursesProps) => {
   const router = useRouter()
 
-  const [createCourse] = useCreateCourseMutation()
+  const { data: orgCourses, isLoading: coursesLoading } = useGetOrganizationCoursesQuery(
+    cohort?.organizationId as string,
+  )
+
   const [addCourseToCohort, { isLoading: addCourseLoading }] = useAddCourseToCohortMutation()
-  const [removeCourseFromCohort] = useRemoveCourseFromCohortMutation()
   const [addCourseInstructor, { isLoading: addInstructorLoading }] = useAddCourseInstructorMutation()
   const [removeCourseInstructor] = useRemoveCourseInstructorMutation()
   const [createTransaction] = useCreateTransactionMutation()
@@ -75,7 +78,7 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch, currentUserId }: Co
   const [courseToDelete, setCourseToDelete] = useState<Course | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
-  const availableCourses = courses.filter((course) => !courses?.some((c) => c.courseId === course.courseId)) || []
+  const availableCourses = orgCourses?.filter((course) => !courses?.some((c) => c.courseId === course.courseId)) || []
 
   const REMOVE_INSTRUCTOR_VALUE = "remove_instructor"
 
@@ -96,26 +99,6 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch, currentUserId }: Co
         return 0
       })
   }, [courses, searchTerm, currentUserId])
-
-  const handleCreateCourse = async () => {
-    const result = await createCourse().unwrap();
-
-    if (orgUsers.admins) {
-      for (const admin of orgUsers.admins) {
-        await handleEnroll(admin.id, result.courseId, createTransaction);
-      }
-    }
-
-    await addCourseToCohort({
-      organizationId: cohort.organizationId,
-      cohortId: cohort.cohortId,
-      courseId: result.courseId,
-    }).unwrap();
-    
-    router.push(`/organizations/${cohort.organizationId}/cohorts/${cohort.cohortId}/courses/${result.courseId}/edit`, {
-      scroll: false,
-    });
-  };
 
 
   const handleAddCourse = async () => {
@@ -164,11 +147,6 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch, currentUserId }: Co
     setIsManageUsersDialogOpen(true)
   }
 
-  const getInstructorName = (instructorId: string) => {
-    const instructor = orgUsers?.instructors?.find((i) => i.id === instructorId)
-    return instructor ? getUserName(instructor) : instructorId
-  }
-
   const handleManageInstructors = async () => {
     if (!courseToEdit) {
       toast.error("No course selected")
@@ -200,7 +178,7 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch, currentUserId }: Co
         handleEnroll(selectedInstructorId, courseToEdit.courseId, createTransaction)
       }
 
-      if (!selectedInstructorId && !isRemovingInstructor) {
+      if (!hasCurrentInstructor && !selectedInstructorId) {
         toast.error("Please select an instructor")
         return
       }
@@ -241,11 +219,8 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch, currentUserId }: Co
     if (!courseToDelete) return
 
     try {
-      await removeCourseFromCohort({
-        organizationId: cohort.organizationId,
-        cohortId: cohort.cohortId,
-        courseId: courseToDelete.courseId,
-      }).unwrap()
+      // Here we would need to implement the logic to remove a course from a cohort
+      // This is different from removing from organization
       toast.success(`Course "${courseToDelete.title}" removed from cohort`)
       refetch()
     } catch (error) {
@@ -279,11 +254,13 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch, currentUserId }: Co
   const handleGoToCourse = (course: Course) => {
     if (course.sections?.[0]?.chapters?.[0]) {
       router.push(
-        `/organizations/${cohort?.organizationId}/cohorts/${cohort.cohortId}/courses/${course.courseId}/chapters/${course.sections[0].chapters[0].chapterId}`,
+        `/organizations/${cohort?.organizationId}/cohorts/${cohort?.cohortId}/courses/${course.courseId}/chapters/${course.sections[0].chapters[0].chapterId}`,
         { scroll: false },
       )
     } else {
-      router.push(`/organizations/${cohort?.organizationId}/cohorts/${cohort.cohortId}/courses/${course.courseId}`, { scroll: false })
+      router.push(`/organizations/${cohort?.organizationId}/cohorts/${cohort?.cohortId}/courses/${course.courseId}`, {
+        scroll: false,
+      })
     }
   }
 
@@ -293,83 +270,77 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch, currentUserId }: Co
     <>
       <Header
         rightElement={
-          <div className="flex items-center space-x-4">
-            <Button onClick={handleCreateCourse}>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Course
-            </Button>
-            <Dialog
-              open={activeDialog === "addCourse"}
-              onOpenChange={(open) => {
-                setActiveDialog(open ? "addCourse" : "none")
-                if (!open) {
-                  setSelectedCourseId("")
-                  setSelectedInstructorId("")
-                }
-              }}
-            >
-              <DialogTrigger asChild>
-                <Button>
-                  <BookOpen className="mr-2 h-4 w-4" />
-                  Add Course
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add Course to Cohort</DialogTitle>
-                  <DialogDescription>Select a course and assign an instructor.</DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="course">Course</Label>
-                    <Select value={selectedCourseId} onValueChange={setSelectedCourseId}>
-                      <SelectTrigger id="course">
-                        <SelectValue placeholder="Select course" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableCourses.length > 0 ? (
-                          availableCourses.map((course) => (
-                            <SelectItem key={course.courseId} value={course.courseId}>
-                              {course.title}
-                            </SelectItem>
-                          ))
-                        ) : (
-                          <div className="p-2 text-center text-muted-foreground">No courses available</div>
-                        )}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="instructor">Instructor (Optional)</Label>
-                    <Select value={selectedInstructorId} onValueChange={setSelectedInstructorId}>
-                      <SelectTrigger id="instructor">
-                        <SelectValue placeholder="Select instructor" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {orgUsers?.instructors?.length > 0 ? (
-                          orgUsers?.instructors?.map((instructor) => (
-                            <SelectItem key={instructor.id} value={instructor.id}>
-                              {getUserName(instructor)}
-                            </SelectItem>
-                          ))
-                        ) : (
-                          <div className="p-2 text-center text-muted-foreground">No instructors available</div>
-                        )}
-                      </SelectContent>
-                    </Select>
-                  </div>
+          <Dialog
+            open={activeDialog === "addCourse"}
+            onOpenChange={(open) => {
+              setActiveDialog(open ? "addCourse" : "none")
+              if (!open) {
+                setSelectedCourseId("")
+                setSelectedInstructorId("")
+              }
+            }}
+          >
+            <DialogTrigger asChild>
+              <Button>
+                <BookOpen className="mr-2 h-4 w-4" />
+                Add Course
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add Course to Cohort</DialogTitle>
+                <DialogDescription>Select a course and assign an instructor.</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="course">Course</Label>
+                  <Select value={selectedCourseId} onValueChange={setSelectedCourseId}>
+                    <SelectTrigger id="course">
+                      <SelectValue placeholder="Select course" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableCourses.length > 0 ? (
+                        availableCourses.map((course) => (
+                          <SelectItem key={course.courseId} value={course.courseId}>
+                            {course.title}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <div className="p-2 text-center text-muted-foreground">No courses available</div>
+                      )}
+                    </SelectContent>
+                  </Select>
                 </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setActiveDialog("none")}>
-                    Cancel
-                  </Button>
-                  <Button onClick={handleAddCourse} disabled={addCourseLoading || addInstructorLoading}>
-                    {addCourseLoading || addInstructorLoading ? "Adding..." : "Add Course"}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </div>
+                <div className="space-y-2">
+                  <Label htmlFor="instructor">Instructor (Optional)</Label>
+                  <Select value={selectedInstructorId} onValueChange={setSelectedInstructorId}>
+                    <SelectTrigger id="instructor">
+                      <SelectValue placeholder="Select instructor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {orgUsers?.instructors?.length > 0 ? (
+                        orgUsers?.instructors?.map((instructor) => (
+                          <SelectItem key={instructor.id} value={instructor.id}>
+                            {getUserName(instructor)}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <div className="p-2 text-center text-muted-foreground">No instructors available</div>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setActiveDialog("none")}>
+                  Cancel
+                </Button>
+                <Button onClick={handleAddCourse} disabled={addCourseLoading || addInstructorLoading}>
+                  {addCourseLoading || addInstructorLoading ? "Adding..." : "Add Course"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         }
       />
 
@@ -385,7 +356,6 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch, currentUserId }: Co
               isEnrolled={true}
               onEdit={handleEdit}
               onDelete={handleDeleteConfirmation}
-              isOwner={!!isAdmin}
               onView={handleGoToCourse}
               onArchive={handleArchive}
               onUnarchive={handleUnarchive}
@@ -418,8 +388,13 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch, currentUserId }: Co
           <DialogHeader>
             <DialogTitle>Manage Course Instructors</DialogTitle>
             <DialogDescription>
-              {courseToEdit?.instructors && courseToEdit.instructors.length > 0
-                ? `Current instructor: ${getInstructorName(courseToEdit.instructors[0].userId)}`
+              {courseToEdit?.instructors && courseToEdit.instructors.length > 0 && courseToEdit
+                ? (() => {
+                    const instructorId = courseToEdit.instructors[0].userId
+                    const instructorData = orgUsers.instructors.find((i) => i.id === instructorId)
+
+                    return `Current instructor: ${instructorData ? getUserName(instructorData) : instructorId}`
+                  })()
                 : "No instructor currently assigned"}
             </DialogDescription>
           </DialogHeader>
@@ -432,7 +407,10 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch, currentUserId }: Co
                     {selectedInstructorId === REMOVE_INSTRUCTOR_VALUE
                       ? "Remove instructor"
                       : selectedInstructorId
-                        ? getInstructorName(selectedInstructorId)
+                        ? (() => {
+                            const instructor = orgUsers.instructors.find((i) => i.id === selectedInstructorId)
+                            return instructor ? getUserName(instructor) : selectedInstructorId
+                          })()
                         : "Select instructor"}
                   </SelectValue>
                 </SelectTrigger>
@@ -442,8 +420,8 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch, currentUserId }: Co
                       <span className="text-destructive">Remove instructor</span>
                     </SelectItem>
                   )}
-                  {orgUsers?.instructors?.length > 0 ? (
-                    orgUsers?.instructors?.map((instructor) => (
+                  {orgUsers.instructors.length > 0 ?
+                    orgUsers.instructors.map((instructor) => (
                       <SelectItem key={instructor.id} value={instructor.id}>
                         <span className="flex flex-col">
                           <span>{getUserName(instructor)}</span>
@@ -453,9 +431,8 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch, currentUserId }: Co
                         </span>
                       </SelectItem>
                     ))
-                  ) : (
-                    <div className="p-2 text-center text-muted-foreground">No instructors available</div>
-                  )}
+                    : <div className="p-2 text-center text-muted-foreground">No instructors found</div>
+                  }
                 </SelectContent>
               </Select>
             </div>

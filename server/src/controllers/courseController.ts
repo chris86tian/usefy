@@ -281,7 +281,6 @@ export const unarchiveCourse = async (
   res: Response
 ): Promise<void> => {
   const { courseId } = req.params;
-  const { userId } = getAuth(req);
 
   try {
     const course = await Course.get(courseId);
@@ -456,7 +455,7 @@ export const addCourseInstructor = async (req: Request, res: Response): Promise<
       );
     }
 
-    res.json({ message: "Instructor added to course successfully", data: course });
+    res.json({ message: "Instructor added to course successfully", data: user });
   } catch (error) {
     res.status(500).json({ message: "Error adding instructor to course", error });
   }

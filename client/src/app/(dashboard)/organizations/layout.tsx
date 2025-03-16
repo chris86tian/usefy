@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { useGetMyOrganizationsQuery, useCreateCohortMutation, useGetCohortsQuery } from "@/state/api"
+import { useGetMyOrganizationsQuery, useGetCohortsQuery } from "@/state/api"
 import { useUser } from "@clerk/nextjs"
 import { Spinner } from "@/components/ui/Spinner"
 import { OrganizationContext } from "@/context/OrganizationContext"
@@ -14,12 +14,14 @@ interface OrganizationLayoutProps {
 }
 
 export default function OrganizationLayout({ children }: OrganizationLayoutProps) {
+  const router = useRouter()
   const { orgId } = useParams()
   const { user } = useUser()
+
   const { data: organizations, isLoading } = useGetMyOrganizationsQuery()
   const { data: cohorts, refetch } = useGetCohortsQuery(orgId as string)
+
   const [currentOrg, setCurrentOrg] = useState<Organization | null>(null)
-  const router = useRouter()
 
   useEffect(() => {
     if (organizations && orgId) {
