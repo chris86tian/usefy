@@ -508,7 +508,6 @@ export const inviteUserToCohort = async (req: Request, res: Response): Promise<v
       }
       list.push({ userId: user.id });
 
-      // Add user to organization members based on their role
       if (role === 'learner') {
         if (!organization.learners.some((member: any) => member.userId === user?.id)) {
           organization.learners.push({ userId: user.id });
@@ -519,8 +518,8 @@ export const inviteUserToCohort = async (req: Request, res: Response): Promise<v
         }
       }
 
-      await cohort.save(); // Save the updated cohort
-      await organization.save(); // Save the updated organization
+      await cohort.save();
+      await organization.save();
 
       const message = `You've been added to the cohort ${cohort.name}. Click here to view: ${process.env.CLIENT_URL}/organizations/${organizationId}/cohorts/${cohortId}`;
       await sendMessage(
@@ -548,7 +547,7 @@ export const inviteUserToCohort = async (req: Request, res: Response): Promise<v
         organization.instructors.push({ userId: user.id });
       }
 
-      const resetPasswordLink = `${process.env.CLIENT_URL}/reset-password?email=${encodeURIComponent(email)}`;
+      const resetPasswordLink = `${process.env.CLIENT_URL}/reset-password?email=${encodeURIComponent(email)}&organizationId=${organizationId}&cohortId=${cohortId}`;
 
       await sendMessage(
         user.id,
@@ -559,8 +558,8 @@ export const inviteUserToCohort = async (req: Request, res: Response): Promise<v
         { sendEmail: true, sendNotification: false, rateLimited: false }
       );
 
-      await cohort.save(); // Save the updated cohort
-      await organization.save(); // Save the updated organization
+      await cohort.save();
+      await organization.save();
 
       res.json({ message: "User invitation processed successfully", data: cohort });
     }

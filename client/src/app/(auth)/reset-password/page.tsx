@@ -11,7 +11,7 @@ import { Mail, ShieldCheck, InfoIcon, ArrowLeftIcon, CheckCircle } from 'lucide-
 import { useSearchParams } from 'next/navigation'
 import { Separator } from "@/components/ui/separator"
 
-const ForgotPasswordPage = () => {    
+const ForgotPassword = () => {    
   const searchParams = useSearchParams()
   const [email, setEmail] = useState(searchParams.get('email') || '')
   const [password, setPassword] = useState('')
@@ -22,10 +22,12 @@ const ForgotPasswordPage = () => {
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
-
-  // New state variables for firstName and lastName
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
+  
+  const organizationId = searchParams.get('organizationId') || ''
+  const cohortId = searchParams.get('cohortId') || ''
+  const hasRedirectParams = organizationId && cohortId
 
   const router = useRouter()
   const { isSignedIn } = useAuth()
@@ -34,14 +36,16 @@ const ForgotPasswordPage = () => {
 
   useEffect(() => {
     if (isSignedIn && !successfulReset) {
-      router.push('/')
+      if (hasRedirectParams) {
+        router.push(`/organizations/${organizationId}/cohorts/${cohortId}`)
+      } else {
+        router.push('/')
+      }
     }
-  }, [isSignedIn, router, successfulReset])
+  }, [isSignedIn, router, successfulReset, hasRedirectParams, organizationId, cohortId])
 
-  // This effect handles updating user profile after successful login
   useEffect(() => {
     const updateUserProfile = async () => {
-      // Only proceed if we've successfully reset the password and the user is loaded
       if (successfulReset && isUserLoaded && user && firstName && lastName) {
         try {
           await user.update({
@@ -49,10 +53,13 @@ const ForgotPasswordPage = () => {
             lastName,
           })
           
-          // Redirect to home page or profile page after successful update
           setTimeout(() => {
-            router.push('/')
-          }, 2000) // Small delay to show success message
+            if (hasRedirectParams) {
+              router.push(`/organizations/${organizationId}/cohorts/${cohortId}`)
+            } else {
+              router.push('/')
+            }
+          }, 2000)
         } catch (error: any) {
           console.error("Error updating user profile:", error)
           setError(error.message || "Failed to update profile information")
@@ -61,7 +68,7 @@ const ForgotPasswordPage = () => {
     }
 
     updateUserProfile()
-  }, [successfulReset, isUserLoaded, user, firstName, lastName, router])
+  }, [successfulReset, isUserLoaded, user, firstName, lastName, router, hasRedirectParams, organizationId, cohortId])
 
   if (!isLoaded) {
     return null
@@ -103,7 +110,7 @@ const ForgotPasswordPage = () => {
       } else if (result?.status === 'complete') {
         if (setActive) {
           await setActive({ session: result.createdSessionId })
-          setSuccessfulReset(true) // Mark reset as successful to trigger the useEffect
+          setSuccessfulReset(true)
         }
       }
     } catch (err: any) {
@@ -117,6 +124,13 @@ const ForgotPasswordPage = () => {
     setSuccessfulCreation(false)
     setEmailSent(false)
     setError('')
+  }
+
+  const getRedirectMessage = () => {
+    if (hasRedirectParams) {
+      return "You will be redirected to your cohort page momentarily."
+    }
+    return "You will be redirected to the home page momentarily."
   }
 
   return (
@@ -164,7 +178,7 @@ const ForgotPasswordPage = () => {
               <AlertTitle>Success!</AlertTitle>
               <AlertDescription>
                 Your password has been reset successfully and your profile information has been updated.
-                You will be redirected to the home page momentarily.
+                {getRedirectMessage()}
               </AlertDescription>
             </Alert>
           ) : (
@@ -310,4 +324,4 @@ const ForgotPasswordPage = () => {
   )
 }
 
-export default ForgotPasswordPage
+export default ForgotPassword

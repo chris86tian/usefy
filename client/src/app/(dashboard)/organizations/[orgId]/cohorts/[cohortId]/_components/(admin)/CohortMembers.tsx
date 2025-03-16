@@ -39,7 +39,7 @@ const CohortMembers = ({ cohort, orgUsers, refetch }: CohortMembersProps) => {
   )
 
   const [addLearnerToCohort] = useAddLearnerToCohortMutation()
-  const [removeLearnerFromCohort] = useRemoveLearnerFromCohortMutation()
+  const [removeLearnerFromCohort, { isLoading: removeLearnerFromCohortLoading }] = useRemoveLearnerFromCohortMutation()
   const [inviteUserToCohort, { isLoading: inviteUserToCohortLoading }] = useInviteUserToCohortMutation()
 
   const [searchTerm, setSearchTerm] = useState("")
@@ -264,8 +264,10 @@ const CohortMembers = ({ cohort, orgUsers, refetch }: CohortMembersProps) => {
                     <TableCell className="font-medium">{getUserName(learner)}</TableCell>
                     <TableCell>{learner.emailAddresses[0].emailAddress}</TableCell>
                     <TableCell>
-                      <Button onClick={() => handleRemoveLearner(learner.id)} variant="outline" size="sm">
-                        Remove
+                      <Button 
+                        disabled={removeLearnerFromCohortLoading}
+                        onClick={() => handleRemoveLearner(learner.id)} variant="outline" size="sm">
+                        {removeLearnerFromCohortLoading ? "Removing..." : "Remove"}
                       </Button>
                     </TableCell>
                   </TableRow>

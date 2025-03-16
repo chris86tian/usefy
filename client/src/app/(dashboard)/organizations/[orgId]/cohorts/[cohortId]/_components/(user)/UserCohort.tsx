@@ -153,6 +153,7 @@ const UserCohort = ({ orgUsers, coursesLoading, courses, refetch }: UserCohortPr
                   onView={handleGoToCourse}
                   onEnroll={handleCourseEnroll}
                   onEdit={isInstructor ? () => router.push(`/organizations/${orgId}/cohorts/${cohortId}/courses/${course.courseId}/edit`) : undefined}
+                  onStats={isInstructor ? () => router.push(`/organizations/${orgId}/cohorts/${cohortId}/courses/${course.courseId}/stats`) : undefined}
                 />
                 {course.status === "Archived" && <ArchivedOverlay />}
               </div>
