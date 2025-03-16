@@ -30,7 +30,6 @@ const ChaptersSidebar = () => {
   const router = useRouter()
   const [expandedSections, setExpandedSections] = useState<string[]>([])
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const { currentOrg } = useOrganization()
   const { orgId, cohortId } = useParams()
 
   const {

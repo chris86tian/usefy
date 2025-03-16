@@ -61,7 +61,7 @@ import { Spinner } from "@/components/ui/Spinner"
 const AdminSettings = () => {
   const router = useRouter()
   const { user } = useUser()
-  const { currentOrg } = useOrganization()
+  const { currentOrg, isOrgLoading } = useOrganization()
   const { orgId } = useParams() as { orgId: string; cohortId: string }
 
   const [updateOrganization, { isLoading: isUpdateLoading } ] = useUpdateOrganizationMutation()
@@ -139,7 +139,7 @@ const AdminSettings = () => {
     return cohorts.filter((cohort) => cohort.name.toLowerCase().includes(cohortSearchTerm.toLowerCase()))
   }, [cohorts, cohortSearchTerm])
 
-  if (isMembersLoading || isCohortsLoading) return <Spinner />
+  if (isOrgLoading || isMembersLoading || isCohortsLoading) return <Spinner />
   if (!user) return <SignInRequired />
   if (!members) return <NotFound message="Members not found" />
   if (!currentOrg) return <NotFound message="Organization not found" />

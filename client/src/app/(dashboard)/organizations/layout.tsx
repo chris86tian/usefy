@@ -1,49 +1,54 @@
-"use client"
+'use client';
 
-import type React from "react"
-import { useState, useEffect } from "react"
-import { useParams, useRouter } from "next/navigation"
-import { useGetMyOrganizationsQuery, useGetCohortsQuery } from "@/state/api"
-import { useUser } from "@clerk/nextjs"
-import { Spinner } from "@/components/ui/Spinner"
-import { OrganizationContext } from "@/context/OrganizationContext"
-import OrganizationSidebar from "@/components/OrganizationsSidebar"
-import NotFound from "@/components/NotFound"
-import { SignInRequired } from "@/components/SignInRequired"
+import type React from "react";
+import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useGetMyOrganizationsQuery, useGetCohortsQuery } from "@/state/api";
+import { useUser } from "@clerk/nextjs";
+import { Spinner } from "@/components/ui/Spinner";
+import { OrganizationContext } from "@/context/OrganizationContext";
+import OrganizationSidebar from "@/components/OrganizationsSidebar";
+import NotFound from "@/components/NotFound";
+import { SignInRequired } from "@/components/SignInRequired";
 
 interface OrganizationLayoutProps {
-  children: React.ReactNode
+  children: React.ReactNode;
 }
 
 export default function OrganizationLayout({ children }: OrganizationLayoutProps) {
-  const router = useRouter()
-  const { orgId } = useParams() as { orgId: string }
-  const { user } = useUser()
+  const { orgId } = useParams() as { orgId: string };
+  const { user } = useUser();
 
-  const { data: organizations, isLoading } = useGetMyOrganizationsQuery()
-  const { data: cohorts, refetch } = useGetCohortsQuery(orgId)
+  const { data: organizations, isLoading: orgsLoading } = useGetMyOrganizationsQuery();
+  const { data: cohorts, isLoading: cohortsLoading, refetch } = useGetCohortsQuery(orgId);
 
-  const [currentOrg, setCurrentOrg] = useState<Organization | null>(null)
+  const [currentOrg, setCurrentOrg] = useState<Organization | null>(null);
+  const [isOrgLoading, setIsOrgLoading] = useState(true);
 
   useEffect(() => {
-    if (organizations && orgId) {
-      const org = organizations.find((org) => org.organizationId === orgId)
-      if (org) {
-        setCurrentOrg(org)
-      } else if (organizations.length > 0) {
-        router.push(`/organizations/${organizations[0].organizationId}`)
-      }
-    }
-  }, [organizations, orgId, router])
+    if (!organizations || !orgId) return;
 
-  if (isLoading) return <Spinner />
-  if (!user) return <SignInRequired />
-  if (!currentOrg || !cohorts || !organizations) return <NotFound message={!currentOrg ? "Organization not found" : "Cohorts not found"} />
+    const org = organizations.find((org) => org.organizationId === orgId);
+    if (org) {
+      setCurrentOrg(org);
+      setIsOrgLoading(false);
+    } else if (organizations.length > 0) {
+      setCurrentOrg(organizations[0]);
+      setIsOrgLoading(false);
+    } else {
+      setIsOrgLoading(false);
+    }
+  }, [organizations, orgId]);
+
+  if (orgsLoading || cohortsLoading || isOrgLoading) return <Spinner />;
+  if (!user) return <SignInRequired />;
+  if (!currentOrg || !cohorts || !organizations) 
+    return <NotFound message={!currentOrg ? "Organization not found" : !cohorts ? "Cohorts not found" : "Organizations not found"} />;
   
-  const isAuthorized = currentOrg.admins.some((admin) => admin.userId === user.id)
+  const isAuthorized = currentOrg.admins.some((admin) => admin.userId === user.id);
 
   return (
-    <OrganizationContext.Provider value={{ currentOrg }}>
+    <OrganizationContext.Provider value={{ currentOrg, isOrgLoading }}>
       <div className="flex h-screen w-full">
         <OrganizationSidebar
           organizations={organizations}
@@ -53,12 +58,10 @@ export default function OrganizationLayout({ children }: OrganizationLayoutProps
           orgId={orgId}
           refetchCohorts={refetch}
         />
-
         <div className="flex-1 flex flex-col">
           <main className="flex-1 p-4">{children}</main>
         </div>
       </div>
     </OrganizationContext.Provider>
-  )
+  );
 }
-

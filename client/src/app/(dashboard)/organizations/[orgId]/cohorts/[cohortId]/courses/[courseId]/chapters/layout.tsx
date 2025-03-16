@@ -10,6 +10,7 @@ import ChaptersSidebar from "@/components/ChaptersSidebar"
 import { useCourseProgressData } from "@/hooks/useCourseProgressData"
 import { Spinner } from "@/components/ui/Spinner"
 import { useOrganization } from "@/context/OrganizationContext"
+import NotFound from "@/components/NotFound"
 
 interface ChapterLayoutProps {
   children: React.ReactNode
@@ -22,7 +23,7 @@ export default function ChapterLayout({ children }: ChapterLayoutProps) {
   const pathname = usePathname()
   const router = useRouter()
 
-  const { currentOrg } = useOrganization()
+  const { currentOrg, isOrgLoading } = useOrganization()
 
   const {
     course,
@@ -95,23 +96,10 @@ export default function ChapterLayout({ children }: ChapterLayoutProps) {
     }
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Spinner />
-      </div>
-    )
-  }
+  if (isOrgLoading || isLoading) return <Spinner />
 
-  if (!course) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-muted-foreground">Course not found</p>
-      </div>
-    )
-  }
+  if (!course) return <NotFound message="Course not found" />
 
-  // Calculate current chapter number and total chapters
   const allChapters = course.sections.flatMap((section: any) => section.chapters)
   const currentChapterIndex = allChapters.findIndex((c: any) => c.chapterId === chapterId)
   const totalChapters = allChapters.length

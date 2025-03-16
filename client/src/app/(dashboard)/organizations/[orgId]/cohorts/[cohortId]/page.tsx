@@ -17,7 +17,7 @@ import {
 export default function CohortPage() {
     const { user } = useUser()
     const { orgId, cohortId } = useParams() as { orgId: string, cohortId: string }
-    const { currentOrg } = useOrganization()
+    const { currentOrg, isOrgLoading } = useOrganization()
     
     const { data: orgUsers, 
         isLoading: usersLoading 
@@ -28,7 +28,7 @@ export default function CohortPage() {
         refetch 
     } = useGetCohortCoursesQuery({ organizationId: orgId, cohortId })
 
-    if (usersLoading || coursesLoading) return <Spinner />
+    if (isOrgLoading || usersLoading || coursesLoading) return <Spinner />
     if (!user) return <SignInRequired />
     if (!currentOrg || !orgUsers || !cohortCourses) return <NotFound message={!currentOrg ? "Organization not found" : "Cohort not found"} />
 

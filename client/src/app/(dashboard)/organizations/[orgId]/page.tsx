@@ -7,11 +7,13 @@ import Header from "@/components/Header"
 import AdminDashboard from "./_components/AdminDashboard"
 import UserDashboard from "./_components/UserDashboard"
 import NotFound from "@/components/NotFound"
+import { Spinner } from "@/components/ui/Spinner"
 
 export default function OrganizationDashboard() {
-  const { currentOrg } = useOrganization()
+  const { currentOrg, isOrgLoading } = useOrganization()
   const { user } = useUser()
 
+  if (isOrgLoading) return <Spinner />
   if (!user) return <SignInRequired />
   if (!currentOrg) return <NotFound message="Organization not found" />
 
