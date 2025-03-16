@@ -35,12 +35,16 @@ import { v4 as uuid } from "uuid"
 import { useRouter } from "next/navigation"
 import { uploadAllFiles } from "@/lib/utils";
 import InstructorEmailInput from "./EmailInvite"
+import { useUser } from "@clerk/nextjs"
 
 const CourseEditor = () => {
+  const { user } = useUser()
   const { orgId, cohortId, courseId } = useParams() as { orgId: string; cohortId: string; courseId: string }
 
   const { data: course, isLoading, refetch } = useGetCourseQuery(courseId)
   const { data: instructors, refetch: refetchInstructors } = useGetCourseInstructorsQuery(courseId)
+
+  const isInstructor = instructors?.some((instructor) => instructor.id === user?.id)
 
   const [updateCourse, { isLoading: isUpdating }] = useUpdateCourseMutation()
   const [getUploadVideoUrl] = useGetUploadVideoUrlMutation()
@@ -425,14 +429,15 @@ const CourseEditor = () => {
                   </div>
                 </div>
 
-                {/* Instructor Email Input */}
-                <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                  <InstructorEmailInput
-                    existingInstructors={formattedInstructors}
-                    onAddInstructor={handleAddInstructor}
-                    onRemoveInstructor={handleRemoveInstructor}
-                  />
-                </div>
+                {!isInstructor && (
+                  <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <InstructorEmailInput
+                      existingInstructors={formattedInstructors}
+                      onAddInstructor={handleAddInstructor}
+                      onRemoveInstructor={handleRemoveInstructor}
+                    />
+                  </div>
+                )}
               </div>
             </div>
 

@@ -43,7 +43,7 @@ const AssignmentDescription = ({ text }: { text: string }) => {
 
 export function AssignmentCard({ assignment, isAuthorized, course, sectionId, chapter }: AssignmentCardProps) {
   const { user } = useUser()
-  const { orgId } = useParams()
+  const { orgId, cohortId } = useParams()
   const router = useRouter()
   const [deleteAssignment, { isLoading: isDeleting }] = useDeleteAssignmentMutation()
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
@@ -70,7 +70,7 @@ export function AssignmentCard({ assignment, isAuthorized, course, sectionId, ch
   const handleAssignment = () => {
     if (assignment.isCoding) {
       router.push(
-        `/organizations/${orgId}/courses/${course.courseId}/chapters/${chapter.chapterId}/code?courseId=${course.courseId}&sectionId=${sectionId}&chapterId=${chapter.chapterId}&assignmentId=${assignment.assignmentId}`,
+        `/organizations/${orgId}/cohorts/${cohortId}/courses/${course.courseId}/chapters/${chapter.chapterId}/code?courseId=${course.courseId}&sectionId=${sectionId}&chapterId=${chapter.chapterId}&assignmentId=${assignment.assignmentId}`,
       )
     } else {
       setIsSubmissionModalOpen(true)
