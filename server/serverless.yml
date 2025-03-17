@@ -30,10 +30,14 @@ custom:
   s3BucketName:
     dev: expertize-bucket-dev
     prod: expertize-bucket-prod
+    migration: expertize-bucket-migration
   corsOrigins:
     dev:
       - http://localhost:3000
     prod:
+      - https://usefy.com
+      - https://www.usefy.com
+    migration:
       - https://usefy.com
       - https://www.usefy.com
 
@@ -45,7 +49,7 @@ functions:
           path: /
           method: any
           cors:
-            origins: ${self:custom.corsOrigins.${opt:stage, 'dev'}}
+            origin: "https://www.usefy.com,https://usefy.com"
             headers:
               - Content-Type
               - Authorization
@@ -57,7 +61,7 @@ functions:
           path: "{proxy+}"
           method: any
           cors:
-            origins: ${self:custom.corsOrigins.${opt:stage, 'dev'}}
+            origin: "https://www.usefy.com,https://usefy.com"
             headers:
               - Content-Type
               - Authorization

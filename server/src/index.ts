@@ -93,7 +93,6 @@ const allowedOrigins = [
   "https://www.usefy.com",
 ];
 
-
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   if (origin && allowedOrigins.includes(origin)) {
@@ -123,11 +122,14 @@ app.use((req, res, next) => {
   next();
 });
 
-app.options('*', (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.setHeader('Access-Control-Max-Age', '86400');
+app.options("*", (req, res) => {
+  res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, OPTIONS"
+  );
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Max-Age", "86400");
   res.status(200).send();
 });
 
@@ -145,7 +147,7 @@ app.use("/transactions", requireAuth(), transactionRoutes);
 app.use("/notifications", requireAuth(), notificationRoutes);
 app.use("/commits", requireAuth(), commitRoutes);
 app.use("/feedback", requireAuth(), feedbackRoutes);
-app.use('/time-tracking', timeTrackingRoutes);
+app.use("/time-tracking", timeTrackingRoutes);
 
 app.use(
   (
@@ -205,11 +207,16 @@ export const handler = async (
   event.headers = event.headers || {};
   const origin = event.headers.origin || "https://www.usefy.com";
 
-  if (!allowedOrigins.includes(origin)) {
+  // Always check if the origin is allowed, even for the root path
+  const isAllowedOrigin = allowedOrigins.includes(origin);
+
+  if (!isAllowedOrigin) {
     return {
       statusCode: 403,
       headers: {
         "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": origin,
+        "Access-Control-Allow-Credentials": "true",
       },
       body: JSON.stringify({ message: "Origin not allowed" }),
     };
@@ -221,7 +228,7 @@ export const handler = async (
       headers: {
         "Access-Control-Allow-Origin": origin,
         "Access-Control-Allow-Headers":
-          "Content-Type,Authorization,X-Requested-With",
+          "Content-Type,Authorization,X-Requested-With,Accept",
         "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
         "Access-Control-Allow-Credentials": "true",
         "Access-Control-Max-Age": "86400",
@@ -237,10 +244,55 @@ export const handler = async (
       event.headers["x-request-id"] = event.requestContext.requestId;
     }
 
+    event.headers["x-api-request"] = "true";
+
+    const isRootPath =
+      event.path === "/" ||
+      event.path === "/migration" ||
+      event.path === "/migration/";
+
+    if (isRootPath) {
+      return {
+        statusCode: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": origin,
+          "Access-Control-Allow-Credentials": "true",
+          "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
+          "Access-Control-Allow-Headers":
+            "Content-Type,Authorization,X-Requested-With,Accept",
+          "Access-Control-Max-Age": "86400",
+        },
+        body: JSON.stringify({ message: "API is running" }),
+      };
+    }
+
     const result = await serverlessApp(event, context);
     console.log("Lambda response:", JSON.stringify(result, null, 2));
 
     const response = result as LambdaResponse;
+
+    const isRedirect = response.statusCode >= 300 && response.statusCode < 400;
+
+    if (isRedirect && response.statusCode === 302) {
+      console.log("Converting redirect to 401 Unauthorized response");
+      return {
+        statusCode: 401,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": origin,
+          "Access-Control-Allow-Credentials": "true",
+          "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
+          "Access-Control-Allow-Headers":
+            "Content-Type,Authorization,X-Requested-With,Accept",
+          "Access-Control-Max-Age": "86400",
+        },
+        body: JSON.stringify({
+          message: "Unauthorized. Please sign in to access this resource.",
+          code: "unauthorized",
+        }),
+      };
+    }
 
     const headers = { ...(response.headers || {}) };
     delete headers["access-control-allow-origin"];
@@ -257,7 +309,7 @@ export const handler = async (
         "Access-Control-Allow-Credentials": "true",
         "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
         "Access-Control-Allow-Headers":
-          "Content-Type,Authorization,X-Requested-With",
+          "Content-Type,Authorization,X-Requested-With,Accept",
         "Access-Control-Max-Age": "86400",
       },
     };
@@ -270,7 +322,7 @@ export const handler = async (
         "Access-Control-Allow-Credentials": "true",
         "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
         "Access-Control-Allow-Headers":
-          "Content-Type,Authorization,X-Requested-With",
+          "Content-Type,Authorization,X-Requested-With,Accept",
       },
       body: JSON.stringify({
         message: "Internal Server Error",
