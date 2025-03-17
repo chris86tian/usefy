@@ -44,24 +44,6 @@ export const createCourse = async (
       sections: [],
       enrollments: [],
     });
-
-    const progress = new UserCourseProgress({
-      userId: auth.userId,
-      courseId: course.courseId,
-      enrollmentDate: new Date().toISOString(),
-      overallProgress: 0,
-      lastAccessedTimestamp: new Date().toISOString(),
-      sections: course.sections.map((section: any) => ({
-        sectionId: section.sectionId,
-        chapters: section.chapters.map((chapter: any) => ({
-          chapterId: chapter.chapterId,
-          completed: false,
-          quizCompleted: false,
-        })),
-      })),
-    });
-    await progress.save();
-
     await course.save();
 
     res.json({ message: "Course created successfully", data: course });

@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import Image from "next/image"
 import { cn, getUserName } from "@/lib/utils"
@@ -35,7 +35,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { toast } from "sonner"
 
 interface CourseCardProps {
   course: Course
@@ -142,10 +141,7 @@ export function CourseCard({
   }, [course])
 
   const handleClick = () => {
-    if (variant === "admin" && !isEnrolled && onEnroll) {
-      // Auto-enroll admin users
-      onEnroll(course)
-    } else if (!isEnrolled && variant === "learner") {
+    if (!isEnrolled && variant === "learner") {
       setIsEnrollDialogOpen(true)
     } else if (onView && !showViewOnly) {
       onView(course)
@@ -174,14 +170,6 @@ export function CourseCard({
   }
 
   const lastAccessed = progress?.lastAccessedTimestamp ? formatLastAccessed(progress.lastAccessedTimestamp) : null
-
-  useEffect(() => {
-    if (variant === "admin" && !isEnrolled && onEnroll && user) {
-      // Auto-enroll admin on component mount
-      onEnroll(course)
-      toast("You have been automatically enrolled in the course.")
-    }
-  }, [variant, isEnrolled, onEnroll, course, user])
 
   return (
     <>
