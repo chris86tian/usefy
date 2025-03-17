@@ -365,21 +365,26 @@ export const uploadAllFiles = async (
   sections.forEach((section) => {
     section.chapters.forEach((chapter) => {
       if (chapter.files) {
-        totalFiles += chapter.files.filter((file) => file.file).length;
+        totalFiles += chapter.files.filter(
+          (file) => file.file && !file.fileUrl
+        ).length;
       }
     });
   });
+
+  if (totalFiles === 0) return sections;
 
   const updatedSections = JSON.parse(JSON.stringify(sections));
 
   for (const section of updatedSections) {
     for (const chapter of section.chapters) {
       if (chapter.files) {
-        const updatedFiles = [];
+        const validFiles = [];
+        
         for (const file of chapter.files) {
           // Skip already uploaded files
           if (file.fileUrl) {
-            updatedFiles.push(file);
+            validFiles.push(file);
             continue;
           }
 
@@ -394,33 +399,33 @@ export const uploadAllFiles = async (
                 fileType: file.file.type,
               }).unwrap();
 
-              // Upload file to S3
+              // Upload file to storage
               await fetch(uploadUrl, {
                 method: "PUT",
                 body: file.file,
                 headers: { "Content-Type": file.file.type },
               });
 
-              updatedFiles.push({ 
+              validFiles.push({
                 ...file,
                 fileUrl,
-                file: undefined // Remove the File object
+                file: undefined // Remove temporary file object
               });
               uploadedFiles++;
               progressCallback((uploadedFiles / totalFiles) * 100);
             } catch (error) {
-              uploadErrors.push(`Failed to upload: ${file.title || file.file.name}`);
+              uploadErrors.push(`Failed to upload: ${file.title}`);
             }
           } else {
             uploadErrors.push(`Missing file for: ${file.title}`);
           }
         }
-        
+
         if (uploadErrors.length > 0) {
           throw new Error(uploadErrors.join('\n'));
         }
-        
-        chapter.files = updatedFiles;
+
+        chapter.files = validFiles;
       }
     }
   }

@@ -3,9 +3,10 @@ import { Document, Page, pdfjs } from 'react-pdf';
 import { Button } from "@/components/ui/button";
 import { FileText, X, Loader2 } from "lucide-react";
 import CustomModal from "@/components/CustomModal";
+import "pdfjs-dist/build/pdf.worker.min.mjs";
 
-// Configure PDF worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+// Configure PDF worker using CDN
+pdfjs.GlobalWorkerOptions.workerSrc = "pdfjs-dist/build/pdf.worker.min.mjs"
 
 interface UploadedFilesProps {
   files: Array<{
@@ -22,22 +23,23 @@ const UploadedFiles = ({ files }: UploadedFilesProps) => {
   const [pageNumber, setPageNumber] = useState(1);
   const [scale, setScale] = useState(1.0);
   const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    if (selectedFile) {
-      setIsLoading(true);
-      setPageNumber(1);
-    }
-  }, [selectedFile]);
+  const [error, setError] = useState<string | null>(null);
 
   const handleDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setIsLoading(false);
+    setError(null);
     setNumPages(numPages);
+  };
+
+  const handleDocumentLoadError = (error: Error) => {
+    setIsLoading(false);
+    setError('Failed to load PDF. Please check the file URL.');
+    console.error('PDF load error:', error);
   };
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold flex items-center gap-2">
+      <h3 className="text-lg font-semibold flex items-center gap-2 mt-5">
         <FileText className="w-5 h-5" /> Study Materials ({files.length})
       </h3>
 
@@ -56,7 +58,13 @@ const UploadedFiles = ({ files }: UploadedFilesProps) => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setSelectedFile(file.fileUrl || null)}
+                onClick={() => {
+                  if (file.fileUrl) {
+                    setError(null);
+                    setIsLoading(true);
+                    setSelectedFile(file.fileUrl);
+                  }
+                }}
               >
                 View PDF
               </Button>
@@ -66,7 +74,7 @@ const UploadedFiles = ({ files }: UploadedFilesProps) => {
       </div>
 
       <CustomModal isOpen={!!selectedFile} onClose={() => setSelectedFile(null)}>
-        <div className="bg-background rounded-lg p-6 max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="bg-background rounded-lg p-6 h-auto max-h-[90vh] overflow-hidden flex flex-col">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-semibold">
               {files.find(f => f.fileUrl === selectedFile)?.title}
@@ -75,7 +83,7 @@ const UploadedFiles = ({ files }: UploadedFilesProps) => {
               variant="ghost"
               onClick={() => setSelectedFile(null)}
             >
-              <X className="w-6 h-6" />
+              <X className="w-20 h-20" />
             </Button>
           </div>
 
@@ -85,70 +93,85 @@ const UploadedFiles = ({ files }: UploadedFilesProps) => {
                 <Loader2 className="w-8 h-8 animate-spin" />
               </div>
             )}
-            
-            <Document
-              file={selectedFile}
-              onLoadSuccess={handleDocumentLoadSuccess}
-              onLoadError={() => setIsLoading(false)}
-              className="pdf-viewer"
-            >
-              <Page 
-                pageNumber={pageNumber} 
-                scale={scale}
-                className="border rounded bg-white"
-                loading={(
-                  <div className="flex justify-center p-8">
-                    <Loader2 className="w-8 h-8 animate-spin" />
-                  </div>
-                )}
-              />
-            </Document>
 
-            <div className="sticky bottom-0 bg-background border-t pt-4 mt-4">
-              <div className="flex items-center justify-between">
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setPageNumber(p => Math.max(1, p - 1))}
-                    disabled={pageNumber <= 1}
-                  >
-                    Previous
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setPageNumber(p => Math.min(numPages, p + 1))}
-                    disabled={pageNumber >= numPages}
-                  >
-                    Next
-                  </Button>
-                </div>
-                
-                <div className="flex items-center gap-4">
-                  <span className="text-sm">
-                    Page {pageNumber} of {numPages}
-                  </span>
-                  <div className="flex gap-2">
+            {error && (
+              <div className="text-center p-8 text-red-500">
+                {error}
+              </div>
+            )}
+
+            {selectedFile && !error && (
+              <Document
+                file={selectedFile}
+                onLoadSuccess={handleDocumentLoadSuccess}
+                onLoadError={handleDocumentLoadError}
+                className="pdf-viewer"
+                options={{
+                  httpHeaders: {
+                    'Access-Control-Allow-Origin': '*',
+                  },
+                }}
+              >
+                <Page 
+                  pageNumber={pageNumber} 
+                  scale={scale}
+                  className="border rounded bg-white"
+                  loading={(
+                    <div className="flex justify-center p-8">
+                      <Loader2 className="w-8 h-8 animate-spin" />
+                    </div>
+                  )}
+                />
+              </Document>
+            )}
+
+            {!isLoading && !error && (
+              <div className="sticky bottom-0 bg-background border-t pt-4 mt-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex gap-2 text-gray-800">
                     <Button
                       variant="outline"
-                      size="sm"
-                      onClick={() => setScale(s => Math.max(0.5, s - 0.25))}
+                      onClick={() => setPageNumber(p => Math.max(1, p - 1))}
+                      disabled={pageNumber <= 1}
                     >
-                      -
+                      Previous
                     </Button>
-                    <span className="text-sm w-12 text-center">
-                      {Math.round(scale * 100)}%
+                    <Button
+                      variant="outline"
+                      onClick={() => setPageNumber(p => Math.min(numPages, p + 1))}
+                      disabled={pageNumber >= numPages}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                  
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm">
+                      Page {pageNumber} of {numPages}
                     </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setScale(s => Math.min(2, s + 0.25))}
-                    >
-                      +
-                    </Button>
+                    <div className="flex gap-2 text-gray-800">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setScale(s => Math.max(0.5, s - 0.25))}
+                      >
+                        -
+                      </Button>
+                      <span className="text-sm w-12 mt-2 text-center">
+                        {Math.round(scale * 100)}%
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setScale(s => Math.min(2, s + 0.25))}
+                      >
+                        +
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </CustomModal>

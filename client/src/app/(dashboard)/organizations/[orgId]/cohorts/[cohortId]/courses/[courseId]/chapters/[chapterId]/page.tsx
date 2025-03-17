@@ -34,6 +34,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AssignmentCard } from "./assignments/_components/AssignmentCard"
 import { useCallback } from "react"
 import FeedbackButton from "./adaptive-quiz/FeedbackButton"
+import UploadedFiles from "./adaptive-quiz/UploadedFiles"
 
 const isSectionReleased = (section: Section) => {
   if (!section.releaseDate) return false
@@ -593,6 +594,22 @@ const Course = () => {
             </CardContent>
           </Card>
         )}
+
+        {/* UploadedFiles */}
+        {currentChapter.files && (
+          <Card className="border shadow-sm">
+            <CardHeader className="border-b bg-muted/30">
+              <div className="flex items-center space-x-3">
+                <BookOpen className="h-5 w-5 text-primary" />
+                <CardTitle className="text-lg">Study Materials</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <UploadedFiles files={currentChapter.files} />
+            </CardContent>
+          </Card>
+        )}
+
         <CourseComments
           orgId={currentOrg?.organizationId as string}
           courseId={course.courseId}

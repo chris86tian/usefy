@@ -28,6 +28,7 @@ import CustomModal from "@/components/CustomModal";
 import { type ChapterFormData, chapterSchema } from "@/lib/schemas";
 import { addChapter, closeChapterModal, editChapter } from "@/state";
 import { useAppDispatch, useAppSelector } from "@/state/redux";
+import { undefined } from "zod"
 
 const ChapterModal = () => {
   const dispatch = useAppDispatch();
@@ -793,52 +794,54 @@ const ChapterModal = () => {
                             className="mb-2 text-gray-600 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:placeholder-gray-400"
                           />
 
-                          <div className="mb-4">
-                            <FormLabel className="text-gray-600 dark:text-gray-300 text-sm">
-                              Upload File
-                            </FormLabel>
-                            {file.fileUrl ? (
-                              <div className="flex items-center gap-2">
-                                <a
-                                  href={file.fileUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-blue-600 dark:text-blue-400 hover:underline"
-                                >
-                                  {file.title || "View File"}
-                                </a>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() =>
-                                    updateFile(fileIndex, "fileUrl", "")
-                                  }
-                                  className="text-red-600 dark:text-red-400"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            ) : (
-                              <Input
-                                type="file"
-                                accept=".pdf,.pptx"
-                                onChange={(e) => {
-                                  const selectedFile = e.target.files?.[0];
-                                  if (selectedFile) {
-                                    updateFile(fileIndex, "file", selectedFile);
-                                    updateFile(
+                        <div className="mb-4">
+                          <FormLabel className="text-gray-600 dark:text-gray-300 text-sm">
+                            Upload File
+                          </FormLabel>
+                          {file.fileUrl ? (
+                            <div className="flex items-center gap-2">
+                              <a
+                                href={file.fileUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 dark:text-blue-400 hover:underline"
+                              >
+                                {file.title || "View File"}
+                              </a>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() =>
+                                    {
+                                  updateFile(fileIndex, "fileUrl", "")
+                                  ;
+                                }}
+                                className="text-red-600 dark:text-red-400"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <Input
+                              type="file"
+                              accept=".pdf,.pptx"
+                              onChange={(e) => {
+                                const selectedFile = e.target.files?.[0];
+                                if (selectedFile) {
+                                  updateFile(fileIndex, "file", selectedFile);
+                                  updateFile(
                                       fileIndex,
                                       "fileUrl",
                                       URL.createObjectURL(selectedFile)
                                     );
-                                  }
-                                }}
-                                className="dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
-                                required
-                              />
-                            )}
-                          </div>
+                                }
+                              }}
+                              className="dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                              required
+                            />
+                          )}
+                        </div>
 
                           <textarea
                             value={file.description}
