@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import Image from "next/image"
 import { cn, getUserName } from "@/lib/utils"
@@ -33,7 +33,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 
 interface CourseCardProps {
@@ -76,7 +75,8 @@ export function CourseCard({
 
   const { data: instructors } = useGetCourseInstructorsQuery(course.courseId)
 
-  const canEdit = variant === "admin" || (variant === "instructor" && instructors?.some((instructor) => instructor.id === user?.id))
+  const canEdit =
+    variant === "admin" || (variant === "instructor" && instructors?.some((instructor) => instructor.id === user?.id))
   const showViewOnly = variant === "admin" && !canEdit && !isEnrolled
 
   const statusVariants = { Published: "default", Draft: "outline", Archived: "secondary" } as const
@@ -140,7 +140,10 @@ export function CourseCard({
   }, [course])
 
   const handleClick = () => {
-    if (!isEnrolled && variant === "learner") {
+    if (variant === "admin" && !isEnrolled && onEnroll) {
+      // Auto-enroll admin users
+      onEnroll(course)
+    } else if (!isEnrolled && variant === "learner") {
       setIsEnrollDialogOpen(true)
     } else if (onView && !showViewOnly) {
       onView(course)
@@ -169,6 +172,12 @@ export function CourseCard({
   }
 
   const lastAccessed = progress?.lastAccessedTimestamp ? formatLastAccessed(progress.lastAccessedTimestamp) : null
+
+  useEffect(() => {
+    if (variant === "admin" && !isEnrolled && onEnroll && user) {
+      onEnroll(course)
+    }
+  }, [variant, isEnrolled, onEnroll, course, user])
 
   return (
     <>
