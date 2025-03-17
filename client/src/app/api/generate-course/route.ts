@@ -21,6 +21,7 @@ async function fetchCaptionsAndTranscript(videoId: string): Promise<TranscriptSe
     );
     const captionsData = await captionsResponse.json();
 
+    console.log("🔍 Fetched captions data:", captionsData);
     if (captionsData.items?.length) {
       console.log("✅ Captions found using YouTube API.");
       return await processTranscriptUsingAPI(videoId);
