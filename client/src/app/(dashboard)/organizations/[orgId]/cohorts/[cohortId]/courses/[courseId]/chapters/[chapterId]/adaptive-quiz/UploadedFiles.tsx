@@ -2,12 +2,11 @@ import { useState, useEffect } from 'react';
 import { Document, Page, } from 'react-pdf';
 import { Button } from "@/components/ui/button";
 import { FileText, X, Loader2 } from "lucide-react";
-import CustomModal from "@/components/CustomModal";
 import * as pdfjs from "pdfjs-dist"
 import "pdfjs-dist/build/pdf.worker.min.mjs";
+import PDFViewerModal from '@/components/PDFViewerModal';
 
 // Configure PDF worker using CDN
-
 
 if (typeof window !== "undefined" && !pdfjs.GlobalWorkerOptions.workerSrc) {
   pdfjs.GlobalWorkerOptions.workerSrc = `/pdf.worker.min.mjs`
@@ -82,7 +81,7 @@ const UploadedFiles = ({ files }: UploadedFilesProps) => {
         ))}
       </div>
 
-      <CustomModal isOpen={!!selectedFile} onClose={() => setSelectedFile(null)}>
+      <PDFViewerModal isOpen={!!selectedFile} onClose={() => setSelectedFile(null)}>
         <div className="bg-background rounded-lg p-6 h-auto max-h-[90vh] overflow-hidden flex flex-col">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-semibold">
@@ -183,7 +182,7 @@ const UploadedFiles = ({ files }: UploadedFilesProps) => {
             )}
           </div>
         </div>
-      </CustomModal>
+      </PDFViewerModal>
     </div>
   );
 };
