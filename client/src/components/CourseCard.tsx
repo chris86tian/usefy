@@ -1,12 +1,24 @@
 "use client"
 
 import type React from "react"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import Image from "next/image"
 import { cn, getUserName } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Archive, BarChartBig, ChevronDown, ChevronUp, Pencil, Trash2, Users, Lock, BookOpen, CheckCircle } from 'lucide-react'
+import {
+  Archive,
+  BarChartBig,
+  ChevronDown,
+  ChevronUp,
+  Pencil,
+  Trash2,
+  Users,
+  Lock,
+  BookOpen,
+  CheckCircle,
+  Eye,
+} from "lucide-react"
 import { useUser } from "@clerk/nextjs"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -23,6 +35,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { toast } from "sonner"
 
 interface CourseCardProps {
   course: Course
@@ -129,9 +142,12 @@ export function CourseCard({
   }, [course])
 
   const handleClick = () => {
-    if (!isEnrolled && variant === "learner") {
+    if (variant === "admin" && !isEnrolled && onEnroll) {
+      // Auto-enroll admin users
+      onEnroll(course)
+    } else if (!isEnrolled && variant === "learner") {
       setIsEnrollDialogOpen(true)
-    } else if (onView && !showViewOnly && isEnrolled) {
+    } else if (onView && !showViewOnly) {
       onView(course)
     }
   }
@@ -159,6 +175,14 @@ export function CourseCard({
 
   const lastAccessed = progress?.lastAccessedTimestamp ? formatLastAccessed(progress.lastAccessedTimestamp) : null
 
+  useEffect(() => {
+    if (variant === "admin" && !isEnrolled && onEnroll && user) {
+      // Auto-enroll admin on component mount
+      onEnroll(course)
+      toast("You have been automatically enrolled in the course.")
+    }
+  }, [variant, isEnrolled, onEnroll, course, user])
+
   return (
     <>
       <Card
@@ -169,7 +193,10 @@ export function CourseCard({
         )}
       >
         <CardHeader
-          className={cn("p-0", (variant === "admin" || variant === "instructor") && !showViewOnly && isEnrolled && "cursor-pointer")}
+          className={cn(
+            "p-0",
+            (variant === "admin" || variant === "instructor") && !showViewOnly && isEnrolled && "cursor-pointer",
+          )}
           onClick={isEnrolled ? handleClick : undefined}
         >
           <div className="aspect-video relative overflow-hidden">
@@ -238,7 +265,7 @@ export function CourseCard({
             </div>
           )}
 
-          {variant === "admin" || variant === "instructor" && (
+          {(variant === "admin" || variant === "instructor") && (
             <Collapsible open={isInstructorsOpen} onOpenChange={setIsInstructorsOpen} className="border rounded-md p-2">
               <CollapsibleTrigger asChild>
                 <div className="flex items-center justify-between cursor-pointer hover:bg-accent/50 p-1 rounded">
@@ -298,7 +325,7 @@ export function CourseCard({
                   )}
                   {isEnrolled && onView && (
                     <Button
-                      variant="default"
+                      variant="outline"
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation()
@@ -306,7 +333,8 @@ export function CourseCard({
                       }}
                       className="mr-auto"
                     >
-                      View Course
+                      <Eye className="w-4 h-4 mr-2" />
+                      View
                     </Button>
                   )}
                   {onEdit && (
@@ -527,3 +555,4 @@ export function CourseCard({
     </>
   )
 }
+
