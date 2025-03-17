@@ -7,6 +7,10 @@ import Course from "../models/courseModel";
 import UserCourseProgress from "../models/userCourseProgressModel";
 import { generateTemporaryPassword, sendMessage } from "../utils/utils";
 
+function capitalizeFirstLetter(string: string): string {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
 export const getOrganization = async (
   req: Request,
   res: Response
@@ -471,7 +475,7 @@ export const inviteUserToOrganization = async (req: Request, res: Response): Pro
 
 export const inviteUserToCohort = async (req: Request, res: Response): Promise<void> => {
   const { organizationId, cohortId } = req.params;
-  const { email, role } = req.body;
+  const { email, role, name } = req.body; // Accept name from request
 
   try {
     const users = await clerkClient.users.getUserList({ emailAddress: [email] });
@@ -508,14 +512,10 @@ export const inviteUserToCohort = async (req: Request, res: Response): Promise<v
       }
       list.push({ userId: user.id });
 
-      if (role === 'learner') {
-        if (!organization.learners.some((member: any) => member.userId === user?.id)) {
-          organization.learners.push({ userId: user.id });
-        }
-      } else if (role === 'instructor') {
-        if (!organization.instructors.some((member: any) => member.userId === user?.id)) {
-          organization.instructors.push({ userId: user.id });
-        }
+      if (role === "learner" && !organization.learners.some((m: any) => m.userId === user?.id)) {
+        organization.learners.push({ userId: user.id });
+      } else if (role === "instructor" && !organization.instructors.some((m: any) => m.userId === user?.id)) {
+        organization.instructors.push({ userId: user.id });
       }
 
       await cohort.save();
@@ -533,26 +533,33 @@ export const inviteUserToCohort = async (req: Request, res: Response): Promise<v
 
       res.json({ message: "User added to cohort successfully", data: cohort });
     } else {
+      const firstName = capitalizeFirstLetter(name.split(" ")[0])
+      const lastName = capitalizeFirstLetter(name.split(" ")[1] || "");
+
       user = await clerkClient.users.createUser({
         emailAddress: [email],
         password: generateTemporaryPassword(),
         skipPasswordChecks: true,
+        ...(name && { 
+            firstName,
+            lastName,
+        }),
       });
 
       list.push({ userId: user.id });
 
-      if (role === 'learner') {
+      if (role === "learner") {
         organization.learners.push({ userId: user.id });
-      } else if (role === 'instructor') {
+      } else if (role === "instructor") {
         organization.instructors.push({ userId: user.id });
       }
 
-      const resetPasswordLink = `${process.env.CLIENT_URL}/reset-password?email=${encodeURIComponent(email)}&organizationId=${organizationId}&cohortId=${cohortId}`;
+      const resetPasswordLink = `${process.env.CLIENT_URL}/reset-password?email=${encodeURIComponent(email)}&firstName=${firstName}&lastName=${lastName}&organizationId=${organizationId}&cohortId=${cohortId}`;
 
       await sendMessage(
         user.id,
         email,
-        "You're invited to join a cohort - Reset Your Password",
+        `Hey, ${name || "there"}! You're invited to join a cohort - Reset Your Password`,
         `You've been invited to join the cohort ${cohort.name}. Click the link below to reset your password and activate your account:\n\n${resetPasswordLink}\n\nIf you did not request this, you can ignore this email.`,
         null,
         { sendEmail: true, sendNotification: false, rateLimited: false }
@@ -568,6 +575,7 @@ export const inviteUserToCohort = async (req: Request, res: Response): Promise<v
     res.status(500).json({ message: "Error inviting user to cohort", error });
   }
 };
+
 
 export const getOrganizationUsers = async (req: Request, res: Response): Promise<void> => {
   const { organizationId } = req.params;

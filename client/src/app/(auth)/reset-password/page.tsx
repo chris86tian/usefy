@@ -15,6 +15,8 @@ const ForgotPassword = () => {
   const searchParams = useSearchParams()
   const [email, setEmail] = useState(searchParams.get('email') || '')
   const [password, setPassword] = useState('')
+  const [firstName, setFirstName] = useState(searchParams.get('firstName') || '')
+  const [lastName, setLastName] = useState(searchParams.get('lastName') || '')
   const [code, setCode] = useState('')
   const [successfulCreation, setSuccessfulCreation] = useState(false)
   const [successfulReset, setSuccessfulReset] = useState(false)
@@ -22,8 +24,6 @@ const ForgotPassword = () => {
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
   
   const organizationId = searchParams.get('organizationId') || ''
   const cohortId = searchParams.get('cohortId') || ''
@@ -70,9 +70,7 @@ const ForgotPassword = () => {
     updateUserProfile()
   }, [successfulReset, isUserLoaded, user, firstName, lastName, router, hasRedirectParams, organizationId, cohortId])
 
-  if (!isLoaded) {
-    return null
-  }
+  if (!isLoaded) return null
 
   async function create(e: React.FormEvent) {
     e.preventDefault()

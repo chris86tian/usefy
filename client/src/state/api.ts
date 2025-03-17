@@ -371,15 +371,15 @@ export const api = createApi({
 
     inviteUserToCohort: build.mutation<
       { message: string },
-      { organizationId: string; cohortId: string; email: string; role: string }
+      { organizationId: string; cohortId: string; email: string; role: string; name?: string }
     >({
-      query: ({ organizationId, cohortId, email, role }) => ({
+      query: ({ organizationId, cohortId, email, role, name }) => ({
         url: `organizations/${organizationId}/cohort/${cohortId}/invite`,
         method: "POST",
-        body: { email, role },
+        body: { email, role, ...(name && { name }) },
       }),
     }),
-
+  
     getOrganizationUsers: build.query<
       { admins: User[]; instructors: User[]; learners: User[] },
       string
