@@ -277,14 +277,16 @@ const AdminSettings = () => {
     }
 
     try {
+      const cohortId = uuidv4()
       await createCohort({
         organizationId: currentOrg?.organizationId || "",
-        cohortId: uuidv4(),
+        cohortId,
         name: newCohortName.trim(),
       }).unwrap()
       toast.success("Cohort created successfully")
       setIsCreateCohortDialogOpen(false)
       setNewCohortName("")
+      router.push(`/organizations/${currentOrg?.organizationId}/cohorts/${cohortId}`)
       refetchCohorts()
     } catch (error) {
       toast.error("Failed to create cohort")

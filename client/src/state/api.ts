@@ -329,7 +329,7 @@ export const api = createApi({
         skipAuth: true,
       },
     }),
-
+    
     addCourseToOrganization: build.mutation<
       { message: string },
       { organizationId: string; courseId: string }
@@ -507,7 +507,7 @@ export const api = createApi({
       { cohortId: string; courseId: string }
     >({
       query: ({ cohortId, courseId }) => ({
-        url: `cohorts/remove-course/${cohortId}`,
+        url: `cohorts/remove/${cohortId}/course`,
         method: "DELETE",
         body: { courseId },
       }),
