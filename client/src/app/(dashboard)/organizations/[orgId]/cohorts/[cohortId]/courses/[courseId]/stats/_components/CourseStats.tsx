@@ -44,13 +44,13 @@ export default function CourseStats({ courseId }: CourseStatsProps) {
         />
       </div>
       <div className="container py-8 space-y-8">
-        <h1 className="text-2xl font-bold">Statistics for Course: {course?.title}</h1>
+        <h1 className="text-2xl font-bold">{course?.title}</h1>
         
         {course?.sections.map((section) => (
           <div key={section.sectionId} className="space-y-6">
             <h2 className="text-xl font-semibold">Section: {section.sectionTitle}</h2>
             {section.chapters.map((chapter) => (
-              <div key={chapter.chapterId} className="bg-card p-6 rounded-lg">
+              <div key={chapter.chapterId} className="bg-card p-2 rounded-lg">
                 <h3 className="text-lg font-medium mb-4">Chapter: {chapter.title}</h3>
                 <ChapterStats 
                   courseId={course.courseId} 

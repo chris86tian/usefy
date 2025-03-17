@@ -2,10 +2,14 @@
 import { createContext, useContext } from "react";
 
 interface OrganizationContextType {
-  currentOrg: Organization | null;  
+  currentOrg: Organization | null;
+  isOrgLoading: boolean;
 }
 
-export const OrganizationContext = createContext<OrganizationContextType | null>(null);
+export const OrganizationContext = createContext<OrganizationContextType>({
+  currentOrg: null,
+  isOrgLoading: true, // Default to loading state
+});
 
 export const useOrganization = () => {
   const context = useContext(OrganizationContext);

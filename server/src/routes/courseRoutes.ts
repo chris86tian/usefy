@@ -41,6 +41,7 @@ router.post(
   requireAuth(), 
   createCourse
 );
+
 router.post(
   "/fix-image-urls", 
   requireAuth(), 
@@ -52,9 +53,8 @@ router.get(
   getCourse
 );
 
-// orgId for notification link
 router.put(
-  "/:orgId/:courseId", 
+  "/:orgId/cohorts/:cohortId/:courseId", 
   requireAuth(), 
   upload.none(), 
   updateCourse

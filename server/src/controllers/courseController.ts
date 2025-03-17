@@ -71,7 +71,7 @@ export const createCourse = async (
 };
 
 export const updateCourse = async (req: Request, res: Response): Promise<void> => {
-  const { orgId, courseId } = req.params;
+  const { orgId, cohortId, courseId } = req.params;
   const { userId } = getAuth(req);
   const updateData = { ...req.body };
 
@@ -81,7 +81,6 @@ export const updateCourse = async (req: Request, res: Response): Promise<void> =
       return;
     }
 
-    // 🔹 Fetch Course
     const course = await Course.get(courseId);
     if (!course) {
       res.status(404).json({ code: "course_not_found", message: "Course not found" });
@@ -180,24 +179,12 @@ export const updateCourse = async (req: Request, res: Response): Promise<void> =
           continue;
         }
 
-        const updateDetails: string[] = [];
-        if (updateData.title || updateData.description) updateDetails.push("course information");
-        if (updateData.sections) updateDetails.push("course content");
-        if (updateData.image) updateDetails.push("course image");
-        if (updateData.price !== undefined) updateDetails.push("pricing");
-
-        let updateMessage = `The course "${course.title}" has been updated.`;
-        if (updateDetails.length) {
-          updateMessage += ` The following was updated: ${updateDetails.join(", ")}.`;
-        }
-        updateMessage += " Check it out now!";
-
         await sendMessage(
           userId,
           user.emailAddresses[0].emailAddress,
           "Course Updated",
-          updateMessage,
-          `/organizations/${orgId}/courses/${courseId}/chapters/${course.sections[0]?.chapters[0]?.chapterId || ""}`,
+          `The course "${course.title}" has been updated.`,
+          `/organizations/${orgId}/cohorts/${cohortId}/courses/${courseId}/chapters/${course.sections[0].chapters[0].chapterId}`,
           { sendEmail: true, sendNotification: true, rateLimited: false }
         );
       } catch (err) {
@@ -259,7 +246,6 @@ export const deleteCourse = async (
   res: Response
 ): Promise<void> => {
   const { courseId } = req.params;
-  const { userId } = getAuth(req);
 
   try {
     const course = await Course.get(courseId);
@@ -281,7 +267,6 @@ export const unarchiveCourse = async (
   res: Response
 ): Promise<void> => {
   const { courseId } = req.params;
-  const { userId } = getAuth(req);
 
   try {
     const course = await Course.get(courseId);
@@ -456,7 +441,7 @@ export const addCourseInstructor = async (req: Request, res: Response): Promise<
       );
     }
 
-    res.json({ message: "Instructor added to course successfully", data: course });
+    res.json({ message: "Instructor added to course successfully", data: user });
   } catch (error) {
     res.status(500).json({ message: "Error adding instructor to course", error });
   }

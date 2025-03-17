@@ -7,32 +7,42 @@ import AdminCohort from "./_components/(admin)/AdminCohort";
 import UserCohort from "./_components/(user)/UserCohort";
 import { useParams } from "next/navigation";
 import NotFound from "@/components/NotFound";
+import { Spinner } from "@/components/ui/Spinner";
+import { SignInRequired } from "@/components/SignInRequired";
 import { 
     useGetOrganizationUsersQuery,
     useGetCohortCoursesQuery
 } from "@/state/api";
-import { Spinner } from "@/components/ui/Spinner";
 
 export default function CohortPage() {
     const { user } = useUser()
-    const { orgId, cohortId } = useParams()
-    const { currentOrg } = useOrganization()
-    const { data: orgUsers, isLoading: usersLoading } = useGetOrganizationUsersQuery(orgId as string)
-    const { data: cohortCourses, isLoading: coursesLoading, refetch } = useGetCohortCoursesQuery({ organizationId: orgId as string, cohortId: cohortId as string })
+    const { orgId, cohortId } = useParams() as { orgId: string, cohortId: string }
+    const { currentOrg, isOrgLoading } = useOrganization()
+    
+    const { data: orgUsers, 
+        isLoading: usersLoading 
+    } = useGetOrganizationUsersQuery(orgId)
+    const { 
+        data: cohortCourses, 
+        isLoading: coursesLoading, 
+        refetch 
+    } = useGetCohortCoursesQuery({ organizationId: orgId, cohortId })
 
-    const isAdmin = currentOrg?.admins.some((admin) => admin.userId === user?.id)
+    if (isOrgLoading || usersLoading || coursesLoading) return <Spinner />
+    if (!user) return <SignInRequired />
+    if (!currentOrg || !orgUsers || !cohortCourses) return <NotFound message={!currentOrg ? "Organization not found" : "Cohort not found"} />
 
-    if (usersLoading || coursesLoading) return <Spinner />
-    if (!orgUsers || !cohortCourses) return <NotFound message={!orgUsers ? "Organization not found" : "Cohort not found"} />
+    const isAdmin = currentOrg.admins.some((admin) => admin.userId === user.id)
 
     return (
         <>
             {isAdmin ? 
                 <AdminCohort 
                     orgUsers={orgUsers}
+                    courses={cohortCourses}
                     usersLoading={usersLoading}
                     coursesLoading={coursesLoading}
-                    courses={cohortCourses}
+                    refetch={refetch}
                 /> : 
                 <UserCohort
                     orgUsers={orgUsers}

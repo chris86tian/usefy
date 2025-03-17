@@ -26,6 +26,7 @@ interface AssignmentModalProps {
   onAssignmentChange?: () => void
   open: boolean
   onOpenChange: (open: boolean) => void
+  refetch: () => void
 }
 
 const AssignmentModal = ({
@@ -37,6 +38,7 @@ const AssignmentModal = ({
   onAssignmentChange,
   open,
   onOpenChange,
+  refetch,
 }: AssignmentModalProps) => {
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
@@ -70,7 +72,7 @@ const AssignmentModal = ({
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsSubmitting(true)
-
+  
     try {
       const assignmentData = {
         assignmentId: mode === "create" ? uuidv4() : assignment!.assignmentId,
@@ -82,30 +84,38 @@ const AssignmentModal = ({
         starterCode: isCoding ? starterCode : "",
         submissions: mode === "create" ? [] : assignment!.submissions,
       }
-
+  
+      let result;
       if (mode === "create") {
-        await createAssignment({
+        result = await createAssignment({
           chapterId: chapter.chapterId,
           courseId,
           sectionId,
           assignment: assignmentData,
-        })
+        }).unwrap();
       } else if (mode === "edit" && assignment) {
-        await updateAssignment({
+        result = await updateAssignment({
           chapterId: chapter.chapterId,
           courseId,
           sectionId,
           assignmentId: assignment.assignmentId,
           assignment: assignmentData,
-        })
+        }).unwrap();
       }
+  
+      if (onAssignmentChange) {
+        onAssignmentChange();
+      }
+      
+      refetch();
+      
+      onOpenChange(false);
 
-      onOpenChange(false)
-      if (mode === "create") resetForm()
+      if (mode === "create") resetForm();
     } catch (error) {
-      console.error(`Failed to ${mode} assignment:`, error)
+      console.error(`Failed to ${mode} assignment:`, error);
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
   }
 

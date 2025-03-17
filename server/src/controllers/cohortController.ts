@@ -333,22 +333,26 @@ export const addCourseToCohort = async (req: Request, res: Response): Promise<vo
 export const removeCourseFromCohort = async (req: Request, res: Response): Promise<void> => {
     const { cohortId } = req.params;
     const { courseId } = req.body;
+    
     try {
-        const cohort = await Cohort.get(cohortId);
-        if (!cohort) {
+        const cohort = await Cohort.scan("cohortId").eq(cohortId).exec();
+        
+        if (!cohort || cohort.length === 0) {
             res.status(404).json({ message: "Cohort not found" });
             return;
         }
 
-        if (!cohort.courses.some((course: any) => course.courseId === courseId)) {
+        if (!cohort[0].courses.some((course: any) => course.courseId === courseId)) {
             res.status(400).json({ message: "Course is not in the cohort" });
             return;
         }
 
-        cohort.courses = cohort.courses.filter((course: any) => course.courseId !== courseId);
-        await cohort.save();
-        res.json({ message: "Course removed from cohort successfully", data: cohort });
+        cohort[0].courses = cohort[0].courses.filter((course: any) => course.courseId !== courseId);
+        await cohort[0].save();
+
+        res.json({ message: "Course removed from cohort successfully", data: cohort[0] });
     } catch (error) {
+        console.error("Error removing course from cohort:", error);
         res.status(500).json({ message: "Error removing course from cohort", error });
     }
 };

@@ -38,7 +38,7 @@ interface OrganizationSidebarProps {
   organizations: Organization[]
   cohorts: Cohort[]
   currentOrg: Organization
-  isUserAdmin: boolean
+  isAuthorized: boolean
   orgId: string
   refetchCohorts: () => void
 }
@@ -47,7 +47,7 @@ export default function OrganizationSidebar({
   organizations,
   cohorts,
   currentOrg,
-  isUserAdmin,
+  isAuthorized,
   orgId,
   refetchCohorts,
 }: OrganizationSidebarProps) {
@@ -62,7 +62,7 @@ export default function OrganizationSidebar({
   
 
   const baseNavItems = [
-    // TODO: In case you want to add more items to the sidebar, you can do so by adding them here
+    // TODO: In case we want to add more items to the sidebar, we can do so by adding them here
   ] as { label: string; href: string; icon: React.ElementType; active: boolean }[]
 
   const adminNavItems = [
@@ -80,7 +80,7 @@ export default function OrganizationSidebar({
     },
   ]
 
-  const navItems = isUserAdmin ? [...baseNavItems, ...adminNavItems] : baseNavItems
+  const navItems = isAuthorized ? [...baseNavItems, ...adminNavItems] : baseNavItems
 
   const handleOrgChange = (newOrgId: string) => {
     if (newOrgId !== orgId) {
@@ -113,9 +113,9 @@ export default function OrganizationSidebar({
   }
 
   const canAccessCohort = (cohort: Cohort) => {
-    if (isUserAdmin) return true
+    if (isAuthorized) return true
     if (!user) return false
-    return cohort.learners?.some((learner) => learner.userId === user.id)
+    return cohort.learners?.some((learner) => learner.userId === user.id) || cohort.instructors?.some((instructor) => instructor.userId === user.id)
   }
 
   const handleCohortClick = (cohort: Cohort) => {
@@ -275,7 +275,7 @@ export default function OrganizationSidebar({
                   <div className="px-2 py-1.5 text-sm text-muted-foreground">No cohorts available</div>
                 )}
               </ScrollArea>
-              {isUserAdmin && (
+              {isAuthorized && (
                 <>
                   <DropdownMenuSeparator />
                   <Dialog open={isCreateCohortModalOpen} onOpenChange={setIsCreateCohortModalOpen}>
@@ -306,7 +306,11 @@ export default function OrganizationSidebar({
                         </div>
                       </div>
                       <DialogFooter>
-                        <Button type="submit" onClick={handleCreateCohort} disabled={isCreateCohortLoading}>
+                        <Button 
+                          type="submit" 
+                          onClick={handleCreateCohort} 
+                          disabled={isCreateCohortLoading}
+                        >
                           {isCreateCohortLoading ? "Creating..." : "Create Cohort"}
                         </Button>
                       </DialogFooter>
@@ -353,7 +357,7 @@ export default function OrganizationSidebar({
               )
             })}
 
-            {isUserAdmin && (
+            {isAuthorized && (
               <Dialog open={isCreateCohortModalOpen} onOpenChange={setIsCreateCohortModalOpen}>
                 <DialogTrigger asChild>
                   <Button variant="outline" size="sm" className="w-full mt-2">
@@ -382,8 +386,12 @@ export default function OrganizationSidebar({
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button type="submit" onClick={handleCreateCohort}>
-                      Create Cohort
+                    <Button 
+                      type="submit" 
+                      onClick={handleCreateCohort}
+                      disabled={isCreateCohortLoading}
+                    >
+                      {isCreateCohortLoading ? "Creating..." : "Create Cohort"}
                     </Button>
                   </DialogFooter>
                 </DialogContent>

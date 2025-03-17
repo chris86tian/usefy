@@ -26,6 +26,6 @@ router.post("/:organizationId/:cohortId/add-learner", addLearnerToCohort);
 router.delete("/:organizationId/remove-learner/:cohortId", removeLearnerFromCohort);
 router.get("/:organizationId/:cohortId/courses", getCohortCourses);
 router.post("/:organizationId/:cohortId/add-course", addCourseToCohort);
-router.post("/:organizationId/:cohortId/remove-course", removeCourseFromCohort);
+router.delete("/remove-course/:cohortId", removeCourseFromCohort);
 
 export default router;

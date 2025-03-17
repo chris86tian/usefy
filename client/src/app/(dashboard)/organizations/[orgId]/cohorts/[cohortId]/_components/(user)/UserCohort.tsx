@@ -8,11 +8,16 @@ import { CourseCard } from "@/components/CourseCard"
 import { Archive } from "lucide-react"
 import { toast } from "sonner"
 import { useUser } from "@clerk/nextjs"
-import { getUserName, handleEnroll } from "@/lib/utils"
-import { useCreateTransactionMutation, useGetMyUserCourseProgressesQuery, useGetCohortQuery } from "@/state/api"
+import { handleEnroll } from "@/lib/utils"
+import { 
+  useCreateTransactionMutation, 
+  useGetMyUserCourseProgressesQuery, 
+  useGetCohortQuery } from "@/state/api"
 import { Spinner } from "@/components/ui/Spinner"
 import type { User } from "@clerk/nextjs/server"
 import ArchivedOverlay from "./_components/ArchivedOverlay"
+import NotFound from "@/components/NotFound"
+import { SignInRequired } from "@/components/SignInRequired"
 
 interface UserCohortProps {
   orgUsers: { instructors: User[]; learners: User[]; admins: User[] }
@@ -24,18 +29,21 @@ interface UserCohortProps {
 const UserCohort = ({ orgUsers, coursesLoading, courses, refetch }: UserCohortProps) => {
   const { user } = useUser()
   const router = useRouter()
-  const { orgId, cohortId } = useParams()
+  const { orgId, cohortId } = useParams() as { orgId: string; cohortId: string }
 
-  const { data: cohort, isLoading: cohortLoading } = useGetCohortQuery(
-    { organizationId: orgId as string, cohortId: cohortId as string },
-    { skip: !orgId || !cohortId },
-  )
+  const { 
+    data: cohort, 
+    isLoading: cohortLoading 
+  } = useGetCohortQuery({ organizationId: orgId, cohortId })
+  const {
+    data: progresses, 
+    isLoading: progressesLoading 
+  } = useGetMyUserCourseProgressesQuery(orgId)
+
+  const [createTransaction] = useCreateTransactionMutation()
 
   const [searchTerm, setSearchTerm] = useState("")
   const [showArchived, setShowArchived] = useState(false)
-
-  const { data: progresses } = useGetMyUserCourseProgressesQuery(orgId as string)
-  const [createTransaction] = useCreateTransactionMutation()
 
   const progressesByCourseId = useMemo(() => {
     if (!progresses) return {}
@@ -49,16 +57,35 @@ const UserCohort = ({ orgUsers, coursesLoading, courses, refetch }: UserCohortPr
     )
   }, [progresses])
 
+  const isInstructor = orgUsers.instructors.some((instructor) => instructor.id === user?.id)
+  const isLearner = orgUsers.learners.some((learner) => learner.id === user?.id)
+
   const filteredCourses = useMemo(() => {
     if (!courses) return []
-
+  
     return courses.filter((course) => {
+      // Base filter for search term
       const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase())
-      const matchesArchiveStatus = showArchived ? true : course.status !== "Archived"
-      return matchesSearch && matchesArchiveStatus
+      
+      // Status filtering based on user role
+      let statusFilter = true;
+      if (isInstructor) {
+        // Instructors can see archived courses if they toggle the option
+        statusFilter = showArchived ? true : course.status !== "Archived"
+      } else {
+        // Regular users can only see published courses
+        statusFilter = course.status === "Published"
+      }
+      
+      // Instructor filter - only show courses where the user is an instructor
+      const isInstructorForCourse = isInstructor ? 
+        course.instructors?.some(instructor => instructor.userId === user?.id) : 
+        true // If not an instructor, don't apply this filter
+      
+      return matchesSearch && statusFilter && isInstructorForCourse
     })
-  }, [courses, searchTerm, showArchived])
-
+  }, [courses, searchTerm, showArchived, isInstructor, user?.id])
+  
   const handleGoToCourse = (course: Course) => {
     if (course.status === "Archived") {
       toast.error("This course is archived and no longer available")
@@ -83,7 +110,7 @@ const UserCohort = ({ orgUsers, coursesLoading, courses, refetch }: UserCohortPr
       return
     }
 
-    const isEnrolled = course?.enrollments?.some((enrollment) => enrollment.userId === user.id)
+    const isEnrolled = course.enrollments?.some((enrollment) => enrollment.userId === user.id)
 
     if (!isEnrolled) {
       handleEnroll(user.id, course.courseId, createTransaction)
@@ -105,13 +132,10 @@ const UserCohort = ({ orgUsers, coursesLoading, courses, refetch }: UserCohortPr
     }
   }
 
-  if (coursesLoading || cohortLoading) {
-    return <Spinner />
-  }
+  if (coursesLoading || cohortLoading || progressesLoading) return <Spinner />
 
-  if (!cohort) {
-    return <div>Cohort not found</div>
-  }
+  if (!user) return <SignInRequired />
+  if (!cohort) return <NotFound message="Cohort not found" />
 
   const archivedCount = courses?.filter((course) => course.status === "Archived").length
 
@@ -143,10 +167,13 @@ const UserCohort = ({ orgUsers, coursesLoading, courses, refetch }: UserCohortPr
               <div key={course.courseId} className="relative">
                 <CourseCard
                   course={course}
-                  onView={handleGoToCourse}
-                  onEnroll={handleCourseEnroll}
+                  variant={isInstructor ? "instructor" : isLearner ? "learner" : "learner"}
                   isEnrolled={isEnrolled}
                   progress={courseProgress}
+                  onView={handleGoToCourse}
+                  onEnroll={handleCourseEnroll}
+                  onEdit={isInstructor ? () => router.push(`/organizations/${orgId}/cohorts/${cohortId}/courses/${course.courseId}/edit`) : undefined}
+                  onStats={isInstructor ? () => router.push(`/organizations/${orgId}/cohorts/${cohortId}/courses/${course.courseId}/stats`) : undefined}
                 />
                 {course.status === "Archived" && <ArchivedOverlay />}
               </div>

@@ -38,8 +38,7 @@ import {
 
 interface CourseCardProps {
   course: Course
-  variant?: "admin" | "learner"
-  isOwner?: boolean
+  variant?: "admin" | "learner" | "instructor"
   isEnrolled?: boolean
   progress?: UserCourseProgress
   onView?: (course: Course) => void
@@ -59,7 +58,6 @@ interface CourseCardProps {
 export function CourseCard({
   course,
   variant = "learner",
-  isOwner = false,
   isEnrolled = false,
   progress,
   onView,
@@ -78,8 +76,7 @@ export function CourseCard({
 
   const { data: instructors } = useGetCourseInstructorsQuery(course.courseId)
 
-  const isInstructor = instructors?.some((instructor) => instructor.id === user?.id)
-  const canEdit = isOwner || isInstructor
+  const canEdit = variant === "admin" || (variant === "instructor" && instructors?.some((instructor) => instructor.id === user?.id))
   const showViewOnly = variant === "admin" && !canEdit && !isEnrolled
 
   const statusVariants = { Published: "default", Draft: "outline", Archived: "secondary" } as const
@@ -143,7 +140,7 @@ export function CourseCard({
   }, [course])
 
   const handleClick = () => {
-    if (!isEnrolled && variant === "learner" && !canEdit) {
+    if (!isEnrolled && variant === "learner") {
       setIsEnrollDialogOpen(true)
     } else if (onView && !showViewOnly) {
       onView(course)
@@ -178,12 +175,12 @@ export function CourseCard({
       <Card
         className={cn(
           "overflow-hidden transition-colors hover:bg-accent/50 border border-gray-200 group h-full flex flex-col",
-          (onView || variant === "learner") && "cursor-pointer",
+          (onView || variant === "learner" || variant === "instructor") && "cursor-pointer",
           showViewOnly && "opacity-70",
         )}
       >
         <CardHeader
-          className={cn("p-0", variant === "admin" && !showViewOnly && "cursor-pointer")}
+          className={cn("p-0", (variant === "admin" || variant === "instructor") && !showViewOnly && "cursor-pointer")}
           onClick={handleClick}
         >
           <div className="aspect-video relative overflow-hidden">
@@ -195,9 +192,14 @@ export function CourseCard({
               className="object-cover w-full h-full"
               priority
             />
-            {variant === "admin" && (
+            {(variant === "admin" || variant === "instructor") && (
               <Badge variant={statusVariants[course.status]} className="absolute top-2 right-2 text-white">
                 {course.status}
+              </Badge>
+            )}
+            {variant === "instructor" && (
+              <Badge variant="outline" className="absolute top-2 left-2 bg-white/90">
+                Instructor
               </Badge>
             )}
             {!isEnrolled && variant === "learner" && (
@@ -215,7 +217,7 @@ export function CourseCard({
             </div>
           </div>
 
-          {variant === "admin" && course.enrollments && (
+          {(variant === "admin" || variant === "instructor") && course.enrollments && (
             <Badge variant="outline" className="bg-primary/5">
               {course.enrollments.length} Enrolled
             </Badge>
@@ -236,7 +238,7 @@ export function CourseCard({
             )}
           </div>
 
-          {isEnrolled && (
+          {isEnrolled && variant === "learner" && (
             <div className="space-y-1.5 mt-2">
               <div className="flex justify-between items-center text-xs">
                 <span className="font-medium">Activities completed</span>
@@ -275,7 +277,7 @@ export function CourseCard({
                         {getUserName(instructor)?.[0]}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="text-sm">{getUserName(instructor)}</span>
+                    <span className="text-sm truncate">{getUserName(instructor)}</span>
                   </div>
                 ))
               ) : (
@@ -343,33 +345,18 @@ export function CourseCard({
                         Unarchive
                       </Button>
                     ))}
-                  {isOwner && onDelete && (
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="secondary" size="sm" onClick={(e) => e.stopPropagation()}>
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Delete
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete the course &quot;{course.title}
-                            &quot; and remove all associated data.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={handleDelete}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                          >
-                            Delete Course
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                  {variant === "admin" && onDelete && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDelete(e)
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete
+                    </Button>
                   )}
 
                   {/* Custom Actions */}
@@ -391,6 +378,50 @@ export function CourseCard({
               ) : (
                 showViewOnly && <p className="text-sm text-muted-foreground italic text-center w-full">View Only</p>
               )}
+            </div>
+          ) : variant === "instructor" ? (
+            <div className="flex flex-wrap gap-2 w-full">
+              {onEdit && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onEdit(course)
+                  }}
+                >
+                  <Pencil className="w-4 h-4 mr-2" />
+                  Edit
+                </Button>
+              )}
+              {onStats && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onStats(course)
+                  }}
+                >
+                  <BarChartBig className="w-4 h-4 mr-2" />
+                  Stats
+                </Button>
+              )}
+              {/* Custom Actions */}
+              {customActions.map((action, index) => (
+                <Button
+                  key={`custom-action-${index}`}
+                  variant="secondary"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    action.onClick(course)
+                  }}
+                >
+                  {action.icon}
+                  {action.label}
+                </Button>
+              ))}
             </div>
           ) : isEnrolled ? (
             <Button onClick={handleClick} variant="default" className="w-full">

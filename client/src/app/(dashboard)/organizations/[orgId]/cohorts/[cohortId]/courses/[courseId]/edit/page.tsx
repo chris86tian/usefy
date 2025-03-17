@@ -4,7 +4,7 @@ import { CustomFormField } from "@/components/CustomFormField"
 import Header from "@/components/Header"
 import { Button } from "@/components/ui/button"
 import { Form } from "@/components/ui/form"
-import { centsToDollars, dollarsToCents, uploadAllVideos, uploadThumbnail } from "@/lib/utils"
+import { centsToDollars, dollarsToCents, handleEnroll, uploadAllVideos, uploadThumbnail } from "@/lib/utils"
 import { openSectionModal, setSections } from "@/state"
 import {
   useGetCourseQuery,
@@ -15,6 +15,8 @@ import {
   useRemoveCourseInstructorMutation,
   useGetCourseInstructorsQuery,
   useGetUploadFileUrlMutation,
+  useInviteUserToCohortMutation,
+  useCreateTransactionMutation
 } from "@/state/api"
 import { useAppDispatch, useAppSelector } from "@/state/redux"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -33,23 +35,33 @@ import { v4 as uuid } from "uuid"
 import { useRouter } from "next/navigation"
 import { uploadAllFiles } from "@/lib/utils";
 import InstructorEmailInput from "./EmailInvite"
+import { useUser } from "@clerk/nextjs"
 
 const CourseEditor = () => {
-  const { orgId, courseId } = useParams() as { orgId: string; courseId: string }
+  const { user } = useUser()
+  const { orgId, cohortId, courseId } = useParams() as { orgId: string; cohortId: string; courseId: string }
+
   const { data: course, isLoading, refetch } = useGetCourseQuery(courseId)
   const { data: instructors, refetch: refetchInstructors } = useGetCourseInstructorsQuery(courseId)
+
+  const isInstructor = instructors?.some((instructor) => instructor.id === user?.id)
+
   const [updateCourse, { isLoading: isUpdating }] = useUpdateCourseMutation()
   const [getUploadVideoUrl] = useGetUploadVideoUrlMutation()
   const [getUploadImageUrl] = useGetUploadImageUrlMutation()
+  const [getUploadFileUrl] = useGetUploadFileUrlMutation();
+  const [inviteUserToCohort] = useInviteUserToCohortMutation()
   const [addCourseInstructor] = useAddCourseInstructorMutation()
+  const [createTransaction] = useCreateTransactionMutation()
   const [removeCourseInstructor] = useRemoveCourseInstructorMutation()
+
   const [isUploading, setIsUploading] = useState(false)
   const [progress, setProgress] = useState(0)
   const [image, setImage] = useState<File | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const router = useRouter()
-  const [getUploadFileUrl] = useGetUploadFileUrlMutation();
+
 
   const handleURLSubmit = async (videoUrl: string, options: ProcessOptions) => {
     setIsDialogOpen(false)
@@ -187,10 +199,20 @@ const CourseEditor = () => {
 
   const handleAddInstructor = async (email: string) => {
     try {
-      await addCourseInstructor({
+      await inviteUserToCohort({
+        organizationId: orgId,
+        cohortId,
+        email,
+        role: "instructor",
+      }).unwrap()
+
+      const result = await addCourseInstructor({
         courseId,
         email,
       }).unwrap()
+
+      handleEnroll(result.id, courseId, createTransaction)
+      
       refetchInstructors()
     } catch (error) {
       console.error("Failed to add instructor:", error)
@@ -303,7 +325,7 @@ const CourseEditor = () => {
 
       const formData = createCourseFormData(data, updatedSectionsAfterFiles, thumbnailUrl)
 
-      await updateCourse({ orgId, courseId, formData }).unwrap()
+      await updateCourse({ orgId, cohortId, courseId, formData }).unwrap()
 
       toast.success("Course updated successfully!")
       refetch()
@@ -327,7 +349,7 @@ const CourseEditor = () => {
       <div className="flex items-center gap-5 mb-5">
         <button
           className="flex items-center border border-gray-400 dark:border-gray-600 px-4 py-2 gap-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-200"
-          onClick={() => router.back()}
+          onClick={() => window.location.href = `/organizations/${orgId}/cohorts/${cohortId}`}
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to Courses</span>
@@ -407,14 +429,15 @@ const CourseEditor = () => {
                   </div>
                 </div>
 
-                {/* Instructor Email Input */}
-                <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                  <InstructorEmailInput
-                    existingInstructors={formattedInstructors}
-                    onAddInstructor={handleAddInstructor}
-                    onRemoveInstructor={handleRemoveInstructor}
-                  />
-                </div>
+                {!isInstructor && (
+                  <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <InstructorEmailInput
+                      existingInstructors={formattedInstructors}
+                      onAddInstructor={handleAddInstructor}
+                      onRemoveInstructor={handleRemoveInstructor}
+                    />
+                  </div>
+                )}
               </div>
             </div>
 

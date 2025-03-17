@@ -1,13 +1,11 @@
 "use client"
 
-import { useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Button } from "@/components/ui/button"
+import { getUserName } from "@/lib/utils"
 import { useGetCourseUsersQuery } from "@/state/api"
 import { User } from "@clerk/nextjs/server"
-import { UserPlus2 } from "lucide-react"
 
 interface UserListProps {
   courseId: string
@@ -17,28 +15,20 @@ interface UserListProps {
 
 export default function UserList({ courseId, selectedUser, onUserSelect }: UserListProps) {
   const { data: users } = useGetCourseUsersQuery(courseId)
-  const [isEnrollmentModalOpen, setIsEnrollmentModalOpen] = useState(false)
 
   return (
-    <Card className="">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <Button variant={"outline"}
-          onClick={() => setIsEnrollmentModalOpen(true)}>
-            <UserPlus2 className="mr-2 h-4 w-4" />
-            Manage Enrollment
-        </Button>
-      </CardHeader>
-      <CardContent className="p-0">
+    <Card className="p-2">
+      <CardContent>
         <ScrollArea className="h-[calc(100vh-12rem)] w-full rounded-md">
-          <div className="px-4">
+          <div>
             {!users || users.length === 0 ? (
-              <p className="text-center py-4">No users found for this course</p>
+              <p className="text-center py-2">No users found for this course</p>
             ) : (
-              <ul className="space-y-4">
+              <ul className="space-y-2">
                 {users.map((user) => (
                   <li
                     key={user.id}
-                    className={`flex items-center space-x-4 p-4 rounded-md cursor-pointer border border-transparent hover:border-accent ${
+                    className={`flex items-center space-x-2 p-2 rounded-md cursor-pointer border border-transparent hover:border-accent ${
                       selectedUser?.id === user.id ? "bg-accent text-accent-foreground" : ""
                     }`}
                     onClick={() => onUserSelect(user as unknown as User)}
@@ -47,13 +37,8 @@ export default function UserList({ courseId, selectedUser, onUserSelect }: UserL
                       <AvatarImage src={user.imageUrl || undefined} alt={`${user.firstName} ${user.lastName}`} />
                       <AvatarFallback>{`${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`}</AvatarFallback>
                     </Avatar>
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium leading-none">
-                        {user.firstName} {user.lastName}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {user.publicMetadata.userType === "teacher" ? "Teacher" : "Student"}
-                      </p>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{getUserName(user)}</p>
                     </div>
                   </li>
                 ))}

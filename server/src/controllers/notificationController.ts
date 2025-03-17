@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import UserNotification from "../models/notificationModel";
 import { getAuth } from "@clerk/express";
 
-export const listNotifications = async (
+export const getNotifications = async (
   req: Request,
   res: Response
 ): Promise<void> => {
@@ -28,6 +28,11 @@ export const markNotificationAsRead = async (
 ): Promise<void> => {
   const auth = getAuth(req);
   
+  if (!auth?.userId) {
+    res.status(401).json({ message: "Unauthorized" });
+    return;
+  }
+
   const notificationId = req.params.notificationId;
   if (!notificationId) {
     res.status(400).json({ message: "Notification ID is required" });
@@ -36,7 +41,7 @@ export const markNotificationAsRead = async (
 
   try {
     const notification = await UserNotification.get({
-      userId: auth.userId as string,
+      userId: auth.userId,
       notificationId: notificationId,
     });
 
@@ -45,10 +50,17 @@ export const markNotificationAsRead = async (
       return;
     }
 
+    if (notification.isRead) {
+      res.json({ message: "Notification already marked as read" });
+      return;
+    }
+
     notification.isRead = true;
     await notification.save();
-    res.json({ message: "Notification marked as read" });
+
+    res.json({ message: "Notification marked as read", data: { notificationId } });
   } catch (error) {
-    res.status(500).json({ message: "Error marking notification as read", error });
+    console.error("Error marking notification as read:", error);
+    res.status(500).json({ message: "Error marking notification as read", error: error });
   }
-}
+};

@@ -18,15 +18,17 @@ interface AdminCohortProps {
   usersLoading: boolean
   coursesLoading: boolean
   courses: Course[]
+  refetch: () => void
 }
 
-const AdminCohort = ({ orgUsers, usersLoading, coursesLoading, courses }: AdminCohortProps) => {
+const AdminCohort = ({ orgUsers, usersLoading, coursesLoading, courses, refetch }: AdminCohortProps) => {
   const { user } = useUser()
-  const { orgId, cohortId } = useParams()
-  const { data: cohort, isLoading: cohortLoading, refetch } = useGetCohortQuery(
-    { organizationId: orgId as string, cohortId: cohortId as string },
-    { skip: !orgId || !cohortId },
-  )
+  const { orgId, cohortId } = useParams() as { orgId: string; cohortId: string }
+
+  const { 
+    data: cohort, 
+    isLoading: cohortLoading, 
+  } = useGetCohortQuery({ organizationId: orgId, cohortId, })
 
   if (cohortLoading || usersLoading || coursesLoading) return <Spinner />
   if (!cohort) return <NotFound message="Cohort not found" />
@@ -54,8 +56,7 @@ const AdminCohort = ({ orgUsers, usersLoading, coursesLoading, courses }: AdminC
             cohort={cohort} 
             orgUsers={orgUsers} 
             courses={courses} 
-            currentUserId={user.id}
-            refetch={refetch} 
+            refetch={refetch}
           />
         </TabsContent>
 
@@ -63,7 +64,6 @@ const AdminCohort = ({ orgUsers, usersLoading, coursesLoading, courses }: AdminC
           <CohortMembers 
             cohort={cohort} 
             orgUsers={orgUsers} 
-            refetch={refetch} 
           />
         </TabsContent>
       </Tabs>

@@ -361,10 +361,10 @@ export const api = createApi({
     }),
     removeCourseFromCohort: build.mutation<
       { message: string },
-      { organizationId: string; cohortId: string; courseId: string }
+      { cohortId: string; courseId: string }
     >({
-      query: ({ organizationId, cohortId, courseId }) => ({
-        url: `cohorts/${organizationId}/${cohortId}/remove-course`,
+      query: ({ cohortId, courseId }) => ({
+        url: `cohorts/remove-course/${cohortId}`,
         method: "DELETE",
         body: { courseId },
       }),
@@ -390,11 +390,11 @@ export const api = createApi({
 
     updateCourse: build.mutation<
       Course,
-      { orgId: string, courseId: string; formData: FormData }
+      { orgId: string, cohortId: string, courseId: string; formData: FormData }
     >({
-      query: ({ orgId, courseId, formData }) => {
+      query: ({ orgId, courseId, cohortId, formData }) => {
         return {
-          url: `courses/${orgId}/${courseId}`,
+          url: `courses/${orgId}/cohorts/${cohortId}/${courseId}`,
           method: "PUT",
           body: formData,
           formData: true,
@@ -434,7 +434,7 @@ export const api = createApi({
     }),
 
     addCourseInstructor: build.mutation<
-      { message: string },
+      { message: string, id: string },
       { courseId: string; userId?: string; email?: string }
     >({
       query: ({ courseId, userId, email }) => ({
@@ -660,14 +660,7 @@ export const api = createApi({
         url: `notifications/${notificationId}`,
         method: "PUT",
       }),
-      transformResponse: (response: any) => {
-        if (!response || typeof response !== "object") {
-          return { message: response };
-        }
-        return { message: response.message, data: response.data };
-      },
     }),
-
 
     /* 
     ===============

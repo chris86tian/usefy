@@ -36,6 +36,7 @@ import { useCallback } from "react"
 import FeedbackButton from "./adaptive-quiz/FeedbackButton"
 import UploadedFiles from "./adaptive-quiz/UploadedFiles"
 import { FileText } from "lucide-react"
+import NotFound from "@/components/NotFound"
 
 const isSectionReleased = (section: Section) => {
   if (!section.releaseDate) return false
@@ -57,22 +58,19 @@ const Course = () => {
     hasMarkedComplete,
     courseInstructors,
     setHasMarkedComplete,
+    refetch,
   } = useCourseProgressData()
 
   const playerRef = useRef<ReactPlayer>(null)
   const quizRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
-  const { currentOrg } = useOrganization()
+  const { currentOrg, isOrgLoading } = useOrganization()
   const { orgId, cohortId } = useParams()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [videoEndTime, setVideoEndTime] = useState<number | null>(null)
   const [hasShownPrompt, setHasShownPrompt] = useState(false)
   const [likes, setLikes] = useState(currentChapter?.likes ?? 0)
   const [dislikes, setDislikes] = useState(currentChapter?.dislikes ?? 0)
-  const isAuthorized =
-    currentOrg?.admins.some((admin) => admin.userId === user?.id) ||
-    currentOrg?.instructors.some((instructor) => instructor.userId === user?.id)
-
   const [likeChapter] = useLikeChapterMutation()
   const [dislikeChapter] = useDislikeChapterMutation()
 
@@ -145,8 +143,15 @@ const Course = () => {
     }
   }, [sendTimeTracking])
 
+  if (isOrgLoading || isLoading) return <Spinner />
+  if (!user) return <SignInRequired />
+  if (!currentOrg || !course || !userProgress || !currentChapter || !currentSection || !courseInstructors)
+    return <NotFound message="Course not found" />
+
+  const isAuthorized = currentOrg.admins.some((admin) => admin.userId === user?.id) || currentOrg.instructors.some((instructor) => instructor.userId === user?.id)
+
   const findNextAvailableChapter = (direction: "next" | "previous") => {
-    if (!course?.sections || !currentSection || !currentChapter) return null
+    if (!course.sections || !currentSection || !currentChapter) return null
 
     const currentSectionIndex = course.sections.findIndex((section) => section.sectionId === currentSection.sectionId)
 
@@ -194,7 +199,6 @@ const Course = () => {
         }
       }
     }
-
     return null
   }
 
@@ -311,8 +315,8 @@ const Course = () => {
 
     try {
       await likeChapter({
-        courseId: course?.courseId as string,
-        sectionId: currentSection?.sectionId as string,
+        courseId: course.courseId,
+        sectionId: currentSection.sectionId,
         chapterId: currentChapter.chapterId,
       }).unwrap()
     } catch (error) {
@@ -330,8 +334,8 @@ const Course = () => {
 
     try {
       await dislikeChapter({
-        courseId: course?.courseId as string,
-        sectionId: currentSection?.sectionId as string,
+        courseId: course.courseId,
+        sectionId: currentSection.sectionId,
         chapterId: currentChapter.chapterId,
       }).unwrap()
     } catch (error) {
@@ -340,12 +344,6 @@ const Course = () => {
       setDislikes((prevDislikes) => prevDislikes - 1)
     }
   }
-
-  if (isLoading) return <Spinner />
-  if (!user) return <SignInRequired />
-
-  if (!course || !userProgress || !currentChapter || !currentSection)
-    return <div className="p-4 text-center">Error loading course</div>
 
   const isCurrentSectionReleased = isSectionReleased(currentSection)
   const hasPreviousChapter = !!findNextAvailableChapter("previous")
@@ -380,12 +378,12 @@ const Course = () => {
         <div className="flex items-center space-x-2 text-sm text-muted-foreground">
           <span>{course.title}</span>
           <span>/</span>
-          <span>{currentSection?.sectionTitle}</span>
+          <span>{currentSection.sectionTitle}</span>
           <span>/</span>
-          <span className="font-medium text-foreground">{currentChapter?.title}</span>
+          <span className="font-medium text-foreground">{currentChapter.title}</span>
         </div>
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">{currentChapter?.title}</h1>
+          <h1 className="text-2xl font-bold">{currentChapter.title}</h1>
           <div className="flex items-center space-x-4">
             {/* Show course instructors as dropdown */}
             <DropdownMenu>
@@ -396,7 +394,7 @@ const Course = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                {courseInstructors?.map((instructor) => (
+                {courseInstructors.map((instructor) => (
                   <DropdownMenuItem key={instructor.id}>
                     <User className="mr-2 h-4 w-4" />
                     <span>{getUserName(instructor)}</span>
@@ -410,7 +408,7 @@ const Course = () => {
 
       <Card className="max-w-5xl mx-auto overflow-hidden border shadow-sm">
         <CardContent className="p-0" style={{ aspectRatio: "16/9" }}>
-          {currentChapter?.video ? (
+          {currentChapter.video ? (
             <ReactPlayer
               ref={playerRef}
               url={currentChapter.video as string}
@@ -446,10 +444,10 @@ const Course = () => {
               <div className="flex items-center gap-3">
                 <FeedbackButton
                   feedbackType="question"
-                  itemId={currentChapter?.chapterId as string}
-                  courseId={course?.courseId as string}
-                  sectionId={currentSection?.sectionId as string}
-                  chapterId={currentChapter?.chapterId as string}
+                  itemId={currentChapter.chapterId}
+                  courseId={course.courseId}
+                  sectionId={currentSection.sectionId}
+                  chapterId={currentChapter.chapterId}
                 ></FeedbackButton>
                 {isAuthorized && (
                   <Button onClick={() => setIsModalOpen(true)} variant="outline" size="sm">
@@ -479,7 +477,7 @@ const Course = () => {
 
           <CardContent className="pt-6">
             <ScrollArea className="h-auto max-h-48 pr-4">
-              <p className="text-base leading-relaxed">{currentChapter?.content}</p>
+              <p className="text-base leading-relaxed">{currentChapter.content}</p>
             </ScrollArea>
           </CardContent>
 
@@ -533,14 +531,15 @@ const Course = () => {
           <AssignmentModal
             mode="create"
             courseId={course.courseId}
-            sectionId={currentSection?.sectionId as string}
+            sectionId={currentSection.sectionId}
             chapter={currentChapter}
             open={isModalOpen}
             onOpenChange={setIsModalOpen}
             onAssignmentChange={() => {
               handleModalClose()
-              router.refresh()
+              refetch()
             }}
+            refetch={refetch}
           />
         )}
 
@@ -555,10 +554,10 @@ const Course = () => {
               </CardHeader>
               <CardContent>
                 <AdaptiveQuiz
-                  quiz={currentChapter.quiz as Quiz}
+                  quiz={currentChapter.quiz}
                   courseId={course.courseId}
                   chapterId={currentChapter.chapterId}
-                  sectionId={currentSection?.sectionId}
+                  sectionId={currentSection.sectionId}
                 />
               </CardContent>
             </Card>
@@ -574,15 +573,16 @@ const Course = () => {
             <CardContent>
               <ScrollArea className="h-auto pt-4">
                 <div className="grid grid-cols-2 gap-4">
-                  {currentChapter?.assignments && currentChapter.assignments.length > 0 ? (
+                  {currentChapter.assignments && currentChapter.assignments.length > 0 ? (
                     currentChapter.assignments.map((assignment) => (
                       <AssignmentCard
                         key={assignment.assignmentId}
-                        isAuthorized={isAuthorized as boolean}
+                        isAuthorized={isAuthorized}
                         sectionId={currentSection.sectionId}
                         chapter={currentChapter}
                         course={course}
                         assignment={assignment}
+                        refetch={refetch}
                       />
                     ))
                   ) : (
@@ -612,7 +612,7 @@ const Course = () => {
         )}
 
         <CourseComments
-          orgId={currentOrg?.organizationId as string}
+          orgId={currentOrg.organizationId}
           courseId={course.courseId}
           sectionId={currentSection.sectionId}
           chapterId={currentChapter.chapterId}

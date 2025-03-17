@@ -1,58 +1,67 @@
-"use client"
+'use client';
 
-import type React from "react"
-import { useState, useEffect } from "react"
-import { useParams, useRouter } from "next/navigation"
-import { useGetMyOrganizationsQuery, useCreateCohortMutation, useGetCohortsQuery } from "@/state/api"
-import { useUser } from "@clerk/nextjs"
-import { Spinner } from "@/components/ui/Spinner"
-import { OrganizationContext } from "@/context/OrganizationContext"
-import OrganizationSidebar from "@/components/OrganizationsSidebar"
+import type React from "react";
+import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useGetMyOrganizationsQuery, useGetCohortsQuery } from "@/state/api";
+import { useUser } from "@clerk/nextjs";
+import { Spinner } from "@/components/ui/Spinner";
+import { OrganizationContext } from "@/context/OrganizationContext";
+import OrganizationSidebar from "@/components/OrganizationsSidebar";
+import NotFound from "@/components/NotFound";
+import { SignInRequired } from "@/components/SignInRequired";
 
 interface OrganizationLayoutProps {
-  children: React.ReactNode
+  children: React.ReactNode;
 }
 
 export default function OrganizationLayout({ children }: OrganizationLayoutProps) {
-  const { orgId } = useParams()
-  const { user } = useUser()
-  const { data: organizations, isLoading } = useGetMyOrganizationsQuery()
-  const { data: cohorts, refetch } = useGetCohortsQuery(orgId as string)
-  const [currentOrg, setCurrentOrg] = useState<Organization | null>(null)
-  const router = useRouter()
+  const { orgId } = useParams() as { orgId: string };
+  const { user } = useUser();
+
+  const { data: organizations, isLoading: orgsLoading } = useGetMyOrganizationsQuery();
+  const { data: cohorts, isLoading: cohortsLoading, refetch } = useGetCohortsQuery(orgId);
+
+  const [currentOrg, setCurrentOrg] = useState<Organization | null>(null);
+  const [isOrgLoading, setIsOrgLoading] = useState(true);
 
   useEffect(() => {
-    if (organizations && orgId) {
-      const org = organizations.find((org) => org.organizationId === orgId)
-      if (org) {
-        setCurrentOrg(org)
-      } else if (organizations.length > 0) {
-        router.push(`/organizations/${organizations[0].organizationId}`)
-      }
+    if (!organizations || !orgId) return;
+
+    const org = organizations.find((org) => org.organizationId === orgId);
+    if (org) {
+      setCurrentOrg(org);
+      setIsOrgLoading(false);
+    } else if (organizations.length > 0) {
+      setCurrentOrg(organizations[0]);
+      setIsOrgLoading(false);
+    } else {
+      setIsOrgLoading(false);
     }
-  }, [organizations, orgId, router])
+  }, [organizations, orgId]);
 
-  const isUserAdmin = currentOrg?.admins?.some((admin: { userId: string }) => admin.userId === user?.id)
-
-  if (isLoading) return <Spinner />
+  if (orgsLoading || cohortsLoading || isOrgLoading) return <Spinner />;
+  if (!user) return <SignInRequired />;
+  if (!currentOrg || !cohorts || !organizations) 
+    return <NotFound message={!currentOrg ? "Organization not found" : !cohorts ? "Cohorts not found" : "Organizations not found"} />;
+  
+  const isAuthorized = currentOrg.admins.some((admin) => admin.userId === user.id);
 
   return (
-    <OrganizationContext.Provider value={{ currentOrg }}>
+    <OrganizationContext.Provider value={{ currentOrg, isOrgLoading }}>
       <div className="flex h-screen w-full">
         <OrganizationSidebar
-          organizations={organizations || []}
-          cohorts={cohorts || []}
-          currentOrg={currentOrg as Organization}
-          isUserAdmin={!!isUserAdmin}
-          orgId={orgId as string}
+          organizations={organizations}
+          cohorts={cohorts}
+          currentOrg={currentOrg}
+          isAuthorized={!!isAuthorized}
+          orgId={orgId}
           refetchCohorts={refetch}
         />
-
         <div className="flex-1 flex flex-col">
           <main className="flex-1 p-4">{children}</main>
         </div>
       </div>
     </OrganizationContext.Provider>
-  )
+  );
 }
-

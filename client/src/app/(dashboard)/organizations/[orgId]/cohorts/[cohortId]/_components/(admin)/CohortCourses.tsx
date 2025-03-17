@@ -14,8 +14,25 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { BookOpen, Plus, Users } from "lucide-react"
+import { BookCopyIcon, BookOpen, Users } from "lucide-react"
 import { getUserName, handleEnroll } from "@/lib/utils"
+import { CourseCard } from "@/components/CourseCard"
+import { Toolbar } from "@/components/Toolbar"
+import { useRouter } from "next/navigation"
+import type { User } from "@clerk/nextjs/server"
+import ManageUsersDialog from "./ManageUsersDialog"
+import Header from "@/components/Header"
+import { useUser } from "@clerk/nextjs"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import {
   useAddCourseToCohortMutation,
   useRemoveCourseFromCohortMutation,
@@ -27,43 +44,28 @@ import {
   useUnarchiveCourseMutation,
   useCreateCourseMutation,
 } from "@/state/api"
-import { CourseCard } from "@/components/CourseCard"
-import { Toolbar } from "@/components/Toolbar"
-import { useRouter } from "next/navigation"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import type { User } from "@clerk/nextjs/server"
-import ManageUsersDialog from "./ManageUsersDialog"
-import Header from "@/components/Header"
 
 interface CohortCoursesProps {
   cohort: Cohort
   orgUsers: { instructors: User[]; learners: User[]; admins: User[] }
   courses: Course[]
   refetch: () => void
-  currentUserId?: string
 }
 
-const CohortCourses = ({ cohort, orgUsers, courses, refetch, currentUserId }: CohortCoursesProps) => {
+const CohortCourses = ({ cohort, orgUsers, courses, refetch }: CohortCoursesProps) => {
+  const { user } = useUser()
+  const currentUserId = user?.id
   const router = useRouter()
 
-  const [createCourse] = useCreateCourseMutation()
+  const [createCourse, { isLoading: createCourseLoading } ] = useCreateCourseMutation()
   const [addCourseToCohort, { isLoading: addCourseLoading }] = useAddCourseToCohortMutation()
-  const [removeCourseFromCohort] = useRemoveCourseFromCohortMutation()
+  const [removeCourseFromCohort, { isLoading: removeCourseLoading }] = useRemoveCourseFromCohortMutation()
   const [addCourseInstructor, { isLoading: addInstructorLoading }] = useAddCourseInstructorMutation()
-  const [removeCourseInstructor] = useRemoveCourseInstructorMutation()
+  const [removeCourseInstructor, { isLoading: removeInstructorLoading } ] = useRemoveCourseInstructorMutation()
   const [createTransaction] = useCreateTransactionMutation()
-  const [unenrollUser] = useUnenrollUserMutation()
-  const [archiveCourse] = useArchiveCourseMutation()
-  const [unarchiveCourse] = useUnarchiveCourseMutation()
+  const [unenrollUser, { isLoading: unenrollLoading }] = useUnenrollUserMutation()
+  const [archiveCourse, { isLoading: archiveCourseLoading }] = useArchiveCourseMutation()
+  const [unarchiveCourse, { isLoading: unarchiveCourseLoading }] = useUnarchiveCourseMutation()
 
   const [selectedCourseId, setSelectedCourseId] = useState("")
   const [selectedInstructorId, setSelectedInstructorId] = useState("")
@@ -75,9 +77,7 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch, currentUserId }: Co
   const [courseToDelete, setCourseToDelete] = useState<Course | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
-  const availableCourses = courses.filter((course) => !courses?.some((c) => c.courseId === course.courseId)) || []
-
-  const REMOVE_INSTRUCTOR_VALUE = "remove_instructor"
+  const REMOVE_INSTRUCTOR = "remove_instructor"
 
   const filteredCourses = useMemo(() => {
     if (!courses) return []
@@ -98,25 +98,20 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch, currentUserId }: Co
   }, [courses, searchTerm, currentUserId])
 
   const handleCreateCourse = async () => {
-    const result = await createCourse().unwrap();
-
-    if (orgUsers.admins) {
-      for (const admin of orgUsers.admins) {
-        await handleEnroll(admin.id, result.courseId, createTransaction);
-      }
+    try {
+      const newCourse = await createCourse()
+      await addCourseToCohort({
+        organizationId: cohort.organizationId,
+        cohortId: cohort.cohortId,
+        courseId: newCourse.data?.courseId as string,
+      })
+      router.push(`/organizations/${cohort?.organizationId}/cohorts/${cohort?.cohortId}/courses/${newCourse.data?.courseId}/edit`)
+      refetch()
     }
-
-    await addCourseToCohort({
-      organizationId: cohort.organizationId,
-      cohortId: cohort.cohortId,
-      courseId: result.courseId,
-    }).unwrap();
-    
-    router.push(`/organizations/${cohort.organizationId}/cohorts/${cohort.cohortId}/courses/${result.courseId}/edit`, {
-      scroll: false,
-    });
-  };
-
+    catch (error) {
+      toast.error("Failed to create course")
+    }
+  }
 
   const handleAddCourse = async () => {
     if (!selectedCourseId) {
@@ -126,8 +121,8 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch, currentUserId }: Co
 
     try {
       await addCourseToCohort({
-        organizationId: cohort?.organizationId as string,
-        cohortId: cohort?.cohortId as string,
+        organizationId: cohort.organizationId,
+        cohortId: cohort.cohortId,
         courseId: selectedCourseId,
       })
 
@@ -164,11 +159,6 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch, currentUserId }: Co
     setIsManageUsersDialogOpen(true)
   }
 
-  const getInstructorName = (instructorId: string) => {
-    const instructor = orgUsers?.instructors?.find((i) => i.id === instructorId)
-    return instructor ? getUserName(instructor) : instructorId
-  }
-
   const handleManageInstructors = async () => {
     if (!courseToEdit) {
       toast.error("No course selected")
@@ -176,7 +166,7 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch, currentUserId }: Co
     }
 
     const hasCurrentInstructor = courseToEdit.instructors && courseToEdit.instructors.length > 0
-    const isRemovingInstructor = hasCurrentInstructor && selectedInstructorId === REMOVE_INSTRUCTOR_VALUE
+    const isRemovingInstructor = hasCurrentInstructor && selectedInstructorId === REMOVE_INSTRUCTOR
 
     try {
       if (hasCurrentInstructor) {
@@ -191,7 +181,7 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch, currentUserId }: Co
         })
       }
 
-      if (selectedInstructorId && selectedInstructorId !== REMOVE_INSTRUCTOR_VALUE) {
+      if (selectedInstructorId && selectedInstructorId !== REMOVE_INSTRUCTOR) {
         await addCourseInstructor({
           courseId: courseToEdit.courseId,
           userId: selectedInstructorId,
@@ -200,7 +190,7 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch, currentUserId }: Co
         handleEnroll(selectedInstructorId, courseToEdit.courseId, createTransaction)
       }
 
-      if (!selectedInstructorId && !isRemovingInstructor) {
+      if (!hasCurrentInstructor && !selectedInstructorId) {
         toast.error("Please select an instructor")
         return
       }
@@ -242,11 +232,10 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch, currentUserId }: Co
 
     try {
       await removeCourseFromCohort({
-        organizationId: cohort.organizationId,
         cohortId: cohort.cohortId,
         courseId: courseToDelete.courseId,
-      }).unwrap()
-      toast.success(`Course "${courseToDelete.title}" removed from cohort`)
+      })
+      toast.success(`Course removed from cohort`)
       refetch()
     } catch (error) {
       toast.error("Failed to remove course from cohort")
@@ -279,26 +268,28 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch, currentUserId }: Co
   const handleGoToCourse = (course: Course) => {
     if (course.sections?.[0]?.chapters?.[0]) {
       router.push(
-        `/organizations/${cohort?.organizationId}/cohorts/${cohort.cohortId}/courses/${course.courseId}/chapters/${course.sections[0].chapters[0].chapterId}`,
+        `/organizations/${cohort?.organizationId}/cohorts/${cohort?.cohortId}/courses/${course.courseId}/chapters/${course.sections[0].chapters[0].chapterId}`,
         { scroll: false },
       )
     } else {
-      router.push(`/organizations/${cohort?.organizationId}/cohorts/${cohort.cohortId}/courses/${course.courseId}`, { scroll: false })
+      router.push(`/organizations/${cohort?.organizationId}/cohorts/${cohort?.cohortId}/courses/${course.courseId}`, {
+        scroll: false,
+      })
     }
   }
-
-  const isAdmin = orgUsers?.admins?.some((admin) => admin.id === currentUserId)
 
   return (
     <>
       <Header
         rightElement={
-          <div className="flex items-center space-x-4">
-            <Button onClick={handleCreateCourse}>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Course
+          <div className="flex items-center space-x-2">
+            <Button 
+              onClick={handleCreateCourse} 
+              disabled={createCourseLoading}>
+              <BookCopyIcon className="mr-2 h-4 w-4" />
+              {createCourseLoading ? "Creating..." : "Create Course"}
             </Button>
-            <Dialog
+            {/* <Dialog
               open={activeDialog === "addCourse"}
               onOpenChange={(open) => {
                 setActiveDialog(open ? "addCourse" : "none")
@@ -327,8 +318,8 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch, currentUserId }: Co
                         <SelectValue placeholder="Select course" />
                       </SelectTrigger>
                       <SelectContent>
-                        {availableCourses.length > 0 ? (
-                          availableCourses.map((course) => (
+                        {courses.length > 0 ? (
+                          courses.map((course) => (
                             <SelectItem key={course.courseId} value={course.courseId}>
                               {course.title}
                             </SelectItem>
@@ -346,8 +337,8 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch, currentUserId }: Co
                         <SelectValue placeholder="Select instructor" />
                       </SelectTrigger>
                       <SelectContent>
-                        {orgUsers?.instructors?.length > 0 ? (
-                          orgUsers?.instructors?.map((instructor) => (
+                        {orgUsers.instructors.length > 0 ? (
+                          orgUsers.instructors.map((instructor) => (
                             <SelectItem key={instructor.id} value={instructor.id}>
                               {getUserName(instructor)}
                             </SelectItem>
@@ -360,15 +351,18 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch, currentUserId }: Co
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => setActiveDialog("none")}>
+                  <Button variant="ghost" onClick={() => setActiveDialog("none")}>
                     Cancel
                   </Button>
-                  <Button onClick={handleAddCourse} disabled={addCourseLoading || addInstructorLoading}>
+                  <Button
+                    variant="outline"
+                    onClick={handleAddCourse} 
+                    disabled={addCourseLoading || addInstructorLoading}>
                     {addCourseLoading || addInstructorLoading ? "Adding..." : "Add Course"}
                   </Button>
                 </DialogFooter>
               </DialogContent>
-            </Dialog>
+            </Dialog> */}
           </div>
         }
       />
@@ -385,7 +379,6 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch, currentUserId }: Co
               isEnrolled={true}
               onEdit={handleEdit}
               onDelete={handleDeleteConfirmation}
-              isOwner={!!isAdmin}
               onView={handleGoToCourse}
               onArchive={handleArchive}
               onUnarchive={handleUnarchive}
@@ -412,14 +405,18 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch, currentUserId }: Co
         )}
       </div>
 
-      {/* Manage Instructors Dialog */}
       <Dialog open={activeDialog === "manageInstructors"} onOpenChange={(open) => !open && closeAllDialogs()}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Manage Course Instructors</DialogTitle>
             <DialogDescription>
-              {courseToEdit?.instructors && courseToEdit.instructors.length > 0
-                ? `Current instructor: ${getInstructorName(courseToEdit.instructors[0].userId)}`
+              {courseToEdit?.instructors && courseToEdit.instructors.length > 0 && courseToEdit
+                ? (() => {
+                    const instructorId = courseToEdit.instructors[0].userId
+                    const instructorData = orgUsers.instructors.find((i) => i.id === instructorId)
+
+                    return `Current instructor: ${instructorData ? getUserName(instructorData) : instructorId}`
+                  })()
                 : "No instructor currently assigned"}
             </DialogDescription>
           </DialogHeader>
@@ -429,21 +426,24 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch, currentUserId }: Co
               <Select value={selectedInstructorId} onValueChange={setSelectedInstructorId}>
                 <SelectTrigger id="instructor">
                   <SelectValue placeholder="Select instructor">
-                    {selectedInstructorId === REMOVE_INSTRUCTOR_VALUE
+                    {selectedInstructorId === REMOVE_INSTRUCTOR
                       ? "Remove instructor"
                       : selectedInstructorId
-                        ? getInstructorName(selectedInstructorId)
+                        ? (() => {
+                            const instructor = orgUsers.instructors.find((i) => i.id === selectedInstructorId)
+                            return instructor ? getUserName(instructor) : selectedInstructorId
+                          })()
                         : "Select instructor"}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {courseToEdit?.instructors && courseToEdit.instructors.length > 0 && (
-                    <SelectItem value={REMOVE_INSTRUCTOR_VALUE}>
+                    <SelectItem value={REMOVE_INSTRUCTOR}>
                       <span className="text-destructive">Remove instructor</span>
                     </SelectItem>
                   )}
-                  {orgUsers?.instructors?.length > 0 ? (
-                    orgUsers?.instructors?.map((instructor) => (
+                  {orgUsers.instructors.length > 0 ?
+                    orgUsers.instructors.map((instructor) => (
                       <SelectItem key={instructor.id} value={instructor.id}>
                         <span className="flex flex-col">
                           <span>{getUserName(instructor)}</span>
@@ -453,9 +453,8 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch, currentUserId }: Co
                         </span>
                       </SelectItem>
                     ))
-                  ) : (
-                    <div className="p-2 text-center text-muted-foreground">No instructors available</div>
-                  )}
+                    : <div className="p-2 text-center text-muted-foreground">No instructors found</div>
+                  }
                 </SelectContent>
               </Select>
             </div>
@@ -466,9 +465,10 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch, currentUserId }: Co
             </Button>
             <Button
               onClick={handleManageInstructors}
-              variant={selectedInstructorId === REMOVE_INSTRUCTOR_VALUE ? "destructive" : "default"}
+              disabled={removeInstructorLoading || addInstructorLoading}
+              variant={selectedInstructorId === REMOVE_INSTRUCTOR ? "destructive" : "default"}
             >
-              {selectedInstructorId === REMOVE_INSTRUCTOR_VALUE
+              {selectedInstructorId === REMOVE_INSTRUCTOR
                 ? "Remove Instructor"
                 : courseToEdit?.instructors && courseToEdit.instructors.length > 0
                   ? "Change Instructor"
@@ -478,7 +478,6 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch, currentUserId }: Co
         </DialogContent>
       </Dialog>
 
-      {/* Manage Users Dialog */}
       <ManageUsersDialog
         isOpen={isManageUsersDialogOpen}
         onClose={() => {
@@ -494,7 +493,6 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch, currentUserId }: Co
         }}
       />
 
-      {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -506,8 +504,12 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch, currentUserId }: Co
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteCourse} className="bg-red-500 hover:bg-red-600">
-              Remove
+            <AlertDialogAction 
+              disabled={removeCourseLoading}
+              onClick={handleDeleteCourse} 
+              className="bg-red-500 hover:bg-red-600"
+            >
+              {removeCourseLoading ? "Removing..." : "Remove"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

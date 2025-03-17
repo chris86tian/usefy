@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Input } from "@/components/ui/input"
 import { User } from "@clerk/nextjs/server"
+import { getUserName } from "@/lib/utils"
 
 interface UserDetailsProps {
   user: User
@@ -42,13 +43,8 @@ export default function UserDetails({ user, courseId }: UserDetailsProps) {
           </Avatar>
           <div>
             <CardTitle className="text-2xl font-bold">
-              {user.firstName} {user.lastName}
+              {getUserName(user)}
             </CardTitle>
-            <CardDescription>
-              <Badge variant="outline" className="mt-1">
-                {user.publicMetadata.userType === "teacher" ? "Teacher" : "Student"}
-              </Badge>
-            </CardDescription>
           </div>
         </div>
       </CardHeader>

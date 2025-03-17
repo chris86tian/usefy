@@ -47,18 +47,6 @@ if (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "dev") {
 dynamoose.aws.ddb.set(new DynamoDB());
 
 const app = express();
-app.use(express.json());
-app.use(helmet());
-app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
-app.use(morgan("common"));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
-
-const allowedOrigins = [
-  "http://localhost:3000",
-  "https://usefy.com",
-  "https://www.usefy.com",
-];
 
 app.use(
   cors({
@@ -91,6 +79,20 @@ app.use(
     maxAge: 86400,
   })
 );
+
+app.use(express.json());
+app.use(helmet());
+app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
+app.use(morgan("common"));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://usefy.com",
+  "https://www.usefy.com",
+];
+
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;

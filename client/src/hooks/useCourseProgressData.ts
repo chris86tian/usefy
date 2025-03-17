@@ -9,14 +9,14 @@ import {
 import { useUser } from "@clerk/nextjs";
 
 export const useCourseProgressData = () => {
-  const { courseId, chapterId } = useParams();
   const { user } = useUser();
+  const { courseId, chapterId } = useParams() as { courseId: string; chapterId: string };
   const [hasMarkedComplete, setHasMarkedComplete] = useState(false);
   const [updateProgress] = useUpdateUserCourseProgressMutation();
 
-  const { data: courseInstructors } = useGetCourseInstructorsQuery((courseId as string) ?? "", { skip: !courseId});
-  const { data: course, isLoading: courseLoading } = useGetCourseQuery((courseId as string) ?? "", { skip: !courseId });
-  const { data: userProgress, isLoading: progressLoading } = useGetUserCourseProgressQuery({ userId: user?.id ?? "", courseId: (courseId as string) ?? "" },{ skip: !user || !courseId });
+  const { data: courseInstructors } = useGetCourseInstructorsQuery(courseId);
+  const { data: course, isLoading: courseLoading, refetch } = useGetCourseQuery(courseId);
+  const { data: userProgress, isLoading: progressLoading } = useGetUserCourseProgressQuery({ userId: user?.id as string, courseId });
 
   const isLoading = courseLoading || progressLoading;
 
@@ -54,7 +54,7 @@ export const useCourseProgressData = () => {
     
     updateProgress({
       userId: user.id,
-      courseId: (courseId as string) ?? "",
+      courseId,
       progressData: {
         sections: [
           {
@@ -87,5 +87,6 @@ export const useCourseProgressData = () => {
     updateChapterProgress,
     hasMarkedComplete,
     setHasMarkedComplete,
+    refetch,
   };
 };
