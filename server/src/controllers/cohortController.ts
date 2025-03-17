@@ -335,20 +335,26 @@ export const removeCourseFromCohort = async (req: Request, res: Response): Promi
     const { courseId } = req.body;
     
     try {
-        const cohort = await Cohort.scan("cohortId").eq(cohortId).exec();
+        const cohort = await Cohort.get(cohortId);
         
         if (!cohort || cohort.length === 0) {
             res.status(404).json({ message: "Cohort not found" });
             return;
         }
 
-        if (!cohort[0].courses.some((course: any) => course.courseId === courseId)) {
+        const course = await Course.get(courseId);
+        if (!course) {
+            res.status(404).json({ message: "Course not found" });
+            return;
+        }
+
+        if (!cohort.courses.some((c: any) => c.courseId === courseId)) {
             res.status(400).json({ message: "Course is not in the cohort" });
             return;
         }
 
-        cohort[0].courses = cohort[0].courses.filter((course: any) => course.courseId !== courseId);
-        await cohort[0].save();
+        cohort.courses = cohort.courses.filter((c: any) => c.courseId !== courseId);
+        await cohort.save();
 
         res.json({ message: "Course removed from cohort successfully", data: cohort[0] });
     } catch (error) {

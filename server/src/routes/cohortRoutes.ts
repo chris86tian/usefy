@@ -16,6 +16,7 @@ import { requireAuth } from "@clerk/express";
 
 const router = Router();
 
+router.delete("/remove-course/:cohortId", removeCourseFromCohort);
 router.post("/:organizationId", requireAuth(), createCohort);
 router.get("/:organizationId", getCohorts);
 router.get("/:organizationId/:cohortId", getCohort);
@@ -26,6 +27,5 @@ router.post("/:organizationId/:cohortId/add-learner", addLearnerToCohort);
 router.delete("/:organizationId/remove-learner/:cohortId", removeLearnerFromCohort);
 router.get("/:organizationId/:cohortId/courses", getCohortCourses);
 router.post("/:organizationId/:cohortId/add-course", addCourseToCohort);
-router.delete("/remove-course/:cohortId", removeCourseFromCohort);
 
 export default router;
