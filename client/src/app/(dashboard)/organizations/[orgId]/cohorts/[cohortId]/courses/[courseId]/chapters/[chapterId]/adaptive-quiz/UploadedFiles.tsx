@@ -5,6 +5,8 @@ import { FileText, X, Loader2 } from "lucide-react";
 import * as pdfjs from "pdfjs-dist"
 import "pdfjs-dist/build/pdf.worker.min.mjs";
 import PDFViewerModal from '@/components/PDFViewerModal';
+import "react-pdf/dist/esm/Page/TextLayer.css";
+import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 
 // Configure PDF worker using CDN
 
@@ -88,10 +90,10 @@ const UploadedFiles = ({ files }: UploadedFilesProps) => {
               {files.find(f => f.fileUrl === selectedFile)?.title}
             </h3>
             <Button
-              variant="ghost"
+              className='w-15 h-15'
               onClick={() => setSelectedFile(null)}
             >
-              <X className="w-20 h-20" />
+              <X className="w-10 h-10" />
             </Button>
           </div>
 
@@ -152,11 +154,12 @@ const UploadedFiles = ({ files }: UploadedFilesProps) => {
                       Next
                     </Button>
                   </div>
+
+                  {/* <span className="text-sm text-gray-800 mt-2 mr-7">
+                    Page {pageNumber} of {numPages}
+                  </span> */}
                   
                   <div className="flex items-center gap-4">
-                    <span className="text-sm">
-                      Page {pageNumber} of {numPages}
-                    </span>
                     <div className="flex gap-2 text-gray-800">
                       <Button
                         variant="outline"
