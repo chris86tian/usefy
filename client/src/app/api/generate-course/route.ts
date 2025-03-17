@@ -15,8 +15,6 @@ interface TranscriptSegment {
 
 async function fetchCaptionsAndTranscript(videoId: string): Promise<TranscriptSegment[]> {
   try {
-    console.log(`🔍 Fetching transcript for video: ${videoId}`);
-
     // 🔹 Step 1: Try YouTube API first
     const captionsResponse = await fetch(
       `https://www.googleapis.com/youtube/v3/captions?part=snippet&videoId=${videoId}&key=${YOUTUBE_API_KEY}`
