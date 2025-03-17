@@ -222,6 +222,24 @@ const chapterSchema = new Schema({
       }),
     ],
   },
+});
+
+const sectionSchema = new Schema({
+  sectionId: {
+    type: String,
+    required: true,
+  },
+  sectionTitle: {
+    type: String,
+    required: true,
+  },
+  sectionDescription: {
+    type: String,
+  },
+  chapters: {
+    type: Array,
+    schema: [chapterSchema],
+  },
   files: {
     type: Array,
     schema: [
@@ -243,24 +261,6 @@ const chapterSchema = new Schema({
         },
       }),
     ],
-  },
-});
-
-const sectionSchema = new Schema({
-  sectionId: {
-    type: String,
-    required: true,
-  },
-  sectionTitle: {
-    type: String,
-    required: true,
-  },
-  sectionDescription: {
-    type: String,
-  },
-  chapters: {
-    type: Array,
-    schema: [chapterSchema],
   },
   releaseDate: {
     type: String,

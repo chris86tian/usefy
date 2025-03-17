@@ -363,71 +363,52 @@ export const uploadAllFiles = async (
 
   // Calculate total files to upload
   sections.forEach((section) => {
-    section.chapters.forEach((chapter) => {
-      if (chapter.files) {
-        totalFiles += chapter.files.filter(
-          (file) => file.file && !file.fileUrl
-        ).length;
-      }
-    });
+    if (section.files) {
+      totalFiles += section.files.filter(file => file.fileUrl).length;
+    }
   });
-
-  if (totalFiles === 0) return sections;
 
   const updatedSections = JSON.parse(JSON.stringify(sections));
 
   for (const section of updatedSections) {
-    for (const chapter of section.chapters) {
-      if (chapter.files) {
-        const validFiles = [];
-        
-        for (const file of chapter.files) {
-          // Skip already uploaded files
-          if (file.fileUrl) {
-            validFiles.push(file);
-            continue;
+    if (section.files) {
+      const updatedFiles = [];
+      for (const file of section.files) {
+        if (file.file) {
+          try {
+            const { uploadUrl, fileUrl } = await getUploadFileUrl({
+              courseId,
+              sectionId: section.sectionId,
+              fileName: file.file.name,
+              fileType: file.file.type,
+            }).unwrap();
+
+            await fetch(uploadUrl, {
+              method: "PUT",
+              body: file.file,
+              headers: { "Content-Type": file.file.type },
+            });
+
+            updatedFiles.push({
+              ...file,
+              fileUrl,
+              file: undefined
+            });
+            uploadedFiles++;
+            progressCallback((uploadedFiles / totalFiles) * 100);
+          } catch (error) {
+            uploadErrors.push(`Failed to upload: ${file.title}`);
           }
-
-          if (file.file) {
-            try {
-              // Get upload URL from backend
-              const { uploadUrl, fileUrl } = await getUploadFileUrl({
-                courseId,
-                sectionId: section.sectionId,
-                chapterId: chapter.chapterId,
-                fileName: file.file.name,
-                fileType: file.file.type,
-              }).unwrap();
-
-              // Upload file to storage
-              await fetch(uploadUrl, {
-                method: "PUT",
-                body: file.file,
-                headers: { "Content-Type": file.file.type },
-              });
-
-              validFiles.push({
-                ...file,
-                fileUrl,
-                file: undefined // Remove temporary file object
-              });
-              uploadedFiles++;
-              progressCallback((uploadedFiles / totalFiles) * 100);
-            } catch (error) {
-              uploadErrors.push(`Failed to upload: ${file.title}`);
-            }
-          } else {
-            uploadErrors.push(`Missing file for: ${file.title}`);
-          }
+        } else if (file.fileUrl) {
+          updatedFiles.push(file);
         }
-
-        if (uploadErrors.length > 0) {
-          throw new Error(uploadErrors.join('\n'));
-        }
-
-        chapter.files = validFiles;
       }
+      section.files = updatedFiles;
     }
+  }
+
+  if (uploadErrors.length > 0) {
+    throw new Error(uploadErrors.join('\n'));
   }
 
   return updatedSections;

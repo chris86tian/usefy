@@ -604,13 +604,12 @@ export const api = createApi({
       {
         courseId: string;
         sectionId: string;
-        chapterId: string;
         fileName: string;
         fileType: string;
       }
     >({
-      query: ({ courseId, sectionId, chapterId, fileName, fileType }) => ({
-        url: `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/get-upload-file-url`,
+      query: ({ courseId, sectionId, fileName, fileType }) => ({
+        url: `courses/${courseId}/sections/${sectionId}/get-upload-file-url`,
         method: "POST",
         body: { fileName, fileType },
       }),

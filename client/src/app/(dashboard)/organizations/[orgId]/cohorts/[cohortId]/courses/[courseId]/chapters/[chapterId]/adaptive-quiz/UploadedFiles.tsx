@@ -1,19 +1,28 @@
 import { useState, useEffect } from 'react';
-import { Document, Page, pdfjs } from 'react-pdf';
+import { Document, Page, } from 'react-pdf';
 import { Button } from "@/components/ui/button";
 import { FileText, X, Loader2 } from "lucide-react";
 import CustomModal from "@/components/CustomModal";
+import * as pdfjs from "pdfjs-dist"
 import "pdfjs-dist/build/pdf.worker.min.mjs";
 
 // Configure PDF worker using CDN
-pdfjs.GlobalWorkerOptions.workerSrc = "pdfjs-dist/build/pdf.worker.min.mjs"
+
+
+if (typeof window !== "undefined" && !pdfjs.GlobalWorkerOptions.workerSrc) {
+  pdfjs.GlobalWorkerOptions.workerSrc = `/pdf.worker.min.mjs`
+}
+else {
+  pdfjs.GlobalWorkerOptions.workerSrc = "pdfjs-dist/build/pdf.worker.min.mjs"
+}
+
 
 interface UploadedFilesProps {
   files: Array<{
     fileId: string;
     title: string;
     description?: string;
-    fileUrl?: string;
+    fileUrl: string;
   }>;
 }
 

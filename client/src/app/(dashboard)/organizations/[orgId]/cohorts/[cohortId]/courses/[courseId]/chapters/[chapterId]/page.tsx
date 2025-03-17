@@ -35,6 +35,7 @@ import { AssignmentCard } from "./assignments/_components/AssignmentCard"
 import { useCallback } from "react"
 import FeedbackButton from "./adaptive-quiz/FeedbackButton"
 import UploadedFiles from "./adaptive-quiz/UploadedFiles"
+import { FileText } from "lucide-react"
 
 const isSectionReleased = (section: Section) => {
   if (!section.releaseDate) return false
@@ -596,16 +597,16 @@ const Course = () => {
         )}
 
         {/* UploadedFiles */}
-        {currentChapter.files && (
+        {currentSection?.files && currentSection.files.length > 0 && (
           <Card className="border shadow-sm">
             <CardHeader className="border-b bg-muted/30">
               <div className="flex items-center space-x-3">
-                <BookOpen className="h-5 w-5 text-primary" />
-                <CardTitle className="text-lg">Study Materials</CardTitle>
+                <FileText className="h-5 w-5 text-primary" />
+                <CardTitle className="text-lg">Section Materials</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
-              <UploadedFiles files={currentChapter.files} />
+              <UploadedFiles files={currentSection.files} />
             </CardContent>
           </Card>
         )}

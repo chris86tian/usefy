@@ -29,6 +29,7 @@ export const makeStore = () => {
             "meta.arg.originalArgs.file",
             "meta.arg.originalArgs.formData",
             "payload.chapter.video",
+            "payload.section.files",
             "meta.baseQueryMeta.request",
             "meta.baseQueryMeta.response",
           ],

@@ -141,7 +141,7 @@ router.post(
 );
 
 router.post(
-  "/:courseId/sections/:sectionId/chapters/:chapterId/get-upload-file-url",
+  "/:courseId/sections/:sectionId/get-upload-file-url",
   requireAuth(),
   getUploadFileUrl
 );
