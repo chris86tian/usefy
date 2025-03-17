@@ -9,7 +9,7 @@ const PDFViewerModal = ({ isOpen, onClose, children }: CustomFixedModalProps) =>
         {children}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-white hover:text-gray-300"
+          className="absolute top-4 right-4 h-20 w-20 text-white hover:text-gray-300"
         >
           ×
         </button>
