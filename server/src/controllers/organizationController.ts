@@ -425,7 +425,7 @@ export const inviteUserToOrganization = async (req: Request, res: Response): Pro
 
       list.push({ userId: user.id });
 
-      const resetPasswordLink = `${process.env.CLIENT_URL}/reset-password?email=${encodeURIComponent(email)}`;
+      const resetPasswordLink = `${process.env.CLIENT_URL}/reset-password?email=${encodeURIComponent(email)}/&organizationId=${organizationId}`;
 
       await sendMessage(
         user.id,

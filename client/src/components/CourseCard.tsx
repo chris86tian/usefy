@@ -238,42 +238,44 @@ export function CourseCard({
             </div>
           )}
 
-          <Collapsible open={isInstructorsOpen} onOpenChange={setIsInstructorsOpen} className="border rounded-md p-2">
-            <CollapsibleTrigger asChild>
-              <div className="flex items-center justify-between cursor-pointer hover:bg-accent/50 p-1 rounded">
-                <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">
-                    {instructors && instructors.length > 0
-                      ? `Instructors (${instructors.length})`
-                      : "No Instructors Assigned"}
-                  </span>
-                </div>
-                {isInstructorsOpen ? (
-                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                ) : (
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                )}
-              </div>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="mt-2 space-y-2">
-              {instructors && instructors.length > 0 ? (
-                instructors.map((instructor) => (
-                  <div key={instructor.id} className="flex items-center gap-2 pl-6 py-1">
-                    <Avatar className="h-6 w-6">
-                      <AvatarImage src={instructor.imageUrl} />
-                      <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                        {getUserName(instructor)?.[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="text-sm truncate">{getUserName(instructor)}</span>
+          {variant === "admin" || variant === "instructor" && (
+            <Collapsible open={isInstructorsOpen} onOpenChange={setIsInstructorsOpen} className="border rounded-md p-2">
+              <CollapsibleTrigger asChild>
+                <div className="flex items-center justify-between cursor-pointer hover:bg-accent/50 p-1 rounded">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium">
+                      {instructors && instructors.length > 0
+                        ? `Instructors (${instructors.length})`
+                        : "No Instructors Assigned"}
+                    </span>
                   </div>
-                ))
-              ) : (
-                <div className="pl-6 py-1 text-sm text-muted-foreground">No instructors assigned</div>
-              )}
-            </CollapsibleContent>
-          </Collapsible>
+                  {isInstructorsOpen ? (
+                    <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </div>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-2 space-y-2">
+                {instructors && instructors.length > 0 ? (
+                  instructors.map((instructor) => (
+                    <div key={instructor.id} className="flex items-center gap-2 pl-6 py-1">
+                      <Avatar className="h-6 w-6">
+                        <AvatarImage src={instructor.imageUrl} />
+                        <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                          {getUserName(instructor)?.[0]}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-sm truncate">{getUserName(instructor)}</span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="pl-6 py-1 text-sm text-muted-foreground">No instructors assigned</div>
+                )}
+              </CollapsibleContent>
+            </Collapsible>
+          )}
         </CardContent>
 
         <CardFooter className="p-4 pt-0">
