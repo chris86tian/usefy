@@ -10,13 +10,13 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "expertize-bucket-migration-dev.s3.amazonaws.com",
+        hostname: "expertize-bucket-migration.s3.amazonaws.com",
         port: "",
         pathname: "/**",
       },
       {
         protocol: "https",
-        hostname: "expertize-bucket-migration-prod.s3.amazonaws.com",
+        hostname: "expertize-bucket-migration.s3.amazonaws.com",
         port: "",
         pathname: "/**",
       },
