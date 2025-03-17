@@ -3,14 +3,9 @@ import CustomModal from "@/components/CustomModal";
 import { Button } from "@/components/ui/button";
 import {
   Form,
-  FormItem,
   FormLabel,
-  FormControl,
-  FormDescription,
-  FormMessage,
-  FormField
 } from "@/components/ui/form";
-import { SectionFormData, courseSchema, sectionSchema } from "@/lib/schemas";
+import { SectionFormData, sectionSchema } from "@/lib/schemas";
 import { addSection, closeSectionModal, editSection } from "@/state";
 import { useAppDispatch, useAppSelector } from "@/state/redux";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -71,7 +66,6 @@ const SectionModal = () => {
     dispatch(closeSectionModal());
   };
 
-    // File operations
   const addFile = () => {
     setFiles([...files, {
       fileId: uuidv4(),
@@ -91,6 +85,7 @@ const SectionModal = () => {
       sectionTitle: data.title,
       sectionDescription: data.description,
       chapters: section?.chapters || [],
+      releaseDate: section?.releaseDate || new Date().toISOString(),
       files: files.map(file => ({
         fileId: file.fileId,
         title: file.title,
