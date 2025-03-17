@@ -46,6 +46,12 @@ if (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "dev") {
 
 dynamoose.aws.ddb.set(new DynamoDB());
 
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://usefy.com",
+  "https://www.usefy.com",
+];
+
 const app = express();
 
 app.use(
@@ -64,6 +70,7 @@ app.use(
       "Content-Type",
       "Authorization",
       "X-Requested-With",
+      "Accept",
       "x-amz-acl",
       "x-amz-date",
       "x-amz-security-token",
@@ -86,12 +93,6 @@ app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
 app.use(morgan("common"));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-
-const allowedOrigins = [
-  "http://localhost:3000",
-  "https://usefy.com",
-  "https://www.usefy.com",
-];
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
@@ -223,6 +224,7 @@ export const handler = async (
   }
 
   if (event.httpMethod === "OPTIONS") {
+    console.log("Handling OPTIONS request for path:", event.path);
     return {
       statusCode: 200,
       headers: {
@@ -252,6 +254,7 @@ export const handler = async (
       event.path === "/migration/";
 
     if (isRootPath) {
+      console.log("Handling request to root path:", event.path);
       return {
         statusCode: 200,
         headers: {
