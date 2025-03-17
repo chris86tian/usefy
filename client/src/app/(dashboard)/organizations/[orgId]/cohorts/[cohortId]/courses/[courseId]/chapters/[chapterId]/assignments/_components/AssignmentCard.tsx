@@ -12,11 +12,9 @@ import AssignmentModal from "../_components/AssignmentModal"
 import SubmissionModal from "../_components/SubmissionModal"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import FeedbackButton from "../../adaptive-quiz/FeedbackButton"
-import { formatDistanceToNow } from "date-fns"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { getUserName } from "@/lib/utils"
+import { SignInRequired } from "@/components/SignInRequired"
 
 interface AssignmentCardProps {
   assignment: Assignment
@@ -27,6 +25,7 @@ interface AssignmentCardProps {
     courseId: string
     instructors?: { userId: string }[]
   }
+  refetch: () => void
 }
 
 const AssignmentDescription = ({ text }: { text: string }) => {
@@ -41,7 +40,7 @@ const AssignmentDescription = ({ text }: { text: string }) => {
   );
 }
 
-export function AssignmentCard({ assignment, isAuthorized, course, sectionId, chapter }: AssignmentCardProps) {
+export function AssignmentCard({ assignment, isAuthorized, course, sectionId, chapter, refetch }: AssignmentCardProps) {
   const { user } = useUser()
   const { orgId, cohortId } = useParams()
   const router = useRouter()
@@ -50,7 +49,9 @@ export function AssignmentCard({ assignment, isAuthorized, course, sectionId, ch
   const [isSubmissionModalOpen, setIsSubmissionModalOpen] = useState(false)
   const [activeTab, setActiveTab] = useState("description")
 
-  const userSubmission = assignment.submissions.find((submission) => submission.userId === user?.id)
+  if (!user) return <SignInRequired />
+
+  const userSubmission = assignment.submissions.find((submission) => submission.userId === user.id)
   const hasSubmitted = Boolean(userSubmission)
 
   const handleDelete = async (e: React.MouseEvent) => {
@@ -218,10 +219,11 @@ export function AssignmentCard({ assignment, isAuthorized, course, sectionId, ch
           sectionId={sectionId}
           onAssignmentChange={() => {
             setIsEditModalOpen(false)
-            router.refresh()
+            refetch()
           }}
           open={isEditModalOpen}
           onOpenChange={setIsEditModalOpen}
+          refetch={refetch}
         />
       )}
 

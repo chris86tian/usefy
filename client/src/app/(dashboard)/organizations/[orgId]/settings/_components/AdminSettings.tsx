@@ -40,7 +40,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import Header from "@/components/Header"
 import { Users, Settings, Shield, Search, Edit, Trash2, PlusCircle, BookOpen } from "lucide-react"
-import type { User } from "@clerk/nextjs/server"
 import {
   Dialog,
   DialogContent,
@@ -458,10 +457,10 @@ const AdminSettings = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredUsers.map((user: User) => {
-                    const isAdmin = members?.admins?.some((admin) => admin.id === user.id)
-                    const isInstructor = members?.instructors?.some((instructor) => instructor.id === user.id)
-                    const isLearner = members?.learners?.some((learner) => learner.id === user.id)
+                  {filteredUsers.map((user) => {
+                    const isAdmin = members.admins.some((admin) => admin.id === user.id)
+                    const isInstructor = members.instructors?.some((instructor) => instructor.id === user.id)
+                    const isLearner = members.learners.some((learner) => learner.id === user.id)
                     const role = isAdmin ? "admin" : isInstructor ? "instructor" : "learner"
 
                     return (
@@ -516,7 +515,7 @@ const AdminSettings = () => {
                             disabled={role === "admin" || isRemoveUserLoading}
                             onClick={() => handleRemoveUser(user.id, role)}
                           >
-                            {isRemoveUserLoading ? "Removing..." : "Remove"}
+                            Remove
                           </Button>
                         </TableCell>
                       </TableRow>
