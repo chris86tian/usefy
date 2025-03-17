@@ -7,8 +7,7 @@ import "pdfjs-dist/build/pdf.worker.min.mjs";
 import PDFViewerModal from '@/components/PDFViewerModal';
 import "react-pdf/dist/esm/Page/TextLayer.css";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
-
-// Configure PDF worker using CDN
+import { useMemo } from 'react';
 
 if (typeof window !== "undefined" && !pdfjs.GlobalWorkerOptions.workerSrc) {
   pdfjs.GlobalWorkerOptions.workerSrc = `/pdf.worker.min.mjs`
@@ -34,6 +33,12 @@ const UploadedFiles = ({ files }: UploadedFilesProps) => {
   const [scale, setScale] = useState(1.0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const documentOptions = useMemo(() => ({
+    httpHeaders: {
+      'Access-Control-Allow-Origin': '*',
+    },
+  }), []);
 
   const handleDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setIsLoading(false);
@@ -112,15 +117,11 @@ const UploadedFiles = ({ files }: UploadedFilesProps) => {
 
             {selectedFile && !error && (
               <Document
-                file={selectedFile}
-                onLoadSuccess={handleDocumentLoadSuccess}
-                onLoadError={handleDocumentLoadError}
-                className="pdf-viewer"
-                options={{
-                  httpHeaders: {
-                    'Access-Control-Allow-Origin': '*',
-                  },
-                }}
+              file={selectedFile}
+              onLoadSuccess={handleDocumentLoadSuccess}
+              onLoadError={handleDocumentLoadError}
+              options={documentOptions}
+              className="pdf-viewer"
               >
                 <Page 
                   pageNumber={pageNumber} 
@@ -136,7 +137,7 @@ const UploadedFiles = ({ files }: UploadedFilesProps) => {
             )}
 
             {!isLoading && !error && (
-              <div className="sticky bottom-0 bg-background border-t pt-4 mt-4">
+              <div className="sticky bottom-0 bg-background border-t pt-4 mt-4 z-50">
                 <div className="flex items-center justify-between">
                   <div className="flex gap-2 text-gray-800">
                     <Button
@@ -155,9 +156,9 @@ const UploadedFiles = ({ files }: UploadedFilesProps) => {
                     </Button>
                   </div>
 
-                  {/* <span className="text-sm text-gray-800 mt-2 mr-7">
+                  <span className="text-sm text-gray-800 mt-2 mr-7">
                     Page {pageNumber} of {numPages}
-                  </span> */}
+                  </span>
                   
                   <div className="flex items-center gap-4">
                     <div className="flex gap-2 text-gray-800">

@@ -28,9 +28,10 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "khbciw4vke.execute-api.us-east-1.amazonaws.com",
+        hostname:
+          "https://mhun775961.execute-api.us-east-1.amazonaws.com/migration/",
         port: "",
-        pathname: "/prod/**",
+        pathname: "**",
       },
     ],
   },
@@ -39,7 +40,7 @@ const nextConfig = {
       {
         source: "/api/:path*",
         destination:
-          "https://khbciw4vke.execute-api.us-east-1.amazonaws.com/prod/:path*",
+          "https://mhun775961.execute-api.us-east-1.amazonaws.com/migration/:path*",
       },
     ];
   },

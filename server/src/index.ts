@@ -46,6 +46,12 @@ if (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "dev") {
 
 dynamoose.aws.ddb.set(new DynamoDB());
 
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://usefy.com",
+  "https://www.usefy.com",
+];
+
 const app = express();
 
 app.use(
@@ -64,6 +70,7 @@ app.use(
       "Content-Type",
       "Authorization",
       "X-Requested-With",
+      "Accept",
       "x-amz-acl",
       "x-amz-date",
       "x-amz-security-token",
@@ -86,13 +93,6 @@ app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
 app.use(morgan("common"));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-
-const allowedOrigins = [
-  "http://localhost:3000",
-  "https://usefy.com",
-  "https://www.usefy.com",
-];
-
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
@@ -123,11 +123,14 @@ app.use((req, res, next) => {
   next();
 });
 
-app.options('*', (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.setHeader('Access-Control-Max-Age', '86400');
+app.options("*", (req, res) => {
+  res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, OPTIONS"
+  );
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Max-Age", "86400");
   res.status(200).send();
 });
 
@@ -145,7 +148,7 @@ app.use("/transactions", requireAuth(), transactionRoutes);
 app.use("/notifications", requireAuth(), notificationRoutes);
 app.use("/commits", requireAuth(), commitRoutes);
 app.use("/feedback", requireAuth(), feedbackRoutes);
-app.use('/time-tracking', timeTrackingRoutes);
+app.use("/time-tracking", timeTrackingRoutes);
 
 app.use(
   (
@@ -205,27 +208,35 @@ export const handler = async (
   event.headers = event.headers || {};
   const origin = event.headers.origin || "https://www.usefy.com";
 
-  if (!allowedOrigins.includes(origin)) {
+  const isAllowedOrigin = allowedOrigins.includes(origin);
+
+  const corsHeaders = {
+    "Access-Control-Allow-Origin": isAllowedOrigin
+      ? origin
+      : "https://www.usefy.com",
+    "Access-Control-Allow-Credentials": "true",
+    "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
+    "Access-Control-Allow-Headers":
+      "Content-Type,Authorization,X-Requested-With,Accept",
+    "Access-Control-Max-Age": "86400",
+  };
+
+  if (!isAllowedOrigin) {
     return {
       statusCode: 403,
       headers: {
         "Content-Type": "application/json",
+        ...corsHeaders,
       },
       body: JSON.stringify({ message: "Origin not allowed" }),
     };
   }
 
   if (event.httpMethod === "OPTIONS") {
+    console.log("Handling OPTIONS request for path:", event.path);
     return {
       statusCode: 200,
-      headers: {
-        "Access-Control-Allow-Origin": origin,
-        "Access-Control-Allow-Headers":
-          "Content-Type,Authorization,X-Requested-With",
-        "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
-        "Access-Control-Allow-Credentials": "true",
-        "Access-Control-Max-Age": "86400",
-      },
+      headers: corsHeaders,
       body: "",
     };
   }
@@ -237,11 +248,48 @@ export const handler = async (
       event.headers["x-request-id"] = event.requestContext.requestId;
     }
 
+    event.headers["x-api-request"] = "true";
+
+    const isRootPath =
+      event.path === "/" ||
+      event.path === "/migration" ||
+      event.path === "/migration/";
+
+    if (isRootPath) {
+      console.log("Handling request to root path:", event.path);
+      return {
+        statusCode: 200,
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders,
+        },
+        body: JSON.stringify({ message: "API is running" }),
+      };
+    }
+
     const result = await serverlessApp(event, context);
     console.log("Lambda response:", JSON.stringify(result, null, 2));
 
     const response = result as LambdaResponse;
 
+    const isRedirect = response.statusCode >= 300 && response.statusCode < 400;
+
+    if (isRedirect && response.statusCode === 302) {
+      console.log("Converting redirect to 401 Unauthorized response");
+      return {
+        statusCode: 401,
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders,
+        },
+        body: JSON.stringify({
+          message: "Unauthorized. Please sign in to access this resource.",
+          code: "unauthorized",
+        }),
+      };
+    }
+
+    // Remove any existing CORS headers to avoid duplicates
     const headers = { ...(response.headers || {}) };
     delete headers["access-control-allow-origin"];
     delete headers["access-control-allow-credentials"];
@@ -253,12 +301,7 @@ export const handler = async (
       ...response,
       headers: {
         ...headers,
-        "Access-Control-Allow-Origin": origin,
-        "Access-Control-Allow-Credentials": "true",
-        "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
-        "Access-Control-Allow-Headers":
-          "Content-Type,Authorization,X-Requested-With",
-        "Access-Control-Max-Age": "86400",
+        ...corsHeaders,
       },
     };
   } catch (error) {
@@ -266,11 +309,8 @@ export const handler = async (
     return {
       statusCode: 500,
       headers: {
-        "Access-Control-Allow-Origin": origin,
-        "Access-Control-Allow-Credentials": "true",
-        "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
-        "Access-Control-Allow-Headers":
-          "Content-Type,Authorization,X-Requested-With",
+        "Content-Type": "application/json",
+        ...corsHeaders,
       },
       body: JSON.stringify({
         message: "Internal Server Error",

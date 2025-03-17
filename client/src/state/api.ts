@@ -19,6 +19,7 @@ const customBaseQuery = async (
   const baseQuery = fetchBaseQuery({
     baseUrl: server_url,
     credentials: "include",
+    mode: "cors",
     prepareHeaders: async (headers) => {
       if (!skipAuth) {
         try {
@@ -35,6 +36,10 @@ const customBaseQuery = async (
       if (!body || !(body instanceof FormData)) {
         headers.set("Content-Type", "application/json");
       }
+
+      headers.set("X-Requested-With", "XMLHttpRequest");
+      headers.set("Accept", "application/json");
+
       return headers;
     },
   });
@@ -43,7 +48,59 @@ const customBaseQuery = async (
     typeof args === "object" && args.url?.includes("get-upload");
 
   try {
-    const result: any = await baseQuery(args, api, extraOptions);
+    let result: any = await baseQuery(args, api, extraOptions);
+
+    if (
+      result.error &&
+      result.error.status === "FETCH_ERROR" &&
+      typeof args === "object"
+    ) {
+      console.log(
+        "Possible CORS error detected, retrying with additional headers"
+      );
+
+      const newArgs = { ...args };
+      if (!newArgs.headers) newArgs.headers = {};
+
+      try {
+        result = await baseQuery(newArgs, api, extraOptions);
+      } catch (retryError) {
+        console.error("Retry after CORS error also failed:", retryError);
+      }
+    }
+
+    if (result.error && result.error.status === 401) {
+      console.log("Unauthorized request, checking authentication status");
+
+      const isSignedIn = !!window.Clerk?.session;
+
+      if (!isSignedIn) {
+        console.log("User not signed in, redirecting to sign-in page");
+        window.Clerk?.openSignIn();
+        return {
+          error: { status: "CUSTOM_ERROR", error: "Authentication required" },
+        };
+      } else {
+        console.log("User is signed in but got 401, trying to refresh token");
+        try {
+          const newToken = await window.Clerk?.session?.getToken();
+
+          if (newToken && typeof args === "object") {
+            const newArgs = { ...args };
+            if (!newArgs.headers) newArgs.headers = {};
+            newArgs.headers = {
+              ...newArgs.headers,
+              Authorization: `Bearer ${newToken}`,
+            };
+
+            console.log("Retrying request with refreshed token");
+            result = await baseQuery(newArgs, api, extraOptions);
+          }
+        } catch (refreshError) {
+          console.error("Error refreshing token:", refreshError);
+        }
+      }
+    }
 
     if (result.error) {
       const errorData = result.error.data;
@@ -51,7 +108,10 @@ const customBaseQuery = async (
         errorData?.message ||
         result.error.status.toString() ||
         "An error occurred";
-      toast.error(`Error: ${errorMessage}`);
+
+      if (result.error.status !== "FETCH_ERROR") {
+        toast.error(`Error: ${errorMessage}`);
+      }
     }
 
     const isMutationRequest =
@@ -231,17 +291,13 @@ export const api = createApi({
       }),
     }),
 
-    getMyUserCourseProgresses: build.query<
-      UserCourseProgress[],
-      string
-    >({
-      query: (organizationId) =>
-        `organizations/${organizationId}/progresses`,
+    getMyUserCourseProgresses: build.query<UserCourseProgress[], string>({
+      query: (organizationId) => `organizations/${organizationId}/progresses`,
     }),
 
     inviteUserToOrganization: build.mutation<
       { message: string },
-      { organizationId: string; email: string; role: string}
+      { organizationId: string; email: string; role: string }
     >({
       query: ({ organizationId, email, role }) => ({
         url: `organizations/${organizationId}/invite`,
@@ -252,7 +308,7 @@ export const api = createApi({
 
     inviteUserToCohort: build.mutation<
       { message: string },
-      { organizationId: string; cohortId: string; email: string, role: string }
+      { organizationId: string; cohortId: string; email: string; role: string }
     >({
       query: ({ organizationId, cohortId, email, role }) => ({
         url: `organizations/${organizationId}/cohort/${cohortId}/invite`,
@@ -261,15 +317,17 @@ export const api = createApi({
       }),
     }),
 
-
-
-    getOrganizationUsers: build.query<{ admins: User[]; instructors: User[]; learners: User[] }, string>({
-      query: (organizationId: string) => `organizations/${organizationId}/users`,
+    getOrganizationUsers: build.query<
+      { admins: User[]; instructors: User[]; learners: User[] },
+      string
+    >({
+      query: (organizationId: string) =>
+        `organizations/${organizationId}/users`,
     }),
 
     removeUserFromOrganization: build.mutation<
       { message: string },
-      { organizationId: string; userId: string, role: string }
+      { organizationId: string; userId: string; role: string }
     >({
       query: ({ organizationId, userId, role }) => ({
         url: `organizations/${organizationId}/remove/${userId}`,
@@ -280,7 +338,12 @@ export const api = createApi({
 
     changeUserRole: build.mutation<
       { message: string },
-      { organizationId: string; userId: string; currentRole: string; newRole: string }
+      {
+        organizationId: string;
+        userId: string;
+        currentRole: string;
+        newRole: string;
+      }
     >({
       query: ({ organizationId, userId, currentRole, newRole }) => ({
         url: `organizations/${organizationId}/change-role/${userId}`,
@@ -293,7 +356,10 @@ export const api = createApi({
     COHORTS
     =============== 
     */
-    createCohort: build.mutation<Cohort, Partial<Cohort> & { organizationId: string }>({
+    createCohort: build.mutation<
+      Cohort,
+      Partial<Cohort> & { organizationId: string }
+    >({
       query: ({ organizationId, ...body }) => ({
         url: `cohorts/${organizationId}`,
         method: "POST",
@@ -305,10 +371,17 @@ export const api = createApi({
       query: (organizationId) => `cohorts/${organizationId}`,
       providesTags: ["Cohorts"],
     }),
-    getCohort: build.query<Cohort, { organizationId: string; cohortId: string }>({
-      query: ({ organizationId, cohortId }) => `cohorts/${organizationId}/${cohortId}`,
+    getCohort: build.query<
+      Cohort,
+      { organizationId: string; cohortId: string }
+    >({
+      query: ({ organizationId, cohortId }) =>
+        `cohorts/${organizationId}/${cohortId}`,
     }),
-    updateCohort: build.mutation<Cohort, { organizationId: string; cohortId: string; name: string }>({
+    updateCohort: build.mutation<
+      Cohort,
+      { organizationId: string; cohortId: string; name: string }
+    >({
       query: ({ organizationId, cohortId, name }) => ({
         url: `cohorts/${organizationId}/${cohortId}`,
         method: "PUT",
@@ -316,15 +389,22 @@ export const api = createApi({
       }),
       invalidatesTags: ["Cohorts"],
     }),
-    deleteCohort: build.mutation<{ message: string }, { organizationId: string; cohortId: string }>({
+    deleteCohort: build.mutation<
+      { message: string },
+      { organizationId: string; cohortId: string }
+    >({
       query: ({ organizationId, cohortId }) => ({
         url: `cohorts/${organizationId}/${cohortId}`,
         method: "DELETE",
       }),
       invalidatesTags: ["Cohorts"],
     }),
-    getCohortLearners: build.query<User[], { organizationId: string; cohortId: string }>({
-      query: ({ organizationId, cohortId }) => `cohorts/${organizationId}/${cohortId}/learners`,
+    getCohortLearners: build.query<
+      User[],
+      { organizationId: string; cohortId: string }
+    >({
+      query: ({ organizationId, cohortId }) =>
+        `cohorts/${organizationId}/${cohortId}/learners`,
     }),
     addLearnerToCohort: build.mutation<
       { message: string },
@@ -346,8 +426,12 @@ export const api = createApi({
         body: { learnerId },
       }),
     }),
-    getCohortCourses: build.query<Course[], { organizationId: string; cohortId: string }>({
-      query: ({ organizationId, cohortId }) => `cohorts/${organizationId}/${cohortId}/courses`,
+    getCohortCourses: build.query<
+      Course[],
+      { organizationId: string; cohortId: string }
+    >({
+      query: ({ organizationId, cohortId }) =>
+        `cohorts/${organizationId}/${cohortId}/courses`,
     }),
     addCourseToCohort: build.mutation<
       { message: string },
@@ -379,8 +463,7 @@ export const api = createApi({
       providesTags: (result, error, id) => [{ type: "Courses", id }],
     }),
 
-    createCourse: build.mutation<Course, void
-    >({
+    createCourse: build.mutation<Course, void>({
       query: () => ({
         url: `courses`,
         method: "POST",
@@ -390,7 +473,7 @@ export const api = createApi({
 
     updateCourse: build.mutation<
       Course,
-      { orgId: string, cohortId: string, courseId: string; formData: FormData }
+      { orgId: string; cohortId: string; courseId: string; formData: FormData }
     >({
       query: ({ orgId, courseId, cohortId, formData }) => {
         return {
@@ -434,7 +517,7 @@ export const api = createApi({
     }),
 
     addCourseInstructor: build.mutation<
-      { message: string, id: string },
+      { message: string; id: string },
       { courseId: string; userId?: string; email?: string }
     >({
       query: ({ courseId, userId, email }) => ({
@@ -652,10 +735,7 @@ export const api = createApi({
     getNotifications: build.query<UserNotification[], void>({
       query: () => "notifications",
     }),
-    markNotificationAsRead: build.mutation<
-      { message: string },
-      string
-    >({
+    markNotificationAsRead: build.mutation<{ message: string }, string>({
       query: (notificationId) => ({
         url: `notifications/${notificationId}`,
         method: "PUT",
@@ -920,7 +1000,7 @@ export const api = createApi({
       query: ({ courseId, chapterId }) => ({
         url: `time-tracking/stats?courseId=${courseId}&chapterId=${chapterId}`,
       }),
-      providesTags: ['TimeTracking'],
+      providesTags: ["TimeTracking"],
     }),
 
     /*
