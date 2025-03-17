@@ -10,7 +10,6 @@ import {
     removeLearnerFromCohort,
     getCohortCourses,
     addCourseToCohort,
-    removeCourseFromCohort,
 } from "../controllers/cohortController";
 import { requireAuth } from "@clerk/express";
 
@@ -26,6 +25,5 @@ router.post("/:organizationId/:cohortId/add-learner", addLearnerToCohort);
 router.delete("/:organizationId/remove-learner/:cohortId", removeLearnerFromCohort);
 router.get("/:organizationId/:cohortId/courses", getCohortCourses);
 router.post("/:organizationId/:cohortId/add-course", addCourseToCohort);
-router.delete("/remove-course", removeCourseFromCohort);
 
 export default router;

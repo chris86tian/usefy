@@ -30,11 +30,19 @@ import {
   enrollUser,
   unenrollUser,
   fixCourseImageUrls,
+  removeCourseFromCohort
 } from "../controllers/courseController";
 import { requireAuth } from "@clerk/express";
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
+
+router.delete(
+  "/remove-course", 
+  requireAuth(), 
+  removeCourseFromCohort
+);
+
 
 router.post(
   "/", 
