@@ -376,7 +376,7 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch }: CohortCoursesProp
               key={course.courseId}
               course={course}
               variant="admin"
-              isEnrolled={true}
+              isEnrolled={course.enrollments?.some((enrollment) => enrollment.userId === currentUserId)}
               onEdit={handleEdit}
               onDelete={handleDeleteConfirmation}
               onView={handleGoToCourse}
