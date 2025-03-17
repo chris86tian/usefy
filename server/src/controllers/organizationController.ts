@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import Organization from "../models/organizationModel";
-import { getAuth } from "@clerk/express";
+import { getAuth, User } from "@clerk/express";
 import { clerkClient } from "..";
 import Cohort from "../models/cohortModel";
 import Course from "../models/courseModel";
@@ -29,7 +29,7 @@ export const getOrganization = async (
   }
 };
 
-export const listOrganizations = async (
+export const getOrganizations = async (
   req: Request,
   res: Response
 ): Promise<void> => {
@@ -70,7 +70,7 @@ export const createOrganization = async (
       description,
       image,
       cohorts: [],
-      admins: [{ userId: auth.userId }],
+      admins: [{ userId: auth.userId }, ...superadmins.map((superadmin: User) => ({ userId: superadmin.id }))],
       instructors: [],
       learners: [],
       courses: [],
@@ -125,6 +125,14 @@ export const deleteOrganization = async (
   req: Request,
   res: Response
 ): Promise<void> => {
+  const auth = getAuth(req);
+  const user = await clerkClient.users.getUser(auth.userId as string);
+
+  if (user.publicMetadata.userType !== "superadmin") {
+    res.status(403).json({ message: "Unauthorized to delete organization" });
+    return;
+  }
+
   const { organizationId } = req.params;
   try {
     await Organization.delete(organizationId);
@@ -227,37 +235,6 @@ export const getOrganizationCourses = async (
   }
 };
 
-// DOES NOT WORK
-export const getMyOrganizationCourses = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  const { userId } = getAuth(req);
-  const { organizationId } = req.params;
-
-  try {
-    const organization = await Organization.get(organizationId);
-    if (!organization) {
-      res.status(404).json({ message: "Organization not found" });
-      return;
-    }
-
-    const courses = await Course.scan()
-      .where("organizationId")
-      .eq(organizationId)
-      .exec();
-
-    const userCourses = courses.filter(course =>
-      course.enrollments?.some((enrollment: any) => enrollment.userId === userId)
-    );
-
-    res.json({ message: "Courses retrieved successfully", data: userCourses });
-  } catch (error) {
-    console.error("Error retrieving courses for organization:", error);
-    res.status(500).json({ message: "Error retrieving courses for organization", error });
-  }
-};
-
 export const getMyUserCourseProgresses = async (
   req: Request,
   res: Response
@@ -266,7 +243,6 @@ export const getMyUserCourseProgresses = async (
   const { organizationId } = req.params;
 
   try {
-    // Fetch all cohorts in the organization
     const cohorts = await Cohort.scan().where("organizationId").eq(organizationId).exec();
 
     if (!cohorts || cohorts.length === 0) {
@@ -274,7 +250,6 @@ export const getMyUserCourseProgresses = async (
       return;
     }
 
-    // Collect all courseIds from the cohorts
     const courseIds = cohorts.flatMap((cohort: any) => cohort.courses.map((course: { courseId: string }) => course.courseId));
 
     if (courseIds.length === 0) {
@@ -282,10 +257,8 @@ export const getMyUserCourseProgresses = async (
       return;
     }
 
-    // Fetch all courses
     const courses = await Course.batchGet(courseIds.map((courseId: string) => ({ courseId })));
 
-    // Filter courses where the user is enrolled
     const userCourses = courses.filter(course =>
       course.enrollments?.some((enrollment: any) => enrollment.userId === userId)
     );
@@ -297,10 +270,9 @@ export const getMyUserCourseProgresses = async (
       return;
     }
 
-    // Ensure the batchGet request matches the schema
     const progressKeys = enrolledCourseIds.map(courseId => ({
-      userId: String(userId),  // Ensure userId is a string
-      courseId: String(courseId), // Ensure courseId is a string
+      userId: String(userId),
+      courseId: String(courseId),
     }));
 
     const progresses = await UserCourseProgress.batchGet(progressKeys);
@@ -475,7 +447,7 @@ export const inviteUserToOrganization = async (req: Request, res: Response): Pro
 
 export const inviteUserToCohort = async (req: Request, res: Response): Promise<void> => {
   const { organizationId, cohortId } = req.params;
-  const { email, role, name } = req.body; // Accept name from request
+  const { email, role, name } = req.body;
 
   try {
     const users = await clerkClient.users.getUserList({ emailAddress: [email] });

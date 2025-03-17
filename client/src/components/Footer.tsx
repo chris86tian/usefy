@@ -109,7 +109,7 @@ const Footer = () => {
             <Link 
               href="https://growthhungry.life" 
               className="text-sm hover:text-white transition-colors">
-              Usefy (GrowthHungry)
+              Usefy
             </Link>
           </div>
         </div>

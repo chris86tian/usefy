@@ -330,10 +330,6 @@ export const api = createApi({
       },
     }),
 
-    getMyOrganizationCourses: build.query<Course[], string>({
-      query: (organizationId) => `organizations/${organizationId}/my-courses`,
-    }),
-
     addCourseToOrganization: build.mutation<
       { message: string },
       { organizationId: string; courseId: string }
@@ -1106,7 +1102,6 @@ export const {
   useJoinOrganizationMutation,
   useGetMyOrganizationsQuery,
   useGetOrganizationCoursesQuery,
-  useGetMyOrganizationCoursesQuery,
   useAddCourseToOrganizationMutation,
   useRemoveCourseFromOrganizationMutation,
   useGetMyUserCourseProgressesQuery,
