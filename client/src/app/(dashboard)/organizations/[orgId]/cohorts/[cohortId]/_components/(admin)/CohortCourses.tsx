@@ -241,7 +241,6 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch }: CohortCoursesProp
         cohortId: cohort.cohortId,
         courseId: courseToDelete.courseId,
       })
-      toast.success(`Course removed from cohort`)
       refetch()
     } catch (error) {
       toast.error("Failed to remove course from cohort")

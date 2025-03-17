@@ -331,8 +331,7 @@ export const addCourseToCohort = async (req: Request, res: Response): Promise<vo
 };
 
 export const removeCourseFromCohort = async (req: Request, res: Response): Promise<void> => {
-    const { cohortId } = req.params;
-    const { courseId } = req.body;
+    const { courseId , cohortId } = req.body;
     
     try {
         const cohort = await Cohort.get(cohortId);
