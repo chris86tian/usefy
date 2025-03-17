@@ -50,6 +50,8 @@ const allowedOrigins = [
   "http://localhost:3000",
   "https://usefy.com",
   "https://www.usefy.com",
+  "https://expertize-bucket-migration.s3.amazonaws.com",
+  "https://d2d2uxovkp6xho.cloudfront.net",
 ];
 
 const app = express();
@@ -145,7 +147,50 @@ app.use("/courses", courseRoutes);
 app.use("/users/course-progress", requireAuth(), userCourseProgressRoutes);
 app.use("/users/clerk", userClerkRoutes);
 app.use("/transactions", requireAuth(), transactionRoutes);
-app.use("/notifications", requireAuth(), notificationRoutes);
+app.use(
+  "/notifications",
+  (req, res, next) => {
+    if (req.method === "OPTIONS") {
+      const origin = req.headers.origin || "";
+      const isAllowedOrigin = allowedOrigins.includes(origin);
+
+      res.header(
+        "Access-Control-Allow-Origin",
+        isAllowedOrigin ? origin : "https://www.usefy.com"
+      );
+      res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+      res.header(
+        "Access-Control-Allow-Headers",
+        "Content-Type,Authorization,X-Requested-With,Accept"
+      );
+      res.header("Access-Control-Allow-Credentials", "true");
+      res.header("Access-Control-Max-Age", "86400");
+      res.status(200).send();
+      return;
+    }
+
+    requireAuth()(req, res, (err) => {
+      if (err) {
+        const origin = req.headers.origin || "";
+        const isAllowedOrigin = allowedOrigins.includes(origin);
+
+        res.header(
+          "Access-Control-Allow-Origin",
+          isAllowedOrigin ? origin : "https://www.usefy.com"
+        );
+        res.header("Access-Control-Allow-Credentials", "true");
+
+        res.status(401).json({
+          message: "Unauthorized. Please sign in to access this resource.",
+          code: "unauthorized",
+        });
+        return;
+      }
+      next();
+    });
+  },
+  notificationRoutes
+);
 app.use("/commits", requireAuth(), commitRoutes);
 app.use("/feedback", requireAuth(), feedbackRoutes);
 app.use("/time-tracking", timeTrackingRoutes);
