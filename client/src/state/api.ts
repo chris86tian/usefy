@@ -50,6 +50,25 @@ const customBaseQuery = async (
   try {
     let result: any = await baseQuery(args, api, extraOptions);
 
+    if (
+      result.error &&
+      result.error.status === "FETCH_ERROR" &&
+      typeof args === "object"
+    ) {
+      console.log(
+        "Possible CORS error detected, retrying with additional headers"
+      );
+
+      const newArgs = { ...args };
+      if (!newArgs.headers) newArgs.headers = {};
+
+      try {
+        result = await baseQuery(newArgs, api, extraOptions);
+      } catch (retryError) {
+        console.error("Retry after CORS error also failed:", retryError);
+      }
+    }
+
     if (result.error && result.error.status === 401) {
       console.log("Unauthorized request, checking authentication status");
 
@@ -64,9 +83,7 @@ const customBaseQuery = async (
       } else {
         console.log("User is signed in but got 401, trying to refresh token");
         try {
-          const newToken = await window.Clerk?.session?.getToken({
-            template: "migration",
-          });
+          const newToken = await window.Clerk?.session?.getToken();
 
           if (newToken && typeof args === "object") {
             const newArgs = { ...args };
@@ -91,7 +108,10 @@ const customBaseQuery = async (
         errorData?.message ||
         result.error.status.toString() ||
         "An error occurred";
-      toast.error(`Error: ${errorMessage}`);
+
+      if (result.error.status !== "FETCH_ERROR") {
+        toast.error(`Error: ${errorMessage}`);
+      }
     }
 
     const isMutationRequest =

@@ -208,16 +208,25 @@ export const handler = async (
   event.headers = event.headers || {};
   const origin = event.headers.origin || "https://www.usefy.com";
 
-  // Always check if the origin is allowed, even for the root path
   const isAllowedOrigin = allowedOrigins.includes(origin);
+
+  const corsHeaders = {
+    "Access-Control-Allow-Origin": isAllowedOrigin
+      ? origin
+      : "https://www.usefy.com",
+    "Access-Control-Allow-Credentials": "true",
+    "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
+    "Access-Control-Allow-Headers":
+      "Content-Type,Authorization,X-Requested-With,Accept",
+    "Access-Control-Max-Age": "86400",
+  };
 
   if (!isAllowedOrigin) {
     return {
       statusCode: 403,
       headers: {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": origin,
-        "Access-Control-Allow-Credentials": "true",
+        ...corsHeaders,
       },
       body: JSON.stringify({ message: "Origin not allowed" }),
     };
@@ -227,14 +236,7 @@ export const handler = async (
     console.log("Handling OPTIONS request for path:", event.path);
     return {
       statusCode: 200,
-      headers: {
-        "Access-Control-Allow-Origin": origin,
-        "Access-Control-Allow-Headers":
-          "Content-Type,Authorization,X-Requested-With,Accept",
-        "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
-        "Access-Control-Allow-Credentials": "true",
-        "Access-Control-Max-Age": "86400",
-      },
+      headers: corsHeaders,
       body: "",
     };
   }
@@ -259,12 +261,7 @@ export const handler = async (
         statusCode: 200,
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": origin,
-          "Access-Control-Allow-Credentials": "true",
-          "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
-          "Access-Control-Allow-Headers":
-            "Content-Type,Authorization,X-Requested-With,Accept",
-          "Access-Control-Max-Age": "86400",
+          ...corsHeaders,
         },
         body: JSON.stringify({ message: "API is running" }),
       };
@@ -283,12 +280,7 @@ export const handler = async (
         statusCode: 401,
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": origin,
-          "Access-Control-Allow-Credentials": "true",
-          "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
-          "Access-Control-Allow-Headers":
-            "Content-Type,Authorization,X-Requested-With,Accept",
-          "Access-Control-Max-Age": "86400",
+          ...corsHeaders,
         },
         body: JSON.stringify({
           message: "Unauthorized. Please sign in to access this resource.",
@@ -297,6 +289,7 @@ export const handler = async (
       };
     }
 
+    // Remove any existing CORS headers to avoid duplicates
     const headers = { ...(response.headers || {}) };
     delete headers["access-control-allow-origin"];
     delete headers["access-control-allow-credentials"];
@@ -308,12 +301,7 @@ export const handler = async (
       ...response,
       headers: {
         ...headers,
-        "Access-Control-Allow-Origin": origin,
-        "Access-Control-Allow-Credentials": "true",
-        "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
-        "Access-Control-Allow-Headers":
-          "Content-Type,Authorization,X-Requested-With,Accept",
-        "Access-Control-Max-Age": "86400",
+        ...corsHeaders,
       },
     };
   } catch (error) {
@@ -321,11 +309,8 @@ export const handler = async (
     return {
       statusCode: 500,
       headers: {
-        "Access-Control-Allow-Origin": origin,
-        "Access-Control-Allow-Credentials": "true",
-        "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
-        "Access-Control-Allow-Headers":
-          "Content-Type,Authorization,X-Requested-With,Accept",
+        "Content-Type": "application/json",
+        ...corsHeaders,
       },
       body: JSON.stringify({
         message: "Internal Server Error",
