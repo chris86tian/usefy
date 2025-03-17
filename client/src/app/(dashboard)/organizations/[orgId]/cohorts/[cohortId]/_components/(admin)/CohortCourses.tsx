@@ -10,11 +10,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { BookCopyIcon, BookOpen, Users } from "lucide-react"
+import { BookCopyIcon, Users } from "lucide-react"
 import { getUserName, handleEnroll } from "@/lib/utils"
 import { CourseCard } from "@/components/CourseCard"
 import { Toolbar } from "@/components/Toolbar"
@@ -57,11 +56,11 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch }: CohortCoursesProp
   const currentUserId = user?.id
   const router = useRouter()
 
-  const [createCourse, { isLoading: createCourseLoading } ] = useCreateCourseMutation()
+  const [createCourse, { isLoading: createCourseLoading }] = useCreateCourseMutation()
   const [addCourseToCohort, { isLoading: addCourseLoading }] = useAddCourseToCohortMutation()
   const [removeCourseFromCohort, { isLoading: removeCourseLoading }] = useRemoveCourseFromCohortMutation()
   const [addCourseInstructor, { isLoading: addInstructorLoading }] = useAddCourseInstructorMutation()
-  const [removeCourseInstructor, { isLoading: removeInstructorLoading } ] = useRemoveCourseInstructorMutation()
+  const [removeCourseInstructor, { isLoading: removeInstructorLoading }] = useRemoveCourseInstructorMutation()
   const [createTransaction] = useCreateTransactionMutation()
   const [unenrollUser, { isLoading: unenrollLoading }] = useUnenrollUserMutation()
   const [archiveCourse, { isLoading: archiveCourseLoading }] = useArchiveCourseMutation()
@@ -105,10 +104,11 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch }: CohortCoursesProp
         cohortId: cohort.cohortId,
         courseId: newCourse.data?.courseId as string,
       })
-      router.push(`/organizations/${cohort?.organizationId}/cohorts/${cohort?.cohortId}/courses/${newCourse.data?.courseId}/edit`)
+      router.push(
+        `/organizations/${cohort?.organizationId}/cohorts/${cohort?.cohortId}/courses/${newCourse.data?.courseId}/edit`,
+      )
       refetch()
-    }
-    catch (error) {
+    } catch (error) {
       toast.error("Failed to create course")
     }
   }
@@ -211,15 +211,21 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch }: CohortCoursesProp
   }
 
   const handleEdit = (course: Course) => {
-    router.push(`/organizations/${cohort?.organizationId}/cohorts/${cohort?.cohortId}/courses/${course.courseId}/edit`, {
-      scroll: false,
-    })
+    router.push(
+      `/organizations/${cohort?.organizationId}/cohorts/${cohort?.cohortId}/courses/${course.courseId}/edit`,
+      {
+        scroll: false,
+      },
+    )
   }
 
   const handleStats = (course: Course) => {
-    router.push(`/organizations/${cohort?.organizationId}/cohorts/${cohort?.cohortId}/courses/${course.courseId}/stats`, {
-      scroll: false,
-    })
+    router.push(
+      `/organizations/${cohort?.organizationId}/cohorts/${cohort?.cohortId}/courses/${course.courseId}/stats`,
+      {
+        scroll: false,
+      },
+    )
   }
 
   const handleDeleteConfirmation = (course: Course) => {
@@ -278,14 +284,40 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch }: CohortCoursesProp
     }
   }
 
+  const handleCourseEnroll = (course: Course) => {
+    if (!user) {
+      toast.error("You must be logged in to enroll in courses")
+      return
+    }
+
+    const isEnrolled = course.enrollments?.some((enrollment) => enrollment.userId === user.id)
+
+    if (!isEnrolled) {
+      handleEnroll(user.id, course.courseId, createTransaction)
+        .then(() => {
+          toast.success(`Successfully enrolled in ${course.title}`)
+          if (course.sections && course.sections.length > 0 && course.sections[0].chapters.length > 0) {
+            router.push(
+              `/organizations/${cohort.organizationId}/cohorts/${cohort.cohortId}/courses/${course.courseId}/chapters/${course.sections[0].chapters[0].chapterId}`,
+            )
+          }
+          refetch()
+        })
+        .catch((error) => {
+          console.error("Enrollment error:", error)
+          toast.error("Failed to enroll in course")
+        })
+    } else {
+      toast.info("You are already enrolled in this course")
+    }
+  }
+
   return (
     <>
       <Header
         rightElement={
           <div className="flex items-center space-x-2">
-            <Button 
-              onClick={handleCreateCourse} 
-              disabled={createCourseLoading}>
+            <Button onClick={handleCreateCourse} disabled={createCourseLoading}>
               <BookCopyIcon className="mr-2 h-4 w-4" />
               {createCourseLoading ? "Creating..." : "Create Course"}
             </Button>
@@ -377,6 +409,7 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch }: CohortCoursesProp
               course={course}
               variant="admin"
               isEnrolled={course.enrollments?.some((enrollment) => enrollment.userId === currentUserId)}
+              onEnroll={handleCourseEnroll}
               onEdit={handleEdit}
               onDelete={handleDeleteConfirmation}
               onView={handleGoToCourse}
@@ -442,7 +475,7 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch }: CohortCoursesProp
                       <span className="text-destructive">Remove instructor</span>
                     </SelectItem>
                   )}
-                  {orgUsers.instructors.length > 0 ?
+                  {orgUsers.instructors.length > 0 ? (
                     orgUsers.instructors.map((instructor) => (
                       <SelectItem key={instructor.id} value={instructor.id}>
                         <span className="flex flex-col">
@@ -453,8 +486,9 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch }: CohortCoursesProp
                         </span>
                       </SelectItem>
                     ))
-                    : <div className="p-2 text-center text-muted-foreground">No instructors found</div>
-                  }
+                  ) : (
+                    <div className="p-2 text-center text-muted-foreground">No instructors found</div>
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -504,9 +538,9 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch }: CohortCoursesProp
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               disabled={removeCourseLoading}
-              onClick={handleDeleteCourse} 
+              onClick={handleDeleteCourse}
               className="bg-red-500 hover:bg-red-600"
             >
               {removeCourseLoading ? "Removing..." : "Remove"}

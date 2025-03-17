@@ -1,23 +1,12 @@
 "use client"
 
 import type React from "react"
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import Image from "next/image"
 import { cn, getUserName } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import {
-  Archive,
-  BarChartBig,
-  ChevronDown,
-  ChevronUp,
-  Pencil,
-  Trash2,
-  Users,
-  Lock,
-  BookOpen,
-  CheckCircle,
-} from "lucide-react"
+import { Archive, BarChartBig, ChevronDown, ChevronUp, Pencil, Trash2, Users, Lock, BookOpen, CheckCircle } from 'lucide-react'
 import { useUser } from "@clerk/nextjs"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -140,12 +129,9 @@ export function CourseCard({
   }, [course])
 
   const handleClick = () => {
-    if (variant === "admin" && !isEnrolled && onEnroll) {
-      // Auto-enroll admin users
-      onEnroll(course)
-    } else if (!isEnrolled && variant === "learner") {
+    if (!isEnrolled && variant === "learner") {
       setIsEnrollDialogOpen(true)
-    } else if (onView && !showViewOnly) {
+    } else if (onView && !showViewOnly && isEnrolled) {
       onView(course)
     }
   }
@@ -173,24 +159,18 @@ export function CourseCard({
 
   const lastAccessed = progress?.lastAccessedTimestamp ? formatLastAccessed(progress.lastAccessedTimestamp) : null
 
-  useEffect(() => {
-    if (variant === "admin" && !isEnrolled && onEnroll && user) {
-      onEnroll(course)
-    }
-  }, [variant, isEnrolled, onEnroll, course, user])
-
   return (
     <>
       <Card
         className={cn(
           "overflow-hidden transition-colors hover:bg-accent/50 border border-gray-200 group h-full flex flex-col",
-          (onView || variant === "learner" || variant === "instructor") && "cursor-pointer",
+          (onView || variant === "learner" || variant === "instructor") && isEnrolled && "cursor-pointer",
           showViewOnly && "opacity-70",
         )}
       >
         <CardHeader
-          className={cn("p-0", (variant === "admin" || variant === "instructor") && !showViewOnly && "cursor-pointer")}
-          onClick={handleClick}
+          className={cn("p-0", (variant === "admin" || variant === "instructor") && !showViewOnly && isEnrolled && "cursor-pointer")}
+          onClick={isEnrolled ? handleClick : undefined}
         >
           <div className="aspect-video relative overflow-hidden">
             <Image
@@ -211,7 +191,7 @@ export function CourseCard({
                 Instructor
               </Badge>
             )}
-            {!isEnrolled && variant === "learner" && (
+            {!isEnrolled && (
               <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 <Lock className="h-8 w-8 text-white" />
               </div>
@@ -301,6 +281,32 @@ export function CourseCard({
             <div className="flex flex-wrap gap-2 w-full">
               {canEdit ? (
                 <>
+                  {!isEnrolled && onEnroll && (
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleEnroll(e)
+                      }}
+                      className="mr-auto"
+                    >
+                      Enroll
+                    </Button>
+                  )}
+                  {isEnrolled && onView && (
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onView(course)
+                      }}
+                      className="mr-auto"
+                    >
+                      View Course
+                    </Button>
+                  )}
                   {onEdit && (
                     <Button
                       variant="secondary"
@@ -385,11 +391,65 @@ export function CourseCard({
                   ))}
                 </>
               ) : (
-                showViewOnly && <p className="text-sm text-muted-foreground italic text-center w-full">View Only</p>
+                <>
+                  {!isEnrolled && onEnroll && (
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleEnroll(e)
+                      }}
+                      className="mr-auto"
+                    >
+                      Enroll
+                    </Button>
+                  )}
+                  {isEnrolled && onView && (
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onView(course)
+                      }}
+                      className="mr-auto"
+                    >
+                      View Course
+                    </Button>
+                  )}
+                  {showViewOnly && <p className="text-sm text-muted-foreground italic text-center w-full">View Only</p>}
+                </>
               )}
             </div>
           ) : variant === "instructor" ? (
             <div className="flex flex-wrap gap-2 w-full">
+              {!isEnrolled && onEnroll && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleEnroll(e)
+                  }}
+                  className="mr-auto"
+                >
+                  Enroll
+                </Button>
+              )}
+              {isEnrolled && onView && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onView(course)
+                  }}
+                  className="mr-auto"
+                >
+                  View Course
+                </Button>
+              )}
               {onEdit && (
                 <Button
                   variant="secondary"
@@ -465,4 +525,3 @@ export function CourseCard({
     </>
   )
 }
-
