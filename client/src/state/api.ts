@@ -16,6 +16,14 @@ const customBaseQuery = async (
 ) => {
   const skipAuth = extraOptions?.skipAuth || false;
 
+  if (
+    typeof window !== "undefined" &&
+    window.document.readyState !== "complete"
+  ) {
+    console.log("Page is still loading, waiting for Clerk to initialize...");
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+
   const baseQuery = fetchBaseQuery({
     baseUrl: server_url,
     credentials: "include",
@@ -23,9 +31,20 @@ const customBaseQuery = async (
     prepareHeaders: async (headers) => {
       if (!skipAuth) {
         try {
+          if (
+            typeof window !== "undefined" &&
+            window.Clerk &&
+            !window.Clerk.session
+          ) {
+            console.log("Waiting for Clerk session to be available...");
+            await new Promise((resolve) => setTimeout(resolve, 500));
+          }
+
           const token = await window.Clerk?.session?.getToken();
           if (token) {
             headers.set("Authorization", `Bearer ${token}`);
+          } else {
+            console.log("No token available from Clerk session");
           }
         } catch (error) {
           console.error("Error getting auth token:", error);
@@ -47,60 +66,104 @@ const customBaseQuery = async (
   const isS3UrlRequest =
     typeof args === "object" && args.url?.includes("get-upload");
 
-  try {
-    let result: any = await baseQuery(args, api, extraOptions);
+  const retryWithBackoff = async (
+    attempt = 0,
+    maxAttempts = 3
+  ): Promise<any> => {
+    try {
+      const result = await baseQuery(args, api, extraOptions);
 
-    if (
-      result.error &&
-      result.error.status === "FETCH_ERROR" &&
-      typeof args === "object"
-    ) {
-      console.log(
-        "Possible CORS error detected, retrying with additional headers"
-      );
+      if (
+        result.error &&
+        result.error.status === "FETCH_ERROR" &&
+        typeof args === "object"
+      ) {
+        console.log(
+          "Possible CORS error detected, retrying with additional headers"
+        );
 
-      const newArgs = { ...args };
-      if (!newArgs.headers) newArgs.headers = {};
+        const newArgs = { ...args };
+        if (!newArgs.headers) newArgs.headers = {};
 
-      try {
-        result = await baseQuery(newArgs, api, extraOptions);
-      } catch (retryError) {
-        console.error("Retry after CORS error also failed:", retryError);
-      }
-    }
-
-    if (result.error && result.error.status === 401) {
-      console.log("Unauthorized request, checking authentication status");
-
-      const isSignedIn = !!window.Clerk?.session;
-
-      if (!isSignedIn) {
-        console.log("User not signed in, redirecting to sign-in page");
-        window.Clerk?.openSignIn();
-        return {
-          error: { status: "CUSTOM_ERROR", error: "Authentication required" },
-        };
-      } else {
-        console.log("User is signed in but got 401, trying to refresh token");
         try {
-          const newToken = await window.Clerk?.session?.getToken();
-
-          if (newToken && typeof args === "object") {
-            const newArgs = { ...args };
-            if (!newArgs.headers) newArgs.headers = {};
-            newArgs.headers = {
-              ...newArgs.headers,
-              Authorization: `Bearer ${newToken}`,
-            };
-
-            console.log("Retrying request with refreshed token");
-            result = await baseQuery(newArgs, api, extraOptions);
-          }
-        } catch (refreshError) {
-          console.error("Error refreshing token:", refreshError);
+          return await baseQuery(newArgs, api, extraOptions);
+        } catch (retryError) {
+          console.error("Retry after CORS error also failed:", retryError);
+          return result;
         }
       }
+
+      if (result.error && result.error.status === 401) {
+        console.log(
+          `Unauthorized request (attempt ${attempt + 1}), checking authentication status`
+        );
+
+        // Check if user is signed in
+        const isSignedIn = !!window.Clerk?.session;
+
+        if (!isSignedIn) {
+          console.log("User not signed in, redirecting to sign-in page");
+          window.Clerk?.openSignIn();
+          return {
+            error: { status: "CUSTOM_ERROR", error: "Authentication required" },
+          };
+        } else {
+          console.log("User is signed in but got 401, trying to refresh token");
+
+          if (attempt < maxAttempts) {
+            // Wait with exponential backoff before retrying
+            const backoffTime = Math.pow(2, attempt) * 1000;
+            console.log(
+              `Waiting ${backoffTime}ms before retry attempt ${attempt + 1}...`
+            );
+            await new Promise((resolve) => setTimeout(resolve, backoffTime));
+
+            try {
+              const newToken = await window.Clerk?.session?.getToken();
+
+              if (newToken && typeof args === "object") {
+                const newArgs = { ...args };
+                if (!newArgs.headers) newArgs.headers = {};
+                newArgs.headers = {
+                  ...newArgs.headers,
+                  Authorization: `Bearer ${newToken}`,
+                };
+
+                console.log(
+                  `Retrying request with refreshed token (attempt ${attempt + 1})`
+                );
+                return await retryWithBackoff(attempt + 1, maxAttempts);
+              }
+            } catch (refreshError) {
+              console.error("Error refreshing token:", refreshError);
+            }
+          } else {
+            console.log(
+              `Max retry attempts (${maxAttempts}) reached for 401 error`
+            );
+          }
+        }
+      }
+
+      return result;
+    } catch (error) {
+      console.error(`API request error (attempt ${attempt + 1}):`, error);
+
+      if (attempt < maxAttempts) {
+        const backoffTime = Math.pow(2, attempt) * 1000;
+        console.log(
+          `Waiting ${backoffTime}ms before retry attempt ${attempt + 1}...`
+        );
+        await new Promise((resolve) => setTimeout(resolve, backoffTime));
+        return retryWithBackoff(attempt + 1, maxAttempts);
+      }
+
+      return { error: { status: "FETCH_ERROR", error } };
     }
+  };
+
+  try {
+    const result = await retryWithBackoff();
 
     if (result.error) {
       const errorData = result.error.data;
