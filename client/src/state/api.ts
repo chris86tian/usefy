@@ -533,10 +533,10 @@ export const api = createApi({
     }),
     addCourseToCohort: build.mutation<
       { message: string },
-      { cohortId: string; courseId: string }
+      { organizationId: string; cohortId: string; courseId: string }
     >({
-      query: ({ cohortId, courseId }) => ({
-        url: `cohorts/${cohortId}/add-course`,
+      query: ({ organizationId, cohortId, courseId }) => ({
+        url: `cohorts/${organizationId}/${cohortId}/add-course`,
         method: "POST",
         body: { courseId },
       }),
