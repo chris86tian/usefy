@@ -38,6 +38,8 @@ const ForgotPassword = () => {
     if (isSignedIn && !successfulReset) {
       if (hasRedirectParams) {
         router.push(`/organizations/${organizationId}/cohorts/${cohortId}`)
+      } else if (organizationId) {
+        router.push(`/organizations/${organizationId}`);
       } else {
         router.push('/')
       }

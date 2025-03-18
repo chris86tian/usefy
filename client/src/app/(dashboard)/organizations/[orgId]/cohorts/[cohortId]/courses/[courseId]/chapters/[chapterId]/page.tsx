@@ -386,7 +386,7 @@ const Course = () => {
           <h1 className="text-2xl font-bold">{currentChapter.title}</h1>
           <div className="flex items-center space-x-4">
             {/* Show course instructors as dropdown */}
-            <DropdownMenu>
+            {/* <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="flex items-center space-x-2">
                   <Users className="h-4 w-4" />
@@ -401,7 +401,7 @@ const Course = () => {
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
-            </DropdownMenu>
+            </DropdownMenu> */}
           </div>
         </div>
       </div>

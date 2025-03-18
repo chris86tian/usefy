@@ -83,7 +83,6 @@ const CohortMembers = ({ cohort, orgUsers }: CohortMembersProps) => {
         learnerId: selectedLearnerId,
       })
 
-      toast.success("Learner added to cohort successfully")
       setActiveDialog("none")
       setSelectedLearnerId("")
       refetch()

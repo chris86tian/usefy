@@ -186,7 +186,11 @@ const customBaseQuery = async (
     }
 
     if (result.data) {
-      result.data = result.data.data;
+      if (Array.isArray(result.data.data)) {
+        result.data = result.data.data;
+      } else if (result.data.data) {
+        result.data = result.data.data;
+      }
     } else if (
       result.error?.status === 204 ||
       result.meta?.response?.status === 24
@@ -367,7 +371,13 @@ export const api = createApi({
 
     inviteUserToCohort: build.mutation<
       { message: string },
-      { organizationId: string; cohortId: string; email: string; role: string; name?: string }
+      {
+        organizationId: string;
+        cohortId: string;
+        email: string;
+        role: string;
+        name?: string;
+      }
     >({
       query: ({ organizationId, cohortId, email, role, name }) => ({
         url: `organizations/${organizationId}/cohort/${cohortId}/invite`,
@@ -375,7 +385,7 @@ export const api = createApi({
         body: { email, role, ...(name && { name }) },
       }),
     }),
-  
+
     getOrganizationUsers: build.query<
       { admins: User[]; instructors: User[]; learners: User[] },
       string
@@ -488,10 +498,40 @@ export const api = createApi({
     getCohortCourses: build.query<
       Course[],
       { organizationId: string; cohortId: string }
-    >({
+      >({
       query: ({ organizationId, cohortId }) =>
         `cohorts/${organizationId}/${cohortId}/courses`,
+      transformResponse: (response: any) => {
+        console.log("getCohortCourses response:", JSON.stringify(response));
+
+        if (!response) {
+          console.log("No response data");
+          return [];
+        }
+
+        const validCourses = response.filter((course: any) => course !== null);
+        const nullCount = response.length - validCourses.length;
+
+        console.log(
+          `Total courses: ${response.length}, Null courses: ${nullCount}`
+        );
+
+        validCourses.forEach((course: any, index: number) => {
+          if (typeof course !== "object") {
+            console.log(
+              `Course at index ${index} is not an object: ${typeof course}`
+            );
+          } else {
+            console.log(
+              `Course at index ${index}: ID=${course.courseId}, Title=${course.title}`
+            );
+          }
+        });
+
+        return validCourses; // ✅ Now filtering out null values
+      },
     }),
+
     addCourseToCohort: build.mutation<
       { message: string },
       { organizationId: string; cohortId: string; courseId: string }
@@ -504,13 +544,17 @@ export const api = createApi({
     }),
     removeCourseFromCohort: build.mutation<
       { message: string },
-      { cohortId: string; courseId: string }
+      { organizationId: string; cohortId: string; courseId: string }
     >({
-      query: ({ cohortId, courseId }) => ({
-        url: `cohorts/remove-course/${cohortId}`,
+      query: ({ organizationId, cohortId, courseId }) => ({
+        url: `cohorts/remove-course`,
         method: "DELETE",
-        body: { courseId },
+        body: {
+          cohortId,
+          courseId,
+        },
       }),
+      invalidatesTags: ["Cohorts"],
     }),
     /* 
     ===============

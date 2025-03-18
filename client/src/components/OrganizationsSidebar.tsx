@@ -98,14 +98,16 @@ export default function OrganizationSidebar({
     }
 
     try {
+      const cohortId = uuidv4()
       await createCohort({
         organizationId: orgId,
-        cohortId: uuidv4(),
+        cohortId,
         name: cohortName.trim(),
       })
       toast.success("Cohort created successfully")
       setIsCreateCohortModalOpen(false)
       setCohortName("")
+      router.push(`/organizations/${orgId}/cohorts/${cohortId}`)
       refetchCohorts()
     } catch (error) {
       toast.error("Failed to create cohort")

@@ -328,6 +328,7 @@ const CourseEditor = () => {
       await updateCourse({ orgId, cohortId, courseId, formData }).unwrap()
 
       toast.success("Course updated successfully!")
+      window.location.href = `/organizations/${orgId}/cohorts/${cohortId}`
       refetch()
     } catch (error) {
       console.error("Failed to update course:", error)
