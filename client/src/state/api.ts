@@ -507,9 +507,12 @@ export const api = createApi({
       { cohortId: string; courseId: string }
     >({
       query: ({ cohortId, courseId }) => ({
-        url: `cohorts/remove-course/${cohortId}`,
+        url: `cohorts/remove-course`,
         method: "DELETE",
-        body: { courseId },
+        body: { 
+          courseId,
+          cohortId,
+         },
       }),
     }),
     /* 
