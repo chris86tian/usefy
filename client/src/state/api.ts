@@ -188,7 +188,7 @@ const customBaseQuery = async (
     if (result.data) {
       if (Array.isArray(result.data.data)) {
         result.data = result.data.data.filter((item: unknown) => item !== null);
-      } else {
+      } else if (result.data.data) {
         result.data = result.data.data;
       }
     } else if (
@@ -502,13 +502,17 @@ export const api = createApi({
       query: ({ organizationId, cohortId }) =>
         `cohorts/${organizationId}/${cohortId}/courses`,
       transformResponse: (response: any) => {
-        if (!response?.data) return [];
-        const validCourses = Array.isArray(response.data)
-          ? response.data.filter(
-              (course: Course | null) => course !== null && course.courseId
-            )
-          : [];
-        return validCourses;
+        if (response?.data) {
+          return Array.isArray(response.data)
+            ? response.data.filter(
+                (course: Course | null) =>
+                  course !== null &&
+                  course.courseId &&
+                  typeof course === "object"
+              )
+            : [];
+        }
+        return [];
       },
     }),
     addCourseToCohort: build.mutation<
