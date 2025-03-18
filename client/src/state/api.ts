@@ -329,7 +329,7 @@ export const api = createApi({
         skipAuth: true,
       },
     }),
-    
+
     addCourseToOrganization: build.mutation<
       { message: string },
       { organizationId: string; courseId: string }
@@ -367,7 +367,13 @@ export const api = createApi({
 
     inviteUserToCohort: build.mutation<
       { message: string },
-      { organizationId: string; cohortId: string; email: string; role: string; name?: string }
+      {
+        organizationId: string;
+        cohortId: string;
+        email: string;
+        role: string;
+        name?: string;
+      }
     >({
       query: ({ organizationId, cohortId, email, role, name }) => ({
         url: `organizations/${organizationId}/cohort/${cohortId}/invite`,
@@ -375,7 +381,7 @@ export const api = createApi({
         body: { email, role, ...(name && { name }) },
       }),
     }),
-  
+
     getOrganizationUsers: build.query<
       { admins: User[]; instructors: User[]; learners: User[] },
       string
@@ -491,6 +497,10 @@ export const api = createApi({
     >({
       query: ({ organizationId, cohortId }) =>
         `cohorts/${organizationId}/${cohortId}/courses`,
+      transformResponse: (response: any) => {
+        if (!response?.data) return [];
+        return response.data.filter((course: Course | null) => course !== null);
+      },
     }),
     addCourseToCohort: build.mutation<
       { message: string },
@@ -509,10 +519,10 @@ export const api = createApi({
       query: ({ cohortId, courseId }) => ({
         url: `cohorts/remove-course`,
         method: "DELETE",
-        body: { 
+        body: {
           courseId,
           cohortId,
-         },
+        },
       }),
     }),
     /* 
