@@ -10,11 +10,13 @@ import {
     removeLearnerFromCohort,
     getCohortCourses,
     addCourseToCohort,
+    removeCourseFromCohort,
 } from "../controllers/cohortController";
 import { requireAuth } from "@clerk/express";
 
 const router = Router();
 
+router.delete("/remove-course/:cohortId", requireAuth(), removeCourseFromCohort);
 router.post("/:organizationId", requireAuth(), createCohort);
 router.get("/:organizationId", getCohorts);
 router.get("/:organizationId/:cohortId", getCohort);
