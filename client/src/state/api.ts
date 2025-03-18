@@ -187,7 +187,7 @@ const customBaseQuery = async (
 
     if (result.data) {
       if (Array.isArray(result.data.data)) {
-        result.data = result.data.data.filter((item: unknown) => item !== null);
+        result.data = result.data.data;
       } else if (result.data.data) {
         result.data = result.data.data;
       }
@@ -502,14 +502,33 @@ export const api = createApi({
       query: ({ organizationId, cohortId }) =>
         `cohorts/${organizationId}/${cohortId}/courses`,
       transformResponse: (response: any) => {
-        if (!response?.data) return [];
-        return response.data.filter(
-          (course: Course | null) =>
-            course !== null &&
-            typeof course === "object" &&
-            "courseId" in course &&
-            "title" in course
+        console.log("getCohortCourses response:", JSON.stringify(response));
+
+        if (!response?.data) {
+          console.log("No data in response");
+          return [];
+        }
+
+        const nullCount = response.data.filter((c: any) => c === null).length;
+        console.log(
+          `Total courses: ${response.data.length}, Null courses: ${nullCount}`
         );
+
+        response.data.forEach((course: any, index: number) => {
+          if (course === null) {
+            console.log(`Course at index ${index} is null`);
+          } else if (typeof course !== "object") {
+            console.log(
+              `Course at index ${index} is not an object: ${typeof course}`
+            );
+          } else {
+            console.log(
+              `Course at index ${index}: ID=${course.courseId}, Title=${course.title}`
+            );
+          }
+        });
+
+        return response.data;
       },
     }),
     addCourseToCohort: build.mutation<
