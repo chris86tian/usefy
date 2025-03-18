@@ -504,17 +504,17 @@ export const api = createApi({
       transformResponse: (response: any) => {
         console.log("getCohortCourses response:", JSON.stringify(response));
 
-        if (!response?.data) {
-          console.log("No data in response");
+        if (!response) {
+          console.log("No response data");
           return [];
         }
 
-        const nullCount = response.data.filter((c: any) => c === null).length;
+        const nullCount = response.filter((c: any) => c === null).length;
         console.log(
-          `Total courses: ${response.data.length}, Null courses: ${nullCount}`
+          `Total courses: ${response.length}, Null courses: ${nullCount}`
         );
 
-        response.data.forEach((course: any, index: number) => {
+        response.forEach((course: any, index: number) => {
           if (course === null) {
             console.log(`Course at index ${index} is null`);
           } else if (typeof course !== "object") {
@@ -528,7 +528,7 @@ export const api = createApi({
           }
         });
 
-        return response.data;
+        return response;
       },
     }),
     addCourseToCohort: build.mutation<
