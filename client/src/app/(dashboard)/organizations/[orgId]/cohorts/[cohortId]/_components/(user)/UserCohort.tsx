@@ -211,48 +211,50 @@ const UserCohort = ({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredCourses.length > 0 ? (
-          filteredCourses.map((course) => {
-            const isEnrolled = course?.enrollments?.some(
-              (enrollment) => enrollment.userId === user?.id
-            );
-            const courseProgress = progressesByCourseId[course.courseId];
+          filteredCourses
+            .filter(course => course !== null)
+            .map((course) => {
+              const isEnrolled = course?.enrollments?.some(
+                (enrollment) => enrollment.userId === user?.id
+              );
+              const courseProgress = progressesByCourseId[course.courseId];
 
-            return (
-              <div key={course.courseId} className="relative">
-                <CourseCard
-                  course={course}
-                  variant={
-                    isInstructor
-                      ? "instructor"
-                      : isLearner
-                        ? "learner"
-                        : "learner"
-                  }
-                  isEnrolled={isEnrolled}
-                  progress={courseProgress}
-                  onView={handleGoToCourse}
-                  onEnroll={handleCourseEnroll}
-                  onEdit={
-                    isInstructor
-                      ? () =>
-                          router.push(
-                            `/organizations/${orgId}/cohorts/${cohortId}/courses/${course.courseId}/edit`
-                          )
-                      : undefined
-                  }
-                  onStats={
-                    isInstructor
-                      ? () =>
-                          router.push(
-                            `/organizations/${orgId}/cohorts/${cohortId}/courses/${course.courseId}/stats`
-                          )
-                      : undefined
-                  }
-                />
-                {course.status === "Archived" && <ArchivedOverlay />}
-              </div>
-            );
-          })
+              return (
+                <div key={course.courseId} className="relative">
+                  <CourseCard
+                    course={course}
+                    variant={
+                      isInstructor
+                        ? "instructor"
+                        : isLearner
+                          ? "learner"
+                          : "learner"
+                    }
+                    isEnrolled={isEnrolled}
+                    progress={courseProgress}
+                    onView={handleGoToCourse}
+                    onEnroll={handleCourseEnroll}
+                    onEdit={
+                      isInstructor
+                        ? () =>
+                            router.push(
+                              `/organizations/${orgId}/cohorts/${cohortId}/courses/${course.courseId}/edit`
+                            )
+                        : undefined
+                    }
+                    onStats={
+                      isInstructor
+                        ? () =>
+                            router.push(
+                              `/organizations/${orgId}/cohorts/${cohortId}/courses/${course.courseId}/stats`
+                            )
+                        : undefined
+                    }
+                  />
+                  {course.status === "Archived" && <ArchivedOverlay />}
+                </div>
+              );
+            })
         ) : (
           <div className="col-span-full flex flex-col items-center justify-center min-h-[300px] text-muted-foreground">
             <p className="text-lg font-medium">No courses found</p>

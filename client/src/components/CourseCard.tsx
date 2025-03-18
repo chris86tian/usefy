@@ -58,6 +58,7 @@ interface CourseCardProps {
   onUnarchive?: (course: Course) => void;
   onStats?: (course: Course) => void;
   onEnroll?: (course: Course) => void;
+  isEnrolling?: boolean;
   customActions?: Array<{
     label: string;
     icon?: React.ReactNode;
@@ -77,6 +78,7 @@ export function CourseCard({
   onUnarchive,
   onStats,
   onEnroll,
+  isEnrolling,
   customActions = [],
 }: CourseCardProps) {
   const { user } = useUser();
@@ -378,6 +380,7 @@ export function CourseCard({
                 <>
                   {!isEnrolled && onEnroll && (
                     <Button
+                      disabled={isEnrolling}
                       variant="default"
                       size="sm"
                       onClick={(e) => {
@@ -386,7 +389,7 @@ export function CourseCard({
                       }}
                       className="mr-auto"
                     >
-                      Enroll
+                      {isEnrolling ? "Enrolling..." : "Enroll"}
                     </Button>
                   )}
                   {isEnrolled && onView && (
@@ -491,6 +494,7 @@ export function CourseCard({
                 <>
                   {!isEnrolled && onEnroll && (
                     <Button
+                      disabled={isEnrolling}
                       variant="default"
                       size="sm"
                       onClick={(e) => {
@@ -499,7 +503,7 @@ export function CourseCard({
                       }}
                       className="mr-auto"
                     >
-                      Enroll
+                      {isEnrolling ? "Enrolling..." : "Enroll"}
                     </Button>
                   )}
                   {isEnrolled && onView && (
@@ -527,6 +531,7 @@ export function CourseCard({
             <div className="flex flex-wrap gap-2 w-full">
               {!isEnrolled && onEnroll && (
                 <Button
+                  disabled={isEnrolling}
                   variant="default"
                   size="sm"
                   onClick={(e) => {
@@ -535,7 +540,7 @@ export function CourseCard({
                   }}
                   className="mr-auto"
                 >
-                  Enroll
+                  {isEnrolling ? "Enrolling..." : "Enroll"}
                 </Button>
               )}
               {isEnrolled && onView && (
@@ -600,11 +605,12 @@ export function CourseCard({
           ) : (
             onEnroll && (
               <Button
+                disabled={isEnrolling}
                 onClick={handleEnroll}
                 variant="outline"
                 className="w-full font-semibold"
               >
-                Enroll
+                {isEnrolling ? "Enrolling..." : "Enroll"}
               </Button>
             )
           )}
@@ -626,10 +632,11 @@ export function CourseCard({
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
+              disabled={isEnrolling}
               onClick={() => handleEnroll()}
               className="bg-primary"
             >
-              Enroll Now
+              {isEnrolling ? "Enrolling..." : "Enroll"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
