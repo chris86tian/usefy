@@ -553,6 +553,7 @@ export const api = createApi({
           courseId,
         },
       }),
+      invalidatesTags: ["Cohorts"],
     }),
     /* 
     ===============
