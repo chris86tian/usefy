@@ -148,7 +148,6 @@ const CohortCourses = ({
     try {
       const newCourse = await createCourse();
       await addCourseToCohort({
-        organizationId: cohort.organizationId,
         cohortId: cohort.cohortId,
         courseId: newCourse.data?.courseId as string,
       });
@@ -169,7 +168,6 @@ const CohortCourses = ({
 
     try {
       await addCourseToCohort({
-        organizationId: cohort.organizationId,
         cohortId: cohort.cohortId,
         courseId: selectedCourseId,
       });
@@ -304,7 +302,6 @@ const CohortCourses = ({
 
     try {
       await removeCourseFromCohort({
-        organizationId: cohort.organizationId,
         cohortId: cohort.cohortId,
         courseId: courseToDelete.courseId,
       });

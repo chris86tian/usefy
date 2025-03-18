@@ -533,22 +533,25 @@ export const api = createApi({
     }),
     addCourseToCohort: build.mutation<
       { message: string },
-      { organizationId: string; cohortId: string; courseId: string }
+      { cohortId: string; courseId: string }
     >({
-      query: ({ organizationId, cohortId, courseId }) => ({
-        url: `cohorts/${organizationId}/${cohortId}/add-course`,
+      query: ({ cohortId, courseId }) => ({
+        url: `cohorts/${cohortId}/add-course`,
         method: "POST",
         body: { courseId },
       }),
     }),
     removeCourseFromCohort: build.mutation<
       { message: string },
-      { organizationId: string; cohortId: string; courseId: string }
+      { cohortId: string; courseId: string }
     >({
-      query: ({ organizationId, cohortId, courseId }) => ({
-        url: `cohorts/${organizationId}/${cohortId}/remove-course`,
+      query: ({ cohortId, courseId }) => ({
+        url: `cohorts/remove-course`,
         method: "DELETE",
-        body: { courseId },
+        body: {
+          courseId,
+          cohortId,
+        },
       }),
     }),
     /* 
