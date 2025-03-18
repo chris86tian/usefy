@@ -304,6 +304,7 @@ const CohortCourses = ({
 
     try {
       await removeCourseFromCohort({
+        organizationId: cohort.organizationId,
         cohortId: cohort.cohortId,
         courseId: courseToDelete.courseId,
       });

@@ -543,14 +543,14 @@ export const api = createApi({
     }),
     removeCourseFromCohort: build.mutation<
       { message: string },
-      { cohortId: string; courseId: string }
+      { organizationId: string; cohortId: string; courseId: string }
     >({
-      query: ({ cohortId, courseId }) => ({
+      query: ({ organizationId, cohortId, courseId }) => ({
         url: `cohorts/remove-course`,
         method: "DELETE",
         body: {
-          courseId,
           cohortId,
+          courseId,
         },
       }),
     }),
