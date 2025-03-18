@@ -186,7 +186,11 @@ const customBaseQuery = async (
     }
 
     if (result.data) {
-      result.data = result.data.data;
+      if (Array.isArray(result.data.data)) {
+        result.data = result.data.data.filter((item: unknown) => item !== null);
+      } else {
+        result.data = result.data.data;
+      }
     } else if (
       result.error?.status === 204 ||
       result.meta?.response?.status === 24
@@ -499,10 +503,12 @@ export const api = createApi({
         `cohorts/${organizationId}/${cohortId}/courses`,
       transformResponse: (response: any) => {
         if (!response?.data) return [];
-        const validCourses = response.data.filter(
-          (course: Course | null) => course !== null
-        );
-        return validCourses.length > 0 ? validCourses : [];
+        const validCourses = Array.isArray(response.data)
+          ? response.data.filter(
+              (course: Course | null) => course !== null && course.courseId
+            )
+          : [];
+        return validCourses;
       },
     }),
     addCourseToCohort: build.mutation<
