@@ -499,7 +499,10 @@ export const api = createApi({
         `cohorts/${organizationId}/${cohortId}/courses`,
       transformResponse: (response: any) => {
         if (!response?.data) return [];
-        return response.data.filter((course: Course | null) => course !== null);
+        const validCourses = response.data.filter(
+          (course: Course | null) => course !== null
+        );
+        return validCourses.length > 0 ? validCourses : [];
       },
     }),
     addCourseToCohort: build.mutation<
