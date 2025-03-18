@@ -61,7 +61,7 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch }: CohortCoursesProp
   const [removeCourseFromCohort, { isLoading: removeCourseLoading }] = useRemoveCourseFromCohortMutation()
   const [addCourseInstructor, { isLoading: addInstructorLoading }] = useAddCourseInstructorMutation()
   const [removeCourseInstructor, { isLoading: removeInstructorLoading }] = useRemoveCourseInstructorMutation()
-  const [createTransaction] = useCreateTransactionMutation()
+  const [createTransaction, { isLoading: createTransactionLoading}] = useCreateTransactionMutation()
   const [unenrollUser, { isLoading: unenrollLoading }] = useUnenrollUserMutation()
   const [archiveCourse, { isLoading: archiveCourseLoading }] = useArchiveCourseMutation()
   const [unarchiveCourse, { isLoading: unarchiveCourseLoading }] = useUnarchiveCourseMutation()
@@ -316,9 +316,9 @@ const CohortCourses = ({ cohort, orgUsers, courses, refetch }: CohortCoursesProp
       <Header
         rightElement={
           <div className="flex items-center space-x-2">
-            <Button onClick={handleCreateCourse} disabled={createCourseLoading}>
+            <Button onClick={handleCreateCourse} disabled={createCourseLoading || addCourseLoading}>
               <BookCopyIcon className="mr-2 h-4 w-4" />
-              {createCourseLoading ? "Creating..." : "Create Course"}
+              {createCourseLoading || addCourseLoading ? "Creating..." : "Create Course"}
             </Button>
           </div>
         }
