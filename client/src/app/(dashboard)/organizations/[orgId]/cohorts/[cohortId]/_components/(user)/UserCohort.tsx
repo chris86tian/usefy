@@ -74,51 +74,34 @@ const UserCohort = ({
   const filteredCourses = useMemo(() => {
     console.log("User view - Filtering courses:", courses);
     if (!courses) return [];
-
-    // Filter out null courses and log them
-    const validCourses = courses.filter((course) => {
-      if (!course) {
-        console.log("Found null course in courses array");
-        return false;
-      }
-
-      if (typeof course !== "object" || !course.courseId || !course.title) {
-        console.log("Invalid course object:", course);
-        return false;
-      }
-
-      return true;
-    });
-
-    console.log(
-      `Valid courses: ${validCourses.length} out of ${courses.length}`
-    );
-
+  
+    // Remove null values before processing
+    const validCourses = courses.filter((course) => course !== null);
+  
+    console.log(`Valid courses: ${validCourses.length} out of ${courses.length}`);
+  
     return validCourses.filter((course) => {
       // Base filter for search term
       const matchesSearch =
         course.title?.toLowerCase().includes(searchTerm.toLowerCase()) || false;
-
+  
       // Status filtering based on user role
       let statusFilter = true;
       if (isInstructor) {
-        // Instructors can see archived courses if they toggle the option
         statusFilter = showArchived ? true : course.status !== "Archived";
       } else {
-        // Regular users can only see published courses
         statusFilter = course.status === "Published";
       }
-
-      // Instructor filter - only show courses where the user is an instructor
+  
+      // Instructor filter
       const isInstructorForCourse = isInstructor
-        ? course.instructors?.some(
-            (instructor) => instructor.userId === user?.id
-          )
-        : true; // If not an instructor, don't apply this filter
-
+        ? course.instructors?.some((instructor) => instructor.userId === user?.id)
+        : true;
+  
       return matchesSearch && statusFilter && isInstructorForCourse;
     });
   }, [courses, searchTerm, showArchived, isInstructor, user?.id]);
+  
 
   const handleGoToCourse = (course: Course) => {
     if (course.status === "Archived") {
