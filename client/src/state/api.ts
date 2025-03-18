@@ -502,17 +502,14 @@ export const api = createApi({
       query: ({ organizationId, cohortId }) =>
         `cohorts/${organizationId}/${cohortId}/courses`,
       transformResponse: (response: any) => {
-        if (response?.data) {
-          return Array.isArray(response.data)
-            ? response.data.filter(
-                (course: Course | null) =>
-                  course !== null &&
-                  course.courseId &&
-                  typeof course === "object"
-              )
-            : [];
-        }
-        return [];
+        if (!response?.data) return [];
+        return response.data.filter(
+          (course: Course | null) =>
+            course !== null &&
+            typeof course === "object" &&
+            "courseId" in course &&
+            "title" in course
+        );
       },
     }),
     addCourseToCohort: build.mutation<
