@@ -422,7 +422,7 @@ const AdminSettings = () => {
               <CardTitle>Members</CardTitle>
               <CardDescription>Manage your organization members</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="overflow-y-auto max-h-[450px]">
               <div className="flex items-center space-x-2 mb-4">
                 <div className="relative flex-grow">
                   <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
