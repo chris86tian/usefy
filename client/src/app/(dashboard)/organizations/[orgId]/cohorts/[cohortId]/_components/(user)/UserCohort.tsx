@@ -72,20 +72,16 @@ const UserCohort = ({
   );
 
   const filteredCourses = useMemo(() => {
-    console.log("User view - Filtering courses:", courses);
     if (!courses) return [];
   
-    // Remove null values before processing
     const validCourses = courses.filter((course) => course !== null);
   
-    console.log(`Valid courses: ${validCourses.length} out of ${courses.length}`);
-  
     return validCourses.filter((course) => {
-      // Base filter for search term
+      if (!course) return false; // Extra safeguard
+  
       const matchesSearch =
         course.title?.toLowerCase().includes(searchTerm.toLowerCase()) || false;
   
-      // Status filtering based on user role
       let statusFilter = true;
       if (isInstructor) {
         statusFilter = showArchived ? true : course.status !== "Archived";
@@ -93,15 +89,15 @@ const UserCohort = ({
         statusFilter = course.status === "Published";
       }
   
-      // Instructor filter
       const isInstructorForCourse = isInstructor
-        ? course.instructors?.some((instructor) => instructor.userId === user?.id)
+        ? course.instructors?.some(
+            (instructor) => instructor.userId === user?.id
+          )
         : true;
   
       return matchesSearch && statusFilter && isInstructorForCourse;
     });
   }, [courses, searchTerm, showArchived, isInstructor, user?.id]);
-  
 
   const handleGoToCourse = (course: Course) => {
     if (course.status === "Archived") {
@@ -193,57 +189,53 @@ const UserCohort = ({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredCourses.length > 0 ? (
-          filteredCourses
-            .filter(course => course !== null)
-            .map((course) => {
-              const isEnrolled = course?.enrollments?.some(
-                (enrollment) => enrollment.userId === user?.id
-              );
-              const courseProgress = progressesByCourseId[course.courseId];
+      {filteredCourses.length > 0 ? (
+        filteredCourses
+          .filter((course) => course !== null) // Extra safety
+          .map((course) => {
+            if (!course) return null; // Avoid crashes
 
-              return (
-                <div key={course.courseId} className="relative">
-                  <CourseCard
-                    course={course}
-                    variant={
-                      isInstructor
-                        ? "instructor"
-                        : isLearner
-                          ? "learner"
-                          : "learner"
-                    }
-                    isEnrolled={isEnrolled}
-                    progress={courseProgress}
-                    onView={handleGoToCourse}
-                    onEnroll={handleCourseEnroll}
-                    onEdit={
-                      isInstructor
-                        ? () =>
-                            router.push(
-                              `/organizations/${orgId}/cohorts/${cohortId}/courses/${course.courseId}/edit`
-                            )
-                        : undefined
-                    }
-                    onStats={
-                      isInstructor
-                        ? () =>
-                            router.push(
-                              `/organizations/${orgId}/cohorts/${cohortId}/courses/${course.courseId}/stats`
-                            )
-                        : undefined
-                    }
-                  />
-                  {course.status === "Archived" && <ArchivedOverlay />}
-                </div>
-              );
-            })
-        ) : (
-          <div className="col-span-full flex flex-col items-center justify-center min-h-[300px] text-muted-foreground">
-            <p className="text-lg font-medium">No courses found</p>
-            <p className="text-sm">Try adjusting your search or filters</p>
-          </div>
-        )}
+            const isEnrolled = course?.enrollments?.some(
+              (enrollment) => enrollment.userId === user?.id
+            );
+            const courseProgress = progressesByCourseId[course.courseId];
+
+            return (
+              <div key={course.courseId} className="relative">
+                <CourseCard
+                  course={course}
+                  variant={isInstructor ? "instructor" : "learner"}
+                  isEnrolled={isEnrolled}
+                  progress={courseProgress}
+                  onView={handleGoToCourse}
+                  onEnroll={handleCourseEnroll}
+                  onEdit={
+                    isInstructor
+                      ? () =>
+                          router.push(
+                            `/organizations/${orgId}/cohorts/${cohortId}/courses/${course.courseId}/edit`
+                          )
+                      : undefined
+                  }
+                  onStats={
+                    isInstructor
+                      ? () =>
+                          router.push(
+                            `/organizations/${orgId}/cohorts/${cohortId}/courses/${course.courseId}/stats`
+                          )
+                      : undefined
+                  }
+                />
+                {course.status === "Archived" && <ArchivedOverlay />}
+              </div>
+            );
+          })
+      ) : (
+        <div className="col-span-full flex flex-col items-center justify-center min-h-[300px] text-muted-foreground">
+          <p className="text-lg font-medium">No courses found</p>
+          <p className="text-sm">Try adjusting your search or filters</p>
+        </div>
+      )}
       </div>
     </div>
   );
