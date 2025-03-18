@@ -498,7 +498,7 @@ export const api = createApi({
     getCohortCourses: build.query<
       Course[],
       { organizationId: string; cohortId: string }
-    >({
+      >({
       query: ({ organizationId, cohortId }) =>
         `cohorts/${organizationId}/${cohortId}/courses`,
       transformResponse: (response: any) => {
@@ -509,15 +509,15 @@ export const api = createApi({
           return [];
         }
 
-        const nullCount = response.filter((c: any) => c === null).length;
+        const validCourses = response.filter((course: any) => course !== null);
+        const nullCount = response.length - validCourses.length;
+
         console.log(
           `Total courses: ${response.length}, Null courses: ${nullCount}`
         );
 
-        response.forEach((course: any, index: number) => {
-          if (course === null) {
-            console.log(`Course at index ${index} is null`);
-          } else if (typeof course !== "object") {
+        validCourses.forEach((course: any, index: number) => {
+          if (typeof course !== "object") {
             console.log(
               `Course at index ${index} is not an object: ${typeof course}`
             );
@@ -528,9 +528,10 @@ export const api = createApi({
           }
         });
 
-        return response;
+        return validCourses; // ✅ Now filtering out null values
       },
     }),
+
     addCourseToCohort: build.mutation<
       { message: string },
       { organizationId: string; cohortId: string; courseId: string }
