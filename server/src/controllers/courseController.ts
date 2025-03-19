@@ -36,7 +36,7 @@ export const createCourse = async (
     const course = new Course({
       courseId: uuidv4(),
       instructors: [],
-      title: "",
+      title: "Untitled Course",
       description: "",
       image: "",
       price: 0,

@@ -36,15 +36,20 @@ import { useRouter } from "next/navigation"
 import { uploadAllFiles } from "@/lib/utils";
 import InstructorEmailInput from "./EmailInvite"
 import { useUser } from "@clerk/nextjs"
+import { useOrganization } from "@/context/OrganizationContext"
+import { Spinner } from "@/components/ui/Spinner"
+import NotFound from "@/components/NotFound"
 
 const CourseEditor = () => {
   const { user } = useUser()
+  const { currentOrg, isOrgLoading } = useOrganization()
   const { orgId, cohortId, courseId } = useParams() as { orgId: string; cohortId: string; courseId: string }
 
   const { data: course, isLoading, refetch } = useGetCourseQuery(courseId)
   const { data: instructors, refetch: refetchInstructors } = useGetCourseInstructorsQuery(courseId)
 
   const isInstructor = instructors?.some((instructor) => instructor.id === user?.id)
+  const isAdmin = currentOrg?.admins?.some((admin) => admin.userId === user?.id)
 
   const [updateCourse, { isLoading: isUpdating }] = useUpdateCourseMutation()
   const [getUploadVideoUrl] = useGetUploadVideoUrlMutation()
@@ -61,6 +66,13 @@ const CourseEditor = () => {
   const [isGenerating, setIsGenerating] = useState(false)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const router = useRouter()
+
+  useEffect(() => {
+    if (!isInstructor && !isAdmin) {
+      router.push(`/organizations/${orgId}/cohorts/${cohortId}`)
+    }
+  }
+  , [isInstructor, isAdmin, router, orgId, cohortId])
 
 
   const handleURLSubmit = async (videoUrl: string, options: ProcessOptions) => {
@@ -344,6 +356,10 @@ const CourseEditor = () => {
       id: instructor.id,
       email: instructor.emailAddresses[0]?.emailAddress || "Unknown email",
     })) || []
+
+  if (isLoading || isOrgLoading) return <Spinner />
+  if (!course || !currentOrg) return <NotFound message={!currentOrg ? "Organization not found" : "Course not found"} />
+    
 
   return (
     <div className="dark:text-gray-100">

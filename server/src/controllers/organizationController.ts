@@ -206,25 +206,30 @@ export const getOrganizationCourses = async (
   const { organizationId } = req.params;
 
   try {
-    const organization = await Organization.query("organizationId")
-      .eq(organizationId)
-      .exec();
-    const orgData = organization?.[0];
+    const organization = await Organization.get(organizationId);
 
-    if (!orgData) {
-      res.json({ message: "No courses found for this organization", data: [] });
+    if (!organization) {
+      res.status(404).json({ message: "Organization not found" });
       return;
     }
 
-    const courseIds = orgData.courses || [];
+    const cohorts = await Cohort.scan().where("organizationId").eq(organizationId).exec();
+
+    if (!cohorts || cohorts.length === 0) {
+      res.json({ message: "No cohorts found for this organization", data: [] });
+      return;
+    }
+
+    const courseIds = cohorts.flatMap((cohort: any) => cohort.courses.map((course: { courseId: string }) => course.courseId));
+
     if (courseIds.length === 0) {
-      res.json({ message: "No courses found for this organization", data: [] });
+      res.json({ message: "No courses found in any cohort", data: [] });
       return;
     }
-    
-    const courses = await Course.batchGet(courseIds);
+
+    const courses = await Course.batchGet(courseIds.map((courseId: string) => ({ courseId })));
+
     res.json({ message: "Courses retrieved successfully", data: courses });
-    return;
   } catch (error) {
     console.error(
       `Error retrieving courses for organization ${organizationId}:`,
@@ -450,9 +455,7 @@ export const inviteUserToCohort = async (req: Request, res: Response): Promise<v
   const { email, role, name } = req.body;
 
   try {
-    const users = await clerkClient.users.getUserList({ emailAddress: [email] });
-    let user = users.totalCount > 0 ? users.data[0] : null;
-
+    // Fetch organization and cohort
     const organization = await Organization.get(organizationId);
     if (!organization) {
       res.status(404).json({ message: "Organization not found" });
@@ -465,6 +468,7 @@ export const inviteUserToCohort = async (req: Request, res: Response): Promise<v
       return;
     }
 
+    // Validate role
     const roleMapping: Record<string, any[]> = {
       learner: cohort.learners,
       instructor: cohort.instructors,
@@ -475,78 +479,66 @@ export const inviteUserToCohort = async (req: Request, res: Response): Promise<v
       return;
     }
 
-    const list = roleMapping[role];
-
+    const users = await clerkClient.users.getUserList({ emailAddress: [email] });
+    let user = users.totalCount > 0 ? users.data[0] : null;
+    
     if (user) {
-      if (list.some((u) => u.userId === user?.id)) {
+      const userId = user.id;
+      const list = roleMapping[role];
+
+      if (list.some((u) => u.userId === userId)) {
         res.status(400).json({ message: "User is already in the cohort" });
         return;
       }
-      list.push({ userId: user.id });
 
-      if (role === "learner" && !organization.learners.some((m: any) => m.userId === user?.id)) {
-        organization.learners.push({ userId: user.id });
-      } else if (role === "instructor" && !organization.instructors.some((m: any) => m.userId === user?.id)) {
-        organization.instructors.push({ userId: user.id });
+      list.push({ userId });
+
+      const orgList = organization.admins.concat(organization.instructors, organization.learners);
+      if (!orgList.some((m: any) => m.userId === userId)) {
+        orgList.push({ userId });
       }
 
       await cohort.save();
       await organization.save();
 
       const message = `You've been added to the cohort ${cohort.name}. Click here to view: ${process.env.CLIENT_URL}/organizations/${organizationId}/cohorts/${cohortId}`;
-      await sendMessage(
-        user.id,
-        user.emailAddresses[0].emailAddress,
-        "You've been added to a cohort",
-        message,
-        null,
-        { sendEmail: true, sendNotification: true, rateLimited: false }
-      );
-
-      res.json({ message: "User added to cohort successfully", data: cohort });
-    } else {
-      const firstName = capitalizeFirstLetter(name.split(" ")[0])
-      const lastName = capitalizeFirstLetter(name.split(" ")[1] || "");
-
-      user = await clerkClient.users.createUser({
-        emailAddress: [email],
-        password: generateTemporaryPassword(),
-        skipPasswordChecks: true,
-        ...(name && { 
-            firstName,
-            lastName,
-        }),
+      await sendMessage(userId, email, "You've been added to a cohort", message, null, {
+        sendEmail: true,
+        sendNotification: true,
+        rateLimited: false,
       });
 
-      list.push({ userId: user.id });
-
-      if (role === "learner") {
-        organization.learners.push({ userId: user.id });
-      } else if (role === "instructor") {
-        organization.instructors.push({ userId: user.id });
-      }
-
-      const resetPasswordLink = `${process.env.CLIENT_URL}/reset-password?email=${encodeURIComponent(email)}&firstName=${firstName}&lastName=${lastName}&organizationId=${organizationId}&cohortId=${cohortId}`;
-
-      await sendMessage(
-        user.id,
-        email,
-        `Hey, ${name || "there"}! You're invited to join a cohort - Reset Your Password`,
-        `You've been invited to join the cohort ${cohort.name}. Click the link below to reset your password and activate your account:\n\n${resetPasswordLink}\n\nIf you did not request this, you can ignore this email.`,
-        null,
-        { sendEmail: true, sendNotification: false, rateLimited: false }
-      );
-
-      await cohort.save();
-      await organization.save();
-
-      res.json({ message: "User invitation processed successfully", data: cohort });
+      res.json({ message: "User added to cohort successfully", data: cohort });
+      return;
     }
+
+    const [firstName, lastName] = name.split(" ").map(capitalizeFirstLetter);
+    user = await clerkClient.users.createUser({
+      emailAddress: [email],
+      password: generateTemporaryPassword(),
+      skipPasswordChecks: true,
+      firstName,
+      lastName,
+    });
+
+    roleMapping[role].push({ userId: user.id });
+    (role === "learner" ? organization.learners : organization.instructors).push({ userId: user.id });
+
+    await cohort.save();
+    await organization.save();
+
+    const resetPasswordLink = `${process.env.CLIENT_URL}/reset-password?email=${encodeURIComponent(email)}&firstName=${firstName}&lastName=${lastName}&organizationId=${organizationId}&cohortId=${cohortId}`;
+    await sendMessage(user.id, email, `Hey, ${name || "there"}! You're invited to join a cohort - Reset Your Password`, 
+      `You've been invited to join the cohort ${cohort.name}. Click below to reset your password:\n\n${resetPasswordLink}`,
+      null, { sendEmail: true, sendNotification: false, rateLimited: false });
+
+    res.json({ message: "User invitation processed successfully", data: cohort });
   } catch (error) {
     console.error("Error inviting user to cohort:", error);
     res.status(500).json({ message: "Error inviting user to cohort", error });
   }
 };
+
 
 
 export const getOrganizationUsers = async (req: Request, res: Response): Promise<void> => {

@@ -253,9 +253,7 @@ export const removeLearnerFromCohort = async (
     const organization = await Organization.get(cohort.organizationId);
     if (organization) {
       const admins = organization.admins || [];
-      const learners = cohort.learners || [];
-      const allUsers = [...admins, ...learners];
-      for (const user of allUsers) {
+      for (const user of admins) {
         try {
           const clerkUser = await clerkClient.users.getUser(user.userId);
           const userEmail = clerkUser.emailAddresses[0].emailAddress;
