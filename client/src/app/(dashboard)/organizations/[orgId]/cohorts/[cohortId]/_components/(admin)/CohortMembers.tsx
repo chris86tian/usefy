@@ -66,9 +66,29 @@ const CohortMembers = ({ cohort, orgUsers }: CohortMembersProps) => {
   const [isSendingBatch, setIsSendingBatch] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [removingLearnerId, setRemovingLearnerId] = useState<string | null>(null);
+
 
   if (cohortLearnersLoading) return <Spinner />
   if (!learners) return <NotFound message="Learners not found" />
+
+  const handleRemoveLearner = async (learnerId: string) => {
+    setRemovingLearnerId(learnerId);
+  
+    try {
+      await removeLearnerFromCohort({
+        organizationId: cohort.organizationId,
+        cohortId: cohort.cohortId,
+        learnerId,
+      }).unwrap();
+  
+      refetch();
+    } catch (error) {
+      toast.error("Failed to remove learner from cohort");
+    } finally {
+      setRemovingLearnerId(null); // Reset state after removal
+    }
+  };
 
   const handleAddLearner = async () => {
     if (!selectedLearnerId) {
@@ -129,20 +149,6 @@ const CohortMembers = ({ cohort, orgUsers }: CohortMembersProps) => {
       .filter((email) => email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
 
     setEmailBatch(emails)
-  }
-
-  const handleRemoveLearner = async (learnerId: string) => {
-    try {
-      await removeLearnerFromCohort({
-        organizationId: cohort.organizationId,
-        cohortId: cohort.cohortId,
-        learnerId,
-      }).unwrap()
-
-      refetch()
-    } catch (error) {
-      toast.error("Failed to remove learner from cohort")
-    }
   }
 
   const handleCsvUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -581,14 +587,14 @@ const CohortMembers = ({ cohort, orgUsers }: CohortMembersProps) => {
                     <TableCell className="font-medium">{getUserName(learner)}</TableCell>
                     <TableCell>{learner.emailAddresses[0].emailAddress}</TableCell>
                     <TableCell>
-                      <Button
-                        disabled={removeLearnerFromCohortLoading}
-                        onClick={() => handleRemoveLearner(learner.id)}
-                        variant="outline"
-                        size="sm"
-                      >
-                        {removeLearnerFromCohortLoading ? "Removing..." : "Remove"}
-                      </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={removingLearnerId === learner.id}
+                      onClick={() => handleRemoveLearner(learner.id)}
+                    >
+                      {removingLearnerId === learner.id ? "Removing..." : "Remove"}
+                    </Button>
                     </TableCell>
                   </TableRow>
                 ))
