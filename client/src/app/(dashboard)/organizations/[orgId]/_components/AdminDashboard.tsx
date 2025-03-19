@@ -48,7 +48,7 @@ const AdminDashboard = ({ orgId }: AdminDashboardProps) => {
             </CardContent>
           </Card>
           
-          <Card>
+          {/* <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -60,7 +60,7 @@ const AdminDashboard = ({ orgId }: AdminDashboardProps) => {
                 </div>
               </div>
             </CardContent>
-          </Card>
+          </Card> */}
         </div>
       </div>
     )
