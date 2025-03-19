@@ -538,6 +538,7 @@ export const inviteUserToCohort = async (req: Request, res: Response): Promise<v
     res.status(500).json({ message: "Error inviting user to cohort", error });
   }
 };
+
 export const getOrganizationUsers = async (req: Request, res: Response): Promise<void> => {
   const { organizationId } = req.params;
 
@@ -548,36 +549,34 @@ export const getOrganizationUsers = async (req: Request, res: Response): Promise
       return;
     }
 
-    const userIds = new Set([
-      ...organization.admins.map((admin: any) => admin.userId),
-      ...organization.instructors.map((instructor: any) => instructor.userId),
-      ...organization.learners.map((learner: any) => learner.userId),
-    ]);
+    const adminIds = organization.admins.map((admin: any) => admin.userId);
+    const instructorIds = organization.instructors.map((instructor: any) => instructor.userId);
+    const learnerIds = organization.learners.map((learner: any) => learner.userId);
+    
+    const allUserIds = [...adminIds, ...instructorIds, ...learnerIds];
 
-    console.log("userIds", userIds);
+    console.log("Fetching users for IDs:", allUserIds);
 
+    const users = await Promise.all(
+      allUserIds.map(async (userId) => {
+        try {
+          return await clerkClient.users.getUser(userId);
+        } catch (error) {
+          console.error(`Error fetching user ${userId}:`, error);
+          return null;
+        }
+      })
+    );
 
-    const { data, totalCount } = await clerkClient.users.getUserList({
-      userId: Array.from(userIds),
-      orderBy: '-created_at',
-      limit: 500,
-    })
-
-    console.log("data", data);
+    const filteredUsers = users.filter(user => user !== null); // Remove failed fetches
 
     const response = {
-      admins: data.filter(user => 
-        organization.admins.some((admin: any) => admin.userId === user.id)
-      ),
-      instructors: data.filter(user => 
-        organization.instructors.some((instructor: any) => instructor.userId === user.id)
-      ),
-      learners: data.filter(user => 
-        organization.learners.some((learner: any) => learner.userId === user.id)
-      ),
+      admins: filteredUsers.filter(user => adminIds.includes(user.id)),
+      instructors: filteredUsers.filter(user => instructorIds.includes(user.id)),
+      learners: filteredUsers.filter(user => learnerIds.includes(user.id)),
     };
 
-    console.log("response", response);
+    console.log("Final Response:", response);
 
     res.json({ message: "Organization users retrieved successfully", data: response });
   } catch (error) {
@@ -585,6 +584,7 @@ export const getOrganizationUsers = async (req: Request, res: Response): Promise
     res.status(500).json({ message: "Error retrieving organization users", error });
   }
 };
+
 
 export const removeUserFromOrganization = async (req: Request, res: Response): Promise<void> => {
   const { organizationId, userId } = req.params;
