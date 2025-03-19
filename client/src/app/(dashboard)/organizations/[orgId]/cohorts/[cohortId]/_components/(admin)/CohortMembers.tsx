@@ -139,7 +139,6 @@ const CohortMembers = ({ cohort, orgUsers }: CohortMembersProps) => {
         learnerId,
       }).unwrap()
 
-      toast.success("Learner removed from cohort successfully")
       refetch()
     } catch (error) {
       toast.error("Failed to remove learner from cohort")
