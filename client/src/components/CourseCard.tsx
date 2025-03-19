@@ -88,7 +88,6 @@ export function CourseCard({
     course?.courseId || ""
   );
 
-  // Define course progress and total activities with safe fallbacks
   const courseProgress = useMemo(() => {
     if (!course || !progress || !course.sections || !isEnrolled || !user)
       return 0;

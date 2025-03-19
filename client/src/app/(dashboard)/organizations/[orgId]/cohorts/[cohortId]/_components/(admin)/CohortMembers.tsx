@@ -18,7 +18,16 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, UserPlus, UserCheck, MailPlusIcon, UploadIcon, AlertCircle, FileIcon, UploadCloudIcon } from "lucide-react"
+import {
+  Search,
+  UserPlus,
+  UserCheck,
+  MailPlusIcon,
+  UploadIcon,
+  AlertCircle,
+  FileIcon,
+  UploadCloudIcon,
+} from "lucide-react"
 import { getUserName } from "@/lib/utils"
 import {
   useAddLearnerToCohortMutation,
@@ -53,6 +62,7 @@ const CohortMembers = ({ cohort, orgUsers }: CohortMembersProps) => {
   const [inviteUserToCohort, { isLoading: inviteUserToCohortLoading }] = useInviteUserToCohortMutation()
 
   const [searchTerm, setSearchTerm] = useState("")
+  const [memberSearchTerm, setMemberSearchTerm] = useState("")
   const [selectedLearnerId, setSelectedLearnerId] = useState("")
   const [activeDialog, setActiveDialog] = useState<"none" | "addLearner" | "inviteLearner" | "csvUpload">("none")
   const [inviteEmail, setInviteEmail] = useState("")
@@ -66,29 +76,28 @@ const CohortMembers = ({ cohort, orgUsers }: CohortMembersProps) => {
   const [isSendingBatch, setIsSendingBatch] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [removingLearnerId, setRemovingLearnerId] = useState<string | null>(null);
-
+  const [removingLearnerId, setRemovingLearnerId] = useState<string | null>(null)
 
   if (cohortLearnersLoading) return <Spinner />
   if (!learners) return <NotFound message="Learners not found" />
 
   const handleRemoveLearner = async (learnerId: string) => {
-    setRemovingLearnerId(learnerId);
-  
+    setRemovingLearnerId(learnerId)
+
     try {
       await removeLearnerFromCohort({
         organizationId: cohort.organizationId,
         cohortId: cohort.cohortId,
         learnerId,
-      }).unwrap();
-  
-      refetch();
+      }).unwrap()
+
+      refetch()
     } catch (error) {
-      toast.error("Failed to remove learner from cohort");
+      toast.error("Failed to remove learner from cohort")
     } finally {
-      setRemovingLearnerId(null); // Reset state after removal
+      setRemovingLearnerId(null) // Reset state after removal
     }
-  };
+  }
 
   const handleAddLearner = async () => {
     if (!selectedLearnerId) {
@@ -326,9 +335,24 @@ const CohortMembers = ({ cohort, orgUsers }: CohortMembersProps) => {
         learner.emailAddresses[0].emailAddress.toLowerCase().includes(searchTerm.toLowerCase())),
   )
 
+  const filteredMembers = learners.filter(
+    (learner) =>
+      getUserName(learner).toLowerCase().includes(memberSearchTerm.toLowerCase()) ||
+      learner.emailAddresses[0].emailAddress.toLowerCase().includes(memberSearchTerm.toLowerCase()),
+  )
+
   return (
     <>
-      <div className="flex justify-end items-center">
+      <div className="flex justify-between items-center mb-4">
+        <div className="relative w-full max-w-sm">
+          <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search members..."
+            className="pl-8"
+            value={memberSearchTerm}
+            onChange={(e) => setMemberSearchTerm(e.target.value)}
+          />
+        </div>
         <div className="flex gap-2">
           <Dialog
             open={activeDialog === "addLearner"}
@@ -572,41 +596,43 @@ const CohortMembers = ({ cohort, orgUsers }: CohortMembersProps) => {
 
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {learners.length > 0 ? (
-                learners.map((learner) => (
-                  <TableRow key={learner.id}>
-                    <TableCell className="font-medium">{getUserName(learner)}</TableCell>
-                    <TableCell>{learner.emailAddresses[0].emailAddress}</TableCell>
-                    <TableCell>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={removingLearnerId === learner.id}
-                      onClick={() => handleRemoveLearner(learner.id)}
-                    >
-                      {removingLearnerId === learner.id ? "Removing..." : "Remove"}
-                    </Button>
+          <div className="max-h-[500px] overflow-y-auto">
+            <Table>
+              <TableHeader className="sticky top-0 bg-background z-10">
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredMembers.length > 0 ? (
+                  filteredMembers.map((learner) => (
+                    <TableRow key={learner.id}>
+                      <TableCell className="font-medium">{getUserName(learner)}</TableCell>
+                      <TableCell>{learner.emailAddresses[0].emailAddress}</TableCell>
+                      <TableCell>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={removingLearnerId === learner.id}
+                          onClick={() => handleRemoveLearner(learner.id)}
+                        >
+                          {removingLearnerId === learner.id ? "Removing..." : "Remove"}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={3} className="text-center text-muted-foreground">
+                      {memberSearchTerm ? "No matching members found" : "No learners in this cohort"}
                     </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={3} className="text-center text-muted-foreground">
-                    No learners in this cohort
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </>

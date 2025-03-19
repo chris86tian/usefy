@@ -206,25 +206,30 @@ export const getOrganizationCourses = async (
   const { organizationId } = req.params;
 
   try {
-    const organization = await Organization.query("organizationId")
-      .eq(organizationId)
-      .exec();
-    const orgData = organization?.[0];
+    const organization = await Organization.get(organizationId);
 
-    if (!orgData) {
-      res.json({ message: "No courses found for this organization", data: [] });
+    if (!organization) {
+      res.status(404).json({ message: "Organization not found" });
       return;
     }
 
-    const courseIds = orgData.courses || [];
+    const cohorts = await Cohort.scan().where("organizationId").eq(organizationId).exec();
+
+    if (!cohorts || cohorts.length === 0) {
+      res.json({ message: "No cohorts found for this organization", data: [] });
+      return;
+    }
+
+    const courseIds = cohorts.flatMap((cohort: any) => cohort.courses.map((course: { courseId: string }) => course.courseId));
+
     if (courseIds.length === 0) {
-      res.json({ message: "No courses found for this organization", data: [] });
+      res.json({ message: "No courses found in any cohort", data: [] });
       return;
     }
-    
-    const courses = await Course.batchGet(courseIds);
+
+    const courses = await Course.batchGet(courseIds.map((courseId: string) => ({ courseId })));
+
     res.json({ message: "Courses retrieved successfully", data: courses });
-    return;
   } catch (error) {
     console.error(
       `Error retrieving courses for organization ${organizationId}:`,
