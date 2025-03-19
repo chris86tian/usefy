@@ -538,13 +538,9 @@ export const inviteUserToCohort = async (req: Request, res: Response): Promise<v
     res.status(500).json({ message: "Error inviting user to cohort", error });
   }
 };
-
-
-
 export const getOrganizationUsers = async (req: Request, res: Response): Promise<void> => {
   const { organizationId } = req.params;
 
-  console.log("Fetching users for org:", organizationId);
   try {
     const organization = await Organization.get(organizationId);
     if (!organization) {
@@ -553,17 +549,26 @@ export const getOrganizationUsers = async (req: Request, res: Response): Promise
     }
 
     const userIds = new Set([
-      ...organization.admins.map((admin: { userId: string }) => admin.userId),
-      ...organization.instructors.map((instructor: { userId: string }) => instructor.userId),
-      ...organization.learners.map((learner: { userId: string }) => learner.userId),
+      ...organization.admins.map((admin: any) => admin.userId),
+      ...organization.instructors.map((instructor: any) => instructor.userId),
+      ...organization.learners.map((learner: any) => learner.userId),
     ]);
 
-    const users = await clerkClient.users.getUserList({ userId: Array.from(userIds) });
+    const users = await clerkClient.users.getUserList({ 
+      userId: Array.from(userIds),
+      limit: 500,
+    });
 
     const response = {
-      admins: users.data.filter(user => organization.admins.some((admin: { userId: string }) => admin.userId === user.id)),
-      instructors: users.data.filter(user => organization.instructors.some((instructor: { userId: string }) => instructor.userId === user.id)),
-      learners: users.data.filter(user => organization.learners.some((learner: { userId: string }) => learner.userId === user.id)),
+      admins: users.data.filter(user => 
+        organization.admins.some((admin: any) => admin.userId === user.id)
+      ),
+      instructors: users.data.filter(user => 
+        organization.instructors.some((instructor: any) => instructor.userId === user.id)
+      ),
+      learners: users.data.filter(user => 
+        organization.learners.some((learner: any) => learner.userId === user.id)
+      ),
     };
 
     res.json({ message: "Organization users retrieved successfully", data: response });
