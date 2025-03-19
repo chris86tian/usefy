@@ -82,7 +82,7 @@ const AdminSettings = () => {
   ] = useCreateCohortMutation()
 
   const { 
-    data: members, 
+    data: users, 
     isLoading: isMembersLoading,
     refetch: refetchMembers 
   } = useGetOrganizationUsersQuery(orgId)
@@ -119,19 +119,21 @@ const AdminSettings = () => {
   const [emailBatch, setEmailBatch] = useState<string[]>([]);
 
   const filteredUsers = useMemo(() => {
-    const allUsers = [...(members?.admins || []), ...(members?.instructors || []), ...(members?.learners || [])]
-
+    const allUsers = [...(users?.admins || []), ...(users?.instructors || []), ...(users?.learners || [])]
     return allUsers.filter((user) => {
-      const matchesSearch = user.emailAddresses?.[0]?.emailAddress?.toLowerCase().includes(searchTerm.toLowerCase())
-      const matchesRole =
-        roleFilter === "all" ||
-        (roleFilter === "admin" && members?.admins?.some((admin) => admin.id === user.id)) ||
-        (roleFilter === "instructor" && members?.instructors?.some((instructor) => instructor.id === user.id)) ||
-        (roleFilter === "learner" && members?.learners?.some((learner) => learner.id === user.id))
-
+      const matchesSearch = 
+        user.emailAddresses?.[0]?.emailAddress?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        getUserName(user).toLowerCase().includes(searchTerm.toLowerCase())
+      
+      const matchesRole = 
+        roleFilter === "all" || 
+        (roleFilter === "admin" && users?.admins?.some((admin) => admin.id === user.id)) || 
+        (roleFilter === "instructor" && users?.instructors?.some((instructor) => instructor.id === user.id)) || 
+        (roleFilter === "learner" && users?.learners?.some((learner) => learner.id === user.id))
+      
       return matchesSearch && matchesRole
     })
-  }, [members, searchTerm, roleFilter])
+  }, [users, searchTerm, roleFilter])
 
   const filteredCohorts = useMemo(() => {
     if (!cohorts) return []
@@ -140,7 +142,7 @@ const AdminSettings = () => {
 
   if (isOrgLoading || isMembersLoading || isCohortsLoading) return <Spinner />
   if (!user) return <SignInRequired />
-  if (!members) return <NotFound message="Members not found" />
+  if (!users) return <NotFound message="Users not found" />
   if (!currentOrg) return <NotFound message="Organization not found" />
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -244,7 +246,7 @@ const AdminSettings = () => {
   };
 
   const handleChangeRole = async (userId: string, currentRole: string, newRole: string) => {
-    if (currentRole === "admin" && newRole !== "admin" && members.admins.length === 1) {
+    if (currentRole === "admin" && newRole !== "admin" && users.admins.length === 1) {
       toast.error("You must have at least one admin in the organization");
       return;
     }
@@ -423,7 +425,7 @@ const AdminSettings = () => {
               <CardDescription>Manage your organization members</CardDescription>
             </CardHeader>
             <CardContent className="overflow-y-auto max-h-[450px]">
-              <div className="flex items-center space-x-2 mb-4">
+              <div className="flex items-center space-x-2 my-2">
                 <div className="relative flex-grow">
                   <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
@@ -460,9 +462,9 @@ const AdminSettings = () => {
                 </TableHeader>
                 <TableBody>
                   {filteredUsers.map((user) => {
-                    const isAdmin = members.admins.some((admin) => admin.id === user.id)
-                    const isInstructor = members.instructors?.some((instructor) => instructor.id === user.id)
-                    const isLearner = members.learners.some((learner) => learner.id === user.id)
+                    const isAdmin = users.admins.some((admin) => admin.id === user.id)
+                    const isInstructor = users.instructors?.some((instructor) => instructor.id === user.id)
+                    const isLearner = users.learners.some((learner) => learner.id === user.id)
                     const role = isAdmin ? "admin" : isInstructor ? "instructor" : "learner"
 
                     return (

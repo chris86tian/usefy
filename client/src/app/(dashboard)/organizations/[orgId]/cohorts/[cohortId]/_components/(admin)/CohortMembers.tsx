@@ -179,8 +179,7 @@ const CohortMembers = ({ cohort, orgUsers }: CohortMembersProps) => {
       try {
         const text = event.target?.result as string
         const rows = text.split("\n")
-
-        // Skip header row if it exists
+        
         const startRow = rows[0].toLowerCase().includes("name") || rows[0].toLowerCase().includes("email") ? 1 : 0
 
         const parsedUsers: CsvUser[] = []
