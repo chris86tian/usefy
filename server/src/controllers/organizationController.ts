@@ -557,23 +557,15 @@ export const getOrganizationUsers = async (req: Request, res: Response): Promise
 
     console.log("Fetching users for IDs:", allUserIds);
 
-    const users = await Promise.all(
-      allUserIds.map(async (userId) => {
-        try {
-          return await clerkClient.users.getUser(userId);
-        } catch (error) {
-          console.error(`Error fetching user ${userId}:`, error);
-          return null;
-        }
-      })
-    );
-
-    const filteredUsers = users.filter(user => user !== null);
+    const users = await clerkClient.users.getUserList({ 
+      userId: allUserIds,
+      limit: 500,
+     });
 
     const response = {
-      admins: filteredUsers.filter(user => adminIds.includes(user.id)),
-      instructors: filteredUsers.filter(user => instructorIds.includes(user.id)),
-      learners: filteredUsers.filter(user => learnerIds.includes(user.id)),
+      admins: users.data.filter(user => adminIds.includes(user.id)),
+      instructors: users.data.filter(user => instructorIds.includes(user.id)),
+      learners: users.data.filter(user => learnerIds.includes(user.id)),
     };
 
     console.log("Final Response:", response);
