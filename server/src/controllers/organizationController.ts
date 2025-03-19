@@ -554,22 +554,30 @@ export const getOrganizationUsers = async (req: Request, res: Response): Promise
       ...organization.learners.map((learner: any) => learner.userId),
     ]);
 
-    const users = await clerkClient.users.getUserList({ 
+    console.log("userIds", userIds);
+
+
+    const { data, totalCount } = await clerkClient.users.getUserList({
       userId: Array.from(userIds),
+      orderBy: '-created_at',
       limit: 500,
-    });
+    })
+
+    console.log("data", data);
 
     const response = {
-      admins: users.data.filter(user => 
+      admins: data.filter(user => 
         organization.admins.some((admin: any) => admin.userId === user.id)
       ),
-      instructors: users.data.filter(user => 
+      instructors: data.filter(user => 
         organization.instructors.some((instructor: any) => instructor.userId === user.id)
       ),
-      learners: users.data.filter(user => 
+      learners: data.filter(user => 
         organization.learners.some((learner: any) => learner.userId === user.id)
       ),
     };
+
+    console.log("response", response);
 
     res.json({ message: "Organization users retrieved successfully", data: response });
   } catch (error) {
