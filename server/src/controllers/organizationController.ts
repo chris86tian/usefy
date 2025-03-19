@@ -568,7 +568,7 @@ export const getOrganizationUsers = async (req: Request, res: Response): Promise
       })
     );
 
-    const filteredUsers = users.filter(user => user !== null); // Remove failed fetches
+    const filteredUsers = users.filter(user => user !== null);
 
     const response = {
       admins: filteredUsers.filter(user => adminIds.includes(user.id)),
@@ -584,7 +584,6 @@ export const getOrganizationUsers = async (req: Request, res: Response): Promise
     res.status(500).json({ message: "Error retrieving organization users", error });
   }
 };
-
 
 export const removeUserFromOrganization = async (req: Request, res: Response): Promise<void> => {
   const { organizationId, userId } = req.params;
