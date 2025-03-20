@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { BookCopyIcon, Users } from "lucide-react";
+import { BookCopyIcon, Users } from 'lucide-react';
 import { getUserName, handleEnroll } from "@/lib/utils";
 import { CourseCard } from "@/components/CourseCard";
 import { Toolbar } from "@/components/Toolbar";
@@ -98,6 +98,7 @@ const CohortCourses = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [courseToDelete, setCourseToDelete] = useState<Course | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [enrollingCourseId, setEnrollingCourseId] = useState<string | null>(null);
 
   const REMOVE_INSTRUCTOR = "remove_instructor";
 
@@ -364,6 +365,7 @@ const CohortCourses = ({
     );
 
     if (!isEnrolled) {
+      setEnrollingCourseId(course.courseId);
       handleEnroll(user.id, course.courseId, createTransaction)
         .then(() => {
           toast.success(`Successfully enrolled in ${course.title}`);
@@ -377,10 +379,12 @@ const CohortCourses = ({
             );
           }
           refetch();
+          setEnrollingCourseId(null);
         })
         .catch((error) => {
           console.error("Enrollment error:", error);
           toast.error("Failed to enroll in course");
+          setEnrollingCourseId(null);
         });
     } else {
       toast.info("You are already enrolled in this course");
@@ -411,7 +415,7 @@ const CohortCourses = ({
               variant="admin"
               isEnrolled={course.enrollments?.some((enrollment) => enrollment.userId === currentUserId)}
               onEnroll={handleCourseEnroll}
-              isEnrolling={createTransactionLoading}
+              isEnrolling={enrollingCourseId === course.courseId}
               onEdit={handleEdit}
               onDelete={handleDeleteConfirmation}
               onView={handleGoToCourse}
@@ -577,6 +581,7 @@ const CohortCourses = ({
               {removeCourseLoading ? "Removing..." : "Remove"}
             </AlertDialogAction>
           </AlertDialogFooter>
+       
         </AlertDialogContent>
       </AlertDialog>
     </>
