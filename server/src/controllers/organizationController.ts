@@ -167,6 +167,36 @@ export const joinOrganization = async (
   }
 };
 
+export const leaveOrganization = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { organizationId } = req.params;
+  const auth = getAuth(req);
+  try {
+    const organization = await Organization.query("organizationId")
+      .eq(organizationId)
+      .exec();
+    if (!organization || organization.length === 0) {
+      res.status(404).json({ message: "Organization not found" });
+      return;
+    }
+    
+    organization[0].learners = organization[0].learners.filter(
+      (learner: { userId: string }) => learner.userId !== auth.userId
+    );
+    await organization[0].save();
+    res.json({
+      message: "You have left the organization",
+      data: organization[0],
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error leaving organization", error });
+  }
+};
+
+
+
 export const getMyOrganizations = async (
   req: Request,
   res: Response
