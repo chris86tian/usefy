@@ -394,12 +394,14 @@ export const api = createApi({
       }),
     }),
 
-    getOrganizationUsers: build.query<
-      { admins: User[]; instructors: User[]; learners: User[] },
-      string
-    >({
-      query: (organizationId: string) =>
-        `organizations/${organizationId}/users`,
+    getOrganizationUsers: build.query<PaginatedResponse, PaginationParams>({
+      query: (params) => {
+        const { organizationId, page = 1, limit = 10, role = "all", search = "" } = params
+        return {
+          url: `organizations/${organizationId}/users`,
+          params: { page, limit, role, search },
+        }
+      },
     }),
 
     removeUserFromOrganization: build.mutation<

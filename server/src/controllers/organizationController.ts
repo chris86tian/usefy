@@ -568,42 +568,92 @@ export const inviteUserToCohort = async (req: Request, res: Response): Promise<v
 };
 
 export const getOrganizationUsers = async (req: Request, res: Response): Promise<void> => {
-  const { organizationId } = req.params;
+  const { organizationId } = req.params
+  const { page = "1", limit = "10", role = "all", search = "" } = req.query
+
+  const pageNumber = Number.parseInt(page as string, 10)
+  const limitNumber = Number.parseInt(limit as string, 10)
 
   try {
-    const organization = await Organization.get(organizationId);
+    const organization = await Organization.get(organizationId)
     if (!organization) {
-      res.status(404).json({ message: "Organization not found" });
-      return;
+      res.status(404).json({ message: "Organization not found" })
+      return
     }
 
-    const adminIds = organization.admins.map((admin: any) => admin.userId);
-    const instructorIds = organization.instructors.map((instructor: any) => instructor.userId);
-    const learnerIds = organization.learners.map((learner: any) => learner.userId);
-    
-    const allUserIds = [...adminIds, ...instructorIds, ...learnerIds];
+    // Get all user IDs based on their roles
+    const adminIds = organization.admins.map((admin: any) => admin.userId)
+    const instructorIds = organization.instructors.map((instructor: any) => instructor.userId)
+    const learnerIds = organization.learners.map((learner: any) => learner.userId)
 
-    console.log("Fetching users for IDs:", allUserIds);
+    // Filter by role if specified
+    let filteredUserIds: string[] = []
+    if (role === "admin") {
+      filteredUserIds = adminIds
+    } else if (role === "instructor") {
+      filteredUserIds = instructorIds
+    } else if (role === "learner") {
+      filteredUserIds = learnerIds
+    } else {
+      filteredUserIds = [...adminIds, ...instructorIds, ...learnerIds]
+    }
 
-    const users = await clerkClient.users.getUserList({ 
-      userId: allUserIds,
-      limit: 500,
-     });
+    console.log("Fetching users for IDs:", filteredUserIds)
 
+    // Fetch all users from Clerk
+    // We'll fetch all users at once since we need to filter by role afterward
+    const clerkResponse = await clerkClient.users.getUserList({
+      userId: filteredUserIds,
+      limit: 500, // Use a reasonable limit based on your expected max users
+    })
+
+    const allUsers = clerkResponse.data
+    const totalClerkUsers = clerkResponse.totalCount
+
+    // Apply search filter if provided
+    const searchFilteredUsers = search
+      ? allUsers.filter((user) => {
+          const fullName = `${user.firstName || ""} ${user.lastName || ""}`.toLowerCase()
+          const email = user.emailAddresses?.[0]?.emailAddress?.toLowerCase() || ""
+          const searchLower = (search as string).toLowerCase()
+          return fullName.includes(searchLower) || email.includes(searchLower)
+        })
+      : allUsers
+
+    // Prepare response with pagination
+    const totalUsers = searchFilteredUsers.length
+    const totalPages = Math.ceil(totalUsers / limitNumber)
+
+    // Calculate start and end indices for pagination
+    const startIndex = (pageNumber - 1) * limitNumber
+    const endIndex = Math.min(startIndex + limitNumber, totalUsers)
+
+    // Get paginated users
+    const paginatedUsers = searchFilteredUsers.slice(startIndex, endIndex)
+
+    // Group users by role
     const response = {
-      admins: users.data.filter(user => adminIds.includes(user.id)),
-      instructors: users.data.filter(user => instructorIds.includes(user.id)),
-      learners: users.data.filter(user => learnerIds.includes(user.id)),
-    };
+      admins: paginatedUsers.filter((user) => adminIds.includes(user.id)),
+      instructors: paginatedUsers.filter((user) => instructorIds.includes(user.id)),
+      learners: paginatedUsers.filter((user) => learnerIds.includes(user.id)),
+      pagination: {
+        total: totalUsers,
+        page: pageNumber,
+        limit: limitNumber,
+        totalPages,
+        hasNextPage: pageNumber < totalPages,
+        hasPrevPage: pageNumber > 1,
+      },
+    }
 
-    console.log("Final Response:", response);
+    console.log("Final Response:", response)
 
-    res.json({ message: "Organization users retrieved successfully", data: response });
+    res.json({ message: "Organization users retrieved successfully", data: response })
   } catch (error) {
-    console.error("Error retrieving organization users:", error);
-    res.status(500).json({ message: "Error retrieving organization users", error });
+    console.error("Error retrieving organization users:", error)
+    res.status(500).json({ message: "Error retrieving organization users", error })
   }
-};
+}
 
 export const removeUserFromOrganization = async (req: Request, res: Response): Promise<void> => {
   const { organizationId, userId } = req.params;

@@ -453,6 +453,28 @@ declare global {
     instructors: { userId: string }[];
     courses: { courseId: string }[];
   }
+
+  interface PaginationParams {
+    organizationId: string
+    page?: number
+    limit?: number
+    role?: "all" | "admin" | "instructor" | "learner"
+    search?: string
+  }
+  
+  interface PaginatedResponse {
+    admins: User[]
+    instructors: User[]
+    learners: User[]
+    pagination: {
+      total: number
+      page: number
+      limit: number
+      totalPages: number
+      hasNextPage: boolean
+      hasPrevPage: boolean
+    }
+  }
 }
 
 export {};

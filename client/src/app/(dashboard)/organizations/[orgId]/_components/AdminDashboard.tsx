@@ -15,7 +15,7 @@ const AdminDashboard = ({ orgId }: AdminDashboardProps) => {
     const { 
       data: orgUsers,
       isLoading: usersLoading,
-    } = useGetOrganizationUsersQuery(orgId)
+    } = useGetOrganizationUsersQuery({organizationId: orgId})
 
     const { 
       data: orgCourses,

@@ -21,7 +21,7 @@ export default function CohortPage() {
     
     const { data: orgUsers, 
         isLoading: usersLoading 
-    } = useGetOrganizationUsersQuery(orgId)
+    } = useGetOrganizationUsersQuery({ organizationId: orgId })
     const { 
         data: cohortCourses, 
         isLoading: coursesLoading, 
