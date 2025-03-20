@@ -6,6 +6,7 @@ import {
   updateOrganization,
   deleteOrganization,
   joinOrganization,
+  leaveOrganization,
   getMyOrganizations,
   getOrganizationCourses,
   getMyUserCourseProgresses,
@@ -30,6 +31,7 @@ router.post("/", requireAuth(), createOrganization);
 router.put("/:organizationId", requireAuth(), upload.any(), updateOrganization);
 router.delete("/:organizationId", requireAuth(), deleteOrganization);
 router.post("/:organizationId/join", requireAuth(), joinOrganization);
+router.post("/:organizationId/leave", requireAuth(), leaveOrganization);
 router.get("/:organizationId/courses", getOrganizationCourses);
 router.get("/:organizationId/progresses", requireAuth(), getMyUserCourseProgresses);
 router.post("/:organizationId/invite", requireAuth(), inviteUserToOrganization);

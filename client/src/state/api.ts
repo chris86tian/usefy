@@ -305,6 +305,14 @@ export const api = createApi({
       invalidatesTags: ["Organizations"],
     }),
 
+    leaveOrganization: build.mutation<Organization, string>({
+      query: (organizationId) => ({
+        url: `organizations/${organizationId}/leave`,
+        method: "POST",
+      }),
+      invalidatesTags: ["Organizations"],
+    }),
+
     getMyOrganizations: build.query<Organization[], void>({
       query: () => "organizations/my",
     }),
@@ -1144,6 +1152,7 @@ export const {
   useUpdateOrganizationMutation,
   useDeleteOrganizationMutation,
   useJoinOrganizationMutation,
+  useLeaveOrganizationMutation,
   useGetMyOrganizationsQuery,
   useGetOrganizationCoursesQuery,
   useAddCourseToOrganizationMutation,

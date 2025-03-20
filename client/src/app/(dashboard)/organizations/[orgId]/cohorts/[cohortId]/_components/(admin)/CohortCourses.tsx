@@ -414,10 +414,9 @@ const CohortCourses = ({
               key={course.courseId}
               course={course}
               variant="admin"
-              isEnrolled={course.enrollments?.some(
-                (enrollment) => enrollment.userId === currentUserId
-              )}
+              isEnrolled={course.enrollments?.some((enrollment) => enrollment.userId === currentUserId)}
               onEnroll={handleCourseEnroll}
+              isEnrolling={createTransactionLoading}
               onEdit={handleEdit}
               onDelete={handleDeleteConfirmation}
               onView={handleGoToCourse}
