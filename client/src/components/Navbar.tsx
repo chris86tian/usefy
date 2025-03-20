@@ -101,10 +101,13 @@ const Navbar = ({ isDashboard = false }: NavbarProps) => {
             </Button>
 
             <SignedIn>
-              <NotificationDropdown 
-                notifications={notifications || []}
-                refetch={refetch}
-              />
+              {isDashboard && (
+                <NotificationDropdown
+                  notifications={notifications || []}
+                  refetch={refetch}
+                />
+              )}
+              <OrganizationsDropdown />
               <UserButton />
             </SignedIn>
 
@@ -124,19 +127,6 @@ const Navbar = ({ isDashboard = false }: NavbarProps) => {
                       </SheetClose>
                     </div>
                   </div>
-                  
-                  {/* <div className="flex-1 overflow-auto py-4">
-                    <div className="space-y-4 px-4">
-                      <Link
-                        href="/explore"
-                        className="flex items-center gap-3 px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
-                        scroll={false}
-                      >
-                        <School className="h-5 w-5" />
-                        <span>Browse</span>
-                      </Link>
-                    </div>
-                  </div> */}
                   
                   <SignedOut>
                     <div className="p-4 border-t border-gray-200 dark:border-gray-800">
