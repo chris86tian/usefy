@@ -485,7 +485,6 @@ export const inviteUserToCohort = async (req: Request, res: Response): Promise<v
   const { email, role, name } = req.body;
 
   try {
-    // Fetch organization and cohort
     const organization = await Organization.get(organizationId);
     if (!organization) {
       res.status(404).json({ message: "Organization not found" });
@@ -498,7 +497,6 @@ export const inviteUserToCohort = async (req: Request, res: Response): Promise<v
       return;
     }
 
-    // Validate role
     const roleMapping: Record<string, any[]> = {
       learner: cohort.learners,
       instructor: cohort.instructors,
