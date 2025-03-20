@@ -26,7 +26,6 @@ import { Toolbar } from "@/components/Toolbar";
 import { useRouter } from "next/navigation";
 import type { User } from "@clerk/nextjs/server";
 import ManageUsersDialog from "./ManageUsersDialog";
-import Header from "@/components/Header";
 import { useUser } from "@clerk/nextjs";
 import {
   AlertDialog,
@@ -48,7 +47,10 @@ import {
   useArchiveCourseMutation,
   useUnarchiveCourseMutation,
   useCreateCourseMutation,
+  useGetCohortLearnersQuery,
 } from "@/state/api";
+import NotFound from "@/components/NotFound";
+import { Spinner } from "@/components/ui/Spinner";
 
 interface CohortCoursesProps {
   cohort: Cohort;
@@ -66,6 +68,12 @@ const CohortCourses = ({
   const { user } = useUser();
   const currentUserId = user?.id;
   const router = useRouter();
+  
+  const {
+    data: cohortLearners,
+    isLoading: cohortLearnersLoading,
+    refetch: refetchCohortLearners,
+  } = useGetCohortLearnersQuery({ organizationId: cohort.organizationId, cohortId: cohort.cohortId })
 
   const [createCourse, { isLoading: createCourseLoading }] =
     useCreateCourseMutation();
@@ -391,6 +399,9 @@ const CohortCourses = ({
     }
   };
 
+  if (cohortLearnersLoading) return <Spinner />
+  if (!cohortLearners) return <NotFound message="Cohort learners not found" />
+
   return (
     <>
       <div className="flex items-center justify-between">
@@ -551,7 +562,7 @@ const CohortCourses = ({
           setSelectedCourseForUsers(null);
         }}
         course={selectedCourseForUsers}
-        cohortLearners={orgUsers.learners}
+        cohortLearners={cohortLearners}
         onSuccess={() => {
           refetch();
           setSelectedCourseForUsers(null);
