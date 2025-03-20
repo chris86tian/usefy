@@ -89,8 +89,7 @@ export function CourseCard({
   );
 
   const courseProgress = useMemo(() => {
-    if (!course || !progress || !course.sections || !isEnrolled || !user)
-      return 0;
+    if (!course || !progress || !course.sections || !isEnrolled || !user) return 0;
 
     let totalItems = 0;
     let completedItems = 0;

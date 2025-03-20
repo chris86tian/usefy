@@ -35,19 +35,12 @@ const UserCohort = ({
 }: UserCohortProps) => {
   const { user } = useUser();
   const router = useRouter();
-  const { orgId, cohortId } = useParams() as {
-    orgId: string;
-    cohortId: string;
-  };
+  const { orgId, cohortId } = useParams() as { orgId: string; cohortId: string;};
 
-  const { data: cohort, isLoading: cohortLoading } = useGetCohortQuery({
-    organizationId: orgId,
-    cohortId,
-  });
-  const { data: progresses, isLoading: progressesLoading } =
-    useGetMyUserCourseProgressesQuery(orgId);
+  const { data: cohort, isLoading: cohortLoading } = useGetCohortQuery({ organizationId: orgId, cohortId });
+  const { data: progresses, isLoading: progressesLoading } = useGetMyUserCourseProgressesQuery(orgId);
 
-  const [createTransaction] = useCreateTransactionMutation();
+  const [createTransaction, { isLoading: createTransactionLoading }] = useCreateTransactionMutation();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [showArchived, setShowArchived] = useState(false);
@@ -77,7 +70,7 @@ const UserCohort = ({
     const validCourses = courses.filter((course) => course !== null);
   
     return validCourses.filter((course) => {
-      if (!course) return false; // Extra safeguard
+      if (!course) return false;
   
       const matchesSearch =
         course.title?.toLowerCase().includes(searchTerm.toLowerCase()) || false;
@@ -209,6 +202,7 @@ const UserCohort = ({
                   progress={courseProgress}
                   onView={handleGoToCourse}
                   onEnroll={handleCourseEnroll}
+                  isEnrolling={createTransactionLoading}
                   onEdit={
                     isInstructor
                       ? () =>

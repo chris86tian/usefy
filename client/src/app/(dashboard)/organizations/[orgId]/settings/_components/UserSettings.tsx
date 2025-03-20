@@ -26,6 +26,7 @@ import {
 import { LogOut, School, Bell, Moon, BookOpen } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import { useRouter } from "next/navigation"
+import NotFound from "@/components/NotFound"
 
 const UserSettings = () => {
   const router = useRouter()
@@ -73,6 +74,7 @@ const UserSettings = () => {
   }
 
   if (!user) return <SignInRequired />
+  if (!myOrganizations) return <NotFound message="Organizations not found" />
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -257,7 +259,7 @@ const UserSettings = () => {
               <CardDescription>Manage your organization memberships</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {myOrganizations && myOrganizations.length > 0 ? (
+              {myOrganizations.length > 0 ? (
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="organization">Select Organization</Label>
