@@ -1323,6 +1323,90 @@ export const getComments = async (
   }
 };
 
+export const likeChapter = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { courseId, sectionId, chapterId } = req.params;
+
+  try {
+    const course = await Course.get(courseId);
+    if (!course) {
+      res.status(404).json({ message: "Course not found" });
+      return;
+    }
+
+    const section = course.sections.find(
+      (section: any) => section.sectionId === sectionId
+    );
+    if (!section) {
+      res.status(404).json({ message: "Section not found" });
+      return;
+    }
+
+    const chapter = section.chapters.find(
+      (chapter: any) => chapter.chapterId === chapterId
+    );
+    if (!chapter) {
+      res.status(404).json({ message: "Chapter not found" });
+      return;
+    }
+
+    if (!chapter.likes) {
+      chapter.likes = 0;
+    }
+
+    chapter.likes += 1;
+
+    await course.save();
+    res.json({ message: "Chapter liked successfully", data: chapter });
+  } catch (error) {
+    res.status(500).json({ message: "Error liking chapter", error });
+  }
+};
+
+export const dislikeChapter = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { courseId, sectionId, chapterId } = req.params;
+
+  try {
+    const course = await Course.get(courseId);
+    if (!course) {
+      res.status(404).json({ message: "Course not found" });
+      return;
+    }
+
+    const section = course.sections.find(
+      (section: any) => section.sectionId === sectionId
+    );
+    if (!section) {
+      res.status(404).json({ message: "Section not found" });
+      return;
+    }
+
+    const chapter = section.chapters.find(
+      (chapter: any) => chapter.chapterId === chapterId
+    );
+    if (!chapter) {
+      res.status(404).json({ message: "Chapter not found" });
+      return;
+    }
+
+    if (!chapter.dislikes) {
+      chapter.dislikes = 0;
+    }
+
+    chapter.dislikes += 1;
+
+    await course.save();
+    res.json({ data: chapter });
+  } catch (error) {
+    res.status(500).json({ message: "Error disliking chapter", error });
+  }
+};
+
 export const fixCourseImageUrls = async (
   req: Request,
   res: Response

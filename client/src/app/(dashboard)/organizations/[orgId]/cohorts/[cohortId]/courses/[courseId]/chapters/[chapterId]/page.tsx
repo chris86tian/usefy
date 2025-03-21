@@ -19,16 +19,14 @@ import {
   BookOpen,
   GraduationCap,
   Calendar,
+  User,
+  Users,
 } from "lucide-react"
 import AssignmentModal from "./assignments/_components/AssignmentModal"
 import { SignInRequired } from "@/components/SignInRequired"
-import { parseYouTubeTime } from "@/lib/utils"
+import { getUserName, parseYouTubeTime } from "@/lib/utils"
 import { CourseComments } from "./_components/CourseComments"
-import { 
-  useLikeChapterMutation, 
-  useDislikeChapterMutation,
-  useGetChapterReactionCountQuery
-} from "@/state/api"
+import { useLikeChapterMutation, useDislikeChapterMutation } from "@/state/api"
 import AdaptiveQuiz from "./adaptive-quiz/AdaptiveQuiz"
 import { Spinner } from "@/components/ui/Spinner"
 import { useOrganization } from "@/context/OrganizationContext"
@@ -71,20 +69,16 @@ const Course = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [videoEndTime, setVideoEndTime] = useState<number | null>(null)
   const [hasShownPrompt, setHasShownPrompt] = useState(false)
-
+  const [likes, setLikes] = useState(currentChapter?.likes ?? 0)
+  const [dislikes, setDislikes] = useState(currentChapter?.dislikes ?? 0)
   const [likeChapter] = useLikeChapterMutation()
   const [dislikeChapter] = useDislikeChapterMutation()
-
-  const { 
-    data: reactionCount,
-    refetch: refetchReactionCount
-   } = useGetChapterReactionCountQuery({chapterId: currentChapter?.chapterId as string})
 
   useEffect(() => {
     if (currentChapter?.video) {
       const nextChapterId = findNextAvailableChapter("next")
       const nextChapter = course?.sections
-        .flatMap((section: Section) => section.chapters)
+        .flatMap((section) => section.chapters)
         .find((chapter) => chapter.chapterId === nextChapterId)
 
       if (nextChapter?.video) {
@@ -151,9 +145,8 @@ const Course = () => {
 
   if (isOrgLoading || isLoading) return <Spinner />
   if (!user) return <SignInRequired />
-  if (!course) return <NotFound message="Course not found" />
-  if (!currentSection || !currentChapter) return <NotFound message="Chapter not found" />
-  if (!currentOrg) return <NotFound message="Organization not found" />
+  if (!currentOrg || !course || !userProgress || !currentChapter || !currentSection || !courseInstructors)
+    return <NotFound message="Course not found" />
 
   const isAuthorized = currentOrg.admins.some((admin) => admin.userId === user?.id) || currentOrg.instructors.some((instructor) => instructor.userId === user?.id)
 
@@ -317,23 +310,38 @@ const Course = () => {
 
   const handleLike = async () => {
     if (!currentChapter) return
+
+    setLikes((prevLikes) => prevLikes + 1)
+
     try {
-      await likeChapter({chapterId: currentChapter.chapterId}).unwrap()
-      refetchReactionCount()
+      await likeChapter({
+        courseId: course.courseId,
+        sectionId: currentSection.sectionId,
+        chapterId: currentChapter.chapterId,
+      }).unwrap()
     } catch (error) {
       console.error("Failed to like chapter:", error)
       toast.error("Failed to like the chapter. Please try again.")
+
+      setLikes((prevLikes) => prevLikes - 1)
     }
   }
 
   const handleDislike = async () => {
     if (!currentChapter) return
+
+    setDislikes((prevDislikes) => prevDislikes + 1)
+
     try {
-      await dislikeChapter({chapterId: currentChapter.chapterId}).unwrap()
-      refetchReactionCount()
+      await dislikeChapter({
+        courseId: course.courseId,
+        sectionId: currentSection.sectionId,
+        chapterId: currentChapter.chapterId,
+      }).unwrap()
     } catch (error) {
       console.error("Failed to dislike chapter:", error)
       toast.error("Failed to dislike the chapter. Please try again.")
+      setDislikes((prevDislikes) => prevDislikes - 1)
     }
   }
 
@@ -483,7 +491,7 @@ const Course = () => {
                   className="h-8 px-2 text-muted-foreground hover:text-foreground"
                 >
                   <ThumbsUp className="h-4 w-4 mr-1" />
-                  <span className="text-sm">{reactionCount?.likes}</span>
+                  <span className="text-sm">{likes}</span>
                 </Button>
                 <Button
                   onClick={handleDislike}
@@ -492,7 +500,7 @@ const Course = () => {
                   className="h-8 px-2 text-muted-foreground hover:text-foreground"
                 >
                   <ThumbsDown className="h-4 w-4 mr-1" />
-                  <span className="text-sm">{reactionCount?.dislikes}</span>
+                  <span className="text-sm">{dislikes}</span>
                 </Button>
               </div>
             </div>

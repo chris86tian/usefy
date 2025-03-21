@@ -216,9 +216,6 @@ export const api = createApi({
     "Feedback",
     "Cohorts",
     "TimeTracking",
-    "UserNotifications",
-    "Transactions",
-    "ChapterInteractions",
   ],
   endpoints: (build) => ({
     /* 
@@ -1030,37 +1027,25 @@ export const api = createApi({
 
     /*
     ===============
-    CHAPTER-INTERACTIONS
+    LIKE/DISLIKE
     ===============
     */
-    getChapterInteraction: build.query<
-      ChapterInteraction,
-      { chapterId: string }
-    >({
-      query: ({ chapterId }) => `chapter-interactions/${chapterId}`,
-    }),
-    getChapterReactionCount: build.query<
-      { likes: number; dislikes: number },
-      { chapterId: string }
-    >({
-      query: ({ chapterId }) => `chapter-interactions/${chapterId}/reactions`,
-    }),
     likeChapter: build.mutation<
       { message: string },
-      { chapterId: string }
+      { courseId: string; sectionId: string; chapterId: string }
     >({
-      query: ({ chapterId }) => ({
-        url: `chapter-interactions/${chapterId}/like`,
+      query: ({ courseId, sectionId, chapterId }) => ({
+        url: `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/like`,
         method: "POST",
       }),
     }),
 
     dislikeChapter: build.mutation<
       { message: string },
-      { chapterId: string }
+      { courseId: string; sectionId: string; chapterId: string }
     >({
-      query: ({ chapterId }) => ({
-        url: `chapter-interactions/${chapterId}/dislike`,
+      query: ({ courseId, sectionId, chapterId }) => ({
+        url: `courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/dislike`,
         method: "POST",
       }),
     }),
@@ -1226,8 +1211,6 @@ export const {
   useDownvoteCommentMutation,
   useCreateReplyMutation,
   useGetChapterCommentsQuery,
-  useGetChapterInteractionQuery,
-  useGetChapterReactionCountQuery,
   useLikeChapterMutation,
   useDislikeChapterMutation,
   useCreateFeedbackMutation,
