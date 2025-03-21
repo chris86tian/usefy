@@ -70,10 +70,9 @@ import { Spinner } from "@/components/ui/Spinner"
 
 const AdminSettings = () => {
   const router = useRouter()
-  const { user } = useUser()
+  const currentUser = useUser().user
   const { currentOrg, isOrgLoading } = useOrganization()
   const { orgId } = useParams() as { orgId: string; cohortId: string }
-
 
   const [updateOrganization, { isLoading: isUpdateLoading }] = useUpdateOrganizationMutation()
   const [deleteOrganization, { isLoading: isDeleteLoading }] = useDeleteOrganizationMutation()
@@ -146,10 +145,13 @@ const AdminSettings = () => {
     return cohorts.filter((cohort) => cohort.name.toLowerCase().includes(cohortSearchTerm.toLowerCase()))
   }, [cohorts, cohortSearchTerm])
 
-  if (!user) return <SignInRequired />
+  if (!currentUser) return <SignInRequired />
   if (isOrgLoading || isMembersLoading || isCohortsLoading) return <Spinner />
   if (!usersData) return <NotFound message="Users not found" />
   if (!currentOrg) return <NotFound message="Organization not found" />
+
+  const pagination = usersData.pagination
+  const isSuperAdmin = currentUser.publicMetadata.userType === "superadmin"
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -181,7 +183,7 @@ const AdminSettings = () => {
 
   const handleDelete = async () => {
     try {
-      if (user?.publicMetadata?.userType !== "superadmin") {
+      if (currentUser.publicMetadata.userType !== "superadmin") {
         toast.error("You are not authorized to delete this organization")
         return
       }
@@ -207,8 +209,7 @@ const AdminSettings = () => {
             organizationId: orgId,
             email: email.trim(),
             role: inviteRole,
-          }).unwrap(),
-        ),
+          }).unwrap()),
       )
       toast.success(`Invitations sent to ${emailBatch.length} users`)
       setEmailBatch([])
@@ -340,8 +341,6 @@ const AdminSettings = () => {
     setEditCohortName(cohort.name)
     setIsEditCohortDialogOpen(true)
   }
-
-  const pagination = usersData.pagination
 
   return (
     <div className="space-y-4">
@@ -515,7 +514,7 @@ const AdminSettings = () => {
                           </TableCell>
                           <TableCell>
                             <Select
-                              disabled={role === "admin" || isChangeUserRoleLoading}
+                              disabled={role === "admin" && !isSuperAdmin || isChangeUserRoleLoading || user.id === currentUser.id}
                               value={roleSelections[user.id] || ""}
                               onValueChange={(newRole) => {
                                 setRoleSelections((prev) => ({
@@ -801,7 +800,7 @@ const AdminSettings = () => {
               <AlertDialogTrigger asChild>
                 <Button
                   variant="destructive"
-                  disabled={user?.publicMetadata?.userType !== "superadmin" || isDeleteLoading}
+                  disabled={currentUser.publicMetadata.userType !== "superadmin" || isDeleteLoading}
                 >
                   {isDeleteLoading ? "Deleting..." : "Delete Organization"}
                 </Button>
