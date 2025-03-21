@@ -19,7 +19,6 @@ import feedbackRoutes from "./routes/feedbackRoutes";
 import organizationRoutes from "./routes/organizationRoutes";
 import cohortRoutes from "./routes/cohortRoutes";
 import timeTrackingRoutes from "./routes/timeTrackingRoutes";
-import chapterInteractionRoutes from "./routes/chapterInteractionRoutes";
 
 dotenv.config();
 
@@ -148,7 +147,6 @@ app.use("/courses", courseRoutes);
 app.use("/users/course-progress", requireAuth(), userCourseProgressRoutes);
 app.use("/users/clerk", userClerkRoutes);
 app.use("/transactions", requireAuth(), transactionRoutes);
-app.use("/chapter-interactions", requireAuth(), chapterInteractionRoutes);
 app.use(
   "/notifications",
   (req, res, next) => {
