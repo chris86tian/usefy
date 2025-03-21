@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { X, Plus, Mail } from 'lucide-react'
 import { toast } from "sonner"
+import { getUserName } from "@/lib/utils"
+import { User } from "@clerk/nextjs/server"
 
 interface InstructorEmailInputProps {
-  existingInstructors: { email: string; id: string }[]
+  existingInstructors: User[]
   onAddInstructor: (email: string) => Promise<void>
   onRemoveInstructor: (instructorId: string) => Promise<void>
 }
@@ -36,7 +38,7 @@ const InstructorEmailInput = ({
       return
     }
 
-    if (existingInstructors.some(instructor => instructor.email.toLowerCase() === email.toLowerCase())) {
+    if (existingInstructors.some(instructor => instructor.emailAddresses[0].emailAddress.toLowerCase() === email.toLowerCase())) {
       toast.error("This instructor is already added to the course")
       return
     }
@@ -82,7 +84,7 @@ const InstructorEmailInput = ({
                 className="flex items-center gap-2 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-3 py-1.5 rounded-full text-sm"
               >
                 <Mail className="h-3.5 w-3.5" />
-                <span>{instructor.email}</span>
+                <span>{getUserName(instructor)}</span>
                 <button
                   type="button"
                   onClick={() => handleRemoveInstructor(instructor.id)}
