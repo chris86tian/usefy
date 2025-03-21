@@ -351,14 +351,10 @@ const CourseEditor = () => {
     }
   }
 
-  const formattedInstructors =
-    instructors?.map((instructor) => ({
-      id: instructor.id,
-      email: instructor.emailAddresses[0]?.emailAddress || "Unknown email",
-    })) || []
-
   if (isLoading || isOrgLoading) return <Spinner />
-  if (!course || !currentOrg) return <NotFound message={!currentOrg ? "Organization not found" : "Course not found"} />
+  if (!currentOrg) return <NotFound message="Organization not found" />
+  if (!course) return <NotFound message="Course not found" />
+  if (!instructors) return <NotFound message="Instructors not found" />
     
 
   return (
@@ -449,7 +445,7 @@ const CourseEditor = () => {
                 {!isInstructor && (
                   <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                     <InstructorEmailInput
-                      existingInstructors={formattedInstructors}
+                      existingInstructors={instructors}
                       onAddInstructor={handleAddInstructor}
                       onRemoveInstructor={handleRemoveInstructor}
                     />

@@ -540,14 +540,27 @@ export const inviteUserToCohort = async (req: Request, res: Response): Promise<v
       return;
     }
 
-    const [firstName, lastName] = name.split(" ").map(capitalizeFirstLetter);
-    user = await clerkClient.users.createUser({
+    let firstName = "";
+    let lastName = "";
+    
+    if (name) {
+      const nameParts = name.split(" ");
+      firstName = capitalizeFirstLetter(nameParts[0] || "");
+      lastName = nameParts.length > 1 
+        ? nameParts.slice(1).map(capitalizeFirstLetter).join(" ") 
+        : "";
+    }
+
+    const createUserParams: any = {
       emailAddress: [email],
       password: generateTemporaryPassword(),
       skipPasswordChecks: true,
-      firstName,
-      lastName,
-    });
+    };
+    
+    if (firstName) createUserParams.firstName = firstName;
+    if (lastName) createUserParams.lastName = lastName;
+    
+    user = await clerkClient.users.createUser(createUserParams);
 
     roleMapping[role].push({ userId: user.id });
     (role === "learner" ? organization.learners : organization.instructors).push({ userId: user.id });
@@ -556,9 +569,14 @@ export const inviteUserToCohort = async (req: Request, res: Response): Promise<v
     await organization.save();
 
     const resetPasswordLink = `${process.env.CLIENT_URL}/reset-password?email=${encodeURIComponent(email)}&firstName=${firstName}&lastName=${lastName}&organizationId=${organizationId}&cohortId=${cohortId}`;
-    await sendMessage(user.id, email, `Hey, ${name || "there"}! You're invited to join a cohort - Reset Your Password`, 
-      `You've been invited to join the cohort ${cohort.name}. Click below to reset your password:\n\n${resetPasswordLink}`,
-      null, { sendEmail: true, sendNotification: false, rateLimited: false });
+    const emailSubject = `Hey, ${name || "there"}! You're invited to join a cohort - Reset Your Password`;
+    const emailBody = `You've been invited to join the cohort ${cohort.name}. Click below to reset your password:\n\n${resetPasswordLink}`;
+    
+    await sendMessage(user.id, email, emailSubject, emailBody, null, { 
+      sendEmail: true, 
+      sendNotification: false, 
+      rateLimited: false 
+    });
 
     res.json({ message: "User invitation processed successfully", data: cohort });
   } catch (error) {
