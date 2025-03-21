@@ -152,8 +152,6 @@ declare global {
     video?: string | File;
     assignments?: Assignment[];
     comments?: ChapterComment[];
-    likes?: number;
-    dislikes?: number;
     quiz?: Quiz;
     timeTracking?: TimeTrackingRecord[];
     averageCompletionTime?: number;
@@ -312,10 +310,6 @@ declare global {
     onClick?: () => void;
   }
 
-  interface CoursePreviewProps {
-    course: Course;
-  }
-
   interface CustomFixedModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -401,6 +395,13 @@ declare global {
     createdAt: string;
     status: string;
     updatedAt: string;
+  }
+
+  interface ChapterInteraction {
+    chapterId: string;
+    userId: string;
+    like: boolean;
+    dislike: boolean;
   }
 
   interface UserNotification {
