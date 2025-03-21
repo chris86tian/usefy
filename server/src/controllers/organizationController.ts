@@ -8,7 +8,7 @@ import UserCourseProgress from "../models/userCourseProgressModel";
 import { generateTemporaryPassword, sendMessage } from "../utils/utils";
 
 function capitalizeFirstLetter(string: string): string {
-    return string.charAt(0).toUpperCase() + string.slice(1);
+  return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
 export const getOrganization = async (
@@ -51,7 +51,9 @@ export const createOrganization = async (
   const { organizationId, name, description, image } = req.body;
   const auth = getAuth(req);
 
-  const superadmins = (await clerkClient.users.getUserList()).data.filter(user => user.publicMetadata.userType === "superadmin");
+  const superadmins = (await clerkClient.users.getUserList()).data.filter(
+    (user) => user.publicMetadata.userType === "superadmin"
+  );
   if (superadmins.length === 0) {
     res.status(400).json({ message: "No superadmins found" });
     return;
@@ -70,7 +72,10 @@ export const createOrganization = async (
       description,
       image,
       cohorts: [],
-      admins: [{ userId: auth.userId }, ...superadmins.map((superadmin: User) => ({ userId: superadmin.id }))],
+      admins: [
+        { userId: auth.userId },
+        ...superadmins.map((superadmin: User) => ({ userId: superadmin.id })),
+      ],
       instructors: [],
       learners: [],
       courses: [],
@@ -97,7 +102,10 @@ export const createOrganization = async (
   }
 };
 
-export const updateOrganization = async (req: Request, res: Response): Promise<void> => {
+export const updateOrganization = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   const { organizationId } = req.params;
   const { name, description, image } = req.body;
 
@@ -181,7 +189,7 @@ export const leaveOrganization = async (
       res.status(404).json({ message: "Organization not found" });
       return;
     }
-    
+
     organization[0].learners = organization[0].learners.filter(
       (learner: { userId: string }) => learner.userId !== auth.userId
     );
@@ -194,8 +202,6 @@ export const leaveOrganization = async (
     res.status(500).json({ message: "Error leaving organization", error });
   }
 };
-
-
 
 export const getMyOrganizations = async (
   req: Request,
@@ -243,21 +249,28 @@ export const getOrganizationCourses = async (
       return;
     }
 
-    const cohorts = await Cohort.scan().where("organizationId").eq(organizationId).exec();
+    const cohorts = await Cohort.scan()
+      .where("organizationId")
+      .eq(organizationId)
+      .exec();
 
     if (!cohorts || cohorts.length === 0) {
       res.json({ message: "No cohorts found for this organization", data: [] });
       return;
     }
 
-    const courseIds = cohorts.flatMap((cohort: any) => cohort.courses.map((course: { courseId: string }) => course.courseId));
+    const courseIds = cohorts.flatMap((cohort: any) =>
+      cohort.courses.map((course: { courseId: string }) => course.courseId)
+    );
 
     if (courseIds.length === 0) {
       res.json({ message: "No courses found in any cohort", data: [] });
       return;
     }
 
-    const courses = await Course.batchGet(courseIds.map((courseId: string) => ({ courseId })));
+    const courses = await Course.batchGet(
+      courseIds.map((courseId: string) => ({ courseId }))
+    );
 
     res.json({ message: "Courses retrieved successfully", data: courses });
   } catch (error) {
@@ -278,51 +291,60 @@ export const getMyUserCourseProgresses = async (
   const { organizationId } = req.params;
 
   try {
-    const cohorts = await Cohort.scan().where("organizationId").eq(organizationId).exec();
+    const cohorts = await Cohort.scan()
+      .where("organizationId")
+      .eq(organizationId)
+      .exec();
 
     if (!cohorts || cohorts.length === 0) {
       res.json({ message: "No cohorts found for this organization", data: [] });
       return;
     }
 
-    const courseIds = cohorts.flatMap((cohort: any) => cohort.courses.map((course: { courseId: string }) => course.courseId));
+    const courseIds = cohorts.flatMap((cohort: any) =>
+      cohort.courses.map((course: { courseId: string }) => course.courseId)
+    );
 
     if (courseIds.length === 0) {
       res.json({ message: "No courses found in any cohort", data: [] });
       return;
     }
 
-    const courses = await Course.batchGet(courseIds.map((courseId: string) => ({ courseId })));
-
-    const userCourses = courses.filter(course =>
-      course.enrollments?.some((enrollment: any) => enrollment.userId === userId)
+    const courses = await Course.batchGet(
+      courseIds.map((courseId: string) => ({ courseId }))
     );
 
-    const enrolledCourseIds = userCourses.map(course => course.courseId);
+    const userCourses = courses.filter((course) =>
+      course.enrollments?.some(
+        (enrollment: any) => enrollment.userId === userId
+      )
+    );
+
+    const enrolledCourseIds = userCourses.map((course) => course.courseId);
 
     if (enrolledCourseIds.length === 0) {
       res.json({ message: "No enrolled courses found", data: [] });
       return;
     }
 
-    const progressKeys = enrolledCourseIds.map(courseId => ({
+    const progressKeys = enrolledCourseIds.map((courseId) => ({
       userId: String(userId),
       courseId: String(courseId),
     }));
 
     const progresses = await UserCourseProgress.batchGet(progressKeys);
 
-    res.json({ 
-      message: "Course progresses retrieved successfully", 
-      data: progresses 
+    res.json({
+      message: "Course progresses retrieved successfully",
+      data: progresses,
     });
-
   } catch (error) {
     console.error("Error retrieving course progresses:", error);
-    res.status(500).json({ message: "Error retrieving course progresses", error });
+    res
+      .status(500)
+      .json({ message: "Error retrieving course progresses", error });
   }
 };
-
 
 export const addCourseToOrganization = async (
   req: Request,
@@ -359,51 +381,68 @@ export const addCourseToOrganization = async (
   }
 };
 
-export const removeCourseFromOrganization = async (req: Request, res: Response): Promise<void> => {
-    const { organizationId, courseId } = req.params;
+export const removeCourseFromOrganization = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { organizationId, courseId } = req.params;
 
-    try {
-        const organization = await Organization.get(organizationId);
-        if (!organization) {
-            res.status(404).json({ message: "Organization not found" });
-            return;
-        }
-
-        organization.courses = organization.courses || [];
-
-        const courseIndex = organization.courses.findIndex((course: { courseId: string; }) => course.courseId === courseId);
-        if (courseIndex !== -1) {
-            organization.courses.splice(courseIndex, 1);
-        }
-
-        organization.cohorts = organization.cohorts || [];
-        organization.cohorts.forEach(async (cohort: { cohortId: string; }) => {
-            const cohortData = await Cohort.get(cohort.cohortId);
-            if (cohortData) {
-                cohortData.courses = cohortData.courses || [];
-                const courseIndex = cohortData.courses.findIndex((course: { courseId: string; }) => course.courseId === courseId);
-                if (courseIndex !== -1) {
-                    cohortData.courses.splice(courseIndex, 1);
-                    await cohortData.save();
-                }
-            }
-        });
-
-        await Course.delete(courseId);
-        
-        await organization.save();
-        res.json({ message: "Course removed from organization successfully", data: organization });
-    } catch (error) {
-        res.status(500).json({ message: "Error removing course from organization", error });
+  try {
+    const organization = await Organization.get(organizationId);
+    if (!organization) {
+      res.status(404).json({ message: "Organization not found" });
+      return;
     }
+
+    organization.courses = organization.courses || [];
+
+    const courseIndex = organization.courses.findIndex(
+      (course: { courseId: string }) => course.courseId === courseId
+    );
+    if (courseIndex !== -1) {
+      organization.courses.splice(courseIndex, 1);
+    }
+
+    organization.cohorts = organization.cohorts || [];
+    organization.cohorts.forEach(async (cohort: { cohortId: string }) => {
+      const cohortData = await Cohort.get(cohort.cohortId);
+      if (cohortData) {
+        cohortData.courses = cohortData.courses || [];
+        const courseIndex = cohortData.courses.findIndex(
+          (course: { courseId: string }) => course.courseId === courseId
+        );
+        if (courseIndex !== -1) {
+          cohortData.courses.splice(courseIndex, 1);
+          await cohortData.save();
+        }
+      }
+    });
+
+    await Course.delete(courseId);
+
+    await organization.save();
+    res.json({
+      message: "Course removed from organization successfully",
+      data: organization,
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error removing course from organization", error });
+  }
 };
 
-export const inviteUserToOrganization = async (req: Request, res: Response): Promise<void> => {
+export const inviteUserToOrganization = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   const { organizationId } = req.params;
   const { role, email } = req.body;
 
   try {
-    const users = await clerkClient.users.getUserList({ emailAddress: [email] });
+    const users = await clerkClient.users.getUserList({
+      emailAddress: [email],
+    });
     let user = users.totalCount > 0 ? users.data[0] : null;
 
     const organization = await Organization.get(organizationId);
@@ -412,7 +451,10 @@ export const inviteUserToOrganization = async (req: Request, res: Response): Pro
       return;
     }
 
-    const roleMapping: Record<string, { list: any[]; title: string; message: string }> = {
+    const roleMapping: Record<
+      string,
+      { list: any[]; title: string; message: string }
+    > = {
       admin: {
         list: organization.admins,
         title: "You've been added as an admin to an organization",
@@ -439,15 +481,17 @@ export const inviteUserToOrganization = async (req: Request, res: Response): Pro
 
     if (user) {
       if (list.some((u) => u.userId === user?.id)) {
-        res.status(400).json({ message: "User is already in the organization" });
+        res
+          .status(400)
+          .json({ message: "User is already in the organization" });
         return;
       }
       list.push({ userId: user.id });
       await sendMessage(
-        user.id, 
-        user.emailAddresses[0].emailAddress, 
-        title, 
-        message, 
+        user.id,
+        user.emailAddresses[0].emailAddress,
+        title,
+        message,
         `/organizations/${organization.organizationId}`,
         { sendEmail: true, sendNotification: true, rateLimited: false }
       );
@@ -460,7 +504,11 @@ export const inviteUserToOrganization = async (req: Request, res: Response): Pro
 
       list.push({ userId: user.id });
 
-      const resetPasswordLink = `${process.env.CLIENT_URL}/reset-password?email=${encodeURIComponent(email)}/&organizationId=${organizationId}`;
+      const resetPasswordLink = `${
+        process.env.CLIENT_URL
+      }/reset-password?email=${encodeURIComponent(
+        email
+      )}/&organizationId=${organizationId}`;
 
       await sendMessage(
         user.id,
@@ -473,14 +521,22 @@ export const inviteUserToOrganization = async (req: Request, res: Response): Pro
     }
 
     await organization.save();
-    res.json({ message: "User invitation processed successfully", data: organization });
+    res.json({
+      message: "User invitation processed successfully",
+      data: organization,
+    });
   } catch (error) {
     console.error("Error inviting user:", error);
-    res.status(500).json({ message: "Error inviting user to organization", error });
+    res
+      .status(500)
+      .json({ message: "Error inviting user to organization", error });
   }
 };
 
-export const inviteUserToCohort = async (req: Request, res: Response): Promise<void> => {
+export const inviteUserToCohort = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   const { organizationId, cohortId } = req.params;
   const { email, role, name } = req.body;
 
@@ -507,9 +563,11 @@ export const inviteUserToCohort = async (req: Request, res: Response): Promise<v
       return;
     }
 
-    const users = await clerkClient.users.getUserList({ emailAddress: [email] });
+    const users = await clerkClient.users.getUserList({
+      emailAddress: [email],
+    });
     let user = users.totalCount > 0 ? users.data[0] : null;
-    
+
     if (user) {
       const userId = user.id;
       const list = roleMapping[role];
@@ -521,7 +579,10 @@ export const inviteUserToCohort = async (req: Request, res: Response): Promise<v
 
       list.push({ userId });
 
-      const orgList = organization.admins.concat(organization.instructors, organization.learners);
+      const orgList = organization.admins.concat(
+        organization.instructors,
+        organization.learners
+      );
       if (!orgList.some((m: any) => m.userId === userId)) {
         orgList.push({ userId });
       }
@@ -530,11 +591,18 @@ export const inviteUserToCohort = async (req: Request, res: Response): Promise<v
       await organization.save();
 
       const message = `You've been added to the cohort ${cohort.name}. Click here to view: ${process.env.CLIENT_URL}/organizations/${organizationId}/cohorts/${cohortId}`;
-      await sendMessage(userId, email, "You've been added to a cohort", message, null, {
-        sendEmail: true,
-        sendNotification: true,
-        rateLimited: false,
-      });
+      await sendMessage(
+        userId,
+        email,
+        "You've been added to a cohort",
+        message,
+        null,
+        {
+          sendEmail: true,
+          sendNotification: true,
+          rateLimited: false,
+        }
+      );
 
       res.json({ message: "User added to cohort successfully", data: cohort });
       return;
@@ -542,13 +610,14 @@ export const inviteUserToCohort = async (req: Request, res: Response): Promise<v
 
     let firstName = "";
     let lastName = "";
-    
+
     if (name) {
       const nameParts = name.split(" ");
       firstName = capitalizeFirstLetter(nameParts[0] || "");
-      lastName = nameParts.length > 1 
-        ? nameParts.slice(1).map(capitalizeFirstLetter).join(" ") 
-        : "";
+      lastName =
+        nameParts.length > 1
+          ? nameParts.slice(1).map(capitalizeFirstLetter).join(" ")
+          : "";
     }
 
     const createUserParams: any = {
@@ -556,104 +625,162 @@ export const inviteUserToCohort = async (req: Request, res: Response): Promise<v
       password: generateTemporaryPassword(),
       skipPasswordChecks: true,
     };
-    
+
     if (firstName) createUserParams.firstName = firstName;
     if (lastName) createUserParams.lastName = lastName;
-    
+
     user = await clerkClient.users.createUser(createUserParams);
 
     roleMapping[role].push({ userId: user.id });
-    (role === "learner" ? organization.learners : organization.instructors).push({ userId: user.id });
+    (role === "learner"
+      ? organization.learners
+      : organization.instructors
+    ).push({ userId: user.id });
 
     await cohort.save();
     await organization.save();
 
-    const resetPasswordLink = `${process.env.CLIENT_URL}/reset-password?email=${encodeURIComponent(email)}&firstName=${firstName}&lastName=${lastName}&organizationId=${organizationId}&cohortId=${cohortId}`;
-    const emailSubject = `Hey, ${name || "there"}! You're invited to join a cohort - Reset Your Password`;
+    const resetPasswordLink = `${
+      process.env.CLIENT_URL
+    }/reset-password?email=${encodeURIComponent(
+      email
+    )}&firstName=${firstName}&lastName=${lastName}&organizationId=${organizationId}&cohortId=${cohortId}`;
+    const emailSubject = `Hey, ${
+      name || "there"
+    }! You're invited to join a cohort - Reset Your Password`;
     const emailBody = `You've been invited to join the cohort ${cohort.name}. Click below to reset your password:\n\n${resetPasswordLink}`;
-    
-    await sendMessage(user.id, email, emailSubject, emailBody, null, { 
-      sendEmail: true, 
-      sendNotification: false, 
-      rateLimited: false 
+
+    await sendMessage(user.id, email, emailSubject, emailBody, null, {
+      sendEmail: true,
+      sendNotification: false,
+      rateLimited: false,
     });
 
-    res.json({ message: "User invitation processed successfully", data: cohort });
+    res.json({
+      message: "User invitation processed successfully",
+      data: cohort,
+    });
   } catch (error) {
     console.error("Error inviting user to cohort:", error);
     res.status(500).json({ message: "Error inviting user to cohort", error });
   }
 };
 
-export const getOrganizationUsers = async (req: Request, res: Response): Promise<void> => {
-  const { organizationId } = req.params
-  const { page = "1", limit = "10", role = "all", search = "" } = req.query
+export const getOrganizationUsers = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { organizationId } = req.params;
+  const { page = "1", limit = "10", role = "all", search = "" } = req.query;
 
-  const pageNumber = Number.parseInt(page as string, 10)
-  const limitNumber = Number.parseInt(limit as string, 10)
+  const pageNumber = Number.parseInt(page as string, 10);
+  const limitNumber = Number.parseInt(limit as string, 10);
 
   try {
-    const organization = await Organization.get(organizationId)
+    const organization = await Organization.get(organizationId);
     if (!organization) {
-      res.status(404).json({ message: "Organization not found" })
-      return
+      res.status(404).json({ message: "Organization not found" });
+      return;
     }
 
     // Get all user IDs based on their roles
-    const adminIds = organization.admins.map((admin: any) => admin.userId)
-    const instructorIds = organization.instructors.map((instructor: any) => instructor.userId)
-    const learnerIds = organization.learners.map((learner: any) => learner.userId)
+    const adminIds = organization.admins.map((admin: any) => admin.userId);
+    const instructorIds = organization.instructors.map(
+      (instructor: any) => instructor.userId
+    );
+    const learnerIds = organization.learners.map(
+      (learner: any) => learner.userId
+    );
 
     // Filter by role if specified
-    let filteredUserIds: string[] = []
+    let filteredUserIds: string[] = [];
     if (role === "admin") {
-      filteredUserIds = adminIds
+      filteredUserIds = adminIds;
     } else if (role === "instructor") {
-      filteredUserIds = instructorIds
+      filteredUserIds = instructorIds;
     } else if (role === "learner") {
-      filteredUserIds = learnerIds
+      filteredUserIds = learnerIds;
     } else {
-      filteredUserIds = [...adminIds, ...instructorIds, ...learnerIds]
+      filteredUserIds = [...adminIds, ...instructorIds, ...learnerIds];
     }
 
-    console.log("Fetching users for IDs:", filteredUserIds)
+    console.log("Fetching users for IDs:", filteredUserIds);
 
     // Fetch all users from Clerk
     // We'll fetch all users at once since we need to filter by role afterward
     const clerkResponse = await clerkClient.users.getUserList({
       userId: filteredUserIds,
       limit: 500, // Use a reasonable limit based on your expected max users
-    })
+    });
 
-    const allUsers = clerkResponse.data
-    const totalClerkUsers = clerkResponse.totalCount
+    const allUsers = clerkResponse.data;
+    const totalClerkUsers = clerkResponse.totalCount;
 
     // Apply search filter if provided
     const searchFilteredUsers = search
       ? allUsers.filter((user) => {
-          const fullName = `${user.firstName || ""} ${user.lastName || ""}`.toLowerCase()
-          const email = user.emailAddresses?.[0]?.emailAddress?.toLowerCase() || ""
-          const searchLower = (search as string).toLowerCase()
-          return fullName.includes(searchLower) || email.includes(searchLower)
+          const fullName = `${user.firstName || ""} ${
+            user.lastName || ""
+          }`.toLowerCase();
+          const email =
+            user.emailAddresses?.[0]?.emailAddress?.toLowerCase() || "";
+          const searchLower = (search as string).toLowerCase();
+          return fullName.includes(searchLower) || email.includes(searchLower);
         })
-      : allUsers
+      : allUsers;
 
-    // Prepare response with pagination
-    const totalUsers = searchFilteredUsers.length
-    const totalPages = Math.ceil(totalUsers / limitNumber)
+    const admins = searchFilteredUsers.filter((user) =>
+      adminIds.includes(user.id)
+    );
+    const instructors = searchFilteredUsers.filter((user) =>
+      instructorIds.includes(user.id)
+    );
+    const learners = searchFilteredUsers.filter((user) =>
+      learnerIds.includes(user.id)
+    );
 
-    // Calculate start and end indices for pagination
-    const startIndex = (pageNumber - 1) * limitNumber
-    const endIndex = Math.min(startIndex + limitNumber, totalUsers)
+    let totalUsers = 0;
+    let usersToPage = [];
 
-    // Get paginated users
-    const paginatedUsers = searchFilteredUsers.slice(startIndex, endIndex)
+    if (role === "admin") {
+      totalUsers = admins.length;
+      usersToPage = admins;
+    } else if (role === "instructor") {
+      totalUsers = instructors.length;
+      usersToPage = instructors;
+    } else if (role === "learner") {
+      totalUsers = learners.length;
+      usersToPage = learners;
+    } else {
+      totalUsers = searchFilteredUsers.length;
+      usersToPage = searchFilteredUsers;
+    }
 
-    // Group users by role
+    const totalPages = Math.ceil(totalUsers / limitNumber);
+    const startIndex = (pageNumber - 1) * limitNumber;
+    const endIndex = Math.min(startIndex + limitNumber, totalUsers);
+
+    const paginatedUsers = usersToPage.slice(startIndex, endIndex);
+
     const response = {
-      admins: paginatedUsers.filter((user) => adminIds.includes(user.id)),
-      instructors: paginatedUsers.filter((user) => instructorIds.includes(user.id)),
-      learners: paginatedUsers.filter((user) => learnerIds.includes(user.id)),
+      admins:
+        role === "admin"
+          ? paginatedUsers
+          : role === "all"
+          ? paginatedUsers.filter((user) => adminIds.includes(user.id))
+          : [],
+      instructors:
+        role === "instructor"
+          ? paginatedUsers
+          : role === "all"
+          ? paginatedUsers.filter((user) => instructorIds.includes(user.id))
+          : [],
+      learners:
+        role === "learner"
+          ? paginatedUsers
+          : role === "all"
+          ? paginatedUsers.filter((user) => learnerIds.includes(user.id))
+          : [],
       pagination: {
         total: totalUsers,
         page: pageNumber,
@@ -662,18 +789,26 @@ export const getOrganizationUsers = async (req: Request, res: Response): Promise
         hasNextPage: pageNumber < totalPages,
         hasPrevPage: pageNumber > 1,
       },
-    }
+    };
 
-    console.log("Final Response:", response)
+    console.log("Final Response:", response);
 
-    res.json({ message: "Organization users retrieved successfully", data: response })
+    res.json({
+      message: "Organization users retrieved successfully",
+      data: response,
+    });
   } catch (error) {
-    console.error("Error retrieving organization users:", error)
-    res.status(500).json({ message: "Error retrieving organization users", error })
+    console.error("Error retrieving organization users:", error);
+    res
+      .status(500)
+      .json({ message: "Error retrieving organization users", error });
   }
-}
+};
 
-export const removeUserFromOrganization = async (req: Request, res: Response): Promise<void> => {
+export const removeUserFromOrganization = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   const { organizationId, userId } = req.params;
   const { role } = req.body;
 
@@ -686,35 +821,56 @@ export const removeUserFromOrganization = async (req: Request, res: Response): P
 
     switch (role) {
       case "admin":
-        organization.admins = organization.admins.filter((admin: { userId: string }) => admin.userId !== userId);
+        organization.admins = organization.admins.filter(
+          (admin: { userId: string }) => admin.userId !== userId
+        );
         break;
       case "instructor":
-        organization.instructors = organization.instructors.filter((instructor: { userId: string }) => instructor.userId !== userId);
+        organization.instructors = organization.instructors.filter(
+          (instructor: { userId: string }) => instructor.userId !== userId
+        );
         break;
       case "learner":
-        organization.learners = organization.learners.filter((learner: { userId: string }) => learner.userId !== userId);
+        organization.learners = organization.learners.filter(
+          (learner: { userId: string }) => learner.userId !== userId
+        );
         break;
       default:
         res.status(400).json({ message: "Invalid role specified" });
         return;
     }
 
-    const cohorts = await Cohort.scan().where("organizationId").eq(organizationId).exec();
+    const cohorts = await Cohort.scan()
+      .where("organizationId")
+      .eq(organizationId)
+      .exec();
     for (const cohort of cohorts) {
-      cohort.learners = cohort.learners.filter((learner: { userId: string }) => learner.userId !== userId);
-      cohort.instructors = cohort.instructors.filter((instructor: { userId: string }) => instructor.userId !== userId);
+      cohort.learners = cohort.learners.filter(
+        (learner: { userId: string }) => learner.userId !== userId
+      );
+      cohort.instructors = cohort.instructors.filter(
+        (instructor: { userId: string }) => instructor.userId !== userId
+      );
       await cohort.save();
     }
 
     await organization.save();
-    res.json({ message: "User removed from organization and all cohorts successfully", data: organization });
+    res.json({
+      message: "User removed from organization and all cohorts successfully",
+      data: organization,
+    });
   } catch (error) {
     console.error("Error removing user from organization:", error);
-    res.status(500).json({ message: "Error removing user from organization", error });
+    res
+      .status(500)
+      .json({ message: "Error removing user from organization", error });
   }
 };
 
-export const changeUserRole = async (req: Request, res: Response): Promise<void> => {
+export const changeUserRole = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   const { organizationId, userId } = req.params;
   const { currentRole, newRole } = req.body;
 
@@ -741,7 +897,9 @@ export const changeUserRole = async (req: Request, res: Response): Promise<void>
         return;
     }
 
-    const userIndex = roleArray.findIndex((user: { userId: string }) => user.userId === userId);
+    const userIndex = roleArray.findIndex(
+      (user: { userId: string }) => user.userId === userId
+    );
     if (userIndex === -1) {
       res.status(404).json({ message: "User not found in organization" });
       return;
