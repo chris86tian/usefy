@@ -24,8 +24,6 @@ import {
   downvoteComment,
   createReply,
   getComments,
-  likeChapter,
-  dislikeChapter,
   getUserCourseSubmissions,
   enrollUser,
   unenrollUser,
@@ -167,22 +165,10 @@ router.get(
   getComments
 );
 
-// orgId for notification link
 router.post(
   "/:orgId/:courseId/sections/:sectionId/chapters/:chapterId/comments/:commentId/replies",
   requireAuth(),
   createReply
-);
-
-router.post(
-  "/:courseId/sections/:sectionId/chapters/:chapterId/like",
-  requireAuth(),
-  likeChapter
-);
-router.post(
-  "/:courseId/sections/:sectionId/chapters/:chapterId/dislike",
-  requireAuth(),
-  dislikeChapter
 );
 
 router.get(
