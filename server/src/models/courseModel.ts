@@ -17,9 +17,19 @@ const chapterSchema = new Schema({
   },
   likes: {
     type: Number,
+    default: 0,
   },
   dislikes: {
     type: Number,
+    default: 0,
+  },
+  likedBy: {
+    type: Array,
+    default: [],
+  },
+  dislikedBy: {
+    type: Array,
+    default: [],
   },
   comments : {
     type: Array,
