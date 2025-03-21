@@ -238,7 +238,7 @@ const AdminSettings = () => {
   }
 
   const handleRemoveUser = async (userId: string, role: string) => {
-    if (role === "admin") {
+    if (role === "admin" && !isSuperAdmin) {
       toast.error("You cannot remove another admin.")
       return
     }
@@ -536,7 +536,7 @@ const AdminSettings = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              disabled={role === "admin" || isRemoveUserLoading}
+                              disabled={role === "admin" && !isSuperAdmin || isRemoveUserLoading || user.id === currentUser.id}
                               onClick={() => handleRemoveUser(user.id, role)}
                             >
                               Remove
