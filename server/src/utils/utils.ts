@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import UserNotification from "../models/notificationModel";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 let lastRequestTime = 0;
 
@@ -100,9 +100,14 @@ export const handleAdvancedVideoUpload = async (
   return null; // Return null if not HLS/DASH to handle regular upload
 };
 
-export const mergeSections = (existingSections: any[], newSections: any[]): any[] => {
+export const mergeSections = (
+  existingSections: any[],
+  newSections: any[]
+): any[] => {
   if (!Array.isArray(existingSections) || !Array.isArray(newSections)) {
-    console.error("Invalid input: existingSections or newSections is not an array");
+    console.error(
+      "Invalid input: existingSections or newSections is not an array"
+    );
     return [];
   }
 
@@ -124,22 +129,24 @@ export const mergeSections = (existingSections: any[], newSections: any[]): any[
         ? {
             ...existingSection,
             ...newSection,
-            chapters: mergeChapters(existingSection.chapters || [], newSection.chapters || []),
+            chapters: mergeChapters(
+              existingSection.chapters || [],
+              newSection.chapters || []
+            ),
           }
         : {
             ...newSection,
-            chapters: newSection.chapters?.map((chapter: any) => ({
-              ...chapter,
-              completed: chapter.completed ?? false,
-            })) || [],
+            chapters:
+              newSection.chapters?.map((chapter: any) => ({
+                ...chapter,
+                completed: chapter.completed ?? false,
+              })) || [],
           }
     );
   }
 
   return Array.from(existingSectionsMap.values());
 };
-
-
 
 export const mergeChapters = (
   existingChapters: any[],
@@ -157,16 +164,14 @@ export const mergeChapters = (
     existingChaptersMap.set(newChapter.chapterId, {
       ...existingChapter,
       ...newChapter,
-      completed:
-        newChapter.completed !== undefined
-          ? newChapter.completed
-          : existingChapter?.completed ?? false,
+      completed: newChapter.completed ?? existingChapter?.completed ?? false,
+      quizCompleted:
+        newChapter.quizCompleted ?? existingChapter?.quizCompleted ?? false,
     });
   }
 
   return Array.from(existingChaptersMap.values());
 };
-
 
 export const calculateOverallProgress = (sections: any[]): number => {
   const totalChapters = sections.reduce(
@@ -195,7 +200,11 @@ export const sendMessage = async (
     rateLimited?: boolean;
   } = {}
 ) => {
-  const { sendEmail = true, sendNotification = true, rateLimited = false } = options;
+  const {
+    sendEmail = true,
+    sendNotification = true,
+    rateLimited = false,
+  } = options;
 
   try {
     if (sendEmail) {
@@ -236,8 +245,9 @@ export const sendMessage = async (
 };
 
 export function generateTemporaryPassword(length = 12): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()';
-  let password = '';
+  const chars =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
+  let password = "";
   for (let i = 0; i < length; i++) {
     password += chars.charAt(Math.floor(Math.random() * chars.length));
   }

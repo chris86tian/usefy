@@ -78,35 +78,44 @@ export const updateUserCourseProgress = async (
   const { userId, courseId } = req.params;
   const progressData = req.body;
 
-  console.log("progressData", progressData.sections[0].chapters)
+  console.log("Received progress update request:");
+  console.log("User ID:", userId);
+  console.log("Course ID:", courseId);
+  console.log("Progress Data:", JSON.stringify(progressData, null, 2));
 
   try {
     let progress = await UserCourseProgress.get({ userId, courseId });
 
     if (!progress) {
+      console.log("No existing progress found, creating new progress record");
       progress = new UserCourseProgress({
         userId,
         courseId,
         enrollmentDate: new Date().toISOString(),
         overallProgress: 0,
-        sections: progressData.sections || [],
+        sections: progressData || [],
         lastAccessedTimestamp: new Date().toISOString(),
       });
     } else {
-      progress.sections = mergeSections(
-        progress.sections,
-        progressData.sections || []
+      console.log("Found existing progress, merging with new data");
+      console.log(
+        "Existing sections:",
+        JSON.stringify(progress.sections, null, 2)
+      );
+      progress.sections = mergeSections(progress.sections, progressData);
+      console.log(
+        "After merge sections:",
+        JSON.stringify(progress.sections, null, 2)
       );
       progress.lastAccessedTimestamp = new Date().toISOString();
       progress.overallProgress = calculateOverallProgress(progress.sections);
     }
 
-    console.log("progress", progress.sections[0].chapters)
-
     await progress.save();
+    console.log("Final progress saved:", JSON.stringify(progress, null, 2));
 
     res.json({
-      message: "",
+      message: "Course progress updated successfully",
       data: progress,
     });
   } catch (error) {
@@ -153,20 +162,21 @@ export const updateQuizProgress = async (
       return;
     }
 
-    progress.sections[sectionIndex].chapters[chapterIndex].quizCompleted = completed;
+    progress.sections[sectionIndex].chapters[chapterIndex].quizCompleted =
+      completed;
     progress.lastAccessedTimestamp = new Date().toISOString();
     progress.overallProgress = calculateOverallProgress(progress.sections);
 
     try {
       const today = new Date().toISOString().split("T")[0];
-    
+
       let commit = await Commit.query("userId")
         .eq(userId)
         .where("date")
         .eq(today)
         .using("userId-date-index")
         .exec();
-    
+
       if (commit.length > 0) {
         await Commit.update(
           { commitId: commit[0].commitId },
@@ -183,7 +193,7 @@ export const updateQuizProgress = async (
       }
     } catch (commitError) {
       console.error("Error handling commit:", commitError);
-    }       
+    }
 
     await progress.save();
     res.json({
