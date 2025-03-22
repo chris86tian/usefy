@@ -1,4 +1,4 @@
-<img width="1278" alt="Screenshot 2025-03-22 at 1 05 58 AM" src="https://github.com/user-attachments/assets/f099a476-bc8b-4fa5-88f1-e908f8826052" /># Usefy
+# Usefy
 
 Usefy is an AI-agents powered organization platform designed to revolutionize educational experiences through intelligent course management, role-based access control, and automated content generation.
 
