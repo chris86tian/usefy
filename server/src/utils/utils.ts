@@ -101,37 +101,44 @@ export const handleAdvancedVideoUpload = async (
 };
 
 export const mergeSections = (existingSections: any[], newSections: any[]): any[] => {
+  if (!Array.isArray(existingSections) || !Array.isArray(newSections)) {
+    console.error("Invalid input: existingSections or newSections is not an array");
+    return [];
+  }
+
   const existingSectionsMap = new Map<string, any>();
 
-  console.log("existingSections", existingSections[0].chapters);
-  console.log("newSections", newSections[0].chapters);
-
   for (const existingSection of existingSections) {
+    if (!existingSection || !existingSection.sectionId) continue;
     existingSectionsMap.set(existingSection.sectionId, existingSection);
   }
 
   for (const newSection of newSections) {
+    if (!newSection || !newSection.sectionId) continue;
+
     const existingSection = existingSectionsMap.get(newSection.sectionId);
 
-    if (!existingSection) {
-      existingSectionsMap.set(newSection.sectionId, {
-        ...newSection,
-        chapters: newSection.chapters.map((chapter: any) => ({
-          ...chapter,
-          completed: chapter.completed ?? false,
-        })),
-      });
-    } else {
-      existingSectionsMap.set(newSection.sectionId, {
-        ...existingSection,
-        ...newSection,
-        chapters: mergeChapters(existingSection.chapters, newSection.chapters),
-      });
-    }
+    existingSectionsMap.set(
+      newSection.sectionId,
+      existingSection
+        ? {
+            ...existingSection,
+            ...newSection,
+            chapters: mergeChapters(existingSection.chapters || [], newSection.chapters || []),
+          }
+        : {
+            ...newSection,
+            chapters: newSection.chapters?.map((chapter: any) => ({
+              ...chapter,
+              completed: chapter.completed ?? false,
+            })) || [],
+          }
+    );
   }
 
   return Array.from(existingSectionsMap.values());
 };
+
 
 
 export const mergeChapters = (

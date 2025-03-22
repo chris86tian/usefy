@@ -515,7 +515,6 @@ export const api = createApi({
       query: ({ organizationId, cohortId }) =>
         `cohorts/${organizationId}/${cohortId}/courses`,
       transformResponse: (response: any) => {
-        console.log("getCohortCourses response:", JSON.stringify(response));
 
         if (!response) {
           console.log("No response data");
