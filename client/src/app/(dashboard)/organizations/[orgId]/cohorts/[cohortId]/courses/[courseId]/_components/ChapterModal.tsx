@@ -456,7 +456,7 @@ const ChapterModal = () => {
                               )
                             }
                             placeholder="Enter your question"
-                            className="mb-2 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:placeholder-gray-400"
+                            className="mb-2 text-black dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:placeholder-gray-400"
                           />
 
                           <div className="my-2">
@@ -508,7 +508,7 @@ const ChapterModal = () => {
                                   )
                                 }
                                 placeholder={`Option ${optionIndex + 1}`}
-                                className="flex-1 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:placeholder-gray-400"
+                                className="flex-1 text-black dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:placeholder-gray-400"
                               />
                             </div>
                           ))}
