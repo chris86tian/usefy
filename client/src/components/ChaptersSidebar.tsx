@@ -45,6 +45,7 @@ const ChaptersSidebar = () => {
     isAssignmentsCompleted,
   } = useCourseProgressData()
 
+
   useEffect(() => {
     if (course && chapterId) {
       const currentSection = course.sections.find((section) =>
@@ -399,7 +400,7 @@ const Chapter = ({
   isQuizCompleted,
   isAssignmentsCompleted,
   collapsed,
-  sectionIndex, // Add this new prop
+  sectionIndex,
 }: {
   chapter: Chapter
   index: number
@@ -414,7 +415,7 @@ const Chapter = ({
   isQuizCompleted: (chapterId: string) => boolean
   isAssignmentsCompleted: (chapterId: string) => boolean
   collapsed?: boolean
-  sectionIndex: number // Add this new prop type
+  sectionIndex: number
 }) => {
   const completed = isChapterCompleted(sectionId, chapter.chapterId)
   const quizCompleted = isQuizCompleted(chapter.chapterId)
@@ -435,7 +436,6 @@ const Chapter = ({
     handleChapterClick(sectionId, chapter.chapterId)
   }
 
-  // Create section.chapter format (e.g., 1.1, 1.2, etc.)
   const chapterNumber = `${sectionIndex + 1}.${index + 1}`
 
   if (collapsed) {

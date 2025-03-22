@@ -97,8 +97,10 @@ export default function ChapterLayout({ children }: ChapterLayoutProps) {
   }
 
   if (isOrgLoading || isLoading) return <Spinner />
-
   if (!course) return <NotFound message="Course not found" />
+  if (!currentSection) return <NotFound message="Section not found" />
+  if (!currentChapter) return <NotFound message="Chapter not found" />
+
 
   const allChapters = course.sections.flatMap((section: any) => section.chapters)
   const currentChapterIndex = allChapters.findIndex((c: any) => c.chapterId === chapterId)
@@ -149,7 +151,7 @@ export default function ChapterLayout({ children }: ChapterLayoutProps) {
               )}
             </div>
 
-            {!isChapterCompleted() && currentChapter && (
+            {!isChapterCompleted(currentSection.sectionId, currentChapter.chapterId) && currentChapter && (
               <Button variant="outline" size="sm" onClick={handleMarkComplete} className="flex items-center gap-1">
                 <CheckCircle className="h-4 w-4" />
                 <span className="hidden sm:inline">Mark Complete</span>

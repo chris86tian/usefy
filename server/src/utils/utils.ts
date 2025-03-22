@@ -100,38 +100,39 @@ export const handleAdvancedVideoUpload = async (
   return null; // Return null if not HLS/DASH to handle regular upload
 };
 
-export const mergeSections = (
-  existingSections: any[],
-  newSections: any[]
-): any[] => {
+export const mergeSections = (existingSections: any[], newSections: any[]): any[] => {
   const existingSectionsMap = new Map<string, any>();
 
-  // Map existing sections by sectionId
+  console.log("existingSections", existingSections[0].chapters);
+  console.log("newSections", newSections[0].chapters);
+
   for (const existingSection of existingSections) {
     existingSectionsMap.set(existingSection.sectionId, existingSection);
   }
 
-  // Merge new sections into the existing map
   for (const newSection of newSections) {
-    const section = existingSectionsMap.get(newSection.sectionId);
-    if (!section) {
-      // Add new section, ensuring chapters have a default structure
+    const existingSection = existingSectionsMap.get(newSection.sectionId);
+
+    if (!existingSection) {
       existingSectionsMap.set(newSection.sectionId, {
         ...newSection,
         chapters: newSection.chapters.map((chapter: any) => ({
           ...chapter,
-          completed: chapter.completed || false, // Ensure completed defaults to false
+          completed: chapter.completed ?? false,
         })),
       });
     } else {
-      // Merge chapters within the section
-      section.chapters = mergeChapters(section.chapters, newSection.chapters);
-      existingSectionsMap.set(newSection.sectionId, section);
+      existingSectionsMap.set(newSection.sectionId, {
+        ...existingSection,
+        ...newSection,
+        chapters: mergeChapters(existingSection.chapters, newSection.chapters),
+      });
     }
   }
 
   return Array.from(existingSectionsMap.values());
 };
+
 
 export const mergeChapters = (
   existingChapters: any[],
@@ -139,28 +140,21 @@ export const mergeChapters = (
 ): any[] => {
   const existingChaptersMap = new Map<string, any>();
 
-  // Map existing chapters by chapterId
   for (const existingChapter of existingChapters) {
     existingChaptersMap.set(existingChapter.chapterId, existingChapter);
   }
 
-  // Merge new chapters into the existing map
   for (const newChapter of newChapters) {
     const existingChapter = existingChaptersMap.get(newChapter.chapterId);
-    if (existingChapter) {
-      // Merge existing chapter with new chapter data
-      existingChaptersMap.set(newChapter.chapterId, {
-        ...existingChapter,
-        ...newChapter,
-        completed: existingChapter.completed || false, // Retain or default completed to false
-      });
-    } else {
-      // Add new chapter with default completed value
-      existingChaptersMap.set(newChapter.chapterId, {
-        ...newChapter,
-        completed: newChapter.completed || false, // Default completed to false
-      });
-    }
+
+    existingChaptersMap.set(newChapter.chapterId, {
+      ...existingChapter,
+      ...newChapter,
+      completed:
+        newChapter.completed !== undefined
+          ? newChapter.completed
+          : existingChapter?.completed ?? false,
+    });
   }
 
   return Array.from(existingChaptersMap.values());
