@@ -30,6 +30,8 @@ Usefy provides a comprehensive platform for creating and managing educational or
 
 <img width="1278" alt="Screenshot 2025-03-22 at 1 05 58 AM" src="https://github.com/user-attachments/assets/517977ea-a73f-4fe2-8b49-c1b4b5be5073" />
 
+<img width="1279" alt="Screenshot 2025-03-22 at 1 19 11 AM" src="https://github.com/user-attachments/assets/6a49d10e-d514-49c7-bbca-8533f5ae3e0b" />
+
 <img width="1019" alt="Screenshot 2025-03-22 at 1 08 29 AM" src="https://github.com/user-attachments/assets/76107800-c316-4e49-9ac6-166704a06c2e" />
 
 <img width="1018" alt="Screenshot 2025-03-22 at 1 09 43 AM" src="https://github.com/user-attachments/assets/0c72e351-24e0-47ea-84db-49658891746e" />
@@ -39,6 +41,9 @@ Usefy provides a comprehensive platform for creating and managing educational or
 <img width="1277" alt="Screenshot 2025-03-22 at 1 15 34 AM" src="https://github.com/user-attachments/assets/9b3a2f66-ae63-4c89-a8c1-e3c719ce32ec" />
 
 <img width="1278" alt="Screenshot 2025-03-22 at 1 16 01 AM" src="https://github.com/user-attachments/assets/a3f798da-95f0-41ad-916e-fcd03a320709" />
+
+<img width="1723" alt="Screenshot 2025-03-22 at 1 20 09 AM" src="https://github.com/user-attachments/assets/d773a7c8-ccf0-4bfd-8cbf-5bc8654de584" />
+
 
 ---
 
