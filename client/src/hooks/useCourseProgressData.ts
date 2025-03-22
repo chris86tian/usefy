@@ -15,15 +15,9 @@ export const useCourseProgressData = () => {
   const [updateProgress] = useUpdateUserCourseProgressMutation();
 
   const { data: courseInstructors } = useGetCourseInstructorsQuery(courseId);
-  const { data: course, isLoading: courseLoading, refetch: refetchCourse } = useGetCourseQuery(courseId);
-  const { 
-    data: userProgress, 
-    isLoading: progressLoading, 
-    refetch: refetchProgress 
-  } = useGetUserCourseProgressQuery(
-    { userId: user?.id as string, courseId },
-    { skip: !user?.id }
-  );
+  const { data: course, isLoading: courseLoading, refetch } = useGetCourseQuery(courseId);
+  const { data: userProgress, isLoading: progressLoading } = useGetUserCourseProgressQuery({ userId: user?.id as string, courseId });
+
 
   const isChapterCompleted = (sectionId: string, chapterId: string) => {
     const section = userProgress?.sections?.find((s) => s.sectionId === sectionId);
@@ -34,80 +28,45 @@ export const useCourseProgressData = () => {
   const currentSection = course?.sections.find((s) => s.chapters.some((c) => c.chapterId === chapterId));
   const currentChapter = currentSection?.chapters.find((c) => c.chapterId === chapterId);
   
-  const isQuizCompleted = (chapterId: string) => {
-    if (!userProgress?.sections) return false;
-    
-    const sectionWithChapter = userProgress.sections.find(section => 
-      section.chapters.some(chapter => chapter.chapterId === chapterId)
-    );
-    
-    if (!sectionWithChapter) return false;
-    
-    return sectionWithChapter.chapters.some(
-      chapter => chapter.chapterId === chapterId && chapter.quizCompleted
-    );
-  };
 
-  const isAssignmentsCompleted = (chapterId: string) => {
-    if (!course?.sections) return false;
-    
-    // Find the section containing this chapter
-    const section = course.sections.find(section => 
-      section.chapters.some(chapter => chapter.chapterId === chapterId)
-    );
-    
-    if (!section) return false;
-    
-    // Find the chapter
-    const chapter = section.chapters.find(c => c.chapterId === chapterId);
-    
-    if (!chapter || !chapter.assignments || chapter.assignments.length === 0) return false;
-    
-    // Check if all assignments have submissions from this user
-    return chapter.assignments.every(assignment => 
-      assignment.submissions?.some(submission => submission.userId === user?.id)
-    );
-  };
+  const isQuizCompleted = () => {
+    if (!currentSection || !currentChapter || !userProgress?.sections) return false;
 
-  const updateChapterProgress = async (
+    const section = userProgress.sections.find((s) => s.sectionId === currentSection.sectionId);
+    return (section?.chapters.some((c) => c.chapterId === currentChapter.chapterId && c.quizCompleted ) ?? false);
+  }
+
+  const isAssignmentsCompleted = () => {
+    if (!currentSection || !currentChapter || !userProgress?.sections) return false;
+
+    const submissions = currentChapter?.assignments?.map((a) => a.submissions.some((s) => s.userId === user?.id));
+    return submissions?.every((s) => s) ?? false;
+  }
+
+  const updateChapterProgress = (
     sectionId: string,
     chapterId: string,
     completed: boolean
   ) => {
     if (!user) return;
     
-    try {
-      await updateProgress({
-        userId: user.id,
-        courseId,
-        progressData: {
-          sections: [
-            {
-              sectionId,
-              chapters: [
-                {
-                  chapterId,
-                  completed,
-                },
-              ],
-            },
-          ],
-        },
-      }).unwrap(); // Using unwrap() to get the result or throw an error
-      
-      // After successful update, refetch the progress data
-      await refetchProgress();
-      
-      // Update local state if needed
-      setHasMarkedComplete(completed);
-    } catch (error) {
-      console.error("Failed to update chapter progress:", error);
-    }
-  };
-
-  // Function to refetch all data
-  const refetch = async () => {
-    await Promise.all([refetchCourse(), refetchProgress()]);
+    updateProgress({
+      userId: user.id,
+      courseId,
+      progressData: {
+        sections: [
+          {
+            sectionId,
+            chapters: [
+              {
+                chapterId,
+                completed,
+              },
+            ],
+          },
+        ],
+      },
+    });
   };
 
   return {
