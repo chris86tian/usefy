@@ -82,7 +82,7 @@ export const updateUserCourseProgress = async (
 
   try {
     let progress = await UserCourseProgress.get({ userId, courseId });
-    
+
     if (!progress) {
       console.log("No existing progress found, creating new progress record");
       // Initialize new progress record
@@ -96,33 +96,34 @@ export const updateUserCourseProgress = async (
       });
     }
 
+    if (!progress.sections || !Array.isArray(progress.sections)) {
+      progress.sections = [];
+    }
+
     // Log existing sections before merge
     console.log(
       "Existing sections:",
       JSON.stringify(progress.sections, null, 2)
     );
-    
-    // Handle the case where progressData has a sections property
-    // This matches the structure in your log: { "sections": [...] }
+
+    let sectionsToMerge = [];
+
     if (progressData && progressData.sections) {
-      progress.sections = mergeSections(
-        Array.isArray(progress.sections) ? progress.sections : [],
-        Array.isArray(progressData.sections) ? progressData.sections : []
-      );
-    } 
-    // Handle the case where progressData is directly the sections array
-    else if (Array.isArray(progressData)) {
-      progress.sections = mergeSections(
-        Array.isArray(progress.sections) ? progress.sections : [],
-        progressData
+      sectionsToMerge = progressData.sections;
+    } else if (Array.isArray(progressData)) {
+      sectionsToMerge = progressData;
+    }
+
+    console.log("Sections to merge:", JSON.stringify(sectionsToMerge, null, 2));
+
+    if (sectionsToMerge.length > 0) {
+      progress.sections = mergeSections(progress.sections, sectionsToMerge);
+      console.log(
+        "After merge sections:",
+        JSON.stringify(progress.sections, null, 2)
       );
     }
-    
-    console.log(
-      "After merge sections:",
-      JSON.stringify(progress.sections, null, 2)
-    );
-    
+
     progress.lastAccessedTimestamp = new Date().toISOString();
     progress.overallProgress = calculateOverallProgress(progress.sections);
 
@@ -141,7 +142,6 @@ export const updateUserCourseProgress = async (
     });
   }
 };
-
 
 export const updateQuizProgress = async (
   req: Request,
