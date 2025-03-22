@@ -36,6 +36,9 @@ Usefy provides a comprehensive platform for creating and managing educational or
 
 <img width="1278" alt="Screenshot 2025-03-22 at 1 11 42 AM" src="https://github.com/user-attachments/assets/4fdc410d-d1b6-46c9-8836-72c943ab8540" />
 
+<img width="1277" alt="Screenshot 2025-03-22 at 1 15 34 AM" src="https://github.com/user-attachments/assets/9b3a2f66-ae63-4c89-a8c1-e3c719ce32ec" />
+
+<img width="1278" alt="Screenshot 2025-03-22 at 1 16 01 AM" src="https://github.com/user-attachments/assets/a3f798da-95f0-41ad-916e-fcd03a320709" />
 
 ---
 
