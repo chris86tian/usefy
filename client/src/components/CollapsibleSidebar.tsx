@@ -60,7 +60,7 @@ export function CollapsibleSidebar({
   return (
     <div
       className={cn(
-        "relative h-screen border-border bg-white dark:bg-gray-950 transition-all duration-300 ease-in-out",
+        "relative h-full border-border bg-white dark:bg-gray-950 transition-all duration-300 ease-in-out",
         position === "left" ? "border-r" : "border-l",
         className,
       )}

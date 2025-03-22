@@ -219,7 +219,7 @@ const Section = ({
             isQuizCompleted={isQuizCompleted}
             isAssignmentsCompleted={isAssignmentsCompleted}
             collapsed={collapsed}
-            sectionIndex={index} // Pass the section index
+            sectionIndex={index}
           />
         )}
       </div>
@@ -276,7 +276,7 @@ const Section = ({
           isQuizCompleted={isQuizCompleted}
           isAssignmentsCompleted={isAssignmentsCompleted}
           collapsed={collapsed}
-          sectionIndex={index} // Pass the section index
+          sectionIndex={index}
         />
       </CollapsibleContent>
     </Collapsible>
@@ -342,7 +342,7 @@ const ChaptersList = ({
   isQuizCompleted,
   isAssignmentsCompleted,
   collapsed,
-  sectionIndex, // Add this new prop
+  sectionIndex,
 }: {
   section: Section
   sectionProgress: any
@@ -355,7 +355,7 @@ const ChaptersList = ({
   isQuizCompleted: (chapterId: string) => boolean
   isAssignmentsCompleted: (chapterId: string) => boolean
   collapsed?: boolean
-  sectionIndex: number // Add this new prop type
+  sectionIndex: number
 }) => {
   if (!isReleased) {
     return null
@@ -379,7 +379,7 @@ const ChaptersList = ({
           isQuizCompleted={isQuizCompleted}
           isAssignmentsCompleted={isAssignmentsCompleted}
           collapsed={collapsed}
-          sectionIndex={sectionIndex} // Pass the section index
+          sectionIndex={sectionIndex}
         />
       ))}
     </ul>

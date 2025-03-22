@@ -78,38 +78,53 @@ export const updateUserCourseProgress = async (
   const { userId, courseId } = req.params;
   const progressData = req.body;
 
-  console.log("Received progress update request:");
-  console.log("User ID:", userId);
-  console.log("Course ID:", courseId);
   console.log("Progress Data:", JSON.stringify(progressData, null, 2));
 
   try {
     let progress = await UserCourseProgress.get({ userId, courseId });
-
+    
     if (!progress) {
       console.log("No existing progress found, creating new progress record");
+      // Initialize new progress record
       progress = new UserCourseProgress({
         userId,
         courseId,
         enrollmentDate: new Date().toISOString(),
         overallProgress: 0,
-        sections: progressData || [],
+        sections: [],
         lastAccessedTimestamp: new Date().toISOString(),
       });
-    } else {
-      console.log("Found existing progress, merging with new data");
-      console.log(
-        "Existing sections:",
-        JSON.stringify(progress.sections, null, 2)
-      );
-      progress.sections = mergeSections(progress.sections, progressData);
-      console.log(
-        "After merge sections:",
-        JSON.stringify(progress.sections, null, 2)
-      );
-      progress.lastAccessedTimestamp = new Date().toISOString();
-      progress.overallProgress = calculateOverallProgress(progress.sections);
     }
+
+    // Log existing sections before merge
+    console.log(
+      "Existing sections:",
+      JSON.stringify(progress.sections, null, 2)
+    );
+    
+    // Handle the case where progressData has a sections property
+    // This matches the structure in your log: { "sections": [...] }
+    if (progressData && progressData.sections) {
+      progress.sections = mergeSections(
+        Array.isArray(progress.sections) ? progress.sections : [],
+        Array.isArray(progressData.sections) ? progressData.sections : []
+      );
+    } 
+    // Handle the case where progressData is directly the sections array
+    else if (Array.isArray(progressData)) {
+      progress.sections = mergeSections(
+        Array.isArray(progress.sections) ? progress.sections : [],
+        progressData
+      );
+    }
+    
+    console.log(
+      "After merge sections:",
+      JSON.stringify(progress.sections, null, 2)
+    );
+    
+    progress.lastAccessedTimestamp = new Date().toISOString();
+    progress.overallProgress = calculateOverallProgress(progress.sections);
 
     await progress.save();
     console.log("Final progress saved:", JSON.stringify(progress, null, 2));
@@ -126,6 +141,7 @@ export const updateUserCourseProgress = async (
     });
   }
 };
+
 
 export const updateQuizProgress = async (
   req: Request,
