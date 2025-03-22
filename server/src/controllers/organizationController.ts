@@ -51,13 +51,14 @@ export const createOrganization = async (
   const { organizationId, name, description, image } = req.body;
   const auth = getAuth(req);
 
-  const superadmins = (await clerkClient.users.getUserList()).data.filter(
-    (user) => user.publicMetadata.userType === "superadmin"
-  );
-  if (superadmins.length === 0) {
-    res.status(400).json({ message: "No superadmins found" });
+  const isSuperadmin = await clerkClient.users
+    .getUser(auth.userId as string)
+    .then((user) => user.publicMetadata.userType === "superadmin");
+
+  if (!isSuperadmin) {
+    res.status(403).json({ message: "Unauthorized to create organization" });
     return;
-  }
+  } 
 
   try {
     const existingOrganization = await Organization.get(organizationId);
@@ -74,24 +75,12 @@ export const createOrganization = async (
       cohorts: [],
       admins: [
         { userId: auth.userId },
-        ...superadmins.map((superadmin: User) => ({ userId: superadmin.id })),
       ],
       instructors: [],
       learners: [],
       courses: [],
     });
     await organization.save();
-
-    for (const superadmin of superadmins) {
-      await sendMessage(
-        superadmin.id,
-        superadmin.emailAddresses[0].emailAddress,
-        "A new organization has been created",
-        `A new organization ${name} has been created. Click here to view: ${process.env.CLIENT_URL}/organizations/${organizationId}`,
-        `/organizations/${organizationId}`,
-        { sendEmail: true, sendNotification: true, rateLimited: true }
-      );
-    }
 
     res.json({
       message: "Organization created successfully",
