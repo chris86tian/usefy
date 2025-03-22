@@ -1,63 +1,92 @@
 # Usefy
 
-Usefy is a cutting-edge platform designed to empower individuals by enhancing their learning experiences, tracking progress, and fostering personal growth. This repository encapsulates the backend & client architecture and data flow for Usefy, making it a one-stop solution for modern educational needs.
+Usefy is an AI-agents powered organization platform designed to revolutionize educational experiences through intelligent course management, role-based access control, and automated content generation.
 
 ---
 
 ## Table of Contents
 
 - [Introduction](#introduction)
-- [Features](#features)
+- [Key Features](#key-features)
+  - [Organization Management](#organization-management)
+  - [Role-Based Access Control](#role-based-access-control)
+  - [AI Course Generation](#ai-course-generation)
+  - [Interactive Learning](#interactive-learning)
+  - [Progress Tracking](#progress-tracking)
+  - [Course Management](#course-management)
+- [Technical Architecture](#technical-architecture)
 - [Schema Diagrams](#schema-diagrams)
 - [Technologies Used](#technologies-used)
 - [Installation](#installation)
 - [Usage](#usage)
 - [Deployment](#deployment)
-- [OAuth Configuration](#oauth-configuration)
 - [Contributing](#contributing)
 
 ---
 
 ## Introduction
 
-Usefy provides a seamless way to manage courses, track user progress, handle transactions, and deliver notifications. It enables users to:
-
-- Enroll in courses.
-- Monitor their learning journey with detailed progress tracking.
-- Manage financial transactions related to course enrollments.
-- Stay updated with notifications and personal commitment tracking.
+Usefy provides a comprehensive platform for creating and managing educational organizations, cohorts, and courses. The platform leverages AI to generate educational content while offering robust features for both administrators and learners. Usefy empowers educational institutions, training programs, and learning communities to create, customize, and manage their educational content with minimal effort.
 
 ---
 
-## Features
+## Key Features
 
-1. **Course Management**
+### Organization Management
 
-   - Create and manage course content with associated metadata.
-   - Track enrollments and course completion statuses.
+- Create organizations and cohorts within them
+- Invite users to organizations/cohorts via email or CSV bulk import
+- Manage members across different cohorts
 
-2. **User Progress Tracking**
+### Role-Based Access Control
 
-   - Monitor section- and chapter-wise progress.
-   - Mark quizzes and chapters as completed.
+- **Admins**: Full control over organizations, cohorts, and courses
+- **Instructors**: Ability to edit courses and generate content
+- **Learners**: Access to assigned cohorts and courses
 
-3. **Transaction Management**
+### AI Course Generation
 
-   - Securely handle course payments.
-   - Generate transaction histories for users.
+- Generate complete courses from YouTube links
+- AI-powered creation of sections, chapters, resources, quizzes, and assignments
+- Customizable content generation based on specific needs
 
-4. **Notifications**
+### Interactive Learning
 
-   - Send real-time updates to users about course events and reminders.
+- Run code directly in the built-in IDE
+- Receive AI-generated feedback on coding assignments
+- Comment on and like chapter content
+- Submit issues/feedback on course materials
 
-5. **Commit Tracking**
-   - Maintain daily user activity streaks for motivation and accountability.
+### Progress Tracking
+
+- GitHub-like activity commit graph
+- Detailed statistics for instructors (submissions, completion rates, time spent)
+- Personal progress tracking for learners
+
+### Course Management
+
+- Control release timing of course sections
+- Change course status (public/draft/archived)
+- Instant email/notification updates for course changes
+
+---
+
+## Technical Architecture
+
+Usefy provides a seamless experience through its integrated backend and client architecture, handling:
+
+- User authentication and authorization
+- Course content management
+- Progress tracking
+- Notifications
+- AI-powered content generation
+- IDE integration for coding assignments
 
 ---
 
 ## Schema Diagrams
 
-For an interactive view of the diagrams, visit [this workspace](https://app.eraser.io/workspace/cdYkToriyno1VkoxYAop?origin=share).
+For an interactive view of the database schemas and relationships, visit [this workspace](https://app.eraser.io/workspace/cdYkToriyno1VkoxYAop?origin=share).
 
 ---
 
@@ -66,8 +95,11 @@ For an interactive view of the diagrams, visit [this workspace](https://app.eras
 - **Backend**: Node.js, Express.js, Serverless Framework
 - **Database**: DynamoDB
 - **Authentication**: Clerk
-- **API Deployment**: AWS API Gateway, AWS Lambda
-- **Infrastructure**: AWS CloudFormation
+- **AI Services**: OpenAI SDK for AI agents (content generation and solutions feedback)
+- **Frontend**: Next.js
+- **Containerization**: Docker
+- **Infrastructure**: AWS (API Gateway, Lambda, CloudFormation, CloudWatch)
+- **Storage**: AWS S3
 - **API Documentation**: Swagger/OpenAPI
 - **Other Tools**: AWS SDK, Dynamoose ORM
 
@@ -79,46 +111,59 @@ Follow these steps to set up the project locally:
 
 1. Clone the repository:
 
-   ```bash
-   git clone https://github.com/growthhungrylife/usefy.git
-   ```
+```bash
+git clone https://github.com/growthhungrylife/usefy.git
+```
 
-2. Navigate to the project directory:
+2. Navigate to the project directories:
 
-   ```bash
-   cd usefy
+```bash
+cd usefy
 
-   // Client application
-   cd client
+# Client application
+cd client
 
-   // Server application
-   cs server
-   ```
+# Server application (from root)
+cd server
+```
 
 3. Install dependencies:
 
-   ```bash
-   // Client application
-   npm install --legacy-peer-deps
+```bash
+# Client application
+npm install --legacy-peer-deps
 
-   // Server application
-   npm install
-   ```
+# Server application
+npm install
+```
 
-4. Configure environment variables by creating a `.env` file and adding environment variables
+4. Configure environment variables by creating a `.env` file with necessary environment variables
 
-5. Start the server:
-   ```bash
-   npm run dev
-   ```
+5. Start the development servers:
+
+```bash
+npm run dev
+```
+
+### Using Docker
+
+You can also run the application using Docker:
+
+```bash
+# Build the Docker image
+docker build -t usefy .
+
+# Run the container
+docker run -p 3000:3000 -p 8001:8001 usefy
+```
 
 ---
 
 ## Usage
 
-1. Access the server locally at `http://localhost:8001` and client at `http://localhost:3000`.
-2. Use a tool like Postman or Swagger UI for testing endpoints.
-3. Integrate the backend with your frontend or mobile application for a complete user experience.
+1. Access the server locally at http://localhost:8001 and client at http://localhost:3000
+2. Use Postman or Swagger UI for testing endpoints
+3. Integrate the backend with your frontend or mobile application for a complete user experience
 
 ---
 
@@ -129,42 +174,28 @@ The backend is deployed using AWS Lambda and API Gateway with the Serverless Fra
 ### Deploying to AWS
 
 1. Install the Serverless Framework globally:
-   ```bash
-   npm install -g serverless
-   ```
+
+```bash
+npm install -g serverless
+```
+
 2. Deploy the service:
-   ```bash
-   serverless deploy
-   ```
+
+```bash
+serverless deploy
+```
+
 3. The deployment will provide an API Gateway URL, e.g.:
 
-   ```
-   Service deployed to stack growthhungry-service-dev (60s)
+```
+Service deployed to stack growthhungry-service-dev (60s)
 
-   endpoints:
-     ANY - https://khbciw4vke.execute-api.us-east-1.amazonaws.com/prod/
-     ANY - https://khbciw4vke.execute-api.us-east-1.amazonaws.com/prod/{proxy+}
-   ```
+endpoints:
+  ANY - https://mhun775961.execute-api.us-east-1.amazonaws.com/migration/
+  ANY - https://mhun775961.execute-api.us-east-1.amazonaws.com/migration/{proxy+}
+```
 
----
-
-S3 bucket= expertize-bucket-migration-migration
-
-## OAuth Configuration
-
-To enable Google OAuth, configure the following settings in the Google Cloud Console :
-
-### **Authorized JavaScript Origins (Frontend)**
-
-- ✅ `https://usefy.com`
-- ✅ `http://localhost:3000`
-
-### **Authorized Redirect URIs (Backend)**
-
-- ✅ `https://khbciw4vke.execute-api.us-east-1.amazonaws.com/prod/auth/google/callback`
-- ✅ `http://localhost:8001/auth/google/callback`
-
-Ensure that your backend has an `/auth/google/callback` route to handle authentication responses.
+S3 bucket: expertize-bucket-migration
 
 ---
 
@@ -172,18 +203,22 @@ Ensure that your backend has an `/auth/google/callback` route to handle authenti
 
 We welcome contributions from the community! To contribute:
 
-1. Fork the repository.
+1. Fork the repository
 2. Create a new branch for your feature or bug fix:
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
+
+```bash
+git checkout -b feature/your-feature-name
+```
+
 3. Commit your changes and push the branch:
-   ```bash
-   git commit -m "Add your message here"
-   git push origin feature/your-feature-name
-   ```
-4. Open a pull request on GitHub.
+
+```bash
+git commit -m "Add your message here"
+git push origin feature/your-feature-name
+```
+
+4. Open a pull request on GitHub
 
 ---
 
-Happy Learning! 🚀
+Happy Learning & Teaching! 🚀
