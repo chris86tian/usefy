@@ -40,6 +40,7 @@ export default function ChapterLayout({ children }: ChapterLayoutProps) {
   const [nextChapter, setNextChapter] = useState<any>(null)
   const [prevChapter, setPrevChapter] = useState<any>(null)
 
+
   useEffect(() => {
     if (course && chapterId) {
       // Flatten all chapters from all sections

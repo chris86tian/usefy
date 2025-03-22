@@ -104,86 +104,147 @@ export const mergeSections = (
   existingSections: any[],
   newSections: any[]
 ): any[] => {
-  if (!Array.isArray(existingSections) || !Array.isArray(newSections)) {
-    console.error(
-      "Invalid input: existingSections or newSections is not an array"
-    );
-    return [];
+  // Ensure both inputs are arrays
+  if (!Array.isArray(existingSections)) {
+    console.error("existingSections is not an array:", existingSections);
+    existingSections = [];
   }
+  
+  if (!Array.isArray(newSections)) {
+    console.error("newSections is not an array:", newSections);
+    newSections = [];
+  }
+  
+  console.log("mergeSections input:", { 
+    existingSectionsLength: existingSections.length,
+    newSectionsLength: newSections.length 
+  });
 
   const existingSectionsMap = new Map<string, any>();
 
+  // Build map of existing sections
   for (const existingSection of existingSections) {
-    if (!existingSection || !existingSection.sectionId) continue;
+    if (!existingSection || !existingSection.sectionId) {
+      console.log("Skipping invalid existing section:", existingSection);
+      continue;
+    }
     existingSectionsMap.set(existingSection.sectionId, existingSection);
   }
 
+  // Process new sections
   for (const newSection of newSections) {
-    if (!newSection || !newSection.sectionId) continue;
+    if (!newSection || !newSection.sectionId) {
+      console.log("Skipping invalid new section:", newSection);
+      continue;
+    }
 
     const existingSection = existingSectionsMap.get(newSection.sectionId);
-
-    existingSectionsMap.set(
-      newSection.sectionId,
-      existingSection
-        ? {
-            ...existingSection,
-            ...newSection,
-            chapters: mergeChapters(
-              existingSection.chapters || [],
-              newSection.chapters || []
-            ),
-          }
-        : {
-            ...newSection,
-            chapters:
-              newSection.chapters?.map((chapter: any) => ({
+    
+    if (existingSection) {
+      existingSectionsMap.set(
+        newSection.sectionId,
+        {
+          ...existingSection,
+          ...newSection,
+          // Always merge chapters to preserve completion status
+          chapters: mergeChapters(
+            Array.isArray(existingSection.chapters) ? existingSection.chapters : [],
+            Array.isArray(newSection.chapters) ? newSection.chapters : []
+          ),
+        }
+      );
+    } else {
+      // New section not in existing data
+      existingSectionsMap.set(
+        newSection.sectionId,
+        {
+          ...newSection,
+          chapters: Array.isArray(newSection.chapters)
+            ? newSection.chapters.map((chapter: any) => ({
                 ...chapter,
                 completed: chapter.completed ?? false,
-              })) || [],
-          }
-    );
+                quizCompleted: chapter.quizCompleted ?? false,
+              }))
+            : [],
+        }
+      );
+    }
   }
 
-  return Array.from(existingSectionsMap.values());
+  const result = Array.from(existingSectionsMap.values());
+  console.log("mergeSections result length:", result.length);
+  return result;
 };
 
 export const mergeChapters = (
   existingChapters: any[],
   newChapters: any[]
 ): any[] => {
+  // Ensure both inputs are arrays
+  if (!Array.isArray(existingChapters) || !Array.isArray(newChapters)) {
+    return Array.isArray(existingChapters) ? existingChapters : 
+           Array.isArray(newChapters) ? newChapters.map(ch => ({
+             ...ch,
+             completed: ch.completed ?? false,
+             quizCompleted: ch.quizCompleted ?? false
+           })) : [];
+  }
+
   const existingChaptersMap = new Map<string, any>();
 
+  // Build map of existing chapters
   for (const existingChapter of existingChapters) {
+    if (!existingChapter || !existingChapter.chapterId) continue;
     existingChaptersMap.set(existingChapter.chapterId, existingChapter);
   }
 
+  // Process new chapters
   for (const newChapter of newChapters) {
+    if (!newChapter || !newChapter.chapterId) continue;
+    
     const existingChapter = existingChaptersMap.get(newChapter.chapterId);
 
-    existingChaptersMap.set(newChapter.chapterId, {
-      ...existingChapter,
-      ...newChapter,
-      completed: newChapter.completed ?? existingChapter?.completed ?? false,
-      quizCompleted:
-        newChapter.quizCompleted ?? existingChapter?.quizCompleted ?? false,
-    });
+    // Merge or add new chapter
+    existingChaptersMap.set(
+      newChapter.chapterId, 
+      {
+        ...(existingChapter || {}),
+        ...newChapter,
+        // Preserve completion status or use new values if provided
+        completed: newChapter.completed ?? existingChapter?.completed ?? false,
+        quizCompleted: newChapter.quizCompleted ?? existingChapter?.quizCompleted ?? false,
+        // Preserve or merge quiz answers/results if they exist
+        quizResults: newChapter.quizResults ?? existingChapter?.quizResults,
+        // Always keep chapter content data from new updates
+        title: newChapter.title || existingChapter?.title,
+        content: newChapter.content ?? existingChapter?.content,
+        video: newChapter.video ?? existingChapter?.video,
+      }
+    );
   }
 
-  return Array.from(existingChaptersMap.values());
+  // Convert map back to array and ensure chapters are ordered
+  return Array.from(existingChaptersMap.values())
+    .sort((a, b) => (a.order || 0) - (b.order || 0));
 };
 
 export const calculateOverallProgress = (sections: any[]): number => {
-  const totalChapters = sections.reduce(
-    (acc: number, section: any) => acc + section.chapters.length,
-    0
-  );
+  if (!Array.isArray(sections)) {
+    console.error("Invalid sections data for progress calculation:", sections);
+    return 0;
+  }
 
-  const completedChapters = sections.reduce(
-    (acc: number, section: any) =>
-      acc + section.chapters.filter((chapter: any) => chapter.completed).length,
-    0
-  );
+  let totalChapters = 0;
+  let completedChapters = 0;
+
+  for (const section of sections) {
+    if (section && Array.isArray(section.chapters)) {
+      totalChapters += section.chapters.length;
+      completedChapters += section.chapters.filter((chapter: any) => 
+        chapter && chapter.completed === true
+      ).length;
+    }
+  }
 
   return totalChapters > 0 ? (completedChapters / totalChapters) * 100 : 0;
 };

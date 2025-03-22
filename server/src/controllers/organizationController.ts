@@ -672,7 +672,6 @@ export const getOrganizationUsers = async (
       return;
     }
 
-    // Get all user IDs based on their roles
     const adminIds = organization.admins.map((admin: any) => admin.userId);
     const instructorIds = organization.instructors.map(
       (instructor: any) => instructor.userId
@@ -681,7 +680,6 @@ export const getOrganizationUsers = async (
       (learner: any) => learner.userId
     );
 
-    // Filter by role if specified
     let filteredUserIds: string[] = [];
     if (role === "admin") {
       filteredUserIds = adminIds;
@@ -694,18 +692,14 @@ export const getOrganizationUsers = async (
     }
 
     console.log("Fetching users for IDs:", filteredUserIds);
-
-    // Fetch all users from Clerk
-    // We'll fetch all users at once since we need to filter by role afterward
     const clerkResponse = await clerkClient.users.getUserList({
       userId: filteredUserIds,
-      limit: 500, // Use a reasonable limit based on your expected max users
+      limit: 500,
     });
 
     const allUsers = clerkResponse.data;
     const totalClerkUsers = clerkResponse.totalCount;
 
-    // Apply search filter if provided
     const searchFilteredUsers = search
       ? allUsers.filter((user) => {
           const fullName = `${user.firstName || ""} ${
@@ -780,7 +774,6 @@ export const getOrganizationUsers = async (
       },
     };
 
-    console.log("Final Response:", response);
 
     res.json({
       message: "Organization users retrieved successfully",

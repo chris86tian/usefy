@@ -49,7 +49,7 @@ export default function OrganizationLayout({ children }: OrganizationLayoutProps
 
   return (
     <OrganizationContext.Provider value={{ currentOrg, isOrgLoading }}>
-      <div className="flex h-screen w-full">
+      <div className="flex h-screen">
         <OrganizationSidebar
           organizations={organizations}
           cohorts={cohorts}

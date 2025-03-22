@@ -76,6 +76,7 @@ export const updateCourse = async (req: Request, res: Response): Promise<void> =
           code: "invalid_price",
           message: "Price must be a non-negative number",
         });
+        return;
       }
       updateData.price = price;
     }
@@ -131,20 +132,33 @@ export const updateCourse = async (req: Request, res: Response): Promise<void> =
           message: "Invalid sections data format",
           details: error instanceof Error ? error.message : "Unknown error",
         });
+        return;
       }
     }
 
     const updatedCourse = await Course.update(courseId, updateData);
 
+    // Update user progress when sections are updated
     if (updateData.sections) {
       const progressList = await UserCourseProgress.query("courseId").eq(courseId).using("CourseIdIndex").exec();
 
       for (const progress of progressList) {
-        const existingSections = JSON.parse(JSON.stringify(progress.sections || []));
-        progress.sections = mergeSections(existingSections, updateData.sections);
-        progress.lastAccessedTimestamp = new Date().toISOString();
-        progress.overallProgress = calculateOverallProgress(progress.sections);
-        await progress.save();
+        try {
+          // Parse sections properly to ensure they're an array
+          const existingSections = Array.isArray(progress.sections) 
+            ? progress.sections 
+            : (typeof progress.sections === 'string' 
+                ? JSON.parse(progress.sections) 
+                : []);
+          
+          // Use the mergeSections function to update progress while preserving user completion data
+          progress.sections = mergeSections(existingSections, updateData.sections);
+          progress.lastAccessedTimestamp = new Date().toISOString();
+          progress.overallProgress = calculateOverallProgress(progress.sections);
+          await progress.save();
+        } catch (err) {
+          console.error(`Error updating progress for user ${progress.userId}:`, err);
+        }
       }
     }
 
