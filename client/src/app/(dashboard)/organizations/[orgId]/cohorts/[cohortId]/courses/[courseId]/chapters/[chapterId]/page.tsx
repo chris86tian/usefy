@@ -216,7 +216,7 @@ const Course = () => {
       currentChapter &&
       currentSection &&
       userProgress?.sections &&
-      !isChapterCompleted() &&
+      !isChapterCompleted(currentSection.sectionId, currentChapter.chapterId) &&
       isSectionReleased(currentSection)
     ) {
       setHasMarkedComplete(true)
@@ -498,7 +498,7 @@ const Course = () => {
             </div>
 
             <div className="text-sm text-muted-foreground">
-              {isChapterCompleted() ? (
+              {isChapterCompleted(currentSection.sectionId, currentChapter.chapterId) ? (
                 <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
                   Completed
                 </Badge>

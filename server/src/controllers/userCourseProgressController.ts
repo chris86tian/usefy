@@ -78,6 +78,8 @@ export const updateUserCourseProgress = async (
   const { userId, courseId } = req.params;
   const progressData = req.body;
 
+  console.log("progressData", progressData.sections[0].chapters)
+
   try {
     let progress = await UserCourseProgress.get({ userId, courseId });
 
@@ -98,6 +100,8 @@ export const updateUserCourseProgress = async (
       progress.lastAccessedTimestamp = new Date().toISOString();
       progress.overallProgress = calculateOverallProgress(progress.sections);
     }
+
+    console.log("progress", progress.sections[0].chapters)
 
     await progress.save();
 
