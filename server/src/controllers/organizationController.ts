@@ -688,7 +688,6 @@ export const getOrganizationUsers = async (
       filteredUserIds = [...adminIds, ...instructorIds, ...learnerIds];
     }
 
-    console.log("Fetching users for IDs:", filteredUserIds);
     const clerkResponse = await clerkClient.users.getUserList({
       userId: filteredUserIds,
       limit: 500,
