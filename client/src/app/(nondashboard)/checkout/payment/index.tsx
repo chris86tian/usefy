@@ -52,13 +52,10 @@ const PaymentPageContent = () => {
       return
     }
 
-    const baseUrl =
-      process.env.NEXT_ENV === "production" ? process.env.NEXT_PUBLIC_CLIENT_URL : process.env.NEXT_PUBLIC_LOCAL_URL
-
     const result = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        return_url: `${baseUrl}/checkout?step=3&id=${courseId}`,
+        return_url: `${process.env.NEXT_PUBLIC_CLIENT_URL}/checkout?step=3&id=${courseId}`,
       },
       redirect: "if_required",
     })
