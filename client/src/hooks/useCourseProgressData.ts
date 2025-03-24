@@ -29,44 +29,99 @@ export const useCourseProgressData = () => {
   const currentChapter = currentSection?.chapters.find((c) => c.chapterId === chapterId);
   
 
-  const isQuizCompleted = () => {
-    if (!currentSection || !currentChapter || !userProgress?.sections) return false;
+  const isQuizCompleted = (targetChapterId?: string) => {
+    const chapterToCheck = targetChapterId || currentChapter?.chapterId;
+    
+    if (!chapterToCheck || !userProgress?.sections) return false;
+    
+    // Find the section and chapter
+    const targetChapter = course?.sections
+      .flatMap(s => s.chapters)
+      .find(c => c.chapterId === chapterToCheck);
+      
+    const targetSection = course?.sections
+      .find(s => s.chapters.some(c => c.chapterId === chapterToCheck));
+    
+    // If there's no quiz in the chapter, consider it completed
+    if (!targetChapter || targetChapter.quiz === undefined) return true;
 
-    const section = userProgress.sections.find((s) => s.sectionId === currentSection.sectionId);
-    return (section?.chapters.some((c) => c.chapterId === currentChapter.chapterId && c.quizCompleted ) ?? false);
+    // Find the section in user progress
+    const section = userProgress.sections.find((s) => s.sectionId === targetSection?.sectionId);
+    return (section?.chapters.some((c) => c.chapterId === chapterToCheck && c.quizCompleted) ?? false);
   }
 
-  const isAssignmentsCompleted = () => {
-    if (!currentSection || !currentChapter || !userProgress?.sections) return false;
+  const isAssignmentsCompleted = (targetChapterId?: string) => {
+    const chapterToCheck = targetChapterId || currentChapter?.chapterId;
+    
+    if (!chapterToCheck || !userProgress?.sections) return false;
+    
+    // Find the chapter
+    const targetChapter = course?.sections
+      .flatMap(s => s.chapters)
+      .find(c => c.chapterId === chapterToCheck);
+    
+    // If there are no assignments in the chapter, consider them completed
+    if (!targetChapter || !targetChapter.assignments || targetChapter.assignments.length === 0) return true;
 
-    const submissions = currentChapter?.assignments?.map((a) => a.submissions.some((s) => s.userId === user?.id));
-    return submissions?.every((s) => s) ?? false;
+    // Check if all assignments have submissions from the current user
+    const submissions = targetChapter.assignments.map((a) => 
+      a.submissions?.some((s) => s.userId === user?.id)
+    );
+    
+    return submissions.every((s) => s === true);
   }
 
   const updateChapterProgress = (
     sectionId: string,
     chapterId: string,
-    completed: boolean
+    completed: boolean,
+    quizCompleted?: boolean
   ) => {
     if (!user) return;
     
+    const progressData: any = {
+      sections: [
+        {
+          sectionId,
+          chapters: [
+            {
+              chapterId,
+              completed,
+            },
+          ],
+        },
+      ],
+    };
+
+    // Only include quizCompleted if it's provided
+    if (quizCompleted !== undefined) {
+      progressData.sections[0].chapters[0].quizCompleted = quizCompleted;
+    }
+
     updateProgress({
       userId: user.id,
       courseId,
-      progressData: {
-        sections: [
-          {
-            sectionId,
-            chapters: [
-              {
-                chapterId,
-                completed,
-              },
-            ],
-          },
-        ],
-      },
+      progressData,
     });
+  };
+
+  const markQuizCompleted = (targetChapterId?: string) => {
+    const chapterToCheck = targetChapterId || currentChapter?.chapterId;
+    
+    if (!chapterToCheck || !user) return;
+    
+    // Find the section for the chapter
+    const targetSection = course?.sections
+      .find(s => s.chapters.some(c => c.chapterId === chapterToCheck));
+    
+    if (!targetSection) return;
+    
+    updateChapterProgress(
+      targetSection.sectionId,
+      chapterToCheck,
+      true, // Mark chapter as completed
+      true  // Mark quiz as completed
+    );
   };
 
   return {
@@ -83,6 +138,7 @@ export const useCourseProgressData = () => {
     isQuizCompleted,
     isAssignmentsCompleted,
     updateChapterProgress,
+    markQuizCompleted,
     hasMarkedComplete,
     setHasMarkedComplete,
     refetch,

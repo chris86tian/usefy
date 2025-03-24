@@ -34,7 +34,7 @@ export const createTimeTracking = async (req: Request, res: Response): Promise<v
     await newTimeTracking.save();
     
     res.status(201).json({ 
-      message: "Time tracking recorded successfully", 
+      message: "", 
       data: newTimeTracking 
     });
   } catch (error) {
@@ -49,7 +49,7 @@ export const getChapterTimeTracking = async (req: Request, res: Response): Promi
     const timeRecords = await TimeTracking.scan("chapterId").eq(chapterId).exec();
     
     res.json({
-      message: "Time tracking records retrieved successfully",
+      message: "",
       data: timeRecords
     });
   } catch (error) {
@@ -68,7 +68,7 @@ export const getUserCourseTimeTracking = async (req: Request, res: Response): Pr
       .exec();
     
     res.json({
-      message: "Course time tracking retrieved successfully",
+      message: "",
       data: timeRecords
     });
   } catch (error) {
