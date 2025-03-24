@@ -5,7 +5,7 @@ import Header from "../_components/Header";
 import axios from "axios";
 
 async function fetchAssignment(courseId: string, sectionId: string, chapterId: string, assignmentId: string) {
-  const url = `${process.env.NEXT_ENV ===  "development" ? process.env.NEXT_PUBLIC_API_LOCAL_URL : process.env.NEXT_PUBLIC_API_URL}/courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/assignments/${assignmentId}`;
+  const url = `${process.env.NEXT_PUBLIC_API_URL}/courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/assignments/${assignmentId}`;
   const { data } = await axios.get(url);
   return data;
 }

@@ -4,11 +4,6 @@ import { User } from "@clerk/nextjs/server";
 import { Clerk } from "@clerk/clerk-js";
 import { toast } from "sonner";
 
-const server_url =
-  process.env.NEXT_ENV === "production"
-    ? process.env.NEXT_PUBLIC_API_URL
-    : process.env.NEXT_PUBLIC_API_LOCAL_URL;
-
 const customBaseQuery = async (
   args: string | FetchArgs,
   api: BaseQueryApi,
@@ -25,7 +20,7 @@ const customBaseQuery = async (
   }
 
   const baseQuery = fetchBaseQuery({
-    baseUrl: server_url,
+    baseUrl: process.env.NEXT_PUBLIC_API_URL,
     credentials: "include",
     mode: "cors",
     prepareHeaders: async (headers) => {
