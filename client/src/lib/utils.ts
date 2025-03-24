@@ -40,16 +40,32 @@ export function convertToSubCurrency(amount: number, factor = 100) {
   return Math.round(amount * factor);
 }
 
-export function extractVideoId(url: string): string | null {
-  const patterns = [
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
-    /^[a-zA-Z0-9_-]{11}$/,
-  ];
+export function extractVideoId(url: string, source: "youtube" | "vimeo" = "youtube"): string | null {
+  if (source === "youtube") {
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+      /^[a-zA-Z0-9_-]{11}$/,
+    ];
 
-  for (const pattern of patterns) {
-    const match = url.match(pattern);
-    if (match) {
-      return match[1];
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match) {
+        return match[1];
+      }
+    }
+  } else if (source === "vimeo") {
+    // Extract Vimeo video ID
+    const patterns = [
+      /vimeo\.com\/(\d+)/,
+      /vimeo\.com\/.*\/(\d+)/,
+      /player\.vimeo\.com\/video\/(\d+)/,
+    ];
+
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match) {
+        return match[1];
+      }
     }
   }
 
@@ -69,6 +85,31 @@ export const parseYouTubeTime = (url: string) => {
 
   return seconds;
 };
+
+// Convert timestamp string (HH:MM:SS) to seconds
+export function convertTimestampToSeconds(timestamp: string | undefined): number {
+  if (!timestamp) return 0;
+  
+  const parts = timestamp.split(':');
+  const hours = parseInt(parts[0]) || 0;
+  const minutes = parseInt(parts[1]) || 0;
+  const seconds = parseInt(parts[2]) || 0;
+  
+  return hours * 3600 + minutes * 60 + seconds;
+}
+
+// Convert seconds to HH:MM:SS format
+export function formatSecondsToTimestamp(seconds: number): string {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const remainingSeconds = Math.floor(seconds % 60);
+  
+  return [
+    hours.toString().padStart(2, '0'),
+    minutes.toString().padStart(2, '0'),
+    remainingSeconds.toString().padStart(2, '0')
+  ].join(':');
+}
 
 export const getUserName = (user: User) => {
   const fullName = [user.firstName, user.lastName].filter(Boolean).join(" ");
