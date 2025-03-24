@@ -5,7 +5,7 @@ import { clerkClient } from "..";
 import Cohort from "../models/cohortModel";
 import Course from "../models/courseModel";
 import UserCourseProgress from "../models/userCourseProgressModel";
-import { generateTemporaryPassword, sendMessage } from "../utils/utils";
+import { generateStyledHtml, generateTemporaryPassword, sendMessage } from "../utils/utils";
 
 function capitalizeFirstLetter(string: string): string {
   return string.charAt(0).toUpperCase() + string.slice(1);
@@ -447,17 +447,17 @@ export const inviteUserToOrganization = async (
       admin: {
         list: organization.admins,
         title: "You've been added as an admin to an organization",
-        message: `You've been added as an admin to the organization ${organization.name}. Click here to view: ${process.env.CLIENT_URL}/organizations/${organization.organizationId}`,
+        message: `You've been added as an admin to the organization ${organization.name}.`,
       },
       instructor: {
         list: organization.instructors,
         title: "You've been added as an instructor to an organization",
-        message: `You've been added as an instructor to the organization ${organization.name}. Click here to view: ${process.env.CLIENT_URL}/organizations/${organization.organizationId}`,
+        message: `You've been added as an instructor to the organization ${organization.name}.`,
       },
       learner: {
         list: organization.learners,
         title: "You've been added as a learner to an organization",
-        message: `You've been added as a learner to the organization ${organization.name}. Click here to view: ${process.env.CLIENT_URL}/organizations/${organization.organizationId}`,
+        message: `You've been added as a learner to the organization ${organization.name}.`,
       },
     };
 
@@ -467,6 +467,7 @@ export const inviteUserToOrganization = async (
     }
 
     const { list, title, message } = roleMapping[role];
+    const link = `/organizations/${organization.organizationId}`;
 
     if (user) {
       if (list.some((u) => u.userId === user?.id)) {
@@ -482,7 +483,7 @@ export const inviteUserToOrganization = async (
         title,
         message,
         `/organizations/${organization.organizationId}`,
-        { sendEmail: true, sendNotification: true, rateLimited: false }
+        { sendEmail: true, sendNotification: true, rateLimited: false, html: generateStyledHtml(message, link) }
       );
     } else {
       user = await clerkClient.users.createUser({
@@ -493,19 +494,15 @@ export const inviteUserToOrganization = async (
 
       list.push({ userId: user.id });
 
-      const resetPasswordLink = `${
-        process.env.CLIENT_URL
-      }/reset-password?email=${encodeURIComponent(
-        email
-      )}/&organizationId=${organizationId}`;
+      const resetPasswordLink = `/reset-password?email=${encodeURIComponent(email)}/&organizationId=${organizationId}`;
 
       await sendMessage(
         user.id,
         email,
         "You're invited to join an organization - Reset Your Password",
-        `You've been invited to join the organization ${organization.name}. Click the link below to reset your password and activate your account:\n\n${resetPasswordLink}\n\nIf you did not request this, you can ignore this email.`,
+        `You've been invited to join the organization ${organization.name}.`,
         null,
-        { sendEmail: true, sendNotification: false, rateLimited: false }
+        { sendEmail: true, sendNotification: false, rateLimited: false, html: generateStyledHtml(message, resetPasswordLink) }
       );
     }
 
@@ -691,7 +688,6 @@ export const getOrganizationUsers = async (
       filteredUserIds = [...adminIds, ...instructorIds, ...learnerIds];
     }
 
-    console.log("Fetching users for IDs:", filteredUserIds);
     const clerkResponse = await clerkClient.users.getUserList({
       userId: filteredUserIds,
       limit: 500,

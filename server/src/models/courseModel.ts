@@ -15,6 +15,9 @@ const chapterSchema = new Schema({
   video: {
     type: String,
   },
+  timestamp: {
+    type: String,
+  },
   likes: {
     type: Number,
     default: 0,
