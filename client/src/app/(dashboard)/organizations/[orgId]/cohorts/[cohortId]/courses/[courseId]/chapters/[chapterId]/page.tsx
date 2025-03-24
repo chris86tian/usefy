@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState, useEffect, useMemo } from "react"
+import { useRef, useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -22,7 +22,8 @@ import {
 } from "lucide-react"
 import AssignmentModal from "./assignments/_components/AssignmentModal"
 import { SignInRequired } from "@/components/SignInRequired"
-import { parseYouTubeTime, convertTimestampToSeconds } from "@/lib/utils"
+import { parseYouTubeTime } from "@/lib/utils"
+import { CourseComments } from "./_components/CourseComments"
 import { 
   useLikeChapterMutation, 
   useDislikeChapterMutation,
@@ -38,11 +39,9 @@ import FeedbackButton from "./adaptive-quiz/FeedbackButton"
 import UploadedFiles from "./adaptive-quiz/UploadedFiles"
 import { FileText } from "lucide-react"
 import NotFound from "@/components/NotFound"
-import { CourseComments } from "./_components/CourseComments"
 
-const isSectionReleased = (section?: Section) => {
-  if (!section) return false
-  if (!section.releaseDate) return true
+const isSectionReleased = (section: Section) => {
+  if (!section.releaseDate) return false
   return new Date(section.releaseDate) <= new Date()
 }
 
@@ -59,7 +58,7 @@ const Course = () => {
     isAssignmentsCompleted,
     updateChapterProgress,
     hasMarkedComplete,
-    courseId,
+    courseInstructors,
     setHasMarkedComplete,
     refetch,
   } = useCourseProgressData()
@@ -72,8 +71,6 @@ const Course = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [videoEndTime, setVideoEndTime] = useState<number | null>(null)
   const [hasShownPrompt, setHasShownPrompt] = useState(false)
-  const [progress, setProgress] = useState(0)
-  const [isReady, setIsReady] = useState(false)
 
   const [likeChapter] = useLikeChapterMutation()
   const [dislikeChapter] = useDislikeChapterMutation()
@@ -82,70 +79,6 @@ const Course = () => {
     data: reactionCount,
     refetch: refetchReactionCount
    } = useGetChapterReactionCountQuery({chapterId: currentChapter?.chapterId as string})
-
-  // Define findNextAvailableChapter function before it's used
-  const findNextAvailableChapter = (direction: "next" | "previous") => {
-    if (!course?.sections || !currentSection || !currentChapter) return null
-
-    const currentSectionIndex = course.sections.findIndex((section) => section.sectionId === currentSection.sectionId)
-
-    const currentChapterIndex = currentSection.chapters.findIndex(
-      (chapter) => chapter.chapterId === currentChapter.chapterId,
-    )
-
-    let sectionIndex = currentSectionIndex
-    let chapterIndex = currentChapterIndex
-
-    while (sectionIndex >= 0 && sectionIndex < course.sections.length) {
-      const section = course.sections[sectionIndex]
-
-      if (direction === "next") {
-        if (chapterIndex < section.chapters.length - 1) {
-          if (isSectionReleased(section)) {
-            return section.chapters[chapterIndex + 1].chapterId
-          }
-        }
-        sectionIndex++
-        chapterIndex = 0
-
-        if (sectionIndex < course.sections.length) {
-          const nextSection = course.sections[sectionIndex]
-          if (isSectionReleased(nextSection)) {
-            if (nextSection.chapters.length > 0) {
-              return nextSection.chapters[0].chapterId
-            }
-          }
-        }
-      } else {
-        if (chapterIndex > 0) {
-          if (isSectionReleased(section)) {
-            return section.chapters[chapterIndex - 1].chapterId
-          }
-        }
-        sectionIndex--
-        if (sectionIndex >= 0) {
-          const prevSection = course.sections[sectionIndex]
-          if (isSectionReleased(prevSection)) {
-            if (prevSection.chapters.length > 0) {
-              return prevSection.chapters[prevSection.chapters.length - 1].chapterId
-            }
-          }
-        }
-      }
-    }
-    return null
-  }
-
-  const hasPreviousChapter = !!findNextAvailableChapter("previous")
-  const hasNextChapter = !!findNextAvailableChapter("next")
-
-  const isCurrentSectionReleased = currentSection ? isSectionReleased(currentSection) : false
-  
-  // Only define isAuthorized if currentOrg exists
-  const isAuthorized = currentOrg ? (
-    currentOrg.admins.some((admin) => admin.userId === user?.id) || 
-    currentOrg.instructors.some((instructor) => instructor.userId === user?.id)
-  ) : false
 
   useEffect(() => {
     if (currentChapter?.video) {
@@ -216,8 +149,67 @@ const Course = () => {
     }
   }, [sendTimeTracking])
 
+  if (isOrgLoading || isLoading) return <Spinner />
+  if (!user) return <SignInRequired />
+  if (!course) return <NotFound message="Course not found" />
+  if (!currentSection || !currentChapter) return <NotFound message="Chapter not found" />
+  if (!currentOrg) return <NotFound message="Organization not found" />
+
+  const isAuthorized = currentOrg.admins.some((admin) => admin.userId === user?.id) || currentOrg.instructors.some((instructor) => instructor.userId === user?.id)
+
+  const findNextAvailableChapter = (direction: "next" | "previous") => {
+    if (!course.sections || !currentSection || !currentChapter) return null
+
+    const currentSectionIndex = course.sections.findIndex((section) => section.sectionId === currentSection.sectionId)
+
+    const currentChapterIndex = currentSection.chapters.findIndex(
+      (chapter) => chapter.chapterId === currentChapter.chapterId,
+    )
+
+    let sectionIndex = currentSectionIndex
+    let chapterIndex = currentChapterIndex
+
+    while (sectionIndex >= 0 && sectionIndex < course.sections.length) {
+      const section = course.sections[sectionIndex]
+
+      if (direction === "next") {
+        if (chapterIndex < section.chapters.length - 1) {
+          if (isSectionReleased(section)) {
+            return section.chapters[chapterIndex + 1].chapterId
+          }
+        }
+        sectionIndex++
+        chapterIndex = 0
+
+        if (sectionIndex < course.sections.length) {
+          const nextSection = course.sections[sectionIndex]
+          if (isSectionReleased(nextSection)) {
+            if (nextSection.chapters.length > 0) {
+              return nextSection.chapters[0].chapterId
+            }
+          }
+        }
+      } else {
+        if (chapterIndex > 0) {
+          if (isSectionReleased(section)) {
+            return section.chapters[chapterIndex - 1].chapterId
+          }
+        }
+        sectionIndex--
+        if (sectionIndex >= 0) {
+          const prevSection = course.sections[sectionIndex]
+          if (isSectionReleased(prevSection)) {
+            if (prevSection.chapters.length > 0) {
+              return prevSection.chapters[prevSection.chapters.length - 1].chapterId
+            }
+          }
+        }
+      }
+    }
+    return null
+  }
+
   const handleProgress = ({ played, playedSeconds }: { played: number; playedSeconds: number }) => {
-    setProgress(played)
     if (
       played >= 0.8 &&
       !hasMarkedComplete &&
@@ -345,26 +337,11 @@ const Course = () => {
     }
   }
 
-  // Handle video ready event
-  const handleReady = () => {
-    setIsReady(true);
-    
-    // If we have a timestamp, seek to that position
-    if (currentChapter && currentChapter.timestamp) {
-      const seconds = convertTimestampToSeconds(currentChapter.timestamp);
-      if (playerRef.current) {
-        playerRef.current.seekTo(seconds);
-      }
-    }
-  }
+  const isCurrentSectionReleased = isSectionReleased(currentSection)
+  const hasPreviousChapter = !!findNextAvailableChapter("previous")
+  const hasNextChapter = !!findNextAvailableChapter("next")
 
-  if (isOrgLoading || isLoading) return <Spinner />
-  if (!user) return <SignInRequired />
-  if (!course) return <NotFound message="Course not found" />
-  if (!currentSection || !currentChapter) return <NotFound message="Chapter not found" />
-  if (!currentOrg) return <NotFound message="Organization not found" />
-
-  if (!isCurrentSectionReleased && currentSection) {
+  if (!isCurrentSectionReleased) {
     return (
       <div className="container flex flex-col items-center justify-center space-y-6 py-12">
         <div className="p-8 rounded-full bg-muted">
@@ -397,7 +374,28 @@ const Course = () => {
           <span>/</span>
           <span className="font-medium text-foreground">{currentChapter.title}</span>
         </div>
-        <h1 className="text-2xl font-bold">{currentChapter.title}</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">{currentChapter.title}</h1>
+          <div className="flex items-center space-x-4">
+            {/* Show course instructors as dropdown */}
+            {/* <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="flex items-center space-x-2">
+                  <Users className="h-4 w-4" />
+                  <span>Course Instructors</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                {courseInstructors.map((instructor) => (
+                  <DropdownMenuItem key={instructor.id}>
+                    <User className="mr-2 h-4 w-4" />
+                    <span>{getUserName(instructor)}</span>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu> */}
+          </div>
+        </div>
       </div>
 
       <Card className="max-w-5xl mx-auto overflow-hidden border shadow-sm">
@@ -410,25 +408,12 @@ const Course = () => {
               width="100%"
               height="100%"
               onProgress={handleProgress}
-              onReady={handleReady}
               config={{
                 file: {
                   attributes: {
                     controlsList: "nodownload",
                   },
                 },
-                vimeo: {
-                  playerOptions: {
-                    responsive: true,
-                    autopause: false,
-                    dnt: true,
-                    playsinline: true,
-                    byline: false,
-                    portrait: false,
-                    title: false,
-                    autoplay: true
-                  }
-                }
               }}
             />
           ) : (
@@ -630,3 +615,4 @@ const Course = () => {
 }
 
 export default Course
+

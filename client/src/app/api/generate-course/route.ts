@@ -1,28 +1,19 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { extractVideoId } from "@/lib/utils";
+import { console } from "inspector";
 import { YoutubeTranscript } from "youtube-transcript";
-import fetch from "node-fetch";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
-const VIMEO_ACCESS_TOKEN = process.env.VIMEO_ACCESS_TOKEN;
 
-// YouTube-specific transcript segment
-interface YouTubeTranscriptSegment {
+interface TranscriptSegment {
   text: string;
-  offset: number;  // milliseconds
+  offset: number;
   duration: number;
 }
 
-// Vimeo-specific transcript segment
-interface VimeoTranscriptSegment {
-  text: string;
-  startTime: string;  // Original timestamp format (HH:MM:SS)
-  duration: number;   // seconds
-}
-
-async function fetchYouTubeTranscript(videoId: string): Promise<YouTubeTranscriptSegment[]> {
+async function fetchCaptionsAndTranscript(videoId: string): Promise<TranscriptSegment[]> {
   try {
     // 🔹 Step 1: Try YouTube API first
     const captionsResponse = await fetch(
@@ -33,7 +24,7 @@ async function fetchYouTubeTranscript(videoId: string): Promise<YouTubeTranscrip
     console.log("🔍 Fetched captions data:", captionsData);
     if (captionsData.items?.length) {
       console.log("✅ Captions found using YouTube API.");
-      return await processYouTubeTranscriptUsingAPI(videoId);
+      return await processTranscriptUsingAPI(videoId);
     } else {
       console.log("⚠️ No captions found via YouTube API, trying fallback...");
     }
@@ -59,148 +50,7 @@ async function fetchYouTubeTranscript(videoId: string): Promise<YouTubeTranscrip
   }
 }
 
-async function fetchVimeoTranscript(videoId: string): Promise<VimeoTranscriptSegment[]> {
-  try {
-    if (!VIMEO_ACCESS_TOKEN) {
-      throw new Error("Vimeo access token is not configured");
-    }
-
-    // Fetch video details to get available text tracks
-    const videoResponse = await fetch(`https://api.vimeo.com/videos/${videoId}`, {
-      headers: {
-        'Authorization': `Bearer ${VIMEO_ACCESS_TOKEN}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/vnd.vimeo.*+json;version=3.4'
-      }
-    });
-
-    if (!videoResponse.ok) {
-      throw new Error(`Failed to fetch Vimeo video: ${videoResponse.statusText}`);
-    }
-
-    const videoData = await videoResponse.json();
-
-    // Fetch text tracks (captions/subtitles)
-    const textTracksResponse = await fetch(`https://api.vimeo.com/videos/${videoId}/texttracks`, {
-      headers: {
-        'Authorization': `Bearer ${VIMEO_ACCESS_TOKEN}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/vnd.vimeo.*+json;version=3.4'
-      }
-    });
-
-    if (!textTracksResponse.ok) {
-      throw new Error(`Failed to fetch Vimeo text tracks: ${textTracksResponse.statusText}`);
-    }
-
-    const textTracksData = await textTracksResponse.json();
-    
-    if (!textTracksData.data || textTracksData.data.length === 0) {
-      throw new Error("No transcript available for this Vimeo video");
-    }
-
-    // Get the first available text track
-    const textTrack = textTracksData.data[0];
-    
-    // Fetch the actual transcript content
-    const transcriptResponse = await fetch(textTrack.link, {
-      headers: {
-        'Authorization': `Bearer ${VIMEO_ACCESS_TOKEN}`
-      }
-    });
-
-    if (!transcriptResponse.ok) {
-      throw new Error(`Failed to fetch Vimeo transcript: ${transcriptResponse.statusText}`);
-    }
-
-    const transcriptData = await transcriptResponse.text();
-    
-    // Parse WebVTT format
-    const segments = parseVTT(transcriptData);
-    
-    // Format the segments with proper timestamps
-    return segments.map(segment => ({
-      text: segment.text,
-      startTime: formatVimeoTimestamp(segment.startTime),
-      duration: (segment.endTime - segment.startTime)
-    }));
-  } catch (error) {
-    console.log("❌ Error fetching Vimeo transcript:", error);
-    return [];
-  }
-}
-
-// Parse WebVTT format
-function parseVTT(vtt: string) {
-  const lines = vtt.split('\n');
-  const segments: { startTime: number; endTime: number; text: string }[] = [];
-  
-  let currentSegment: { startTime: number; endTime: number; text: string } | null = null;
-  
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
-    
-    // Skip empty lines and WebVTT header
-    if (!line || line === 'WEBVTT') continue;
-    
-    // Check if this is a timestamp line
-    const timestampMatch = line.match(/(\d{2}:\d{2}:\d{2}\.\d{3}) --> (\d{2}:\d{2}:\d{2}\.\d{3})/);
-    
-    if (timestampMatch) {
-      // If we already have a segment, push it before creating a new one
-      if (currentSegment) {
-        segments.push(currentSegment);
-      }
-      
-      // Parse timestamps to seconds
-      const startTime = parseVimeoTimestamp(timestampMatch[1]);
-      const endTime = parseVimeoTimestamp(timestampMatch[2]);
-      
-      currentSegment = {
-        startTime,
-        endTime,
-        text: ''
-      };
-    } else if (currentSegment && line) {
-      // Add text to current segment
-      if (currentSegment.text) {
-        currentSegment.text += ' ' + line;
-      } else {
-        currentSegment.text = line;
-      }
-    }
-  }
-  
-  // Add the last segment
-  if (currentSegment) {
-    segments.push(currentSegment);
-  }
-  
-  return segments;
-}
-
-// Parse Vimeo timestamp (HH:MM:SS.mmm) to seconds
-function parseVimeoTimestamp(timestamp: string): number {
-  const parts = timestamp.split(':');
-  const hours = parseInt(parts[0]);
-  const minutes = parseInt(parts[1]);
-  const secondsAndMillis = parts[2].split('.');
-  const seconds = parseInt(secondsAndMillis[0]);
-  const milliseconds = parseInt(secondsAndMillis[1]);
-  
-  return hours * 3600 + minutes * 60 + seconds + (milliseconds / 1000);
-}
-
-// Format seconds to Vimeo timestamp format (HH:MM:SS)
-function formatVimeoTimestamp(seconds: number): string {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const secs = Math.floor(seconds % 60);
-  
-  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-}
-
-async function processYouTubeTranscriptUsingAPI(videoId: string): Promise<YouTubeTranscriptSegment[]> {
+async function processTranscriptUsingAPI(videoId: string): Promise<TranscriptSegment[]> {
   try {
     const transcriptResponse = await fetch(`https://www.youtube.com/watch?v=${videoId}`);
     const html = await transcriptResponse.text();
@@ -213,7 +63,7 @@ async function processYouTubeTranscriptUsingAPI(videoId: string): Promise<YouTub
       timestampMatchesCount: timestampMatches.length,
     });
 
-    const transcript: YouTubeTranscriptSegment[] = transcriptMatches.map((match, index) => {
+    const transcript: TranscriptSegment[] = transcriptMatches.map((match, index) => {
       const text = match.match(/"text":"([^"]+)"/)?.[1] || "";
       const offset = parseInt(timestampMatches[index]?.match(/"start":"(\d+)"/)?.[1] || "0");
 
@@ -235,430 +85,282 @@ async function processYouTubeTranscriptUsingAPI(videoId: string): Promise<YouTub
   }
 }
 
-// Helper functions for fetching video details
-async function getYouTubeVideoDetails(videoId: string) {
-  try {
-    const apiKey = process.env.YOUTUBE_API_KEY
-    if (!apiKey) {
-      console.error("❌ YouTube API key is not set")
-      return null
-    }
-
-    const response = await fetch(
-      `https://www.googleapis.com/youtube/v3/videos?id=${videoId}&key=${apiKey}&part=snippet`
-    )
-    const data = await response.json()
-
-    if (data.items && data.items.length > 0) {
-      const snippet = data.items[0].snippet
-      return {
-        title: snippet.title,
-        description: snippet.description,
-      }
-    }
-    return null
-  } catch (error) {
-    console.error("❌ Error fetching YouTube video details:", error)
-    return null
-  }
-}
-
-async function getVimeoVideoDetails(videoId: string) {
-  try {
-    const accessToken = process.env.VIMEO_ACCESS_TOKEN
-    if (!accessToken) {
-      console.error("❌ Vimeo access token is not set")
-      return null
-    }
-
-    const response = await fetch(`https://api.vimeo.com/videos/${videoId}`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    })
-    const data = await response.json()
-
-    return {
-      title: data.name,
-      description: data.description,
-    }
-  } catch (error) {
-    console.error("❌ Error fetching Vimeo video details:", error)
-    return null
-  }
-}
-
 function findKeyMoments(
-  transcript: (YouTubeTranscriptSegment | VimeoTranscriptSegment)[],
+  transcript: TranscriptSegment[],
   targetSegments: number
 ): number[] {
-  if (!transcript || transcript.length === 0) {
-    return [];
+  const totalDuration = transcript.reduce(
+    (sum, segment) => sum + (segment.duration || 0),
+    0
+  );
+  const allWords = transcript.map(
+    (segment) => segment.text.split(/\s+/).length
+  );
+  const totalWords = allWords.reduce((sum, count) => sum + count, 0);
+
+  const keyTimestamps: number[] = [0];
+  const targetWordsPerSegment = totalWords / targetSegments;
+
+  let currentWordCount = 0;
+  let segmentCount = 1;
+
+  for (let i = 0; i < transcript.length; i++) {
+    const wordCount = allWords[i];
+    currentWordCount += wordCount;
+
+    if (
+      currentWordCount >= targetWordsPerSegment * segmentCount &&
+      segmentCount < targetSegments
+    ) {
+      let breakPoint = i;
+      for (
+        let j = Math.max(0, i - 2);
+        j <= Math.min(transcript.length - 1, i + 2);
+        j++
+      ) {
+        if (transcript[j].text.match(/[.!?]$/)) {
+          breakPoint = j;
+          break;
+        }
+      }
+
+      keyTimestamps.push(transcript[breakPoint].offset);
+      segmentCount++;
+    }
   }
 
-  // Always include the first segment
-  const keyTimestamps: number[] = [0];
-  
-  if (transcript.length <= targetSegments) {
-    // If we have fewer segments than target, include all of them
-    return Array.from({ length: transcript.length }, (_, i) => i);
-  }
-  
-  // Calculate segment size to distribute evenly
-  const segmentSize = Math.floor(transcript.length / (targetSegments - 1));
-  
-  // Add evenly distributed segments
-  for (let i = 1; i < targetSegments; i++) {
-    const index = i * segmentSize;
-    if (index < transcript.length) {
-      keyTimestamps.push(index);
-    }
+  while (keyTimestamps.length < targetSegments) {
+    const segmentSize = Math.floor(totalDuration / targetSegments);
+    const nextTimestamp = segmentSize * keyTimestamps.length;
+    keyTimestamps.push(nextTimestamp);
   }
 
   return Array.from(new Set(keyTimestamps)).sort((a, b) => a - b);
 }
 
-// Extract timestamps from YouTube transcript segments
-function extractTimestampsFromYouTubeTranscript(
-  transcript: YouTubeTranscriptSegment[],
-  targetSegments: number = 6
-): string[] {
-  if (!transcript.length) return [];
-  
-  // Find key moments in the transcript
-  const keyMoments = findKeyMoments(transcript, targetSegments);
-  
-  // Extract timestamps at key moments
-  const timestamps: string[] = [];
-  
-  // Validate indices and extract timestamps
-  for (const momentIndex of keyMoments) {
-    if (momentIndex >= 0 && momentIndex < transcript.length) {
-      const segment = transcript[momentIndex];
-      timestamps.push(formatTimestamp(segment.offset));
-    }
-  }
-  
-  // If we couldn't extract any timestamps, create some evenly distributed ones
-  if (timestamps.length === 0 && transcript.length > 0) {
-    const totalDuration = transcript[transcript.length - 1].offset + transcript[transcript.length - 1].duration;
-    const segmentDuration = totalDuration / (targetSegments + 1);
-    
-    for (let i = 1; i <= targetSegments; i++) {
-      timestamps.push(formatTimestamp(Math.floor(segmentDuration * i)));
-    }
-  }
-  
-  return timestamps;
-}
-
-// Extract timestamps from Vimeo transcript segments
-function extractTimestampsFromVimeoTranscript(
-  transcript: VimeoTranscriptSegment[],
-  targetSegments: number = 6
-): string[] {
-  if (!transcript.length) return [];
-  
-  // Find key moments in the transcript
-  const keyMoments = findKeyMoments(transcript, targetSegments);
-  
-  // Extract timestamps at key moments
-  const timestamps: string[] = [];
-  
-  // Validate indices and extract timestamps
-  for (const momentIndex of keyMoments) {
-    if (momentIndex >= 0 && momentIndex < transcript.length) {
-      const segment = transcript[momentIndex];
-      timestamps.push(segment.startTime);
-    }
-  }
-  
-  // If we couldn't extract any timestamps, create some evenly distributed ones
-  if (timestamps.length === 0 && transcript.length > 0) {
-    // For Vimeo, we'll create evenly distributed timestamps
-    const segmentDuration = transcript.reduce((sum, segment) => sum + segment.duration, 0) / targetSegments;
-    let currentTime = 0;
-    
-    for (let i = 0; i < targetSegments; i++) {
-      currentTime += segmentDuration;
-      timestamps.push(formatVimeoTimestamp(currentTime));
-    }
-  }
-  
-  return timestamps;
-}
-
-function formatTimestamp(milliseconds: number): string {
+export async function POST(request: Request) {
   try {
-    if (isNaN(milliseconds) || milliseconds < 0) {
-      console.warn("⚠️ Invalid milliseconds value for timestamp:", milliseconds);
-      milliseconds = 0;
+    const { videoUrl, generateQuizzes, generateAssignments, codingAssignments, language } = await request.json()
+
+    if (!videoUrl) {
+      return NextResponse.json({ error: "Video URL is required" }, { status: 400 })
+    }
+
+    const videoId = extractVideoId(videoUrl)
+
+    if (!videoId) {
+      return NextResponse.json({ error: "Invalid YouTube URL" }, { status: 400 })
+    }
+
+    let transcript
+    try {
+      transcript = await fetchCaptionsAndTranscript(videoId)
+      console.log("📜 Transcript:", transcript)
+    } catch (error) {
+      return NextResponse.json(
+        {
+          error: "Could not get video transcript",
+          details:
+            "This video might have disabled captions or requires authentication. Please try another video with public captions enabled.",
+        },
+        { status: 400 },
+      )
+    }
+
+    console.log("📜 Transcript:", transcript)
+
+    const formattedTranscript = transcript.map(({ text, offset }) => `[${formatTimestamp(offset)}] ${text}`).join("\n")
+
+    const targetSegments = 6
+    const keyTimestamps = findKeyMoments(transcript, targetSegments)
+
+    const systemPrompt = `You are an expert course creator specializing in structured learning experiences. Based on the provided transcript, generate a detailed and structured course outline in JSON format. The response must be a valid JSON object. 
+    Instructions:
+    - Process the entire transcript carefully.
+    - Create a well-structured course outline with at least one section per major topic in the transcript, each seciton containing multiple chapters.
+    - Each chapter must include a relevant video timestamp.
+
+    Additional Content:
+    - ${generateQuizzes ? "Include 5 well-thought-out quiz questions per chapter." : "Do not include quiz questions."}
+    - ${generateAssignments ? `Include at least one assignment per chapter.${codingAssignments ? ` Ensure that assignments are coding-related and written in ${language}. Each coding assignment must include:` : ""}` : "Do not include assignments."}
+
+    For coding assignments, ensure:
+    - The problem statement is clear and relevant to the chapter.
+    - Provide starter code with a function signature and TODO comments.
+    - Include sample test cases for correctness.
+
+    The final response must be a valid JSON object.
+    `
+
+    const userPrompt = `Generate a well-structured course outline with at least one section per major topic of the video, each section containing multiple chapters. Each chapter must have a video timestamp.
+    Additional Requirements:
+    - ${generateQuizzes ? "Include exactly 5 quiz questions per chapter, ensuring they align with the chapter content." : ""}
+    - ${generateAssignments ? `Each chapter must include at least 1 assignment. ${codingAssignments ? `Ensure coding assignments are written in ${language}. Each coding assignment must:` : ""}` : ""}
+
+    For coding assignments:
+    1. Clearly define the problem statement.
+    2. Provide starter code that includes:
+      - A function signature.
+      - The main function structure with TODO comments.
+      - At least 3 sample test cases.
+    3. Ensure that the problem difficulty increases gradually.
+    4. The assignment must align with the course content.
+
+    Ensure that the response is formatted as a **valid JSON object**.
+
+    Format:
+    {
+      "courseTitle": "string",
+      "courseDescription": "string",
+      "sections": [
+        {
+          "sectionId": "s1",
+          "sectionTitle": "string",
+          "sectionDescription": "string",
+          "releaseDate": "",
+          "chapters": [
+            {
+              "chapterId": "c1",
+              "title": "string",
+              "content": "string",
+              "video": "${videoUrl}",
+              ${
+                generateQuizzes
+                  ? `
+              "quiz": {
+                "quizId": "q1",
+                "questions": [
+                  {
+                    "questionId": "q1",
+                    "question": "string",
+                    "difficulty": "easy",
+                    "options": ["string", "string", "string", "string"],
+                    "correctAnswer": 0
+                  }
+                ]
+              },
+              `
+                  : ""
+              }
+              ${
+                generateAssignments
+                  ? `
+              "assignments": [
+                {
+                  "assignmentId": "a1",
+                  "title": "string",
+                  "description": "string",
+                  "submissions": [],
+                  ${
+                    codingAssignments
+                      ? `
+                  "isCoding": true,
+                  "language": "${language}",
+                  "starterCode": "# Your ${language} starter code here",
+                  `
+                      : ""
+                  }
+                  "hints": ["string"],
+                }
+              ],
+              `
+                  : ""
+              }
+            }
+          ]
+        }
+      ]
     }
     
-    const hours = Math.floor(milliseconds / 3600000);
-    const minutes = Math.floor((milliseconds % 3600000) / 60000);
-    const seconds = Math.floor((milliseconds % 60000) / 1000);
+    Transcription:
+    ${formattedTranscript}
+    `
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+      temperature: 0.7,
+      max_tokens: 5000,
+      response_format: { type: "json_object" },
+    })
+
+    const content = completion?.choices[0]?.message?.content
+    if (!content) {
+      return NextResponse.json({ error: "Empty response from OpenAI" }, { status: 500 })
+    }
+
+    console.log("📚 Generated course structure:", content)
+
+    let courseStructure
+    try {
+      courseStructure = JSON.parse(content)
+    } catch (parseError) {
+      return NextResponse.json(
+        {
+          error: "Invalid JSON response from OpenAI",
+          details: parseError instanceof Error ? parseError.message : "Unknown error",
+        },
+        { status: 500 },
+      )
+    }
+
+    if (!courseStructure.sections || !Array.isArray(courseStructure.sections)) {
+      return NextResponse.json(
+        {
+          error: "Invalid course structure: missing or invalid sections array",
+        },
+        { status: 500 },
+      )
+    }
+
+    let timestampIndex = 0
+    courseStructure.sections.forEach((section: Section) => {
+      if (!section.chapters || !Array.isArray(section.chapters)) {
+        throw new Error(`Invalid section structure: missing or invalid chapters array`)
+      }
+
+      section.chapters.forEach((chapter: Chapter) => {
+        const timestamp = keyTimestamps[timestampIndex] || 0
+        chapter.video = `https://www.youtube.com/watch?v=${videoId}&t=${timestamp}s`
+        timestampIndex++
+
+        if (chapter.assignments) {
+          chapter.assignments.forEach((assignment: Assignment) => {
+            if (codingAssignments) {
+              assignment.isCoding = true
+              assignment.language = language
+              assignment.starterCode = assignment.starterCode || `# Your ${language} code here`
+            } else {
+              assignment.isCoding = false
+            }
+          })
+        }
+      })
+    })
     
-    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+    return NextResponse.json(courseStructure)
   } catch (error) {
-    console.error("❌ Error formatting timestamp:", error);
-    return "00:00:00";
+    return NextResponse.json(
+      {
+        error: "Internal server error",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 },
+    )
   }
+}
+
+
+function formatTimestamp(seconds: number) {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = Math.floor(seconds % 60);
+  return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
 }
 
 export const config = {
   api: { bodyParser: { sizeLimit: "1mb" } },
   runtime: "nodejs",
 };
-
-
-export async function POST(request: Request) {
-  try {
-    const { videoUrl, videoSource = "youtube", generateQuizzes, generateAssignments, codingAssignments, language } = await request.json()
-
-    if (!videoUrl) {
-      return NextResponse.json({ error: "Video URL is required" }, { status: 400 })
-    }
-
-    const videoId = extractVideoId(videoUrl, videoSource as "youtube" | "vimeo")
-
-    if (!videoId) {
-      return NextResponse.json({ error: `Invalid ${videoSource === "youtube" ? "YouTube" : "Vimeo"} URL` }, { status: 400 })
-    }
-
-    let transcript = ""
-    let transcriptSegments: (YouTubeTranscriptSegment | VimeoTranscriptSegment)[] = []
-    let videoTitle = ""
-    let videoDescription = ""
-
-    if (videoSource === "youtube") {
-      // Fetch transcript from YouTube
-      try {
-        transcriptSegments = await fetchYouTubeTranscript(videoId)
-        transcript = transcriptSegments.map(segment => `${segment.text}`).join(" ")
-        
-        // Get video details from YouTube
-        const videoDetails = await getYouTubeVideoDetails(videoId)
-        videoTitle = videoDetails?.title || "YouTube Video"
-        videoDescription = videoDetails?.description || "No description available"
-      } catch (error) {
-        console.error("❌ Error fetching YouTube transcript:", error)
-        return NextResponse.json(
-          {
-            error: "Failed to fetch YouTube transcript",
-            details: error instanceof Error ? error.message : "Unknown error occurred",
-          },
-          { status: 500 },
-        )
-      }
-    } else if (videoSource === "vimeo") {
-      // Fetch transcript from Vimeo
-      try {
-        transcriptSegments = await fetchVimeoTranscript(videoId)
-        transcript = transcriptSegments.map(segment => `${segment.text}`).join(" ")
-        
-        // Get video details from Vimeo
-        const videoDetails = await getVimeoVideoDetails(videoId)
-        videoTitle = videoDetails?.title || "Vimeo Video"
-        videoDescription = videoDetails?.description || "No description available"
-      } catch (error) {
-        console.error("❌ Error fetching Vimeo transcript:", error)
-        return NextResponse.json(
-          {
-            error: "Failed to fetch Vimeo transcript",
-            details: error instanceof Error ? error.message : "Unknown error occurred",
-          },
-          { status: 500 },
-        )
-      }
-    }
-
-    console.log("📜 Transcript:", transcript)
-
-    // Extract timestamps from transcript
-    const targetSegments = 6
-    let timestamps: string[] = [];
-    if (videoSource === "youtube") {
-      timestamps = extractTimestampsFromYouTubeTranscript(transcriptSegments as YouTubeTranscriptSegment[], targetSegments);
-    } else if (videoSource === "vimeo") {
-      timestamps = extractTimestampsFromVimeoTranscript(transcriptSegments as VimeoTranscriptSegment[], targetSegments);
-    }
-    console.log("⏱️ Extracted timestamps:", timestamps);
-    
-    // Format transcript for OpenAI
-    const formattedTranscript = transcriptSegments.map(segment => {
-      if ('offset' in segment) {
-        return `[${formatTimestamp(segment.offset)}] ${segment.text}`
-      } else if ('startTime' in segment) {
-        return `[${segment.startTime}] ${segment.text}`
-      }
-    }).join("\n")
-
-    // Generate course content with OpenAI
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4-turbo",
-      messages: [
-        {
-          role: "system",
-          content: `You are a course creation assistant that helps create educational content from video transcripts.
-          
-Your task is to analyze the transcript and create a well-structured course with sections and chapters.
-
-Ensure that the response is formatted as a **valid JSON object**.
-
-Format:
-{
-  "courseTitle": "string",
-  "courseDescription": "string",
-  "sections": [
-    {
-      "sectionId": "s1",
-      "sectionTitle": "string",
-      "sectionDescription": "string",
-      "releaseDate": "",
-      "chapters": [
-        {
-          "chapterId": "c1",
-          "title": "string",
-          "content": "string",
-          "video": "${videoUrl}", // The full video URL for all chapters
-          "timestamp": "00:00:00", // IMPORTANT: Use the exact timestamp from the transcript in HH:MM:SS format
-          ${generateQuizzes
-            ? `
-          "quiz": {
-            "quizId": "q1",
-            "questions": [
-              {
-                "questionId": "q1",
-                "question": "string",
-                "difficulty": "easy",
-                "options": ["string", "string", "string", "string"],
-                "correctAnswer": 0
-              }
-            ]
-          },
-          `
-            : ""
-          }
-          ${generateAssignments
-            ? `
-          "assignments": [
-            {
-              "assignmentId": "a1",
-              "title": "string",
-              "description": "string",
-              "submissions": [],
-              ${codingAssignments
-                ? `
-              "isCoding": true,
-              "language": "${language}",
-              "starterCode": "# Your ${language} starter code here",
-              `
-                : ""
-              }
-              "hints": ["string"],
-            }
-          ],
-          `
-            : ""
-          }
-        }
-      ]
-    }
-  ]
-}`,
-        },
-        {
-          role: "user",
-          content: `I have a video transcript that I want to turn into a structured course.
-
-Video Title: ${videoTitle || "Untitled Video"}
-Video Description: ${videoDescription || "No description available"}
-
-Transcript:
-${formattedTranscript}
-
-Please analyze this transcript and create a well-structured course with:
-1. An appropriate course title and description
-2. Logical sections based on the content
-3. Chapters within each section
-4. Each chapter should have detailed content explaining the key points
-${generateQuizzes
-  ? "5. Include quizzes for each chapter with multiple-choice questions to test understanding"
-  : ""
-}
-${generateAssignments
-  ? `6. Include assignments for each chapter that allow students to apply what they've learned${codingAssignments ? ` through coding exercises in ${language}` : ""}`
-  : ""
-}
-
-Ensure that the response is a valid JSON object following the specified format.`,
-        },
-      ],
-      temperature: 0.7,
-      max_tokens: 4000,
-    })
-
-    console.log("✅ Received response from OpenAI")
-
-    const content = completion.choices[0].message.content
-
-    try {
-      // Extract JSON from the content (in case there's markdown or other text)
-      const jsonMatch = content?.match(/```json\n([\s\S]*?)\n```/) || content?.match(/```([\s\S]*?)```/) || [null, content]
-      const jsonContent = jsonMatch[1] || content || '{}'
-
-      const parsedContent = JSON.parse(jsonContent)
-
-      // Extract title and description
-      const courseTitle = parsedContent.courseTitle || "Generated Course"
-      const courseDescription = parsedContent.courseDescription || "Course generated from video content"
-
-      // Extract sections
-      const sections = parsedContent.sections || []
-      
-      // If this is YouTube, assign our extracted timestamps to the chapters
-      if (videoSource === "youtube" && sections.length > 0) {
-        let timestampIndex = 0;
-        
-        // Distribute timestamps across all chapters in all sections
-        sections.forEach((section: any) => {
-          if (section.chapters && section.chapters.length > 0) {
-            section.chapters.forEach((chapter: any) => {
-              // Assign a timestamp if available, otherwise keep the existing one
-              if (timestampIndex < timestamps.length) {
-                chapter.timestamp = timestamps[timestampIndex++];
-              }
-            });
-          }
-        });
-        
-        console.log("⏱️ Applied extracted timestamps to chapters");
-      }
-
-      return NextResponse.json({
-        sections,
-        courseTitle,
-        courseDescription,
-      })
-    } catch (error) {
-      console.error("❌ Error parsing OpenAI response:", error)
-      return NextResponse.json(
-        {
-          error: "Failed to generate course content",
-          details: "The AI model returned an invalid response. Please try again.",
-        },
-        { status: 500 },
-      )
-    }
-  } catch (error) {
-    console.error("❌ Server error:", error)
-    return NextResponse.json(
-      {
-        error: "Server error",
-        details: error instanceof Error ? error.message : "Unknown error occurred",
-      },
-      { status: 500 },
-    )
-  }
-}

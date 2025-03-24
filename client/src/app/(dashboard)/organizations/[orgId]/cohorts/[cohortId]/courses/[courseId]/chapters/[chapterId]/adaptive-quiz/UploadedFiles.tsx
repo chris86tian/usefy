@@ -139,7 +139,7 @@ const UploadedFiles = ({ files }: UploadedFilesProps) => {
             {!isLoading && !error && (
               <div className="sticky bottom-0 bg-background border-t pt-4 mt-4 z-50">
                 <div className="flex items-center justify-between">
-                  <div className="flex gap-2 text-gray-800 dark:text-white">
+                  <div className="flex gap-2 text-gray-800">
                     <Button
                       variant="outline"
                       onClick={() => setPageNumber(p => Math.max(1, p - 1))}
@@ -156,12 +156,12 @@ const UploadedFiles = ({ files }: UploadedFilesProps) => {
                     </Button>
                   </div>
 
-                  <span className="text-sm text-gray-800 dark:text-white mt-2 mr-7">
+                  <span className="text-sm text-gray-800 mt-2 mr-7">
                     Page {pageNumber} of {numPages}
                   </span>
                   
                   <div className="flex items-center gap-4">
-                    <div className="flex gap-2 text-gray-800 dark:text-white">
+                    <div className="flex gap-2 text-gray-800">
                       <Button
                         variant="outline"
                         size="sm"

@@ -150,7 +150,6 @@ declare global {
     title: string;
     content?: string;
     video?: string | File;
-    timestamp?: string; // HH:MM:SS format for video starting point
     assignments?: Assignment[];
     comments?: ChapterComment[];
     quiz?: Quiz;
@@ -426,7 +425,6 @@ declare global {
     generateAssignments: boolean;
     codingAssignments: boolean;
     language: string;
-    videoSource?: "youtube" | "vimeo";
   };
 
   interface AssignmentCardProps {
