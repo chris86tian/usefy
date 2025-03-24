@@ -4,16 +4,7 @@ import { CustomFormField } from "@/components/CustomFormField"
 import Header from "@/components/Header"
 import { Button } from "@/components/ui/button"
 import { Form } from "@/components/ui/form"
-import { 
-  centsToDollars, 
-  dollarsToCents, 
-  extractVideoId, 
-  convertTimestampToSeconds, 
-  handleEnroll, 
-  uploadAllVideos, 
-  uploadThumbnail, 
-  uploadAllFiles 
-} from "@/lib/utils"
+import { centsToDollars, dollarsToCents, handleEnroll, uploadAllVideos, uploadThumbnail } from "@/lib/utils"
 import { openSectionModal, setSections } from "@/state"
 import {
   useGetCourseQuery,
@@ -39,9 +30,10 @@ import SectionModal from "../_components/SectionModal"
 import { toast } from "sonner"
 import { courseSchema } from "@/lib/schemas"
 import Image from "next/image"
-import VimeoDialog from "@/components/VimeoDialog"
+import YouTubeDialog from "@/components/YouTubeDialog"
 import { v4 as uuid } from "uuid"
 import { useRouter } from "next/navigation"
+import { uploadAllFiles } from "@/lib/utils";
 import InstructorEmailInput from "./EmailInvite"
 import { useUser } from "@clerk/nextjs"
 import { useOrganization } from "@/context/OrganizationContext"
@@ -94,8 +86,7 @@ const CourseEditor = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          videoUrl,
-          videoSource: options.videoSource || "vimeo",
+          videoUrl: videoUrl,
           generateQuizzes: options.generateQuizzes,
           generateAssignments: options.generateAssignments,
           codingAssignments: options.codingAssignments,
@@ -107,92 +98,112 @@ const CourseEditor = () => {
 
       if (data.error) {
         toast.error(data.error)
-        setIsGenerating(false)
         return
       }
 
       const { sections: newSections, courseTitle, courseDescription } = data
-      
-      console.log("Received course data:", { newSections, courseTitle, courseDescription })
 
-      if (course?.title === "" || course?.title === "Untitled Course" || course?.title !== courseTitle) {
+      if (course?.title === "" || course?.title === "Untitled Course") {
         methods.setValue("courseTitle", courseTitle)
         methods.setValue("courseDescription", courseDescription)
       }
 
-      // Process the sections and add video URLs based on the source
-      const processedSections = newSections.map((section: any) => {
-        // Process each section
-        return {
-          ...section,
-          sectionId: section.sectionId || uuid(),
-          chapters: section.chapters.map((chapter: any) => {
-            // Process each chapter
-            const videoId = extractVideoId(videoUrl, options.videoSource as "youtube" | "vimeo")
-            let chapterVideoUrl = chapter.video || ""
-            
-            // If no video URL is provided, construct one based on the timestamp
-            if (!chapterVideoUrl && videoId) {
-              if (options.videoSource === "youtube") {
-                // For YouTube, use timestamp in seconds
-                const timestamp = chapter.timestamp ? 
-                  convertTimestampToSeconds(chapter.timestamp) : 
-                  0
-                chapterVideoUrl = `https://www.youtube.com/watch?v=${videoId}&t=${timestamp}s`
-              } else {
-                // For Vimeo, use timestamp in the format #t=1h42m40s
-                const timestampParts = chapter.timestamp ? chapter.timestamp.split(":") : ["0", "0", "0"]
-                const hours = parseInt(timestampParts[0])
-                const minutes = parseInt(timestampParts[1])
-                const seconds = parseInt(timestampParts[2])
-                
-                // Format timestamp in Vimeo's preferred format
-                let timeString = ""
-                if (hours > 0) timeString += `${hours}h`
-                if (minutes > 0) timeString += `${minutes}m`
-                if (seconds > 0) timeString += `${seconds}s`
-                
-                // Use the fragment identifier format which works for direct video viewing
-                chapterVideoUrl = `https://vimeo.com/${videoId}#t=${timeString}`
-              }
-            }
-            
-            return {
+      const updatedSections = [...sections]
+
+      newSections.forEach((newSection: Section) => {
+        const existingSectionIndex = updatedSections.findIndex(
+          (section) => section.sectionTitle === newSection.sectionTitle,
+        )
+
+        if (existingSectionIndex !== -1) {
+          const existingSection = updatedSections[existingSectionIndex]
+
+          const mergedChapters = newSection.chapters.map((newChapter) => {
+            const existingChapter = existingSection.chapters.find((chapter) => chapter.title === newChapter.title)
+
+            return existingChapter
+              ? {
+                  ...existingChapter,
+                  content: newChapter.content || existingChapter.content,
+                  video: newChapter.video || existingChapter.video,
+                  quiz: newChapter.quiz
+                    ? {
+                        quizId: existingChapter.quiz?.quizId || uuid(),
+                        questions:
+                          existingChapter?.quiz?.questions?.map((question) => ({
+                            ...question,
+                            questionId: uuid(),
+                          })) || [],
+                      }
+                    : existingChapter.quiz || undefined,
+                  assignments:
+                    newChapter.assignments?.map((assignment) => ({
+                      ...assignment,
+                      assignmentId: assignment.assignmentId || uuid(),
+                      submissions: assignment.submissions || [],
+                    })) ||
+                    existingChapter.assignments ||
+                    [],
+                }
+              : {
+                  ...newChapter,
+                  chapterId: newChapter.chapterId || uuid(),
+                  quiz: newChapter.quiz
+                    ? {
+                        quizId: uuid(),
+                        questions:
+                          newChapter.quiz.questions?.map((question) => ({
+                            ...question,
+                            questionId: uuid(),
+                          })) || [],
+                      }
+                    : undefined,
+                  assignments:
+                    newChapter.assignments?.map((assignment) => ({
+                      ...assignment,
+                      assignmentId: assignment.assignmentId || uuid(),
+                      submissions: [],
+                    })) || [],
+                }
+          })
+
+          updatedSections[existingSectionIndex] = {
+            ...existingSection,
+            chapters: [...existingSection.chapters, ...mergedChapters],
+          }
+        } else {
+          updatedSections.push({
+            ...newSection,
+            sectionId: uuid(),
+            chapters: newSection.chapters.map((chapter) => ({
               ...chapter,
-              chapterId: chapter.chapterId || uuid(),
-              video: chapterVideoUrl,
+              chapterId: uuid(),
               quiz: chapter.quiz
                 ? {
-                    quizId: chapter.quiz.quizId || uuid(),
+                    quizId: uuid(),
                     questions:
-                      chapter.quiz.questions?.map((question: any) => ({
+                      chapter.quiz.questions?.map((question) => ({
                         ...question,
-                        questionId: question.questionId || uuid(),
+                        questionId: uuid(),
                       })) || [],
                   }
                 : undefined,
               assignments:
-                chapter.assignments?.map((assignment: any) => ({
+                chapter.assignments?.map((assignment) => ({
                   ...assignment,
                   assignmentId: assignment.assignmentId || uuid(),
-                  submissions: assignment.submissions || [],
-                  isCoding: options.codingAssignments,
-                  language: options.language,
-                  starterCode: assignment.starterCode || `# Your ${options.language} code here`,
+                  submissions: [],
                 })) || [],
-            }
-          }),
+            })),
+          })
         }
       })
 
-      // Update the sections in the form
-      dispatch(setSections(processedSections))
-      
-      console.log("Processed sections:", processedSections)
-      toast.success("Course content generated successfully")
+      dispatch(setSections(updatedSections))
+      toast.success("Sections and chapters generated successfully!")
     } catch (error) {
-      console.error("Error generating course:", error)
-      toast.error("Failed to generate course content")
+      console.error("Error generating course content:", error)
+      toast.error("An error occurred while generating course content.")
     } finally {
       setIsGenerating(false)
     }
@@ -268,7 +279,7 @@ const CourseEditor = () => {
                 assignments: chapter.assignments || [],
               })),
             })),
-          )
+          ),
         )
       }
     }
@@ -474,7 +485,7 @@ const CourseEditor = () => {
                       {isGenerating ? "Generating..." : "Generate"}
                     </span>
                   </Button>
-                  <VimeoDialog
+                  <YouTubeDialog
                     isOpen={isDialogOpen}
                     onClose={() => setIsDialogOpen(false)}
                     onSubmit={handleURLSubmit}
@@ -524,3 +535,4 @@ const CourseEditor = () => {
 }
 
 export default CourseEditor
+

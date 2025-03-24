@@ -259,14 +259,12 @@ export const sendMessage = async (
     sendEmail?: boolean;
     sendNotification?: boolean;
     rateLimited?: boolean;
-    html?: string;
   } = {}
 ) => {
   const {
     sendEmail = true,
     sendNotification = true,
     rateLimited = false,
-    html,
   } = options;
 
   try {
@@ -280,16 +278,12 @@ export const sendMessage = async (
         }
       }
 
-      const htmlContent = html || generateStyledHtml(message, link);
-
       await resend.emails.send({
         from: process.env.EMAIL_FROM!,
         to: email,
         subject: title,
         text: message,
-        html: htmlContent,
       });
-
       lastRequestTime = Date.now();
     }
 
@@ -309,28 +303,6 @@ export const sendMessage = async (
   } catch (error) {
     console.error("❌ Error sending message:", error);
   }
-};
-
-export const generateStyledHtml = (message: string, link: string | null = null) => {
-  const button = link
-    ? `<a href="${process.env.CLIENT_URL}${link}" style="
-        display: inline-block;
-        padding: 10px 20px;
-        background-color: #6366f1;
-        color: #ffffff;
-        text-decoration: none;
-        border-radius: 6px;
-        font-weight: bold;
-        margin-top: 16px;
-      ">Open in App</a>`
-    : "";
-
-  return `
-    <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px;">
-      <p>${message.replace(/\n/g, "<br>")}</p>
-      ${button}
-    </div>
-  `;
 };
 
 export function generateTemporaryPassword(length = 12): string {
