@@ -51,6 +51,7 @@ const allowedOrigins = [
   "http://localhost:3000",
   "https://usefy.com",
   "https://www.usefy.com",
+  "https://usefy.vercel.app",
   "https://expertize-bucket-migration.s3.amazonaws.com",
   "https://d2d2uxovkp6xho.cloudfront.net",
 ];
@@ -253,14 +254,12 @@ export const handler = async (
   context: any
 ): Promise<LambdaResponse> => {
   event.headers = event.headers || {};
-  const origin = event.headers.origin || "https://www.usefy.com";
+  const origin = event.headers.origin;
 
-  const isAllowedOrigin = allowedOrigins.includes(origin);
+  const isAllowedOrigin = origin ? allowedOrigins.includes(origin) : false;
 
   const corsHeaders = {
-    "Access-Control-Allow-Origin": isAllowedOrigin
-      ? origin
-      : "https://www.usefy.com",
+    "Access-Control-Allow-Origin": isAllowedOrigin ? origin : allowedOrigins[2],
     "Access-Control-Allow-Credentials": "true",
     "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
     "Access-Control-Allow-Headers":
@@ -268,7 +267,23 @@ export const handler = async (
     "Access-Control-Max-Age": "86400",
   };
 
-  if (!isAllowedOrigin) {
+  if (event.httpMethod === "OPTIONS") {
+    console.log("Handling OPTIONS request for path:", event.path);
+    console.log("Request origin:", origin);
+    console.log("Is allowed origin:", isAllowedOrigin);
+
+    if (origin && isAllowedOrigin) {
+      corsHeaders["Access-Control-Allow-Origin"] = origin;
+    }
+
+    return {
+      statusCode: 200,
+      headers: corsHeaders,
+      body: "",
+    };
+  }
+
+  if (origin && !isAllowedOrigin) {
     return {
       statusCode: 403,
       headers: {
@@ -279,17 +294,10 @@ export const handler = async (
     };
   }
 
-  if (event.httpMethod === "OPTIONS") {
-    console.log("Handling OPTIONS request for path:", event.path);
-    return {
-      statusCode: 200,
-      headers: corsHeaders,
-      body: "",
-    };
-  }
-
   try {
     console.log("Lambda event:", JSON.stringify(event, null, 2));
+    console.log("Request origin:", origin);
+    console.log("Is allowed origin:", isAllowedOrigin);
 
     if (event.requestContext?.requestId) {
       event.headers["x-request-id"] = event.requestContext.requestId;
@@ -343,6 +351,10 @@ export const handler = async (
     delete headers["access-control-allow-methods"];
     delete headers["access-control-allow-headers"];
     delete headers["access-control-max-age"];
+
+    if (origin && isAllowedOrigin) {
+      corsHeaders["Access-Control-Allow-Origin"] = origin;
+    }
 
     return {
       ...response,

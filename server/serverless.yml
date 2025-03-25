@@ -53,7 +53,7 @@ functions:
           path: /
           method: any
           cors:
-            origin: "https://www.usefy.com,https://usefy.com"
+            origin: "https://www.usefy.com,https://usefy.com,https://usefy.vercel.app"
             headers:
               - Content-Type
               - Authorization
@@ -65,7 +65,7 @@ functions:
           path: "{proxy+}"
           method: any
           cors:
-            origin: "https://www.usefy.com,https://usefy.com"
+            origin: "https://www.usefy.com,https://usefy.com,https://usefy.vercel.app"
             headers:
               - Content-Type
               - Authorization
