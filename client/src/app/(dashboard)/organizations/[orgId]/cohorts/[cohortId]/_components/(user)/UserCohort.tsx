@@ -59,13 +59,13 @@ const UserCohort = ({ orgUsers, coursesLoading, courses, refetch }: UserCohortPr
   const isLearner = orgUsers.learners.some((learner) => learner.id === user?.id)
   const isAdmin = orgUsers.admins.some((admin) => admin.id === user?.id)
 
-  useEffect(() => {
-    if (!isInstructor && !isAdmin && !cohortLearners?.some((learner) => learner.id === user?.id)) {
-      router.push(`/organizations/${orgId}`)
-      toast.error("You do not have access to this cohort")
-      return
-    }
-  }, [isInstructor, isAdmin, router, orgId, cohortLearners, user?.id])
+  // useEffect(() => {
+  //   if (!isInstructor && !isAdmin && !cohortLearners?.some((learner) => learner.id === user?.id)) {
+  //     router.push(`/organizations/${orgId}`)
+  //     toast.error("You do not have access to this cohort")
+  //     return
+  //   }
+  // }, [isInstructor, isAdmin, router, orgId, cohortLearners, user?.id])
 
   const filteredCourses = useMemo(() => {
     if (!courses) return []
