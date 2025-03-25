@@ -303,7 +303,7 @@ export function CourseCard({
             )}
           </div>
 
-          {isEnrolled && variant === "learner" && (
+          {isEnrolled && (
             <div className="space-y-1.5 mt-2">
               <div className="flex justify-between items-center text-xs">
                 <span className="font-medium">Activities completed</span>

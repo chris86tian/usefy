@@ -1112,6 +1112,21 @@ export const api = createApi({
       invalidatesTags: ["Feedback"],
     }),
 
+    trackTimeSpent: build.mutation<void, {
+      userId: string;
+      courseId: string;
+      sectionId: string;
+      chapterId: string;
+      durationMs: number;
+    }>({
+      query: (timeData) => ({
+        url: "time-tracking",
+        method: "POST",
+        body: timeData,
+      }),
+      invalidatesTags: ["TimeTracking"],
+    }),
+
     /*
     ===============
     STATISTICS
@@ -1228,6 +1243,7 @@ export const {
   useGetFeedbackQuery,
   useUpdateFeedbackStatusMutation,
   useDeleteFeedbackMutation,
+  useTrackTimeSpentMutation,
   useGetChapterStatsQuery,
   useEnrollUserMutation,
   useUnenrollUserMutation,

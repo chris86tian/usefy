@@ -1,20 +1,14 @@
 "use client";
 
-import { useRef, useState, useEffect, useMemo } from "react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
-import toast from "react-hot-toast";
-import ReactPlayer from "react-player";
-import { useCourseProgressData } from "@/hooks/useCourseProgressData";
-import { useParams, useRouter } from "next/navigation";
+import { useRef, useState, useEffect, useMemo } from "react"
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Badge } from "@/components/ui/badge"
+import { toast } from "sonner"
+import ReactPlayer from "react-player"
+import { useCourseProgressData } from "@/hooks/useCourseProgressData"
+import { useParams, useRouter } from "next/navigation"
 import {
   ChevronLeft,
   ChevronRight,
@@ -33,23 +27,18 @@ import {
   useLikeChapterMutation,
   useDislikeChapterMutation,
   useGetChapterReactionCountQuery,
-} from "@/state/api";
-import AdaptiveQuiz from "./adaptive-quiz/AdaptiveQuiz";
-import { Spinner } from "@/components/ui/Spinner";
-import { useOrganization } from "@/context/OrganizationContext";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { AssignmentCard } from "./assignments/_components/AssignmentCard";
-import { useCallback } from "react";
-import FeedbackButton from "./adaptive-quiz/FeedbackButton";
-import UploadedFiles from "./adaptive-quiz/UploadedFiles";
-import { FileText } from "lucide-react";
-import NotFound from "@/components/NotFound";
-import { CourseComments } from "./_components/CourseComments";
+  useTrackTimeSpentMutation
+} from "@/state/api"
+import AdaptiveQuiz from "./adaptive-quiz/AdaptiveQuiz"
+import { Spinner } from "@/components/ui/Spinner"
+import { useOrganization } from "@/context/OrganizationContext"
+import { AssignmentCard } from "./assignments/_components/AssignmentCard"
+import { useCallback } from "react"
+import FeedbackButton from "./adaptive-quiz/FeedbackButton"
+import UploadedFiles from "./adaptive-quiz/UploadedFiles"
+import { FileText } from "lucide-react"
+import NotFound from "@/components/NotFound"
+import { CourseComments } from "./_components/CourseComments"
 
 const isSectionReleased = (section?: Section) => {
   if (!section) return false;
@@ -60,7 +49,10 @@ const isSectionReleased = (section?: Section) => {
 const Course = () => {
   const {
     user,
+    courseId,
+    chapterId,
     course,
+    courseInstructors,
     userProgress,
     currentSection,
     currentChapter,
@@ -69,8 +61,8 @@ const Course = () => {
     isQuizCompleted,
     isAssignmentsCompleted,
     updateChapterProgress,
+    markQuizCompleted,
     hasMarkedComplete,
-    courseId,
     setHasMarkedComplete,
     refetch,
   } = useCourseProgressData();
@@ -86,8 +78,9 @@ const Course = () => {
   const [progress, setProgress] = useState(0);
   const [isReady, setIsReady] = useState(false);
 
-  const [likeChapter] = useLikeChapterMutation();
-  const [dislikeChapter] = useDislikeChapterMutation();
+  const [likeChapter] = useLikeChapterMutation()
+  const [dislikeChapter] = useDislikeChapterMutation()
+  const [trackTimeSpent] = useTrackTimeSpentMutation()
 
   const { data: reactionCount, refetch: refetchReactionCount } =
     useGetChapterReactionCountQuery({
@@ -173,12 +166,33 @@ const Course = () => {
         .find((chapter) => chapter.chapterId === nextChapterId);
 
       if (nextChapter?.video) {
-        const nextVideoStartTime = parseYouTubeTime(
-          nextChapter.video as string
-        );
-        console.log(nextVideoStartTime);
-        setVideoEndTime(nextVideoStartTime > 0 ? nextVideoStartTime : null);
-        setHasShownPrompt(false);
+        // Check if the next chapter uses the same video URL (excluding timestamp)
+        const currentVideoBase = currentChapter.video.toString().split(/[?#]/)[0];
+        const nextVideoBase = nextChapter.video.toString().split(/[?#]/)[0];
+        const isSameVideo = currentVideoBase === nextVideoBase;
+        
+        if (isSameVideo) {
+          // Determine if it's a YouTube or Vimeo video
+          const isYouTube = currentVideoBase.includes('youtube.com') || currentVideoBase.includes('youtu.be');
+          const isVimeo = currentVideoBase.includes('vimeo.com');
+          
+          let nextVideoStartTime = 0;
+          
+          if (isYouTube) {
+            // For YouTube, extract timestamp from the URL
+            nextVideoStartTime = parseYouTubeTime(nextChapter.video as string);
+          } else if (isVimeo && nextChapter.timestamp) {
+            // For Vimeo, use the timestamp field from the chapter
+            nextVideoStartTime = convertTimestampToSeconds(nextChapter.timestamp);
+          }
+          
+          console.log("Next chapter starts at timestamp:", nextVideoStartTime);
+          setVideoEndTime(nextVideoStartTime > 0 ? nextVideoStartTime : null)
+        } else {
+          // Different video, no auto-navigation needed within the current video
+          setVideoEndTime(null);
+        }
+        setHasShownPrompt(false)
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -203,36 +217,14 @@ const Course = () => {
           durationMs: duration,
         };
 
-        // Use the production API URL
-        const apiUrl =
-          process.env.NEXT_PUBLIC_API_URL ||
-          "https://khbciw4vke.execute-api.us-east-1.amazonaws.com/prod";
-
-        // Update to use full URL
-        const blob = new Blob([JSON.stringify(timeData)], {
-          type: "application/json",
-        });
-        navigator.sendBeacon(`${apiUrl}/time-tracking`, blob);
-
-        if (!navigator.sendBeacon) {
-          await fetch(`${apiUrl}/time-tracking`, {
-            method: "POST",
-            body: JSON.stringify(timeData),
-            headers: { "Content-Type": "application/json" },
-            keepalive: true,
-          });
-        }
+        // Use the RTK Query mutation instead of direct API call
+        await trackTimeSpent(timeData)
       } catch (error) {
         console.error("Error sending time tracking data:", error);
       }
     },
-    [
-      user?.id,
-      course?.courseId,
-      currentSection?.sectionId,
-      currentChapter?.chapterId,
-    ]
-  );
+    [user?.id, course?.courseId, currentSection?.sectionId, currentChapter?.chapterId, trackTimeSpent],
+  )
 
   useEffect(() => {
     const startTime = Date.now();
@@ -251,16 +243,11 @@ const Course = () => {
     };
   }, [sendTimeTracking]);
 
-  const handleProgress = ({
-    played,
-    playedSeconds,
-  }: {
-    played: number;
-    playedSeconds: number;
-  }) => {
-    setProgress(played);
+  const handleProgress = ({ played, playedSeconds }: { played: number; playedSeconds: number }) => {
+    setProgress(played)
+    
+    // Chapter completion logic
     if (
-      played >= 0.8 &&
       !hasMarkedComplete &&
       currentChapter &&
       currentSection &&
@@ -268,82 +255,127 @@ const Course = () => {
       !isChapterCompleted(currentSection.sectionId, currentChapter.chapterId) &&
       isSectionReleased(currentSection)
     ) {
-      setHasMarkedComplete(true);
-      updateChapterProgress(
-        currentSection.sectionId,
-        currentChapter.chapterId,
-        true
-      );
+      // Get current chapter start timestamp
+      const isYouTube = currentChapter.video?.toString().includes('youtube.com') || currentChapter.video?.toString().includes('youtu.be');
+      const isVimeo = currentChapter.video?.toString().includes('vimeo.com');
+      
+      let currentChapterStartTime = 0;
+      if (isYouTube) {
+        currentChapterStartTime = parseYouTubeTime(currentChapter.video as string);
+      } else if (isVimeo && currentChapter.timestamp) {
+        currentChapterStartTime = convertTimestampToSeconds(currentChapter.timestamp);
+      }
+      
+      // Determine if the user has watched the required chunk
+      const hasWatchedRequiredChunk = videoEndTime 
+        ? playedSeconds >= videoEndTime 
+        : played >= 0.8; // Fallback to 80% if no end time
+      
+      // Check if the chapter has quiz and assignments
+      const hasQuiz = currentChapter.quiz !== undefined;
+      const hasAssignments = currentChapter.assignments && currentChapter.assignments.length > 0;
+      
+      // Determine if chapter should be marked as complete
+      let shouldMarkComplete = false;
+      
+      if (hasQuiz && hasAssignments) {
+        shouldMarkComplete = isQuizCompleted(currentChapter.chapterId) && isAssignmentsCompleted(currentChapter.chapterId) && hasWatchedRequiredChunk;
+      } else if (hasQuiz) {
+        shouldMarkComplete = isQuizCompleted(currentChapter.chapterId) && hasWatchedRequiredChunk;
+      } else if (hasAssignments) {
+        shouldMarkComplete = isAssignmentsCompleted(currentChapter.chapterId) && hasWatchedRequiredChunk;
+      } else {
+        shouldMarkComplete = hasWatchedRequiredChunk;
+      }
+      
+      if (shouldMarkComplete) {
+        setHasMarkedComplete(true)
+        updateChapterProgress(currentSection.sectionId, currentChapter.chapterId, true)
+      }
     }
 
-    console.log(videoEndTime);
-    if (
-      videoEndTime &&
-      Math.floor(playedSeconds) === videoEndTime &&
-      !hasShownPrompt
-    ) {
-      setHasShownPrompt(true);
+    // Auto-navigate to next chapter when reaching the timestamp of the next video
+    if (videoEndTime && Math.floor(playedSeconds) >= videoEndTime && !hasShownPrompt) {
+      setHasShownPrompt(true)
 
-      if (
-        currentChapter?.quiz !== undefined ||
-        (currentChapter?.assignments && currentChapter.assignments.length > 0)
-      ) {
-        if (!isQuizCompleted()) {
-          toast.error(
-            "Please complete the quiz before moving to the next chapter.",
-            {
+      const nextChapterId = findNextAvailableChapter("next")
+      const nextChapter = course?.sections
+        .flatMap((section: Section) => section.chapters)
+        .find((chapter) => chapter.chapterId === nextChapterId)
+
+      // Check if the next chapter uses the same video URL (excluding timestamp)
+      const isSameVideo = nextChapter?.video && currentChapter?.video && 
+        nextChapter.video.toString().split(/[?#]/)[0] === currentChapter.video.toString().split(/[?#]/)[0];
+
+      if (isSameVideo) {
+        // If it's the same video, navigate to the next chapter
+        if (currentChapter?.quiz !== undefined || (currentChapter?.assignments && currentChapter.assignments.length > 0)) {
+          if (!isQuizCompleted(currentChapter.chapterId)) {
+            // Pause the video first
+            if (playerRef.current) {
+              try {
+                const player = playerRef.current.getInternalPlayer()
+                if (player && typeof player.pauseVideo === 'function') {
+                  player.pauseVideo()
+                } else if (player && typeof player.pause === 'function') {
+                  player.pause()
+                }
+              } catch (error) {
+                console.error("Error pausing video:", error)
+              }
+            }
+            
+            // Show toast with Sonner API
+            toast.error("Please complete the quiz before moving to the next chapter.", {
               duration: 10000,
-              icon: <GraduationCap className="w-6 h-6 mr-2" />,
-            }
-          );
+              icon: <GraduationCap className="w-4 h-4" />,
+            })
 
-          quizRef.current?.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-          });
-
-          if (playerRef.current) {
-            const player = playerRef.current.getInternalPlayer();
-            if (player) {
-              player.pauseVideo();
-              player.seekTo(videoEndTime - 1);
+            // Scroll to quiz after a short delay to ensure toast is visible
+            setTimeout(() => {
+              quizRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+            }, 500)
+            
+          } else if (!isAssignmentsCompleted(currentChapter.chapterId)) {
+            // Pause the video first
+            if (playerRef.current) {
+              try {
+                const player = playerRef.current.getInternalPlayer()
+                if (player && typeof player.pauseVideo === 'function') {
+                  player.pauseVideo()
+                } else if (player && typeof player.pause === 'function') {
+                  player.pause()
+                }
+              } catch (error) {
+                console.error("Error pausing video:", error)
+              }
             }
-          }
-        } else if (!isAssignmentsCompleted()) {
-          toast.error(
-            "Please complete all assignments before moving to the next chapter.",
-            {
+            
+            // Show toast with Sonner API
+            toast.error("Please complete all assignments before moving to the next chapter.", {
               duration: 10000,
-              icon: <BookOpen className="w-6 h-6 mr-2" />,
-            }
-          );
-
-          if (playerRef.current) {
-            const player = playerRef.current.getInternalPlayer();
-            if (player) {
-              player.pauseVideo();
-              player.seekTo(videoEndTime - 1);
-            }
+              icon: <BookOpen className="w-4 h-4" />,
+            })
+            
+            // Scroll to assignments section after a short delay
+            setTimeout(() => {
+              document.querySelector('.assignments-section')?.scrollIntoView({ behavior: "smooth", block: "start" })
+            }, 500)
+            
+          } else {
+            toast.success("Reached next chapter timestamp. Navigating to the next chapter.", {
+              duration: 3000,
+              icon: <ChevronRight className="w-6 h-6" />,
+            })
+            handleGoToNextChapter()
           }
         } else {
-          toast.error(
-            "You've reached the end of this chapter. Moving to the next one.",
-            {
-              duration: 5000,
-              icon: <ChevronRight className="w-6 h-6 mx-1 text-green-500" />,
-            }
-          );
-          handleGoToNextChapter();
+          toast.success("Reached next chapter timestamp. Navigating to the next chapter.", {
+            duration: 3000,
+            icon: <ChevronRight className="w-6 h-6" />,
+          })
+          handleGoToNextChapter()
         }
-      } else {
-        toast.error(
-          "You've reached the end of this chapter. Moving to the next one.",
-          {
-            duration: 5000,
-            icon: <ChevronRight className="w-6 h-6 mx-1 text-green-500" />,
-          }
-        );
-        handleGoToNextChapter();
       }
     }
   };
@@ -352,30 +384,32 @@ const Course = () => {
     if (!course) return;
 
     if (currentChapter?.quiz) {
-      if (!isQuizCompleted()) {
-        toast.error(
-          "Please complete the chapter quiz before moving to the next chapter.",
-          {
-            duration: 5000,
-            icon: <GraduationCap className="w-6 h-6 mx-1 text-green-500" />,
-          }
-        );
-        return;
-      }
-
-      if (!isAssignmentsCompleted()) {
-        toast.error(
-          "Please complete all chapter assignments before moving to the next chapter.",
-          {
-            duration: 5000,
-            icon: <BookOpen className="w-6 h-6 mx-1 text-green-500" />,
-          }
-        );
-        return;
+      if (!isQuizCompleted(currentChapter.chapterId)) {
+        toast.error("Please complete the chapter quiz before moving to the next chapter.")
+        
+        // Scroll to quiz after a short delay
+        setTimeout(() => {
+          quizRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+        }, 500)
+        
+        return
       }
     }
-
-    const nextChapterId = findNextAvailableChapter("next");
+    
+    if (currentChapter?.assignments && currentChapter.assignments.length > 0) {
+      if (!isAssignmentsCompleted(currentChapter.chapterId)) {
+        toast.error("Please complete all chapter assignments before moving to the next chapter.")
+        
+        // Scroll to assignments section after a short delay
+        setTimeout(() => {
+          document.querySelector('.assignments-section')?.scrollIntoView({ behavior: "smooth", block: "start" })
+        }, 500)
+        
+        return
+      }
+    }
+    
+    const nextChapterId = findNextAvailableChapter("next")
     if (nextChapterId) {
       setHasShownPrompt(false);
       router.push(
@@ -431,7 +465,21 @@ const Course = () => {
         playerRef.current.seekTo(seconds);
       }
     }
-  };
+  }
+
+  const handleQuizComplete = () => {
+    // Use the markQuizCompleted function from the hook
+    markQuizCompleted()
+    
+    toast.success("Quiz completed successfully!")
+    
+    // If there are assignments, scroll to them
+    if (currentChapter?.assignments && currentChapter.assignments.length > 0 && !isAssignmentsCompleted(currentChapter.chapterId)) {
+      setTimeout(() => {
+        document.querySelector('.assignments-section')?.scrollIntoView({ behavior: "smooth", block: "start" })
+      }, 500)
+    }
+  }
 
   if (isOrgLoading || isLoading) return <Spinner />;
   if (!user) return <SignInRequired />;
@@ -621,20 +669,12 @@ const Course = () => {
                 >
                   Completed
                 </Badge>
-              ) : !isQuizCompleted() && currentChapter.quiz ? (
-                <Badge
-                  variant="outline"
-                  className="bg-yellow-100 text-yellow-800 border-yellow-200"
-                >
+              ) : !isQuizCompleted(currentChapter.chapterId) && currentChapter.quiz ? (
+                <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-200">
                   Quiz Pending
                 </Badge>
-              ) : !isAssignmentsCompleted() &&
-                currentChapter.assignments &&
-                currentChapter.assignments.length > 0 ? (
-                <Badge
-                  variant="outline"
-                  className="bg-blue-100 text-blue-800 border-blue-200"
-                >
+              ) : !isAssignmentsCompleted(currentChapter.chapterId) && currentChapter.assignments && currentChapter.assignments.length > 0 ? (
+                <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">
                   Assignments Pending
                 </Badge>
               ) : (
@@ -662,7 +702,7 @@ const Course = () => {
           />
         )}
 
-        {currentChapter.quiz && !isQuizCompleted() ? (
+        {currentChapter.quiz && !isQuizCompleted(currentChapter.chapterId) ? (
           <div ref={quizRef}>
             <Card className="border shadow-sm">
               <CardHeader className="border-b bg-muted/30">
@@ -677,12 +717,13 @@ const Course = () => {
                   courseId={course.courseId}
                   chapterId={currentChapter.chapterId}
                   sectionId={currentSection.sectionId}
+                  onQuizComplete={handleQuizComplete}
                 />
               </CardContent>
             </Card>
           </div>
         ) : (
-          <Card className="border shadow-sm">
+          <Card className="border shadow-sm assignments-section">
             <CardHeader className="border-b bg-muted/30">
               <div className="flex items-center space-x-3">
                 <GraduationCap className="h-5 w-5 text-primary" />

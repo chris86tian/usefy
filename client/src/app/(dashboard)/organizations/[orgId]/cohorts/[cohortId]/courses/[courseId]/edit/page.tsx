@@ -79,8 +79,7 @@ const CourseEditor = () => {
     if (!isInstructor && !isAdmin) {
       router.push(`/organizations/${orgId}/cohorts/${cohortId}`)
     }
-  }
-  , [isInstructor, isAdmin, router, orgId, cohortId])
+  }, [isInstructor, isAdmin, router, orgId, cohortId])
 
 
   const handleURLSubmit = async (videoUrl: string, options: ProcessOptions) => {
@@ -121,12 +120,12 @@ const CourseEditor = () => {
       }
 
       // Process the sections and add video URLs based on the source
-      const processedSections = newSections.map((section: any) => {
+      const processedSections = newSections.map((section: Section) => {
         // Process each section
         return {
           ...section,
           sectionId: section.sectionId || uuid(),
-          chapters: section.chapters.map((chapter: any) => {
+          chapters: section.chapters.map((chapter) => {
             // Process each chapter
             const videoId = extractVideoId(videoUrl, options.videoSource as "youtube" | "vimeo")
             let chapterVideoUrl = chapter.video || ""
@@ -165,14 +164,14 @@ const CourseEditor = () => {
                 ? {
                     quizId: chapter.quiz.quizId || uuid(),
                     questions:
-                      chapter.quiz.questions?.map((question: any) => ({
+                      chapter.quiz.questions?.map((question) => ({
                         ...question,
                         questionId: question.questionId || uuid(),
                       })) || [],
                   }
                 : undefined,
               assignments:
-                chapter.assignments?.map((assignment: any) => ({
+                chapter.assignments?.map((assignment) => ({
                   ...assignment,
                   assignmentId: assignment.assignmentId || uuid(),
                   submissions: assignment.submissions || [],
@@ -200,20 +199,9 @@ const CourseEditor = () => {
 
   const handleAddInstructor = async (email: string) => {
     try {
-      await inviteUserToCohort({
-        organizationId: orgId,
-        cohortId,
-        email,
-        role: "instructor",
-      }).unwrap()
-
-      const result = await addCourseInstructor({
-        courseId,
-        email,
-      }).unwrap()
-
+      await inviteUserToCohort({ organizationId: orgId, cohortId, email, role: "instructor" }).unwrap()
+      const result = await addCourseInstructor({ courseId, email }).unwrap()
       handleEnroll(result.id, courseId, createTransaction)
-      
       refetchInstructors()
     } catch (error) {
       console.error("Failed to add instructor:", error)
@@ -223,10 +211,7 @@ const CourseEditor = () => {
 
   const handleRemoveInstructor = async (instructorId: string) => {
     try {
-      await removeCourseInstructor({
-        courseId,
-        userId: instructorId,
-      }).unwrap()
+      await removeCourseInstructor({ courseId, userId: instructorId }).unwrap()
       refetchInstructors()
     } catch (error) {
       console.error("Failed to remove instructor:", error)
@@ -258,7 +243,7 @@ const CourseEditor = () => {
         courseImage: course.image || "",
       })
 
-      if (course.sections?.length) {
+      if (course.sections) {
         dispatch(
           setSections(
             course.sections.map((section) => ({
@@ -320,15 +305,11 @@ const CourseEditor = () => {
       );
 
       let thumbnailUrl = course?.image || ""
-      if (image) {
-        thumbnailUrl = await uploadThumbnail(courseId, getUploadImageUrl, image)
-      }
+      if (image) thumbnailUrl = await uploadThumbnail(courseId, getUploadImageUrl, image)
 
       const formData = createCourseFormData(data, updatedSectionsAfterFiles, thumbnailUrl)
-
       await updateCourse({ orgId, cohortId, courseId, formData }).unwrap()
-
-      toast.success("Course updated successfully!")
+      
       window.location.href = `/organizations/${orgId}/cohorts/${cohortId}`
       refetch()
     } catch (error) {
@@ -344,7 +325,6 @@ const CourseEditor = () => {
   if (!currentOrg) return <NotFound message="Organization not found" />
   if (!course) return <NotFound message="Course not found" />
   if (!instructors) return <NotFound message="Instructors not found" />
-    
 
   return (
     <div className="dark:text-gray-100">
