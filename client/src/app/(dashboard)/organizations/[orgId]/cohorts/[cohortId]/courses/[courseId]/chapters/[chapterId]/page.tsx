@@ -484,8 +484,7 @@ const Course = () => {
   if (isOrgLoading || isLoading) return <Spinner />;
   if (!user) return <SignInRequired />;
   if (!course) return <NotFound message="Course not found" />;
-  if (!currentSection || !currentChapter)
-    return <NotFound message="Chapter not found" />;
+  if (!currentSection || !currentChapter) return <NotFound message="Chapter not found" />;
   if (!currentOrg) return <NotFound message="Organization not found" />;
 
   if (!isCurrentSectionReleased && currentSection) {
@@ -702,6 +701,21 @@ const Course = () => {
           />
         )}
 
+        {/* UploadedFiles */}
+        {currentSection.files && currentSection.files.length > 0 && (
+          <Card className="border shadow-sm">
+            <CardHeader className="border-b bg-muted/30">
+              <div className="flex items-center space-x-3">
+                <FileText className="h-5 w-5 text-primary" />
+                <CardTitle className="text-lg">Section Materials</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <UploadedFiles files={currentSection.files} />
+            </CardContent>
+          </Card>
+        )}
+
         {currentChapter.quiz && !isQuizCompleted(currentChapter.chapterId) ? (
           <div ref={quizRef}>
             <Card className="border shadow-sm">
@@ -735,7 +749,7 @@ const Course = () => {
                 <div className="grid grid-cols-2 gap-4">
                   {currentChapter.assignments &&
                   currentChapter.assignments.length > 0 ? (
-                    currentChapter.assignments.map((assignment) => (
+                  currentChapter.assignments.map((assignment) => (
                       <AssignmentCard
                         key={assignment.assignmentId}
                         isAuthorized={isAuthorized}
@@ -753,21 +767,6 @@ const Course = () => {
                   )}
                 </div>
               </ScrollArea>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* UploadedFiles */}
-        {currentSection?.files && currentSection.files.length > 0 && (
-          <Card className="border shadow-sm">
-            <CardHeader className="border-b bg-muted/30">
-              <div className="flex items-center space-x-3">
-                <FileText className="h-5 w-5 text-primary" />
-                <CardTitle className="text-lg">Section Materials</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <UploadedFiles files={currentSection.files} />
             </CardContent>
           </Card>
         )}

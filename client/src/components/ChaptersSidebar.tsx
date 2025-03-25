@@ -732,7 +732,7 @@ const Chapter = ({
                     <FileText className="h-3.5 w-3.5" />
                   </div>
                 </TooltipTrigger>
-                <TooltipContent side="right" className="text-xs">
+                <TooltipContent side="right" className="text-xs dark:text-white">
                   Quiz {quizCompleted ? "completed" : "pending"}
                 </TooltipContent>
               </Tooltip>
