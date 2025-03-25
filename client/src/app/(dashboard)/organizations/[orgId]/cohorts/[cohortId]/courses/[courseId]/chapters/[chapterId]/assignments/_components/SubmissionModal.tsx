@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState, useRef } from "react"
 import { useUser } from "@clerk/nextjs"
-import { useCreateSubmissionMutation } from "@/state/api"
+import { useCreateSubmissionMutation, useGetUploadFileUrlMutation } from "@/state/api"
 import { v4 as uuidv4 } from "uuid"
 import { toast } from "sonner"
 import {
@@ -23,10 +23,7 @@ import { Loader2, LinkIcon, X, UploadCloud } from "lucide-react"
 import { SignInRequired } from "@/components/SignInRequired"
 
 interface SubmissionModalProps {
-  assignment: {
-    assignmentId: string
-    title: string
-  }
+  assignment: Assignment
   courseId: string
   sectionId: string
   chapterId: string
@@ -46,6 +43,7 @@ export default function SubmissionModal({
 }: SubmissionModalProps) {
   const { user } = useUser()
   const [createSubmission, { isLoading }] = useCreateSubmissionMutation()
+  const [getUploadFileUrl] = useGetUploadFileUrlMutation()
   const [comment, setComment] = useState("")
   const [files, setFiles] = useState<File[]>([])
   const [links, setLinks] = useState<string[]>([])
@@ -76,26 +74,44 @@ export default function SubmissionModal({
     setLinks((prev) => prev.filter((_, i) => i !== index))
   }
 
+  const uploadFileToS3 = async (file: File) => {
+    try {
+      // Get pre-signed URL from backend
+      const { uploadUrl, fileUrl } = await getUploadFileUrl({
+        courseId,
+        sectionId,
+        fileName: file.name,
+        fileType: file.type,
+      }).unwrap();
+
+      // Upload file to S3
+      await fetch(uploadUrl, {
+        method: "PUT",
+        body: file,
+        headers: { "Content-Type": file.type },
+      });
+
+      return fileUrl;
+    } catch (error) {
+      console.error("File upload failed:", error);
+      toast.error(`Failed to upload file: ${file.name}`);
+      throw error;
+    }
+  }
+
   const handleSubmit = async () => {
     try {
-      // Convert files to base64 strings
-      const filePromises = files.map((file) => {
-        return new Promise<string>((resolve, reject) => {
-          const reader = new FileReader()
-          reader.readAsDataURL(file)
-          reader.onload = () => resolve(reader.result as string)
-          reader.onerror = (error) => reject(error)
-        })
-      })
-
-      const fileContents = await Promise.all(filePromises)
+      // Upload all files to S3 and get their URLs
+      const fileUrls = files.length > 0 
+        ? await Promise.all(files.map(file => uploadFileToS3(file)))
+        : [];
 
       // Create submission object
       const submissionData = {
         submissionId: uuidv4(),
         userId: user.id,
         comment,
-        filesUrls: [], // TODO: Upload files to S3 and store URLs
+        fileUrls, // Use the S3 file URLs
         links,
         timestamp: new Date().toISOString(),
       }
@@ -199,4 +215,3 @@ export default function SubmissionModal({
     </Dialog>
   )
 }
-

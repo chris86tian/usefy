@@ -48,7 +48,7 @@ async function fetchYouTubeTranscript(videoId: string): Promise<YouTubeTranscrip
 
     console.log("✅ Transcript retrieved using fallback method!");
 
-    return transcript.map((segment: any) => ({
+    return transcript.map((segment: YouTubeTranscriptSegment) => ({
       text: segment.text,
       offset: segment.offset,
       duration: segment.duration || 5000,
@@ -622,9 +622,9 @@ Ensure that the response is a valid JSON object following the specified format.`
         let timestampIndex = 0;
         
         // Distribute timestamps across all chapters in all sections
-        sections.forEach((section: any) => {
+        sections.forEach((section: Section) => {
           if (section.chapters && section.chapters.length > 0) {
-            section.chapters.forEach((chapter: any) => {
+            section.chapters.forEach((chapter) => {
               // Assign a timestamp if available, otherwise keep the existing one
               if (timestampIndex < timestamps.length) {
                 chapter.timestamp = timestamps[timestampIndex++];

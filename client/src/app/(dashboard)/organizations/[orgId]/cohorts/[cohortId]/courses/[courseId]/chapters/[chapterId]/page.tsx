@@ -1,10 +1,11 @@
 "use client";
 
-import { useRef, useState, useEffect, useMemo } from "react"
+import { useRef, useState, useEffect, useMemo, useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
+import { Separator } from "@/components/ui/separator"
 import { toast } from "sonner"
 import ReactPlayer from "react-player"
 import { useCourseProgressData } from "@/hooks/useCourseProgressData"
@@ -34,7 +35,8 @@ import AdaptiveQuiz from "./adaptive-quiz/AdaptiveQuiz"
 import { Spinner } from "@/components/ui/Spinner"
 import { useOrganization } from "@/context/OrganizationContext"
 import { AssignmentCard } from "./assignments/_components/AssignmentCard"
-import { useCallback } from "react"
+import { useUser } from "@clerk/nextjs"
+import { useGetUserCourseSubmissionsQuery } from "@/state/api"
 import FeedbackButton from "./adaptive-quiz/FeedbackButton"
 import UploadedFiles from "./adaptive-quiz/UploadedFiles"
 import { FileText } from "lucide-react"
@@ -73,21 +75,26 @@ const Course = () => {
   const router = useRouter();
   const { currentOrg, isOrgLoading } = useOrganization();
   const { orgId, cohortId } = useParams();
+  const { user: clerkUser } = useUser();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [videoEndTime, setVideoEndTime] = useState<number | null>(null);
   const [hasShownPrompt, setHasShownPrompt] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isReady, setIsReady] = useState(false);
   const [isRedoingQuiz, setIsRedoingQuiz] = useState(false);
+  const [showAllSubmissions, setShowAllSubmissions] = useState(false);
 
   const [likeChapter] = useLikeChapterMutation()
   const [dislikeChapter] = useDislikeChapterMutation()
   const [trackTimeSpent] = useTrackTimeSpentMutation()
 
-  const { data: reactionCount, refetch: refetchReactionCount } =
-    useGetChapterReactionCountQuery({
-      chapterId: currentChapter?.chapterId as string,
-    });
+  const { data: reactionCount, refetch: refetchReactionCount } = useGetChapterReactionCountQuery({ chapterId: currentChapter?.chapterId as string });
+
+  // Get user submissions for the course
+  const { data: userSubmissions = [] } = useGetUserCourseSubmissionsQuery({ 
+    courseId,
+    userId: clerkUser?.id as string
+  }, { skip: !clerkUser?.id })
 
   // Define findNextAvailableChapter function before it's used
   const findNextAvailableChapter = (direction: "next" | "previous") => {
@@ -154,17 +161,15 @@ const Course = () => {
 
   // Only define isAuthorized if currentOrg exists
   const isAuthorized = currentOrg
-    ? currentOrg.admins.some((admin) => admin.userId === user?.id) ||
-      currentOrg.instructors.some(
-        (instructor) => instructor.userId === user?.id
-      )
+    ? currentOrg.admins.some((admin) => admin.userId === clerkUser?.id) ||
+      currentOrg.instructors.some((instructor) => instructor.userId === clerkUser?.id)
     : false;
 
   useEffect(() => {
     if (currentChapter?.video) {
       const nextChapterId = findNextAvailableChapter("next");
       const nextChapter = course?.sections
-        .flatMap((section: Section) => section.chapters)
+        .flatMap((section) => section.chapters)
         .find((chapter) => chapter.chapterId === nextChapterId);
 
       if (nextChapter?.video) {
@@ -203,7 +208,7 @@ const Course = () => {
   const sendTimeTracking = useCallback(
     async (duration: number) => {
       if (
-        !user?.id ||
+        !clerkUser?.id ||
         !course?.courseId ||
         !currentSection?.sectionId ||
         !currentChapter?.chapterId
@@ -212,7 +217,7 @@ const Course = () => {
 
       try {
         const timeData = {
-          userId: user.id,
+          userId: clerkUser.id,
           courseId: course.courseId,
           sectionId: currentSection.sectionId,
           chapterId: currentChapter.chapterId,
@@ -225,7 +230,7 @@ const Course = () => {
         console.error("Error sending time tracking data:", error);
       }
     },
-    [user?.id, course?.courseId, currentSection?.sectionId, currentChapter?.chapterId, trackTimeSpent],
+    [clerkUser?.id, course?.courseId, currentSection?.sectionId, currentChapter?.chapterId, trackTimeSpent],
   )
 
   useEffect(() => {
@@ -302,7 +307,7 @@ const Course = () => {
 
       const nextChapterId = findNextAvailableChapter("next")
       const nextChapter = course?.sections
-        .flatMap((section: Section) => section.chapters)
+        .flatMap((section) => section.chapters)
         .find((chapter) => chapter.chapterId === nextChapterId)
 
       // Check if the next chapter uses the same video URL (excluding timestamp)
@@ -492,7 +497,7 @@ const Course = () => {
   }
 
   if (isOrgLoading || isLoading) return <Spinner />;
-  if (!user) return <SignInRequired />;
+  if (!clerkUser) return <SignInRequired />;
   if (!course) return <NotFound message="Course not found" />;
   if (!currentSection || !currentChapter) return <NotFound message="Chapter not found" />;
   if (!currentOrg) return <NotFound message="Organization not found" />;
@@ -797,6 +802,42 @@ const Course = () => {
                   )}
                 </div>
               </ScrollArea>
+              
+              {currentChapter.assignments && currentChapter.assignments.length > 0 && (
+                <div className="mt-8">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold">Submissions</h3>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setShowAllSubmissions(!showAllSubmissions)}
+                    >
+                      {showAllSubmissions ? "Hide All Submissions" : "View All Submissions"}
+                    </Button>
+                  </div>
+                  
+                  {showAllSubmissions && (
+                    <Card className="border shadow-sm mt-4">
+                      <CardContent className="pt-6">
+                        <UploadedFiles 
+                          files={[]}
+                          submissions={userSubmissions
+                            .filter((sub) => 
+                              currentChapter.assignments?.some(
+                                (assignment) => assignment.assignmentId === sub.assignmentId
+                              ) || false
+                            )
+                            .map((sub) => ({
+                              ...sub,
+                              userName: clerkUser?.fullName || clerkUser?.username || "You"
+                            }))}
+                          showSubmissions={true}
+                        />
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         )}

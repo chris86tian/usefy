@@ -108,13 +108,13 @@ export function OrganizationsDropdown() {
     }
   }
 
-  const isUserMemberOfOrg = (org: any) => {
+  const isUserMemberOfOrg = (org: Organization) => {
     if (!user) return false
 
     return (
-      org.admins?.some((admin: any) => admin.userId === user.id) ||
-      org.instructors?.some((instructor: any) => instructor.userId === user.id) ||
-      org.learners?.some((learner: any) => learner.userId === user.id)
+      org.admins?.some((admin) => admin.userId === user.id) ||
+      org.instructors?.some((instructor) => instructor.userId === user.id) ||
+      org.learners?.some((learner) => learner.userId === user.id)
     )
   }
 

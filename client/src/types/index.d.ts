@@ -245,6 +245,7 @@ declare global {
     links?: string[];
     comment?: string;
     code?: string;
+    timestamp?: string;
     evaluation?: {
       passed: boolean;
       score: number;
