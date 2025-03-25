@@ -19,6 +19,7 @@ import {
   BookOpen,
   GraduationCap,
   Calendar,
+  RefreshCw,
 } from "lucide-react";
 import AssignmentModal from "./assignments/_components/AssignmentModal";
 import { SignInRequired } from "@/components/SignInRequired";
@@ -77,6 +78,7 @@ const Course = () => {
   const [hasShownPrompt, setHasShownPrompt] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isReady, setIsReady] = useState(false);
+  const [isRedoingQuiz, setIsRedoingQuiz] = useState(false);
 
   const [likeChapter] = useLikeChapterMutation()
   const [dislikeChapter] = useDislikeChapterMutation()
@@ -472,6 +474,7 @@ const Course = () => {
     markQuizCompleted()
     
     toast.success("Quiz completed successfully!")
+    setIsRedoingQuiz(false)
     
     // If there are assignments, scroll to them
     if (currentChapter?.assignments && currentChapter.assignments.length > 0 && !isAssignmentsCompleted(currentChapter.chapterId)) {
@@ -479,6 +482,13 @@ const Course = () => {
         document.querySelector('.assignments-section')?.scrollIntoView({ behavior: "smooth", block: "start" })
       }, 500)
     }
+  }
+
+  const handleRedoQuiz = () => {
+    setIsRedoingQuiz(true)
+    setTimeout(() => {
+      quizRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+    }, 100)
   }
 
   if (isOrgLoading || isLoading) return <Spinner />;
@@ -716,13 +726,20 @@ const Course = () => {
           </Card>
         )}
 
-        {currentChapter.quiz && !isQuizCompleted(currentChapter.chapterId) ? (
+        {currentChapter.quiz && (!isQuizCompleted(currentChapter.chapterId) || isRedoingQuiz) ? (
           <div ref={quizRef}>
             <Card className="border shadow-sm">
               <CardHeader className="border-b bg-muted/30">
-                <div className="flex items-center space-x-3">
-                  <GraduationCap className="h-5 w-5 text-primary" />
-                  <CardTitle className="text-lg">Chapter Quiz</CardTitle>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <GraduationCap className="h-5 w-5 text-primary" />
+                    <CardTitle className="text-lg">Chapter Quiz</CardTitle>
+                  </div>
+                  {isRedoingQuiz && (
+                    <Badge variant="outline" className="ml-2">
+                      Practice Mode
+                    </Badge>
+                  )}
                 </div>
               </CardHeader>
               <CardContent>
@@ -739,9 +756,22 @@ const Course = () => {
         ) : (
           <Card className="border shadow-sm assignments-section">
             <CardHeader className="border-b bg-muted/30">
-              <div className="flex items-center space-x-3">
-                <GraduationCap className="h-5 w-5 text-primary" />
-                <CardTitle className="text-lg">Assignments</CardTitle>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <GraduationCap className="h-5 w-5 text-primary" />
+                  <CardTitle className="text-lg">Assignments</CardTitle>
+                </div>
+                {currentChapter.quiz && isQuizCompleted(currentChapter.chapterId) && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleRedoQuiz}
+                    className="flex items-center gap-1"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                    Retake Quiz
+                  </Button>
+                )}
               </div>
             </CardHeader>
             <CardContent>
