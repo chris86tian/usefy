@@ -20,6 +20,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Loader2, LinkIcon, X, UploadCloud } from "lucide-react"
+import { SignInRequired } from "@/components/SignInRequired"
 
 interface SubmissionModalProps {
   assignment: {
@@ -51,6 +52,8 @@ export default function SubmissionModal({
   const [newLink, setNewLink] = useState("")
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  if (!user) return <SignInRequired />;
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files)
@@ -74,11 +77,6 @@ export default function SubmissionModal({
   }
 
   const handleSubmit = async () => {
-    if (!user?.id) {
-      toast.error("You must be logged in to submit an assignment")
-      return
-    }
-
     try {
       // Convert files to base64 strings
       const filePromises = files.map((file) => {
@@ -122,7 +120,7 @@ export default function SubmissionModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Submit Assignment: {assignment.title}</DialogTitle>
+          <DialogTitle>{assignment.title}</DialogTitle>
           <DialogDescription>Upload files, add links, or write comments to submit your assignment.</DialogDescription>
         </DialogHeader>
 

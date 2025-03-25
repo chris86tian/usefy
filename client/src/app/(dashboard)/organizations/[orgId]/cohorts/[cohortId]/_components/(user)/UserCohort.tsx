@@ -55,17 +55,10 @@ const UserCohort = ({ orgUsers, coursesLoading, courses, refetch }: UserCohortPr
     )
   }, [progresses])
 
+
   const isInstructor = orgUsers.instructors.some((instructor) => instructor.id === user?.id)
   const isLearner = orgUsers.learners.some((learner) => learner.id === user?.id)
   const isAdmin = orgUsers.admins.some((admin) => admin.id === user?.id)
-
-  // useEffect(() => {
-  //   if (!isInstructor && !isAdmin && !cohortLearners?.some((learner) => learner.id === user?.id)) {
-  //     router.push(`/organizations/${orgId}`)
-  //     toast.error("You do not have access to this cohort")
-  //     return
-  //   }
-  // }, [isInstructor, isAdmin, router, orgId, cohortLearners, user?.id])
 
   const filteredCourses = useMemo(() => {
     if (!courses) return []
@@ -96,6 +89,7 @@ const UserCohort = ({ orgUsers, coursesLoading, courses, refetch }: UserCohortPr
   if (!user) return <SignInRequired />
   if (!cohort) return <NotFound message="Cohort not found" />
   if (!cohortLearners) return <NotFound message="Cohort learners not found" />
+  if (isLearner && !cohortLearners.some(learner => learner.id === user.id)) return <NotFound message="You do not have access to this page" />
 
   const handleGoToCourse = (course: Course) => {
     if (course.status === "Archived") {
@@ -168,17 +162,13 @@ const UserCohort = ({ orgUsers, coursesLoading, courses, refetch }: UserCohortPr
             .filter((course) => course !== null) // Extra safety
             .map((course) => {
               if (!course) return null // Avoid crashes
-
-              const isEnrolled = course?.enrollments?.some((enrollment) => enrollment.userId === user?.id)
-              const courseProgress = progressesByCourseId[course.courseId]
-
               return (
                 <div key={course.courseId} className="relative">
                   <CourseCard
                     course={course}
                     variant={isInstructor ? "instructor" : "learner"}
-                    isEnrolled={isEnrolled}
-                    progress={courseProgress}
+                    isEnrolled={course.enrollments?.some((enrollment) => enrollment.userId === user.id)}
+                    progress={progressesByCourseId[course.courseId]}
                     onView={handleGoToCourse}
                     onEnroll={handleCourseEnroll}
                     isEnrolling={enrollingCourseId === course.courseId}

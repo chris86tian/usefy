@@ -84,54 +84,68 @@ export function CourseCard({
   const { user } = useUser();
   const [isInstructorsOpen, setIsInstructorsOpen] = useState(false);
   const [isEnrollDialogOpen, setIsEnrollDialogOpen] = useState(false);
-  const { data: instructors } = useGetCourseInstructorsQuery(
-    course?.courseId || ""
-  );
+  
+  const { data: instructors } = useGetCourseInstructorsQuery(course.courseId);
 
   const courseProgress = useMemo(() => {
     if (!course || !progress || !course.sections || !isEnrolled || !user) return 0;
 
-    let totalItems = 0;
-    let completedItems = 0;
+    let totalActivities = 0;
+    let completedActivities = 0;
 
     course.sections.forEach((section) => {
       section.chapters?.forEach((chapter) => {
+        // Count quizzes
         if (chapter.quiz) {
-          totalItems++;
-
-          const sectionProgress = progress.sections?.find(
-            (s) => s.sectionId === section.sectionId
-          );
-          const chapterProgress = sectionProgress?.chapters?.find(
-            (c) => c.chapterId === chapter.chapterId
-          );
-
+          totalActivities++;
+          const sectionProgress = progress.sections?.find(s => s.sectionId === section.sectionId);
+          const chapterProgress = sectionProgress?.chapters?.find(c => c.chapterId === chapter.chapterId);
+          
           if (chapterProgress?.quizCompleted) {
-            completedItems++;
+            completedActivities++;
           }
         }
-      });
-    });
 
-    course.sections.forEach((section) => {
-      section.chapters?.forEach((chapter) => {
+        // Count assignments
         if (chapter.assignments && chapter.assignments.length > 0) {
-          chapter.assignments.forEach((assignment) => {
-            totalItems++;
-
-            if (
-              assignment.submissions &&
-              assignment.submissions.some((sub) => sub.userId === user.id)
-            ) {
-              completedItems++;
+          chapter.assignments.forEach(assignment => {
+            totalActivities++;
+            
+            // Check if user has submitted this assignment
+            if (assignment.submissions && assignment.submissions.some(sub => sub.userId === user.id)) {
+              completedActivities++;
             }
           });
         }
       });
     });
 
-    return totalItems > 0 ? (completedItems / totalItems) * 100 : 0;
+    return totalActivities > 0 ? (completedActivities / totalActivities) * 100 : 0;
   }, [course, progress, user, isEnrolled]);
+
+  const chaptersProgress = useMemo(() => {
+    if (!course || !progress || !course.sections || !isEnrolled) return 0;
+    
+    let totalChapters = 0;
+    let completedChapters = 0;
+    
+    course.sections.forEach((section) => {
+      if (section.chapters) {
+        totalChapters += section.chapters.length;
+        
+        section.chapters.forEach((chapter) => {
+          const sectionProgress = progress.sections?.find(s => s.sectionId === section.sectionId);
+          const chapterProgress = sectionProgress?.chapters?.find(c => c.chapterId === chapter.chapterId);
+          
+          if (chapterProgress?.completed) {
+            completedChapters++;
+          }
+        });
+      }
+    });
+    
+    return totalChapters > 0 ? (completedChapters / totalChapters) * 100 : 0;
+  }, [course, progress, isEnrolled]);
 
   const totalActivities = useMemo(() => {
     if (!course || !course.sections) return 0;
@@ -153,6 +167,7 @@ export function CourseCard({
     return total;
   }, [course]);
 
+
   if (!course || !course.courseId || typeof course !== "object") {
     console.error("Invalid course object passed to CourseCard:", course);
     return (
@@ -166,8 +181,6 @@ export function CourseCard({
       </Card>
     );
   }
-
-  const courseTitle = course.title || "Untitled Course";
 
   const canEdit =
     variant === "admin" ||
@@ -214,9 +227,7 @@ export function CourseCard({
     });
   };
 
-  const lastAccessed = progress?.lastAccessedTimestamp
-    ? formatLastAccessed(progress.lastAccessedTimestamp)
-    : null;
+  const lastAccessed = progress?.lastAccessedTimestamp ? formatLastAccessed(progress.lastAccessedTimestamp) : null;
 
   return (
     <>
@@ -242,7 +253,7 @@ export function CourseCard({
           <div className="aspect-video relative overflow-hidden">
             <Image
               src={course.image || "/placeholder.png"}
-              alt={courseTitle}
+              alt={course.title}
               width={400}
               height={225}
               className="object-cover w-full h-full"
@@ -276,7 +287,7 @@ export function CourseCard({
           <div>
             <div className="flex items-start justify-between mb-1">
               <CardTitle className="line-clamp-1 text-lg">
-                {courseTitle}
+                {course.title}
               </CardTitle>
             </div>
           </div>
@@ -306,9 +317,16 @@ export function CourseCard({
           {isEnrolled && (
             <div className="space-y-1.5 mt-2">
               <div className="flex justify-between items-center text-xs">
+                <span className="font-medium">Chapters completed</span>
+                <span className="text-primary font-medium">
+                  {chaptersProgress.toFixed(0)}%
+                </span>
+              </div>
+              <Progress value={chaptersProgress} className="h-1.5" />
+              <div className="flex items-center justify-between text-xs mt-2">
                 <span className="font-medium">Activities completed</span>
                 <span className="text-primary font-medium">
-                  {Math.round(courseProgress)}%
+                  {courseProgress.toFixed(0)}%
                 </span>
               </div>
               <Progress value={courseProgress} className="h-1.5" />
@@ -598,7 +616,7 @@ export function CourseCard({
             </div>
           ) : isEnrolled ? (
             <Button onClick={handleClick} variant="default" className="w-full">
-              {courseProgress > 0 ? "Continue Learning" : "Start Course"}
+              {courseProgress > 0 || chaptersProgress > 0 ? "Continue Learning" : "Start Course"}
             </Button>
           ) : (
             onEnroll && (
@@ -623,7 +641,7 @@ export function CourseCard({
           <AlertDialogHeader>
             <AlertDialogTitle>Course Access Required</AlertDialogTitle>
             <AlertDialogDescription>
-              You need to be enrolled in &quot;{courseTitle}&quot; to access its
+              You need to be enrolled in &quot;{course.title}&quot; to access its
               content. Would you like to enroll now?
             </AlertDialogDescription>
           </AlertDialogHeader>

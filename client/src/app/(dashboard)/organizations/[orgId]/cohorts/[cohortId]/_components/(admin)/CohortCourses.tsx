@@ -48,6 +48,7 @@ import {
   useUnarchiveCourseMutation,
   useCreateCourseMutation,
   useGetCohortLearnersQuery,
+  useGetMyUserCourseProgressesQuery,
 } from "@/state/api";
 import NotFound from "@/components/NotFound";
 import { Spinner } from "@/components/ui/Spinner";
@@ -74,6 +75,23 @@ const CohortCourses = ({
     isLoading: cohortLearnersLoading,
     refetch: refetchCohortLearners,
   } = useGetCohortLearnersQuery({ organizationId: cohort.organizationId, cohortId: cohort.cohortId })
+
+  const { 
+    data: progresses, 
+    isLoading: progressesLoading 
+  } = useGetMyUserCourseProgressesQuery(cohort.organizationId)
+
+  const progressesByCourseId = useMemo(() => {
+    if (!progresses) return {}
+
+    return progresses.reduce(
+      (acc, progress) => {
+        acc[progress.courseId] = progress
+        return acc
+      },
+      {} as Record<string, UserCourseProgress>,
+    )
+  }, [progresses])
 
   const [createCourse, { isLoading: createCourseLoading }] =
     useCreateCourseMutation();
@@ -424,6 +442,7 @@ const CohortCourses = ({
               key={course.courseId}
               course={course}
               variant="admin"
+              progress={progressesByCourseId[course.courseId]}
               isEnrolled={course.enrollments?.some((enrollment) => enrollment.userId === currentUserId)}
               onEnroll={handleCourseEnroll}
               isEnrolling={enrollingCourseId === course.courseId}

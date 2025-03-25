@@ -19,14 +19,8 @@ export default function CohortPage() {
     const { orgId, cohortId } = useParams() as { orgId: string, cohortId: string }
     const { currentOrg, isOrgLoading } = useOrganization()
     
-    const { data: orgUsers, 
-        isLoading: usersLoading 
-    } = useGetOrganizationUsersQuery({ organizationId: orgId })
-    const { 
-        data: cohortCourses, 
-        isLoading: coursesLoading, 
-        refetch 
-    } = useGetCohortCoursesQuery({ organizationId: orgId, cohortId })
+    const { data: orgUsers, isLoading: usersLoading } = useGetOrganizationUsersQuery({ organizationId: orgId })
+    const { data: cohortCourses, isLoading: coursesLoading, refetch } = useGetCohortCoursesQuery({ organizationId: orgId, cohortId })
 
     if (isOrgLoading || usersLoading || coursesLoading) return <Spinner />
     if (!user) return <SignInRequired />

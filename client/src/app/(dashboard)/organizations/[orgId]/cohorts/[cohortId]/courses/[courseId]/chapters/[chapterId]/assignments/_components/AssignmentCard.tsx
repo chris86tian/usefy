@@ -19,6 +19,7 @@ import {
   UploadCloud,
   CheckCircle,
   Clock,
+  Check,
 } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { useDeleteAssignmentMutation } from "@/state/api";
@@ -236,12 +237,13 @@ export function AssignmentCard({
           <Button
             onClick={handleAssignment}
             className="w-full"
+            disabled={hasSubmitted}
             variant={hasSubmitted ? "outline" : "default"}
           >
-            {hasSubmitted ? (
+            {hasSubmitted ? ( // TODO: view submission and edit submission
               <>
-                <Edit className="h-4 w-4 mr-2" />
-                View Submission
+                <Check className="h-4 w-4 mr-2" />
+                Submitted
               </>
             ) : assignment.isCoding ? (
               <>
@@ -285,7 +287,7 @@ export function AssignmentCard({
           onOpenChange={setIsSubmissionModalOpen}
           onSubmissionComplete={() => {
             setIsSubmissionModalOpen(false);
-            router.refresh();
+            refetch();
           }}
         />
       )}
