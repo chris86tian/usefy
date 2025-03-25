@@ -6,12 +6,18 @@ import axios from "axios";
 import { LANGUAGE_CONFIG } from "@/lib/constants";
 
 interface CodeProps {
-  searchParams: {
+  params: Promise<{
+    orgId: string;
+    cohortId: string;
+    courseId: string;
+    chapterId: string;
+  }>;
+  searchParams: Promise<{
     courseId?: string;
     sectionId?: string;
     chapterId?: string;
     assignmentId?: string;
-  };
+  }>;
 }
 
 async function fetchAssignment(
@@ -56,10 +62,18 @@ async function fetchAssignment(
   }
 }
 
-export default async function Code({ searchParams }: CodeProps) {
+export default async function Code({ params, searchParams }: CodeProps) {
   try {
-    console.log("Received search params:", searchParams);
-    const { courseId, sectionId, chapterId, assignmentId } = searchParams;
+    const [resolvedParams, resolvedSearchParams] = await Promise.all([
+      params,
+      searchParams,
+    ]);
+
+    console.log("Received params:", resolvedParams);
+    console.log("Received search params:", resolvedSearchParams);
+
+    const { courseId, sectionId, chapterId, assignmentId } =
+      resolvedSearchParams;
 
     if (!courseId || !sectionId || !chapterId || !assignmentId) {
       console.error("Missing parameters:", {
