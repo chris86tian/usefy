@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { LANGUAGE_CONFIG } from "@/lib/constants";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
-import { ChevronDownIcon } from 'lucide-react';
+import { ChevronDownIcon } from "lucide-react";
 import useMounted from "@/hooks/useMounted";
 
 interface LanguageSelectorProps {
@@ -17,17 +17,28 @@ function LanguageSelector({ assignment }: LanguageSelectorProps) {
 
   const { language, setLanguage } = useCodeEditorStore();
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const currentLanguageObj = LANGUAGE_CONFIG[language.toLowerCase()];
+
+  const currentLanguage =
+    language.toLowerCase() in LANGUAGE_CONFIG
+      ? language.toLowerCase()
+      : "python";
+  const currentLanguageObj = LANGUAGE_CONFIG[currentLanguage];
 
   useEffect(() => {
-    if (assignment.language) {
-      setLanguage(assignment.language);
+    const assignmentLanguage = assignment.language?.toLowerCase();
+    if (assignmentLanguage && assignmentLanguage in LANGUAGE_CONFIG) {
+      setLanguage(assignmentLanguage);
+    } else {
+      setLanguage("python");
     }
   }, [assignment.language, setLanguage]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
@@ -37,7 +48,7 @@ function LanguageSelector({ assignment }: LanguageSelectorProps) {
   }, []);
 
   const handleLanguageSelect = (langId: string) => {
-    if (langId === assignment.language) {
+    if (langId in LANGUAGE_CONFIG) {
       setLanguage(langId);
       setIsOpen(false);
     }
@@ -92,12 +103,15 @@ function LanguageSelector({ assignment }: LanguageSelectorProps) {
            rounded-xl border border-border shadow-2xl py-2 z-50"
           >
             <div className="px-3 pb-2 mb-2 border-b border-border/50">
-              <p className="text-xs font-medium text-muted-foreground">Select Language</p>
+              <p className="text-xs font-medium text-muted-foreground">
+                Select Language
+              </p>
             </div>
 
             <div className="max-h-[280px] overflow-y-auto overflow-x-hidden">
               {Object.values(LANGUAGE_CONFIG).map((lang, index) => {
-                const isDisabled = lang.id !== assignment.language?.toLowerCase();
+                const isDisabled =
+                  lang.id !== assignment.language?.toLowerCase();
 
                 return (
                   <motion.div
@@ -111,7 +125,7 @@ function LanguageSelector({ assignment }: LanguageSelectorProps) {
                       disabled={isDisabled}
                       className={`
                       relative w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
-                      ${language === lang.id ? "bg-primary/10 text-primary" : "text-foreground/80"}
+                      ${currentLanguage === lang.id ? "bg-primary/10 text-primary" : "text-foreground/80"}
                       ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}
                     `}
                       onClick={() => handleLanguageSelect(lang.id)}
@@ -125,7 +139,7 @@ function LanguageSelector({ assignment }: LanguageSelectorProps) {
                       <div
                         className={`
                          relative size-8 rounded-lg p-1.5 group-hover:scale-110 transition-transform
-                         ${language === lang.id ? "bg-primary/10" : "bg-muted"}
+                         ${currentLanguage === lang.id ? "bg-primary/10" : "bg-muted"}
                          ${isDisabled ? "!scale-100" : ""}
                        `}
                       >
@@ -147,7 +161,7 @@ function LanguageSelector({ assignment }: LanguageSelectorProps) {
                       </span>
 
                       {/* selected language border */}
-                      {language === lang.id && (
+                      {currentLanguage === lang.id && (
                         <motion.div
                           className="absolute inset-0 border-2 border-primary/30 rounded-lg"
                           transition={{
