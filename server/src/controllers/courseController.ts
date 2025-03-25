@@ -928,9 +928,7 @@ export const createSubmission = async (
       return;
     }
 
-    let submission = assignment.submissions.find(
-      (submission: any) => submission.submissionId === submissionId
-    );
+    let submission = assignment.submissions.find((submission: any) => submission.userId === userId);
 
     if (submission) {
       // Update existing submission
@@ -942,12 +940,13 @@ export const createSubmission = async (
         submission.links = links;
         submission.comment = comment;
       }
+      submission.timestamp = new Date().toISOString();
     } else {
       // Create new submission
       const newSubmission: any = {
         submissionId: uuidv4(),
         userId,
-        submittedAt: new Date().toISOString(),
+        timestamp: new Date().toISOString(),
       };
 
       if (assignment.isCoding) {

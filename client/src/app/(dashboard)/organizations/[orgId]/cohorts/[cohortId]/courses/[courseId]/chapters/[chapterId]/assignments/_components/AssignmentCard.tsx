@@ -20,12 +20,14 @@ import {
   CheckCircle,
   Clock,
   Check,
+  Eye,
 } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { useDeleteAssignmentMutation } from "@/state/api";
 import { useParams, useRouter } from "next/navigation";
 import AssignmentModal from "../_components/AssignmentModal";
 import SubmissionModal from "../_components/SubmissionModal";
+import SubmissionViewer from "./SubmissionViewer";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import FeedbackButton from "../../adaptive-quiz/FeedbackButton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -71,6 +73,7 @@ export function AssignmentCard({
     useDeleteAssignmentMutation();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSubmissionModalOpen, setIsSubmissionModalOpen] = useState(false);
+  const [isViewSubmissionModalOpen, setIsViewSubmissionModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("description");
 
   if (!user) return <SignInRequired />;
@@ -191,13 +194,24 @@ export function AssignmentCard({
 
               {hasSubmitted && (
                 <div className="mt-4 p-3 bg-green-50 border border-green-100 rounded-md">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-600" />
-                    <div className="text-sm">
-                      <span className="font-medium text-green-700">
-                        Submitted
-                      </span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <div className="text-sm">
+                        <span className="font-medium text-green-700">
+                          Submitted
+                        </span>
+                      </div>
                     </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsViewSubmissionModalOpen(true)}
+                      className="text-green-700 hover:text-green-800 hover:bg-green-100"
+                    >
+                      <Eye className="h-3 w-3 mr-1" />
+                      View Submission
+                    </Button>
                   </div>
                 </div>
               )}
@@ -237,13 +251,12 @@ export function AssignmentCard({
           <Button
             onClick={handleAssignment}
             className="w-full"
-            disabled={hasSubmitted}
             variant={hasSubmitted ? "outline" : "default"}
           >
-            {hasSubmitted ? ( // TODO: view submission and edit submission
+            {hasSubmitted ? (
               <>
-                <Check className="h-4 w-4 mr-2" />
-                Submitted
+                <UploadCloud className="h-4 w-4 mr-2" />
+                Resubmit Assignment
               </>
             ) : assignment.isCoding ? (
               <>
@@ -274,6 +287,17 @@ export function AssignmentCard({
           open={isEditModalOpen}
           onOpenChange={setIsEditModalOpen}
           refetch={refetch}
+        />
+      )}
+
+      {isViewSubmissionModalOpen && userSubmission && (
+        <SubmissionViewer
+          submission={userSubmission as Submission}
+          open={isViewSubmissionModalOpen}
+          onOpenChange={setIsViewSubmissionModalOpen}
+          onResubmit={() => {
+            setIsSubmissionModalOpen(true);
+          }}
         />
       )}
 

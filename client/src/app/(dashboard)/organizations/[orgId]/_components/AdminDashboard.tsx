@@ -22,19 +22,15 @@ const AdminDashboard = ({ orgId }: AdminDashboardProps) => {
       isLoading: coursesLoading, 
     } = useGetOrganizationCoursesQuery(orgId)
 
-    if (usersLoading 
-      || coursesLoading
-    ) return <Spinner />
-    if (!orgUsers 
-      || !orgCourses
-    ) return <NotFound message={!orgUsers ? "Organization Users not found" : "Organization Courses not found"} />
+    if (usersLoading || coursesLoading) return <Spinner />
+    if (!orgUsers || !orgCourses) return <NotFound message={!orgUsers ? "Organization Users not found" : "Organization Courses not found"} />
 
     const totalUsers = orgUsers.admins.length + orgUsers.instructors.length + orgUsers.learners.length
 
     return (
       <div className="space-y-4 p-2">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
+          {/* <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -46,7 +42,7 @@ const AdminDashboard = ({ orgId }: AdminDashboardProps) => {
                 </div>
               </div>
             </CardContent>
-          </Card>
+          </Card> */}
           
           {/* <Card>
             <CardContent className="p-6">

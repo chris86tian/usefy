@@ -336,7 +336,7 @@ const AdminSettings = () => {
     }
   }
 
-  const openEditCohortDialog = (cohort: any) => {
+  const openEditCohortDialog = (cohort: Cohort) => {
     setEditCohortId(cohort.cohortId)
     setEditCohortName(cohort.name)
     setIsEditCohortDialogOpen(true)

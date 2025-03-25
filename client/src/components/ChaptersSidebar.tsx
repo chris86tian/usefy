@@ -58,8 +58,8 @@ interface Section {
 interface Chapter {
   chapterId: string
   title: string
-  quiz?: any
-  assignments?: any[]
+  quiz?: Quiz
+  assignments?: Assignment[]
 }
 
 interface FileResource {
