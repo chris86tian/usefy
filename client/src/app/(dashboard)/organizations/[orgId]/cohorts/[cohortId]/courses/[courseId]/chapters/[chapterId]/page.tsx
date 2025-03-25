@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { useRef, useState, useEffect, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
@@ -19,12 +19,12 @@ import {
   BookOpen,
   GraduationCap,
   Calendar,
-} from "lucide-react"
-import AssignmentModal from "./assignments/_components/AssignmentModal"
-import { SignInRequired } from "@/components/SignInRequired"
-import { parseYouTubeTime, convertTimestampToSeconds } from "@/lib/utils"
-import { 
-  useLikeChapterMutation, 
+} from "lucide-react";
+import AssignmentModal from "./assignments/_components/AssignmentModal";
+import { SignInRequired } from "@/components/SignInRequired";
+import { parseYouTubeTime, convertTimestampToSeconds } from "@/lib/utils";
+import {
+  useLikeChapterMutation,
   useDislikeChapterMutation,
   useGetChapterReactionCountQuery,
   useTrackTimeSpentMutation
@@ -41,10 +41,10 @@ import NotFound from "@/components/NotFound"
 import { CourseComments } from "./_components/CourseComments"
 
 const isSectionReleased = (section?: Section) => {
-  if (!section) return false
-  if (!section.releaseDate) return true
-  return new Date(section.releaseDate) <= new Date()
-}
+  if (!section) return false;
+  if (!section.releaseDate) return true;
+  return new Date(section.releaseDate) <= new Date();
+};
 
 const Course = () => {
   const {
@@ -65,98 +65,105 @@ const Course = () => {
     hasMarkedComplete,
     setHasMarkedComplete,
     refetch,
-  } = useCourseProgressData()
+  } = useCourseProgressData();
 
-  const playerRef = useRef<ReactPlayer>(null)
-  const quizRef = useRef<HTMLDivElement>(null)
-  const router = useRouter()
-  const { currentOrg, isOrgLoading } = useOrganization()
-  const { orgId, cohortId } = useParams()
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [videoEndTime, setVideoEndTime] = useState<number | null>(null)
-  const [hasShownPrompt, setHasShownPrompt] = useState(false)
-  const [progress, setProgress] = useState(0)
-  const [isReady, setIsReady] = useState(false)
+  const playerRef = useRef<ReactPlayer>(null);
+  const quizRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const { currentOrg, isOrgLoading } = useOrganization();
+  const { orgId, cohortId } = useParams();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [videoEndTime, setVideoEndTime] = useState<number | null>(null);
+  const [hasShownPrompt, setHasShownPrompt] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [isReady, setIsReady] = useState(false);
 
   const [likeChapter] = useLikeChapterMutation()
   const [dislikeChapter] = useDislikeChapterMutation()
   const [trackTimeSpent] = useTrackTimeSpentMutation()
 
-  const { 
-    data: reactionCount,
-    refetch: refetchReactionCount
-   } = useGetChapterReactionCountQuery({chapterId: currentChapter?.chapterId as string})
+  const { data: reactionCount, refetch: refetchReactionCount } =
+    useGetChapterReactionCountQuery({
+      chapterId: currentChapter?.chapterId as string,
+    });
 
   // Define findNextAvailableChapter function before it's used
   const findNextAvailableChapter = (direction: "next" | "previous") => {
-    if (!course?.sections || !currentSection || !currentChapter) return null
+    if (!course?.sections || !currentSection || !currentChapter) return null;
 
-    const currentSectionIndex = course.sections.findIndex((section) => section.sectionId === currentSection.sectionId)
+    const currentSectionIndex = course.sections.findIndex(
+      (section) => section.sectionId === currentSection.sectionId
+    );
 
     const currentChapterIndex = currentSection.chapters.findIndex(
-      (chapter) => chapter.chapterId === currentChapter.chapterId,
-    )
+      (chapter) => chapter.chapterId === currentChapter.chapterId
+    );
 
-    let sectionIndex = currentSectionIndex
-    let chapterIndex = currentChapterIndex
+    let sectionIndex = currentSectionIndex;
+    let chapterIndex = currentChapterIndex;
 
     while (sectionIndex >= 0 && sectionIndex < course.sections.length) {
-      const section = course.sections[sectionIndex]
+      const section = course.sections[sectionIndex];
 
       if (direction === "next") {
         if (chapterIndex < section.chapters.length - 1) {
           if (isSectionReleased(section)) {
-            return section.chapters[chapterIndex + 1].chapterId
+            return section.chapters[chapterIndex + 1].chapterId;
           }
         }
-        sectionIndex++
-        chapterIndex = 0
+        sectionIndex++;
+        chapterIndex = 0;
 
         if (sectionIndex < course.sections.length) {
-          const nextSection = course.sections[sectionIndex]
+          const nextSection = course.sections[sectionIndex];
           if (isSectionReleased(nextSection)) {
             if (nextSection.chapters.length > 0) {
-              return nextSection.chapters[0].chapterId
+              return nextSection.chapters[0].chapterId;
             }
           }
         }
       } else {
         if (chapterIndex > 0) {
           if (isSectionReleased(section)) {
-            return section.chapters[chapterIndex - 1].chapterId
+            return section.chapters[chapterIndex - 1].chapterId;
           }
         }
-        sectionIndex--
+        sectionIndex--;
         if (sectionIndex >= 0) {
-          const prevSection = course.sections[sectionIndex]
+          const prevSection = course.sections[sectionIndex];
           if (isSectionReleased(prevSection)) {
             if (prevSection.chapters.length > 0) {
-              return prevSection.chapters[prevSection.chapters.length - 1].chapterId
+              return prevSection.chapters[prevSection.chapters.length - 1]
+                .chapterId;
             }
           }
         }
       }
     }
-    return null
-  }
+    return null;
+  };
 
-  const hasPreviousChapter = !!findNextAvailableChapter("previous")
-  const hasNextChapter = !!findNextAvailableChapter("next")
+  const hasPreviousChapter = !!findNextAvailableChapter("previous");
+  const hasNextChapter = !!findNextAvailableChapter("next");
 
-  const isCurrentSectionReleased = currentSection ? isSectionReleased(currentSection) : false
-  
+  const isCurrentSectionReleased = currentSection
+    ? isSectionReleased(currentSection)
+    : false;
+
   // Only define isAuthorized if currentOrg exists
-  const isAuthorized = currentOrg ? (
-    currentOrg.admins.some((admin) => admin.userId === user?.id) || 
-    currentOrg.instructors.some((instructor) => instructor.userId === user?.id)
-  ) : false
+  const isAuthorized = currentOrg
+    ? currentOrg.admins.some((admin) => admin.userId === user?.id) ||
+      currentOrg.instructors.some(
+        (instructor) => instructor.userId === user?.id
+      )
+    : false;
 
   useEffect(() => {
     if (currentChapter?.video) {
-      const nextChapterId = findNextAvailableChapter("next")
+      const nextChapterId = findNextAvailableChapter("next");
       const nextChapter = course?.sections
         .flatMap((section: Section) => section.chapters)
-        .find((chapter) => chapter.chapterId === nextChapterId)
+        .find((chapter) => chapter.chapterId === nextChapterId);
 
       if (nextChapter?.video) {
         // Check if the next chapter uses the same video URL (excluding timestamp)
@@ -189,11 +196,17 @@ const Course = () => {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentChapter?.video, course?.sections])
+  }, [currentChapter?.video, course?.sections]);
 
   const sendTimeTracking = useCallback(
     async (duration: number) => {
-      if (!user?.id || !course?.courseId || !currentSection?.sectionId || !currentChapter?.chapterId) return
+      if (
+        !user?.id ||
+        !course?.courseId ||
+        !currentSection?.sectionId ||
+        !currentChapter?.chapterId
+      )
+        return;
 
       try {
         const timeData = {
@@ -202,33 +215,33 @@ const Course = () => {
           sectionId: currentSection.sectionId,
           chapterId: currentChapter.chapterId,
           durationMs: duration,
-        }
+        };
 
         // Use the RTK Query mutation instead of direct API call
         await trackTimeSpent(timeData)
       } catch (error) {
-        console.error("Error sending time tracking data:", error)
+        console.error("Error sending time tracking data:", error);
       }
     },
     [user?.id, course?.courseId, currentSection?.sectionId, currentChapter?.chapterId, trackTimeSpent],
   )
 
   useEffect(() => {
-    const startTime = Date.now()
+    const startTime = Date.now();
 
     const handleBeforeUnload = () => {
-      const duration = Date.now() - startTime
-      sendTimeTracking(duration)
-    }
+      const duration = Date.now() - startTime;
+      sendTimeTracking(duration);
+    };
 
-    window.addEventListener("beforeunload", handleBeforeUnload)
+    window.addEventListener("beforeunload", handleBeforeUnload);
 
     return () => {
-      const duration = Date.now() - startTime
-      sendTimeTracking(duration)
-      window.removeEventListener("beforeunload", handleBeforeUnload)
-    }
-  }, [sendTimeTracking])
+      const duration = Date.now() - startTime;
+      sendTimeTracking(duration);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [sendTimeTracking]);
 
   const handleProgress = ({ played, playedSeconds }: { played: number; playedSeconds: number }) => {
     setProgress(played)
@@ -365,10 +378,10 @@ const Course = () => {
         }
       }
     }
-  }
+  };
 
   const handleGoToNextChapter = () => {
-    if (!course) return
+    if (!course) return;
 
     if (currentChapter?.quiz) {
       if (!isQuizCompleted(currentChapter.chapterId)) {
@@ -398,51 +411,53 @@ const Course = () => {
     
     const nextChapterId = findNextAvailableChapter("next")
     if (nextChapterId) {
-      setHasShownPrompt(false)
-      router.push(`/organizations/${currentOrg?.organizationId}/cohorts/${cohortId}/courses/${course.courseId}/chapters/${nextChapterId}`)
+      setHasShownPrompt(false);
+      router.push(
+        `/organizations/${currentOrg?.organizationId}/cohorts/${cohortId}/courses/${course.courseId}/chapters/${nextChapterId}`
+      );
     }
-  }
+  };
 
   const handleGoToPreviousChapter = () => {
-    if (!course) return
-    const previousChapterId = findNextAvailableChapter("previous")
+    if (!course) return;
+    const previousChapterId = findNextAvailableChapter("previous");
     if (previousChapterId) {
       router.push(
-        `/organizations/${currentOrg?.organizationId}/cohorts/${cohortId}/courses/${course.courseId}/chapters/${previousChapterId}`,
-      )
+        `/organizations/${currentOrg?.organizationId}/cohorts/${cohortId}/courses/${course.courseId}/chapters/${previousChapterId}`
+      );
     }
-  }
+  };
 
   const handleModalClose = () => {
-    setIsModalOpen(false)
-  }
+    setIsModalOpen(false);
+  };
 
   const handleLike = async () => {
-    if (!currentChapter) return
+    if (!currentChapter) return;
     try {
-      await likeChapter({chapterId: currentChapter.chapterId}).unwrap()
-      refetchReactionCount()
+      await likeChapter({ chapterId: currentChapter.chapterId }).unwrap();
+      refetchReactionCount();
     } catch (error) {
-      console.error("Failed to like chapter:", error)
-      toast.error("Failed to like the chapter. Please try again.")
+      console.error("Failed to like chapter:", error);
+      toast.error("Failed to like the chapter. Please try again.");
     }
-  }
+  };
 
   const handleDislike = async () => {
-    if (!currentChapter) return
+    if (!currentChapter) return;
     try {
-      await dislikeChapter({chapterId: currentChapter.chapterId}).unwrap()
-      refetchReactionCount()
+      await dislikeChapter({ chapterId: currentChapter.chapterId }).unwrap();
+      refetchReactionCount();
     } catch (error) {
-      console.error("Failed to dislike chapter:", error)
-      toast.error("Failed to dislike the chapter. Please try again.")
+      console.error("Failed to dislike chapter:", error);
+      toast.error("Failed to dislike the chapter. Please try again.");
     }
-  }
+  };
 
   // Handle video ready event
   const handleReady = () => {
     setIsReady(true);
-    
+
     // If we have a timestamp, seek to that position
     if (currentChapter && currentChapter.timestamp) {
       const seconds = convertTimestampToSeconds(currentChapter.timestamp);
@@ -466,11 +481,12 @@ const Course = () => {
     }
   }
 
-  if (isOrgLoading || isLoading) return <Spinner />
-  if (!user) return <SignInRequired />
-  if (!course) return <NotFound message="Course not found" />
-  if (!currentSection || !currentChapter) return <NotFound message="Chapter not found" />
-  if (!currentOrg) return <NotFound message="Organization not found" />
+  if (isOrgLoading || isLoading) return <Spinner />;
+  if (!user) return <SignInRequired />;
+  if (!course) return <NotFound message="Course not found" />;
+  if (!currentSection || !currentChapter)
+    return <NotFound message="Chapter not found" />;
+  if (!currentOrg) return <NotFound message="Organization not found" />;
 
   if (!isCurrentSectionReleased && currentSection) {
     return (
@@ -482,17 +498,24 @@ const Course = () => {
         <div className="flex items-center gap-2 text-muted-foreground">
           <Calendar className="h-4 w-4" />
           <p>
-            Available {currentSection.releaseDate ? new Date(currentSection.releaseDate).toLocaleDateString() : "soon"}
+            Available{" "}
+            {currentSection.releaseDate
+              ? new Date(currentSection.releaseDate).toLocaleDateString()
+              : "soon"}
           </p>
         </div>
         {hasPreviousChapter && (
-          <Button onClick={handleGoToPreviousChapter} variant="outline" className="mt-4">
+          <Button
+            onClick={handleGoToPreviousChapter}
+            variant="outline"
+            className="mt-4"
+          >
             <ChevronLeft className="h-4 w-4 mr-2" />
             Go to Previous Chapter
           </Button>
         )}
       </div>
-    )
+    );
   }
 
   return (
@@ -503,7 +526,9 @@ const Course = () => {
           <span>/</span>
           <span>{currentSection.sectionTitle}</span>
           <span>/</span>
-          <span className="font-medium text-foreground">{currentChapter.title}</span>
+          <span className="font-medium text-foreground">
+            {currentChapter.title}
+          </span>
         </div>
         <h1 className="text-2xl font-bold">{currentChapter.title}</h1>
       </div>
@@ -534,14 +559,16 @@ const Course = () => {
                     byline: false,
                     portrait: false,
                     title: false,
-                    autoplay: true
-                  }
-                }
+                    autoplay: true,
+                  },
+                },
               }}
             />
           ) : (
             <div className="flex items-center justify-center h-full bg-muted">
-              <p className="text-muted-foreground">No video available for this chapter.</p>
+              <p className="text-muted-foreground">
+                No video available for this chapter.
+              </p>
             </div>
           )}
         </CardContent>
@@ -565,7 +592,11 @@ const Course = () => {
                   chapterId={currentChapter.chapterId}
                 ></FeedbackButton>
                 {isAuthorized && (
-                  <Button onClick={() => setIsModalOpen(true)} variant="outline" size="sm">
+                  <Button
+                    onClick={() => setIsModalOpen(true)}
+                    variant="outline"
+                    size="sm"
+                  >
                     <Sparkles className="h-4 w-4 mr-2" />
                     Create Assignment
                   </Button>
@@ -581,7 +612,12 @@ const Course = () => {
                     <ChevronLeft className="h-4 w-4 mr-2" />
                     Previous
                   </Button>
-                  <Button onClick={handleGoToNextChapter} disabled={!hasNextChapter} variant="outline" size="sm">
+                  <Button
+                    onClick={handleGoToNextChapter}
+                    disabled={!hasNextChapter}
+                    variant="outline"
+                    size="sm"
+                  >
                     Next
                     <ChevronRight className="h-4 w-4 ml-2" />
                   </Button>
@@ -592,7 +628,9 @@ const Course = () => {
 
           <CardContent className="pt-6">
             <ScrollArea className="h-auto max-h-48 pr-4">
-              <p className="text-base leading-relaxed">{currentChapter.content}</p>
+              <p className="text-base leading-relaxed">
+                {currentChapter.content}
+              </p>
             </ScrollArea>
           </CardContent>
 
@@ -621,8 +659,14 @@ const Course = () => {
             </div>
 
             <div className="text-sm text-muted-foreground">
-              {isChapterCompleted(currentSection.sectionId, currentChapter.chapterId) ? (
-                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+              {isChapterCompleted(
+                currentSection.sectionId,
+                currentChapter.chapterId
+              ) ? (
+                <Badge
+                  variant="outline"
+                  className="bg-primary/10 text-primary border-primary/20"
+                >
                   Completed
                 </Badge>
               ) : !isQuizCompleted(currentChapter.chapterId) && currentChapter.quiz ? (
@@ -651,8 +695,8 @@ const Course = () => {
             open={isModalOpen}
             onOpenChange={setIsModalOpen}
             onAssignmentChange={() => {
-              handleModalClose()
-              refetch()
+              handleModalClose();
+              refetch();
             }}
             refetch={refetch}
           />
@@ -689,7 +733,8 @@ const Course = () => {
             <CardContent>
               <ScrollArea className="h-auto pt-4">
                 <div className="grid grid-cols-2 gap-4">
-                  {currentChapter.assignments && currentChapter.assignments.length > 0 ? (
+                  {currentChapter.assignments &&
+                  currentChapter.assignments.length > 0 ? (
                     currentChapter.assignments.map((assignment) => (
                       <AssignmentCard
                         key={assignment.assignmentId}
@@ -735,7 +780,7 @@ const Course = () => {
         />
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Course
+export default Course;
