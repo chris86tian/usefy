@@ -64,6 +64,7 @@ async function fetchAssignment(
 
 export default async function Code({ params, searchParams }: CodeProps) {
   try {
+    // Resolve both promises concurrently
     const [resolvedParams, resolvedSearchParams] = await Promise.all([
       params,
       searchParams,
@@ -72,8 +73,18 @@ export default async function Code({ params, searchParams }: CodeProps) {
     console.log("Received params:", resolvedParams);
     console.log("Received search params:", resolvedSearchParams);
 
-    const { courseId, sectionId, chapterId, assignmentId } =
-      resolvedSearchParams;
+    const courseId = resolvedSearchParams.courseId || resolvedParams.courseId;
+    const sectionId = resolvedSearchParams.sectionId;
+    const chapterId =
+      resolvedSearchParams.chapterId || resolvedParams.chapterId;
+    const assignmentId = resolvedSearchParams.assignmentId;
+
+    console.log("Resolved parameters:", {
+      courseId,
+      sectionId,
+      chapterId,
+      assignmentId,
+    });
 
     if (!courseId || !sectionId || !chapterId || !assignmentId) {
       console.error("Missing parameters:", {
