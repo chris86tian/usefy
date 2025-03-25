@@ -12,8 +12,16 @@ async function fetchAssignment(
   assignmentId: string
 ) {
   try {
-    const url = `${process.env.NEXT_PUBLIC_API_URL}/courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/assignments/${assignmentId}`;
+    const apiUrl =
+      process.env.NEXT_PUBLIC_API_URL ||
+      "https://mhun775961.execute-api.us-east-1.amazonaws.com/migration";
+    const url = `${apiUrl}/courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/assignments/${assignmentId}`;
+
     const { data } = await axios.get(url);
+
+    if (!data || !data.data) {
+      throw new Error("Invalid response format from API");
+    }
 
     if (
       !data.data.language ||
@@ -25,6 +33,15 @@ async function fetchAssignment(
     return data;
   } catch (error) {
     console.error("Error fetching assignment:", error);
+    if (axios.isAxiosError(error)) {
+      if (error.response?.status === 404) {
+        throw new Error("Assignment not found");
+      } else if (error.response?.status === 403) {
+        throw new Error("You don't have permission to access this assignment");
+      } else if (error.response?.status === 401) {
+        throw new Error("Please sign in to access this assignment");
+      }
+    }
     throw error;
   }
 }
@@ -64,16 +81,18 @@ export default async function Code({ searchParams }: CodeProps) {
     );
   } catch (error) {
     console.error("Error in Code page:", error);
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : "There was an error loading the coding assignment. Please try again later.";
+
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-red-600 mb-4">
             Error Loading Code Editor
           </h1>
-          <p className="text-gray-600">
-            There was an error loading the coding assignment. Please try again
-            later.
-          </p>
+          <p className="text-gray-600">{errorMessage}</p>
         </div>
       </div>
     );
