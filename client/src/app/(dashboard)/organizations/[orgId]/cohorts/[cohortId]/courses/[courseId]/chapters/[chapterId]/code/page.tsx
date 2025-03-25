@@ -5,6 +5,15 @@ import Header from "../_components/Header";
 import axios from "axios";
 import { LANGUAGE_CONFIG } from "@/lib/constants";
 
+interface CodeProps {
+  searchParams: {
+    courseId?: string;
+    sectionId?: string;
+    chapterId?: string;
+    assignmentId?: string;
+  };
+}
+
 async function fetchAssignment(
   courseId: string,
   sectionId: string,
@@ -17,6 +26,7 @@ async function fetchAssignment(
       "https://mhun775961.execute-api.us-east-1.amazonaws.com/migration";
     const url = `${apiUrl}/courses/${courseId}/sections/${sectionId}/chapters/${chapterId}/assignments/${assignmentId}`;
 
+    console.log("Fetching assignment from URL:", url);
     const { data } = await axios.get(url);
 
     if (!data || !data.data) {
@@ -48,11 +58,16 @@ async function fetchAssignment(
 
 export default async function Code({ searchParams }: CodeProps) {
   try {
-    const resolvedSearchParams = await searchParams;
-    const { courseId, sectionId, chapterId, assignmentId } =
-      resolvedSearchParams;
+    console.log("Received search params:", searchParams);
+    const { courseId, sectionId, chapterId, assignmentId } = searchParams;
 
     if (!courseId || !sectionId || !chapterId || !assignmentId) {
+      console.error("Missing parameters:", {
+        courseId,
+        sectionId,
+        chapterId,
+        assignmentId,
+      });
       throw new Error("Missing required parameters");
     }
 
