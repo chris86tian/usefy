@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
 import Header from "@/components/Header"
 import { Toolbar } from "@/components/Toolbar"
@@ -9,7 +9,12 @@ import { Archive } from "lucide-react"
 import { toast } from "sonner"
 import { useUser } from "@clerk/nextjs"
 import { handleEnroll } from "@/lib/utils"
-import { useCreateTransactionMutation, useGetMyUserCourseProgressesQuery, useGetCohortQuery } from "@/state/api"
+import { 
+  useCreateTransactionMutation, 
+  useGetMyUserCourseProgressesQuery, 
+  useGetCohortQuery,
+  useGetCohortLearnersQuery
+} from "@/state/api"
 import { Spinner } from "@/components/ui/Spinner"
 import type { User } from "@clerk/nextjs/server"
 import ArchivedOverlay from "./_components/ArchivedOverlay"
@@ -24,12 +29,13 @@ interface UserCohortProps {
 }
 
 const UserCohort = ({ orgUsers, coursesLoading, courses, refetch }: UserCohortProps) => {
-  const { user } = useUser()
   const router = useRouter()
+  const { user } = useUser()
   const { orgId, cohortId } = useParams() as { orgId: string; cohortId: string }
 
   const { data: cohort, isLoading: cohortLoading } = useGetCohortQuery({ organizationId: orgId, cohortId })
   const { data: progresses, isLoading: progressesLoading } = useGetMyUserCourseProgressesQuery(orgId)
+  const { data: cohortLearners, isLoading: learnersLoading } = useGetCohortLearnersQuery({ organizationId: orgId, cohortId })
 
   const [createTransaction, { isLoading: createTransactionLoading }] = useCreateTransactionMutation()
 
@@ -51,6 +57,15 @@ const UserCohort = ({ orgUsers, coursesLoading, courses, refetch }: UserCohortPr
 
   const isInstructor = orgUsers.instructors.some((instructor) => instructor.id === user?.id)
   const isLearner = orgUsers.learners.some((learner) => learner.id === user?.id)
+  const isAdmin = orgUsers.admins.some((admin) => admin.id === user?.id)
+
+  useEffect(() => {
+    if (!isInstructor && !isAdmin && !cohortLearners?.some((learner) => learner.id === user?.id)) {
+      router.push(`/organizations/${orgId}`)
+      toast.error("You do not have access to this cohort")
+      return
+    }
+  }, [isInstructor, isAdmin, router, orgId, cohortLearners, user?.id])
 
   const filteredCourses = useMemo(() => {
     if (!courses) return []
@@ -77,6 +92,11 @@ const UserCohort = ({ orgUsers, coursesLoading, courses, refetch }: UserCohortPr
     })
   }, [courses, searchTerm, showArchived, isInstructor, user?.id])
 
+  if (coursesLoading || cohortLoading || progressesLoading) return <Spinner />
+  if (!user) return <SignInRequired />
+  if (!cohort) return <NotFound message="Cohort not found" />
+  if (!cohortLearners) return <NotFound message="Cohort learners not found" />
+
   const handleGoToCourse = (course: Course) => {
     if (course.status === "Archived") {
       toast.error("This course is archived and no longer available")
@@ -85,16 +105,9 @@ const UserCohort = ({ orgUsers, coursesLoading, courses, refetch }: UserCohortPr
 
     if (course.sections && course.sections.length > 0 && course.sections[0].chapters.length > 0) {
       const firstChapter = course.sections[0].chapters[0]
-      router.push(
-        `/organizations/${orgId}/cohorts/${cohortId}/courses/${course.courseId}/chapters/${firstChapter.chapterId}`,
-        {
-          scroll: false,
-        },
-      )
+      router.push(`/organizations/${orgId}/cohorts/${cohortId}/courses/${course.courseId}/chapters/${firstChapter.chapterId}`, { scroll: false })
     } else {
-      router.push(`/organizations/${orgId}/cohorts/${cohortId}/courses/${course.courseId}`, {
-        scroll: false,
-      })
+      router.push(`/organizations/${orgId}/cohorts/${cohortId}/courses/${course.courseId}`, { scroll: false })
     }
   }
 
@@ -129,12 +142,7 @@ const UserCohort = ({ orgUsers, coursesLoading, courses, refetch }: UserCohortPr
     }
   }
 
-  if (coursesLoading || cohortLoading || progressesLoading) return <Spinner />
-
-  if (!user) return <SignInRequired />
-  if (!cohort) return <NotFound message="Cohort not found" />
-
-  const archivedCount = courses?.filter((course) => course.status === "Archived").length
+  const archivedCount = courses.filter((course) => course.status === "Archived").length
 
   return (
     <div className="space-y-4">
