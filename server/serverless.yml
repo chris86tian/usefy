@@ -43,7 +43,7 @@ custom:
 
 functions:
   api:
-    name: growthhungry-service-migration-api
+    name: growthhungry-service-${opt:stage, self:provider.stage}-api
     handler: dist/index.handler
     events:
       - http:
