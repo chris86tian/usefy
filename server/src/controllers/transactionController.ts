@@ -6,7 +6,8 @@ import Transaction from "../models/transactionModel";
 import UserCourseProgress from "../models/userCourseProgressModel";
 import UserNotification from "../models/notificationModel";
 import { v4 as uuidv4 } from 'uuid';
-import { sendMessage } from "../utils/utils";
+import { sendMessage, generateStyledHtml } from "../utils/utils";
+import { clerkClient } from "..";
 
 dotenv.config();
 
@@ -110,13 +111,27 @@ export const createTransaction = async (req: Request, res: Response): Promise<vo
     await progress.save();
     await Course.update({ courseId }, { $ADD: { enrollments: [{ userId }] } });
 
+    const clerkUser = await clerkClient.users.getUser(userId);
+    const userEmail = clerkUser.emailAddresses[0].emailAddress;
+    const userName = clerkUser.firstName && clerkUser.lastName 
+      ? `${clerkUser.firstName} ${clerkUser.lastName} (${userEmail})`
+      : userEmail;
+
     await sendMessage(
       userId,
       "Course Enrollment",
       `You have been enrolled in ${course.title}`,
       `You have been enrolled in ${course.title}. You can start learning now!`,
       null,
-      { sendEmail: true, sendNotification: true, rateLimited: false }
+      { 
+        sendEmail: true, 
+        sendNotification: true, 
+        rateLimited: false,
+        html: generateStyledHtml(
+          `You have been enrolled in "${course.title}".<br><br>You can start learning now!<br><br>Course Description: ${course.description || 'No description available'}`,
+          `/courses/${courseId}`
+        )
+      }
     );
 
     res.json({

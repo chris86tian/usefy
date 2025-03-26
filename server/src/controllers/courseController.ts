@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import AWS from "aws-sdk";
 import { v4 as uuidv4 } from "uuid";
 import { getAuth, User } from "@clerk/express";
-import { mergeSections, calculateOverallProgress, generateTemporaryPassword } from "../utils/utils";
+import { mergeSections, calculateOverallProgress, generateTemporaryPassword, generateStyledHtml } from "../utils/utils";
 import Commit from "../models/commitModel";
 import Course from "../models/courseModel";
 import UserCourseProgress from "../models/userCourseProgressModel";
@@ -175,13 +175,25 @@ export const updateCourse = async (req: Request, res: Response): Promise<void> =
           continue;
         }
 
+        const userName = user.firstName && user.lastName 
+          ? `${user.firstName} ${user.lastName} (${user.emailAddresses[0].emailAddress})`
+          : user.emailAddresses[0].emailAddress;
+
         await sendMessage(
           userId,
           user.emailAddresses[0].emailAddress,
-          "Course Updated",
+          `Course "${course.title}" has been updated`,
           `The course "${course.title}" has been updated.`,
           `/organizations/${orgId}/cohorts/${cohortId}/courses/${courseId}/chapters/${course.sections[0].chapters[0].chapterId}`,
-          { sendEmail: true, sendNotification: true, rateLimited: false }
+          { 
+            sendEmail: true, 
+            sendNotification: true, 
+            rateLimited: false,
+            html: generateStyledHtml(
+              `The course "${course.title}" has been updated.<br><br>Course Description: ${course.description || 'No description available'}<br><br>Click the button below to view the updated course.`,
+              `/organizations/${orgId}/cohorts/${cohortId}/courses/${courseId}/chapters/${course.sections[0].chapters[0].chapterId}`
+            )
+          }
         );
       } catch (err) {
         console.error(`Error notifying user ${userId}:`, err);
@@ -308,6 +320,30 @@ export const enrollUser = async (
 
     await course.save();
 
+    try {
+      const user = await clerkClient.users.getUser(userId);
+      const userEmail = user.emailAddresses[0].emailAddress;
+      
+      await sendMessage(
+        userId,
+        userEmail,
+        "You have been enrolled in a course",
+        `You have been enrolled in course "${course.title}".`,
+        `/organizations/${course.organizationId}/cohorts/${course.cohortId}/courses/${courseId}`,
+        { 
+          sendEmail: true, 
+          sendNotification: true, 
+          rateLimited: false,
+          html: generateStyledHtml(
+            `You have been enrolled in course "${course.title}".<br><br>Course Description: ${course.description || 'No description available'}<br><br>You can start learning now!<br><br>Click the button below to view the course.`,
+            `/organizations/${course.organizationId}/cohorts/${course.cohortId}/courses/${courseId}`
+          )
+        }
+      );
+    } catch (err) {
+      console.error("Error sending enrollment notification:", err);
+    }
+
     res.json({ message: "User enrolled successfully" });
   } catch (error) {
     console.error("Unhandled server error:", error);
@@ -349,10 +385,17 @@ export const unenrollUser = async (
       await sendMessage(
         userId,
         userEmail,
-        "Course Unenrolled",
-        `You have been unenrolled from the course ${course.title}`,
+        "You have been unenrolled from a course",
+        `You have been unenrolled from course "${course.title}". If you believe this was a mistake, please contact the course instructor.`,
         null,
-        { sendEmail: true, sendNotification: true, rateLimited: false }
+        { 
+          sendEmail: true, 
+          sendNotification: true, 
+          rateLimited: false,
+          html: generateStyledHtml(
+            `You have been unenrolled from course "${course.title}".<br><br>If you believe this was a mistake, please contact the course instructor.`,
+          )
+        }
       );
     } catch (err) {
       console.error("Error sending notification:", err);
@@ -430,10 +473,18 @@ export const addCourseInstructor = async (req: Request, res: Response): Promise<
       await sendMessage(
         instructorUserId,
         user.emailAddresses[0].emailAddress,
-        "New Instructor Added",
-        `You have been added as an instructor to the course "${course.title}".`,
-        null,
-        { sendEmail: true, sendNotification: true, rateLimited: false }
+        `You've been added as an instructor to "${course.title}"`,
+        `You've been added as an instructor to "${course.title}".`,
+        `/courses/${courseId}`,
+        { 
+          sendEmail: true, 
+          sendNotification: true, 
+          rateLimited: true,
+          html: generateStyledHtml(
+            `You've been added as an instructor to "${course.title}".<br><br>Course Description: ${course.description || 'No description available'}<br><br>Click the button below to view the course.`,
+            `/courses/${courseId}`
+          )
+        }
       );
     }
 

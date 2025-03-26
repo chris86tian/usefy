@@ -447,17 +447,17 @@ export const inviteUserToOrganization = async (
       admin: {
         list: organization.admins,
         title: "You've been added as an admin to an organization",
-        message: `You've been added as an admin to the organization ${organization.name}.`,
+        message: `You've been added as an admin to the organization ${organization.name}. You can now manage users, courses, and settings.`,
       },
       instructor: {
         list: organization.instructors,
-        title: "You've been added as an instructor to an organization",
-        message: `You've been added as an instructor to the organization ${organization.name}.`,
+        title: "You've been added as an instructor to an organization", 
+        message: `You've been added as an instructor to the organization ${organization.name}. You can now create and manage courses.`,
       },
       learner: {
         list: organization.learners,
         title: "You've been added as a learner to an organization",
-        message: `You've been added as a learner to the organization ${organization.name}.`,
+        message: `You've been added as a learner to the organization ${organization.name}. You can start learning now!`,
       },
     };
 
@@ -483,7 +483,15 @@ export const inviteUserToOrganization = async (
         title,
         message,
         `/organizations/${organization.organizationId}`,
-        { sendEmail: true, sendNotification: true, rateLimited: false, html: generateStyledHtml(message, link) }
+        { 
+          sendEmail: true, 
+          sendNotification: true, 
+          rateLimited: true,
+          html: generateStyledHtml(
+            `You've been invited to join ${organization.name} at usefy.com.<br><br>Organization Description: ${organization.description || ''}<br><br>Click the button below to view the organization.`,
+            `/organizations/${organization.organizationId}`
+          )
+        }
       );
     } else {
       user = await clerkClient.users.createUser({
@@ -500,9 +508,17 @@ export const inviteUserToOrganization = async (
         user.id,
         email,
         "You're invited to join an organization - Reset Your Password",
-        `You've been invited to join the organization ${organization.name}.`,
+        `You've been invited to join the organization ${organization.name} at usefy.com`,
         null,
-        { sendEmail: true, sendNotification: false, rateLimited: false, html: generateStyledHtml(message, resetPasswordLink) }
+        { 
+          sendEmail: true, 
+          sendNotification: false, 
+          rateLimited: true,
+          html: generateStyledHtml(
+            `You've been invited to join the organization ${organization.name} at usefy.com.<br><br>Organization Description: ${organization.description || 'No description available'}<br><br>Click the button below to view the organization.`,
+            resetPasswordLink
+          )
+        }
       );
     }
 
@@ -583,10 +599,14 @@ export const inviteUserToCohort = async (
         "You've been added to a cohort",
         message,
         null,
-        {
-          sendEmail: true,
-          sendNotification: true,
-          rateLimited: false,
+        { 
+          sendEmail: true, 
+          sendNotification: true, 
+          rateLimited: true,
+          html: generateStyledHtml(
+            `You've been invited to join cohort ${cohort.name} in ${organization.name}.<br><br>Click the button below to view the cohort and the available courses.`,
+            `/organizations/${organizationId}/cohorts/${cohortId}`
+          )
         }
       );
 
@@ -636,11 +656,22 @@ export const inviteUserToCohort = async (
     }! You're invited to join a cohort - Reset Your Password`;
     const emailBody = `You've been invited to join the cohort ${cohort.name}. Click below to reset your password:\n\n${resetPasswordLink}`;
 
-    await sendMessage(user.id, email, emailSubject, emailBody, null, {
-      sendEmail: true,
-      sendNotification: false,
-      rateLimited: false,
-    });
+    await sendMessage(
+      user.id,
+      email,
+      `You've been invited to join cohort ${cohort.name}`,
+      `You've been invited to join cohort ${cohort.name} in ${organization.name}. Click below to view the cohort and the available courses.`,
+      `/organizations/${organizationId}/cohorts/${cohortId}`,
+      { 
+        sendEmail: true, 
+        sendNotification: true, 
+        rateLimited: true,
+        html: generateStyledHtml(
+          `You've been invited to join cohort "${cohort.name}" in "${organization.name}".<br><br> Click the button below to view the cohort and the available courses.`,
+          `/organizations/${organizationId}/cohorts/${cohortId}`
+        )
+      }
+    );
 
     res.json({
       message: "User invitation processed successfully",
@@ -770,7 +801,6 @@ export const getOrganizationUsers = async (
       },
     };
 
-
     res.json({
       message: "Organization users retrieved successfully",
       data: response,
@@ -833,6 +863,29 @@ export const removeUserFromOrganization = async (
     }
 
     await organization.save();
+    const user = await clerkClient.users.getUser(userId);
+    const userEmail = user.emailAddresses[0].emailAddress;
+
+    const userName = user.firstName && user.lastName 
+      ? `${user.firstName} ${user.lastName} (${userEmail})`
+      : userEmail;
+
+    await sendMessage(
+      userId,
+      userEmail,
+      `You've been removed from organization ${organization.name} at usefy.com`,
+      `You've been removed from organization ${organization.name} at usefy.com.`,
+      null,
+      { 
+        sendEmail: true, 
+        sendNotification: true, 
+        rateLimited: true,
+        html: generateStyledHtml(
+          `You've been removed from organization ${organization.name} at usefy.com.<br><br>If you believe this was a mistake, please contact the organization administrators.`,
+          '/'
+        )
+      }
+    );
     res.json({
       message: "User removed from organization and all cohorts successfully",
       data: organization,
@@ -901,6 +954,29 @@ export const changeUserRole = async (
     }
 
     await organization.save();
+    const user = await clerkClient.users.getUser(userId);
+    const userEmail = user.emailAddresses[0].emailAddress;
+
+    const userName = user.firstName && user.lastName 
+      ? `${user.firstName} ${user.lastName} (${userEmail})`
+      : userEmail;
+
+    await sendMessage(
+      userId,
+      userEmail,
+      `Your role in ${organization.name} has been updated`,
+      `Your role in ${organization.name} has been updated to ${newRole}.`,
+      `/organizations/${organizationId}`,
+      { 
+        sendEmail: true, 
+        sendNotification: true, 
+        rateLimited: true,
+        html: generateStyledHtml(
+          `Your role in "${organization.name}" has been updated to ${newRole}.<br><br>Click the button below to view your organization.`,
+          `/organizations/${organizationId}`
+        )
+      }
+    );
     res.json({ message: "User role changed successfully", data: organization });
   } catch (error) {
     console.error("Error changing user role:", error);
