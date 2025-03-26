@@ -53,6 +53,8 @@ jobs:
           CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
           # Stripe
           # STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          # AWS
+          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
           # Email
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           EMAIL_FROM: ${{ secrets.EMAIL_FROM }}

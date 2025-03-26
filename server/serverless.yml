@@ -20,7 +20,7 @@ provider:
     CLERK_SECRET_KEY: ${env:CLERK_SECRET_KEY}
     CLERK_PUBLISHABLE_KEY: ${env:CLERK_PUBLISHABLE_KEY}
     # STRIPE_SECRET_KEY: ${env:STRIPE_SECRET_KEY}
-    S3_BUCKET_NAME: ${self:custom.s3BucketName.${opt:stage, 'dev'}}
+    S3_BUCKET_NAME: ${env:S3_BUCKET_NAME}
     API_URL: ${env:API_URL}
     RESEND_API_KEY: ${env:RESEND_API_KEY}
     EMAIL_FROM: ${env:EMAIL_FROM}
