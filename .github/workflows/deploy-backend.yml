@@ -48,3 +48,14 @@ jobs:
         run: serverless deploy --stage production
         env:
           NODE_ENV: production
+          # Clerk
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+          CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
+          # Stripe
+          # STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          # Email
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          # URLs
+          API_URL: ${{ secrets.API_URL }}
+          CLIENT_URL: ${{ secrets.CLIENT_URL }}
