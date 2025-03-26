@@ -171,7 +171,8 @@ const customBaseQuery = async (
         result.error.status.toString() ||
         "An error occurred";
 
-      if (result.error.status !== "FETCH_ERROR") {
+      // Don't show toast for time tracking errors
+      if (result.error.status !== "FETCH_ERROR" && !(args as FetchArgs).url?.includes('time-tracking')) {
         toast.error(`Error: ${errorMessage}`);
       }
     }

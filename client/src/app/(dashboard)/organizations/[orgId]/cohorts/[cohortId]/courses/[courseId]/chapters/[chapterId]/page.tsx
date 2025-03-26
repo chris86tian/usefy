@@ -211,7 +211,8 @@ const Course = () => {
         !clerkUser?.id ||
         !course?.courseId ||
         !currentSection?.sectionId ||
-        !currentChapter?.chapterId
+        !currentChapter?.chapterId ||
+        duration < 30000 // Only track if duration is at least 30 seconds
       )
         return;
 
