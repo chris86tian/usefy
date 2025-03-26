@@ -245,8 +245,11 @@ export const api = createApi({
       providesTags: ["Users"],
     }),
 
-    getCourseUsers: build.query<User[], string>({
-      query: (courseId) => `users/clerk/course/${courseId}`,
+    getCourseUsers: build.query<{ users: User[], pagination: { total: number, page: number, limit: number, totalPages: number, hasNextPage: boolean, hasPrevPage: boolean } }, { courseId: string, page?: number, limit?: number }>({
+      query: ({ courseId, page = 1, limit = 10 }) => ({
+        url: `users/clerk/course/${courseId}`,
+        params: { page, limit },
+      }),
     }),
 
     deleteUser: build.mutation<{ message: string }, string>({
@@ -1147,6 +1150,22 @@ export const api = createApi({
       providesTags: ["TimeTracking"],
     }),
 
+    getBatchChapterStats: build.query({
+      query: ({ courseId, chapterIds }) => ({
+        url: 'time-tracking/batch-stats',
+        method: 'POST',
+        body: { courseId, chapterIds },
+      }),
+      providesTags: ["TimeTracking"],
+    }),
+
+    getCourseStats: build.query({
+      query: (courseId) => ({
+        url: `time-tracking/course-stats?courseId=${courseId}`,
+      }),
+      providesTags: ["TimeTracking"],
+    }),
+
     /*
     ===============
     ENROLLMENTS
@@ -1252,6 +1271,8 @@ export const {
   useDeleteFeedbackMutation,
   useTrackTimeSpentMutation,
   useGetChapterStatsQuery,
+  useGetBatchChapterStatsQuery,
+  useGetCourseStatsQuery,
   useEnrollUserMutation,
   useUnenrollUserMutation,
 } = api;
