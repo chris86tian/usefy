@@ -20,7 +20,7 @@ const customBaseQuery = async (
   }
 
   const baseQuery = fetchBaseQuery({
-    baseUrl: process.env.NEXT_PUBLIC_API_URL,
+    baseUrl: "/api",
     credentials: "include",
     mode: "cors",
     prepareHeaders: async (headers) => {
@@ -53,6 +53,10 @@ const customBaseQuery = async (
 
       headers.set("X-Requested-With", "XMLHttpRequest");
       headers.set("Accept", "application/json");
+
+      if (process.env.NODE_ENV === "development") {
+        headers.set("Origin", "http://localhost:3000");
+      }
 
       return headers;
     },
@@ -177,7 +181,9 @@ const customBaseQuery = async (
 
     if (isMutationRequest && !isS3UrlRequest) {
       const successMessage = result.data?.message;
-      if (successMessage) toast.success(successMessage);
+      if (successMessage && !(args as FetchArgs).url?.includes('time-tracking')) {
+        toast.success(successMessage);
+      }
     }
 
     if (result.data) {
