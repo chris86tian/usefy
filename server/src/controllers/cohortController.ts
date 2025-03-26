@@ -4,7 +4,7 @@ import Course from "../models/courseModel";
 import Organization from "../models/organizationModel";
 import { clerkClient } from "..";
 import { getAuth, User } from "@clerk/express";
-import { sendMessage } from "../utils/utils";
+import { sendMessage, generateStyledHtml } from "../utils/utils";
 
 export const createCohort = async (
   req: Request,
@@ -44,9 +44,17 @@ export const createCohort = async (
               admin.userId,
               userEmail,
               `Cohort ${name} created`,
-              `A new cohort ${name} has been created in your organization ${organization.name}`,
+              `A new cohort "${name}" has been created in your organization ${organization.name}`,
               `/organizations/${organizationId}/cohorts/${cohortId}`,
-              { sendEmail: true, sendNotification: true, rateLimited: true }
+              { 
+                sendEmail: true, 
+                sendNotification: true, 
+                rateLimited: true,
+                html: generateStyledHtml(
+                  `A new cohort "${name}" has been created in your organization ${organization.name}.<br><br>You can view and manage this cohort by clicking the button below.`,
+                  `/organizations/${organizationId}/cohorts/${cohortId}`
+                )
+              }
             );
           } else {
             console.warn(`No email found for user ${admin.userId}`);
@@ -197,21 +205,48 @@ export const addLearnerToCohort = async (
     const organization = await Organization.get(cohort.organizationId);
     if (organization) {
       const admins = organization.admins || [];
-      const learners = cohort.learners || [];
-      const allUsers = [...admins, ...learners];
+      const course = await Course.get(cohort.courses[0]?.courseId);
+      const instructors = course?.instructors || [];
+      const allUsers = [...admins, ...instructors, { userId: learnerId }];
       for (const user of allUsers) {
         try {
           const clerkUser = await clerkClient.users.getUser(user.userId);
           const userEmail = clerkUser.emailAddresses[0].emailAddress;
 
           if (userEmail) {
+            const userName = clerkUser.firstName && clerkUser.lastName 
+              ? `${clerkUser.firstName} ${clerkUser.lastName} (${userEmail})`
+              : userEmail;
+            
+            const newLearner = await clerkClient.users.getUser(learnerId);
+            const newLearnerName = newLearner.firstName && newLearner.lastName
+              ? `${newLearner.firstName} ${newLearner.lastName} (${newLearner.emailAddresses[0].emailAddress})`
+              : newLearner.emailAddresses[0].emailAddress;
+
+            const isLearner = user.userId === learnerId;
+            const title = isLearner 
+              ? `You have been added to cohort "${cohort.name}"`
+              : `New learner added to cohort ${cohort.name}`;
+            
+            const message = isLearner
+              ? `You have been added to cohort "${cohort.name}"`
+              : `${newLearnerName} has been added to cohort "${cohort.name}"`;
+
             await sendMessage(
               user.userId,
               userEmail,
-              `Learner added to cohort ${cohort.name}`,
-              `A new learner has been added to cohort ${cohort.name}`,
+              title,
+              message,
               `/organizations/${organization.organizationId}/cohorts/${cohort.cohortId}`,
-              { sendEmail: true, sendNotification: true, rateLimited: true }
+              { 
+                sendEmail: true, 
+                sendNotification: true, 
+                rateLimited: true,
+                html: generateStyledHtml(
+                  `${message}.<br><br>You can view the cohort details and available courses by clicking the button below.`,
+                  `/organizations/${organization.organizationId}/cohorts/${cohort.cohortId}`
+                )
+              }
             );
           } else {
             console.warn(`No email found for user ${user.userId}`);
@@ -252,6 +287,31 @@ export const removeLearnerFromCohort = async (
 
     const organization = await Organization.get(cohort.organizationId);
     if (organization) {
+      // Send notification to the removed learner
+      try {
+        const removedLearner = await clerkClient.users.getUser(learnerId);
+        const userEmail = removedLearner.emailAddresses[0].emailAddress;
+        
+        await sendMessage(
+          learnerId,
+          userEmail,
+          `You have been removed from cohort "${cohort.name}"`,
+          `You have been removed from cohort "${cohort.name}". If you believe this was a mistake, please contact the organization administrator.`,
+          `/organizations/${organization.organizationId}`,
+          { 
+            sendEmail: true, 
+            sendNotification: true, 
+            rateLimited: false,
+            html: generateStyledHtml(
+              `You have been removed from cohort "${cohort.name}".<br><br>If you believe this was a mistake, please contact the organization administrator.`,
+              `/organizations/${organization.organizationId}`
+            )
+          }
+        );
+      } catch (error) {
+        console.error(`Error sending message to removed learner ${learnerId}:`, error);
+      }
+
       const admins = organization.admins || [];
       for (const user of admins) {
         try {
@@ -259,13 +319,30 @@ export const removeLearnerFromCohort = async (
           const userEmail = clerkUser.emailAddresses[0].emailAddress;
 
           if (userEmail) {
+            const userName = clerkUser.firstName && clerkUser.lastName 
+              ? `${clerkUser.firstName} ${clerkUser.lastName} (${userEmail})`
+              : userEmail;
+            
+            const removedLearner = await clerkClient.users.getUser(learnerId);
+            const removedLearnerName = removedLearner.firstName && removedLearner.lastName
+              ? `${removedLearner.firstName} ${removedLearner.lastName} (${removedLearner.emailAddresses[0].emailAddress})`
+              : removedLearner.emailAddresses[0].emailAddress;
+
             await sendMessage(
               user.userId,
               userEmail,
-              `Learner removed from cohort ${cohort.name}.`,
-              `A learner has been removed from cohort ${cohort.name}`,
+              `Learner removed from cohort ${cohort.name}`,
+              `${removedLearnerName} has been removed from cohort "${cohort.name}"`,
               `/organizations/${organization.organizationId}/cohorts/${cohort.cohortId}`,
-              { sendEmail: true, sendNotification: true, rateLimited: true }
+              { 
+                sendEmail: true, 
+                sendNotification: true, 
+                rateLimited: true,
+                html: generateStyledHtml(
+                  `${removedLearnerName} has been removed from cohort "${cohort.name}".<br><br>You can view the cohort details by clicking the button below.`,
+                  `/organizations/${organization.organizationId}/cohorts/${cohort.cohortId}`
+                )
+              }
             );
           } else {
             console.warn(`No email found for user ${user.userId}`);
@@ -352,13 +429,27 @@ export const addCourseToCohort = async (
           const userEmail = clerkUser.emailAddresses[0].emailAddress;
 
           if (userEmail) {
+            const userName = clerkUser.firstName && clerkUser.lastName 
+              ? `${clerkUser.firstName} ${clerkUser.lastName} (${userEmail})`
+              : userEmail;
+            
+            const courseName = course ? course.name : 'Unknown Course';
+
             await sendMessage(
               user.userId,
               userEmail,
               `Course added to cohort ${cohort.name}`,
-              `A new course has been added to cohort ${cohort.name}`,
+              `Course "${courseName}" has been added to cohort "${cohort.name}"`,
               `/organizations/${organization.organizationId}/cohorts/${cohort.cohortId}`,
-              { sendEmail: true, sendNotification: true, rateLimited: true }
+              { 
+                sendEmail: true, 
+                sendNotification: true, 
+                rateLimited: true,
+                html: generateStyledHtml(
+                  `Course "${courseName}" has been added to cohort "${cohort.name}".<br><br>You can view the cohort details by clicking the button below.`,
+                  `/organizations/${organization.organizationId}/cohorts/${cohort.cohortId}`
+                )
+              }
             );
           } else {
             console.warn(`No email found for user ${user.userId}`);
