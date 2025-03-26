@@ -45,7 +45,7 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Deploy to AWS Lambda
-        run: serverless deploy --stage production
+        run: serverless deploy --stage migration
         env:
           NODE_ENV: production
           # Clerk
