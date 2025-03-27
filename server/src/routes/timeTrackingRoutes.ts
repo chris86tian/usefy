@@ -4,13 +4,18 @@ import {
   getChapterTimeTracking,
   getUserCourseTimeTracking, 
   getChapterStats,
+  getCourseStats,
+  getBatchChapterStats
 } from '../controllers/timeTrackingController';
 
 const router = express.Router();
 
 router.post('/', createTimeTracking);
-router.get('/chapter/:chapterId', getChapterTimeTracking);
-router.get('/user/:userId/course/:courseId', getUserCourseTimeTracking);
+router.get('/chapter', getChapterTimeTracking);
+router.get('/user-course', getUserCourseTimeTracking);
+router.get('/stats', getChapterStats);
+router.get('/course-stats', getCourseStats);
+router.post('/batch-stats', getBatchChapterStats);
 
 // Handle OPTIONS preflight
 router.options('/', (req, res) => {
@@ -22,10 +27,5 @@ router.options('/chapter/:chapterId', (req, res) => {
   res.setHeader('Access-Control-Allow-Methods', 'GET');
   res.status(200).end();
 });
-
-router.get('/stats', (req, res) => {
-    console.log('Stats route hit:', req.query); // Logging
-    getChapterStats(req, res);
-  });
 
 export default router;

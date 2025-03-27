@@ -52,32 +52,93 @@ export const getCourseUsers = async (
   res: Response
 ): Promise<void> => {
   const { courseId } = req.params;
+  const { page = "1", limit = "10" } = req.query;
+
+  const pageNumber = Number.parseInt(page as string, 10);
+  const limitNumber = Number.parseInt(limit as string, 10);
+
   try {
+    console.log(`[getCourseUsers] Starting with courseId: ${courseId}`);
+    
     const course = await Course.get(courseId);
     if (!course) {
+      console.log(`[getCourseUsers] Course not found for courseId: ${courseId}`);
       res.status(404).json({ message: "Course not found" });
       return;
     }
 
-    const courseUsers = await clerkClient.users.getUserList();
+    console.log(`[getCourseUsers] Course found:`, {
+      courseId,
+      title: course.title,
+      enrollmentCount: course.enrollments?.length || 0
+    });
 
     const courseUserIds = course.enrollments.map(
       (enrollment: { userId: any }) => enrollment.userId
     );
 
-    courseUsers.data = courseUsers.data.filter((user: any) =>
-      courseUserIds.includes(user.id)
-    );
+    console.log(`[getCourseUsers] Course user IDs:`, {
+      count: courseUserIds.length,
+      ids: courseUserIds
+    });
+
+    // Get total count first
+    console.log(`[getCourseUsers] Fetching total count with userId filter`);
+    const totalCountResponse = await clerkClient.users.getUserList({
+      userId: courseUserIds,
+      limit: 1,
+    });
+
+    console.log(`[getCourseUsers] Total count response:`, {
+      totalCount: totalCountResponse.totalCount,
+      dataLength: totalCountResponse.data.length
+    });
+
+    const totalUsers = totalCountResponse.totalCount;
+    const totalPages = Math.ceil(totalUsers / limitNumber);
+    const offset = (pageNumber - 1) * limitNumber;
+
+    console.log(`[getCourseUsers] Pagination details:`, {
+      totalUsers,
+      totalPages,
+      offset,
+      limitNumber
+    });
+
+    // Get paginated users
+    console.log(`[getCourseUsers] Fetching paginated users`);
+    const clerkResponse = await clerkClient.users.getUserList({
+      userId: courseUserIds,
+      limit: limitNumber,
+      offset: offset,
+    });
+
+    console.log(`[getCourseUsers] Paginated response:`, {
+      dataLength: clerkResponse.data.length,
+      totalCount: clerkResponse.totalCount
+    });
+
+    const response = {
+      users: clerkResponse.data,
+      pagination: {
+        total: totalUsers,
+        page: pageNumber,
+        limit: limitNumber,
+        totalPages,
+        hasNextPage: pageNumber < totalPages,
+        hasPrevPage: pageNumber > 1,
+      },
+    };
 
     res.json({
       message: "Course users retrieved successfully",
-      data: Array.isArray(courseUsers.data) ? courseUsers.data : [],
+      data: response,
     });
   } catch (error) {
+    console.error("[getCourseUsers] Error:", error);
     res.status(500).json({ message: "Error retrieving course users", error });
   }
 };
-
 
 export const deleteUser = async (
   req: Request,
