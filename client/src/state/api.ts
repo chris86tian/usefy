@@ -526,12 +526,11 @@ export const api = createApi({
         const validCourses = response.filter((course: any) => course !== null);
         const nullCount = response.length - validCourses.length;
 
-        console.log(
-          `Total courses: ${response.length}, Null courses: ${nullCount}`
-        );
+        //log all courses
+        console.log("all courses:", response);
 
         validCourses.forEach((course: any, index: number) => {
-          if (typeof course !== "object") {
+          if (typeof course !== "object" || !course.courseId || !course.title) {
             console.log(
               `Course at index ${index} is not an object: ${typeof course}`
             );
