@@ -3,7 +3,6 @@
 import { useOrganization } from "@/context/OrganizationContext"
 import { useUser } from "@clerk/nextjs"
 import { SignInRequired } from "@/components/SignInRequired"
-import Header from "@/components/Header"
 import AdminDashboard from "./_components/AdminDashboard"
 import UserDashboard from "./_components/UserDashboard"
 import NotFound from "@/components/NotFound"
@@ -21,10 +20,6 @@ export default function OrganizationDashboard() {
   
   return (
     <>
-      <Header 
-        title={isAdmin ? "Admin Dashboard" : "User Dashboard"}
-        subtitle={"Manage your organization"}
-      />
       {isAdmin ? <AdminDashboard orgId={currentOrg.organizationId}/> : <UserDashboard orgId={currentOrg.organizationId} />}
     </>
   )

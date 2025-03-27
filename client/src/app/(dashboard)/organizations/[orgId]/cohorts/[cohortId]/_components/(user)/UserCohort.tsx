@@ -85,7 +85,7 @@ const UserCohort = ({ orgUsers, coursesLoading, courses, refetch }: UserCohortPr
     })
   }, [courses, searchTerm, showArchived, isInstructor, user?.id])
 
-  if (coursesLoading || cohortLoading || progressesLoading) return <Spinner />
+  if (coursesLoading || cohortLoading || progressesLoading || learnersLoading) return <Spinner />
   if (!user) return <SignInRequired />
   if (!cohort) return <NotFound message="Cohort not found" />
   if (!cohortLearners) return <NotFound message="Cohort learners not found" />
