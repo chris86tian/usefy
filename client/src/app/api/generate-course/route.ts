@@ -512,13 +512,11 @@ Format:
   "courseDescription": "string",
   "sections": [
     {
-      "sectionId": "s1",
       "sectionTitle": "string",
       "sectionDescription": "string",
       "releaseDate": "",
       "chapters": [
         {
-          "chapterId": "c1",
           "title": "string",
           "content": "string",
           "video": "${videoUrl}", // The full video URL for all chapters
@@ -526,10 +524,8 @@ Format:
           ${generateQuizzes
             ? `
           "quiz": {
-            "quizId": "q1",
             "questions": [
               {
-                "questionId": "q1",
                 "question": "string",
                 "difficulty": "easy",
                 "options": ["string", "string", "string", "string"],
@@ -544,7 +540,6 @@ Format:
             ? `
           "assignments": [
             {
-              "assignmentId": "a1",
               "title": "string",
               "description": "string",
               "submissions": [],
