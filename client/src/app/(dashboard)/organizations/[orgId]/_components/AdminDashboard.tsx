@@ -89,11 +89,7 @@ export default function AdminDashboard({ orgId }: AdminDashboardProps) {
     return <Spinner />;
   }
 
-  if (!orgUsers) {
-    return <NotFound message="Organization users not found" />;
-  }
-
-  const totalUsers = orgUsers.admins?.length + orgUsers.instructors?.length + orgUsers.learners?.length || 0;
+  if (!orgUsers) return <NotFound message="Organization users not found" />;
 
   const handleCreateCourseInCohort = (cohortId: string) => {
     router.push(`/organizations/${orgId}/cohorts/${cohortId}`);
@@ -189,7 +185,7 @@ export default function AdminDashboard({ orgId }: AdminDashboardProps) {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Users</p>
-                    <h3 className="text-2xl font-bold">{totalUsers}</h3>
+                    <h3 className="text-2xl font-bold">{orgUsers.pagination.total}</h3>
                   </div>
                   <div className="rounded-full bg-green-100 p-3 dark:bg-green-900">
                     <Users className="h-5 w-5 text-green-600 dark:text-green-300" />
