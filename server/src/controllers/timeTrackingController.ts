@@ -2,6 +2,18 @@ import { Request, Response } from "express";
 import TimeTracking from "../models/timeTrackingModel";
 import { v4 as uuidv4 } from 'uuid';
 import { getAuth } from "@clerk/express";
+import { AnyItem } from "dynamoose/dist/Item";
+
+interface TimeTrackingRecord {
+  timeTrackingId: string;
+  userId: string;
+  courseId: string;
+  sectionId: string;
+  chapterId: string;
+  durationMs: number;
+  trackedAt: string;
+  date: string;
+}
 
 interface ChapterStats {
   totalUsers: number;
@@ -75,19 +87,61 @@ export const getChapterTimeTracking = async (req: Request, res: Response): Promi
 export const getUserCourseTimeTracking = async (req: Request, res: Response): Promise<void> => {
   try {
     const { userId, courseId } = req.params;
-    const timeRecords = await TimeTracking.scan()
-      .where("userId").eq(userId)
-      .and()
-      .where("courseId").eq(courseId)
-      .exec();
     
+    if (!userId || !courseId) {
+      res.status(400).json({ 
+        message: "Missing required parameters",
+        data: [],
+        explanation: "userId and courseId are required"
+      });
+      return;
+    }
+
+    console.log('Fetching time tracking for:', { userId, courseId });
+
+    // Use the global secondary index for more efficient querying
+    const records = await TimeTracking.scan()
+      .where('userId').eq(userId)
+      .and().where('courseId').eq(courseId)
+      .exec();
+
+    console.log('Raw records from database:', records);
+
+    if (!records || records.length === 0) {
+      console.log('No records found');
+      res.json({
+        message: "No time tracking data found",
+        data: [],
+        explanation: "No time tracking records found for this user and course"
+      });
+      return;
+    }
+
+    // Process records to ensure durationMs is a number
+    const processedRecords = records.map(record => {
+      const durationMs = Number(record.durationMs) || 0;
+      return {
+        ...record,
+        durationMs,
+        duration: Math.round(durationMs / 1000) // Convert to seconds
+      };
+    });
+
+    console.log('Processed records:', processedRecords);
+
+    // Return the processed records in a consistent format
     res.json({
-      message: "",
-      data: timeRecords
+      message: "Time tracking data retrieved successfully",
+      data: processedRecords,
+      explanation: "Successfully retrieved time tracking data"
     });
   } catch (error) {
     console.error("Error retrieving course time tracking:", error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ 
+      message: "Internal server error",
+      data: [],
+      explanation: error instanceof Error ? error.message : "Unknown error occurred"
+    });
   }
 };
 
@@ -95,49 +149,42 @@ export const getChapterStats = async (req: Request, res: Response): Promise<void
   try {
     const { courseId, chapterId } = req.query;
     
-    // Log incoming request
-    console.log('getChapterStats called with:', {
-      courseId,
-      chapterId,
-      timestamp: new Date().toISOString()
-    });
-    
     if (!courseId || !chapterId) {
-      console.log('Missing parameters:', { courseId, chapterId });
-      res.status(400).json({ message: "Missing required parameters" });
+      res.status(400).json({ 
+        message: "Missing required parameters",
+        data: {
+          totalUsers: 0,
+          averageDuration: 0,
+          totalDuration: 0,
+          dataPoints: []
+        },
+        explanation: "courseId and chapterId are required"
+      });
       return;
     }
 
-    // Log DynamoDB query
-    console.log('Executing DynamoDB scan with filters:', {
-      courseId,
-      chapterId
-    });
+    console.log('Fetching chapter stats for:', { courseId, chapterId });
 
+    // Simple query without complex filtering
     const records = await TimeTracking.scan()
       .where('courseId').eq(courseId)
       .and().where('chapterId').eq(chapterId)
       .exec();
 
-    // Log scan results
-    console.log('DynamoDB scan results:', {
-      recordCount: records?.length || 0,
-      hasRecords: Boolean(records && records.length > 0),
-      firstRecord: records?.[0] ? {
-        userId: records[0].userId,
-        durationMs: records[0].durationMs,
-        date: records[0].date
-      } : null
-    });
+    console.log('Raw records for chapter:', records);
 
     // If no records found, return empty stats
     if (!records || records.length === 0) {
-      console.log('No records found for:', { courseId, chapterId });
+      console.log('No records found for chapter');
       res.json({
-        totalUsers: 0,
-        averageDuration: 0,
-        totalDuration: 0,
-        dataPoints: []
+        message: "No time tracking data found",
+        data: {
+          totalUsers: 0,
+          averageDuration: 0,
+          totalDuration: 0,
+          dataPoints: []
+        },
+        explanation: "No time tracking records found for this chapter"
       });
       return;
     }
@@ -154,14 +201,6 @@ export const getChapterStats = async (req: Request, res: Response): Promise<void
     const uniqueUsers = Object.keys(userDurations).length;
     const totalDuration = Object.values(userDurations).reduce((sum, duration) => sum + duration, 0);
     const averageDuration = uniqueUsers > 0 ? totalDuration / uniqueUsers : 0;
-
-    // Log calculated metrics
-    console.log('Calculated metrics:', {
-      uniqueUsers,
-      totalDuration,
-      averageDuration,
-      userDurations
-    });
 
     // Group records by date for data points
     const dataPoints = records.reduce((acc: any[], record) => {
@@ -181,33 +220,31 @@ export const getChapterStats = async (req: Request, res: Response): Promise<void
       return acc;
     }, []).sort((a, b) => a.date.localeCompare(b.date));
 
-    // Log final response data
-    console.log('Sending response:', {
-      totalUsers: uniqueUsers,
-      averageDuration: Math.round(averageDuration / 1000),
-      totalDuration: Math.round(totalDuration / 1000),
-      dataPointsCount: dataPoints.length
-    });
-
-    res.json({
+    const stats = {
       totalUsers: uniqueUsers,
       averageDuration: Math.round(averageDuration / 1000), // in seconds
       totalDuration: Math.round(totalDuration / 1000),      // in seconds
       dataPoints
+    };
+
+    console.log('Processed chapter stats:', stats);
+
+    res.json({
+      message: "Chapter statistics retrieved successfully",
+      data: stats,
+      explanation: "Successfully retrieved chapter statistics"
     });
   } catch (error) {
     console.error("Error getting chapter stats:", error);
-    if (error instanceof Error) {
-      console.error("Error details:", {
-        message: error.message,
-        stack: error.stack,
-        queryParams: req.query,
-        timestamp: new Date().toISOString()
-      });
-    }
     res.status(500).json({ 
       message: "Internal server error",
-      error: error instanceof Error ? error.message : "Unknown error"
+      data: {
+        totalUsers: 0,
+        averageDuration: 0,
+        totalDuration: 0,
+        dataPoints: []
+      },
+      explanation: error instanceof Error ? error.message : "Unknown error occurred while retrieving chapter stats"
     });
   }
 };
@@ -216,15 +253,47 @@ export const getCourseStats = async (req: Request, res: Response): Promise<void>
   try {
     const { courseId } = req.query;
     
+    if (!courseId) {
+      res.status(400).json({ 
+        message: "Missing required parameters",
+        data: {
+          totalUsers: 0,
+          totalDuration: 0,
+          averageDurationPerUser: 0,
+          dailyData: []
+        },
+        explanation: "courseId is required"
+      });
+      return;
+    }
+
+    // Simple query without complex filtering
     const records = await TimeTracking.scan()
       .where('courseId').eq(courseId)
       .exec();
 
+    if (!records || records.length === 0) {
+      res.json({
+        message: "No time tracking data found",
+        data: {
+          totalUsers: 0,
+          totalDuration: 0,
+          averageDurationPerUser: 0,
+          dailyData: []
+        },
+        explanation: "No time tracking records found for this course"
+      });
+      return;
+    }
+
     // Calculate unique users
     const uniqueUsers = new Set(records.map(record => record.userId)).size;
     
-    // Calculate total duration
-    const totalDuration = records.reduce((sum, record) => sum + record.durationMs, 0);
+    // Calculate total duration with proper number conversion
+    const totalDuration = records.reduce((sum, record) => {
+      const durationMs = Number(record.durationMs) || 0;
+      return sum + durationMs;
+    }, 0);
     
     // Calculate average duration per user
     const averageDurationPerUser = uniqueUsers > 0 ? totalDuration / uniqueUsers : 0;
@@ -233,16 +302,17 @@ export const getCourseStats = async (req: Request, res: Response): Promise<void>
     const dailyData = records.reduce((acc: any[], record) => {
       const date = record.date;
       const existingDay = acc.find(d => d.date === date);
+      const durationMs = Number(record.durationMs) || 0;
       
       if (existingDay) {
-        existingDay.duration += record.durationMs;
+        existingDay.duration += durationMs;
         if (!existingDay.activeUsers.includes(record.userId)) {
           existingDay.activeUsers.push(record.userId);
         }
       } else {
         acc.push({
           date,
-          duration: record.durationMs,
+          duration: durationMs,
           activeUsers: [record.userId]
         });
       }
@@ -258,17 +328,27 @@ export const getCourseStats = async (req: Request, res: Response): Promise<void>
     })).sort((a, b) => a.date.localeCompare(b.date));
 
     res.json({
+      message: "Course statistics retrieved successfully",
       data: {
         totalUsers: uniqueUsers,
         totalDuration: Math.round(totalDuration / 1000), // Convert to seconds
         averageDurationPerUser: Math.round(averageDurationPerUser / 1000), // Convert to seconds
         dailyData: processedDailyData
       },
-      message: "Course statistics retrieved successfully"
+      explanation: "Successfully retrieved course statistics"
     });
   } catch (error) {
     console.error("Error getting course stats:", error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ 
+      message: "Internal server error",
+      data: {
+        totalUsers: 0,
+        totalDuration: 0,
+        averageDurationPerUser: 0,
+        dailyData: []
+      },
+      explanation: error instanceof Error ? error.message : "Unknown error occurred while retrieving course stats"
+    });
   }
 };
 
@@ -277,43 +357,41 @@ export const getBatchChapterStats = async (req: Request, res: Response): Promise
     const { courseId, chapterIds } = req.body;
     
     if (!courseId || !chapterIds || !Array.isArray(chapterIds)) {
-      res.status(400).json({ message: "Missing required parameters" });
+      res.status(400).json({ 
+        message: "Missing required parameters",
+        data: {},
+        explanation: "courseId and chapterIds array are required"
+      });
       return;
     }
 
-    // Process chapters in batches of 5 to avoid throughput issues
-    const BATCH_SIZE = 5;
-    const chapterBatches = [];
-    for (let i = 0; i < chapterIds.length; i += BATCH_SIZE) {
-      chapterBatches.push(chapterIds.slice(i, i + BATCH_SIZE));
-    }
+    console.log('Fetching batch chapter stats for:', { courseId, chapterIds });
 
     const allChapterStats: BatchChapterStats = {};
 
-    // Process each batch with a delay between batches
-    for (const batch of chapterBatches) {
-      // Get records for this batch of chapters
-      const records = await TimeTracking.scan()
-        .where('courseId').eq(courseId)
-        .and().where('chapterId').in(batch)
-        .exec();
+    // Process each chapter
+    for (const chapterId of chapterIds) {
+      try {
+        const records = await TimeTracking.scan()
+          .where('courseId').eq(courseId)
+          .and().where('chapterId').eq(chapterId)
+          .limit(1000)
+          .exec();
 
-      // Process records for each chapter in the batch
-      batch.forEach(chapterId => {
-        const chapterRecords = records.filter(record => record.chapterId === chapterId);
-        
-        if (!chapterRecords || chapterRecords.length === 0) {
+        console.log(`Raw records for chapter ${chapterId}:`, records);
+
+        if (!records || records.length === 0) {
           allChapterStats[chapterId] = {
             totalUsers: 0,
             averageDuration: 0,
             totalDuration: 0,
             dataPoints: []
           };
-          return;
+          continue;
         }
 
         // Calculate unique users and their total durations
-        const userDurations = chapterRecords.reduce((userAcc: { [key: string]: number }, record) => {
+        const userDurations = records.reduce((userAcc: { [key: string]: number }, record) => {
           if (!userAcc[record.userId]) {
             userAcc[record.userId] = 0;
           }
@@ -326,7 +404,7 @@ export const getBatchChapterStats = async (req: Request, res: Response): Promise
         const averageDuration = uniqueUsers > 0 ? totalDuration / uniqueUsers : 0;
 
         // Group records by date for data points
-        const dataPoints = chapterRecords.reduce((dateAcc: { [key: string]: number }, record) => {
+        const dataPoints = records.reduce((dateAcc: { [key: string]: number }, record) => {
           const date = record.date.split('T')[0];
           if (!dateAcc[date]) {
             dateAcc[date] = 0;
@@ -337,24 +415,44 @@ export const getBatchChapterStats = async (req: Request, res: Response): Promise
 
         allChapterStats[chapterId] = {
           totalUsers: uniqueUsers,
-          averageDuration,
-          totalDuration,
-          dataPoints: Object.entries(dataPoints).map(([date, duration]) => ({
-            date,
-            duration
-          }))
+          averageDuration: Math.round(averageDuration / 1000),
+          totalDuration: Math.round(totalDuration / 1000),
+          dataPoints: Object.entries(dataPoints)
+            .map(([date, duration]) => ({
+              date,
+              duration: Math.round(duration / 1000)
+            }))
+            .sort((a, b) => a.date.localeCompare(b.date))
         };
-      });
 
-      // Add a small delay between batches to avoid rate limiting
-      if (chapterBatches.indexOf(batch) < chapterBatches.length - 1) {
+        console.log(`Processed stats for chapter ${chapterId}:`, allChapterStats[chapterId]);
+
+        // Add a small delay between chapters
         await new Promise(resolve => setTimeout(resolve, 100));
+      } catch (error) {
+        console.error(`Error processing chapter ${chapterId}:`, error);
+        allChapterStats[chapterId] = {
+          totalUsers: 0,
+          averageDuration: 0,
+          totalDuration: 0,
+          dataPoints: []
+        };
       }
     }
 
-    res.json(allChapterStats);
+    console.log('Final batch chapter stats:', allChapterStats);
+
+    res.json({
+      message: "Batch chapter statistics retrieved successfully",
+      data: allChapterStats,
+      explanation: "Successfully retrieved statistics for all requested chapters"
+    });
   } catch (error) {
     console.error("Error retrieving batch chapter stats:", error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ 
+      message: "Internal server error",
+      data: {},
+      explanation: error instanceof Error ? error.message : "Unknown error occurred while retrieving batch chapter statistics"
+    });
   }
 };

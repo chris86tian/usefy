@@ -1142,11 +1142,90 @@ export const api = createApi({
     ===============
     */
 
+    getUserCourseTimeTracking: build.query<TimeTrackingRecord[], { userId: string; courseId: string }>({
+      query: ({ userId, courseId }) => ({
+        url: `time-tracking/user-course/${userId}/${courseId}`,
+      }),
+      providesTags: ["TimeTracking"],
+      transformResponse: (response: any) => {
+        console.log('Raw API response:', response);
+        // Handle both array response and wrapped data response
+        const records = Array.isArray(response) ? response : response?.data;
+        
+        if (!records || records.length === 0) {
+          console.log('No records found');
+          return [];
+        }
+
+        const processedRecords = records.map((record: any) => {
+          const durationMs = Number(record.durationMs) || 0;
+          console.log('Processing record:', { record, durationMs });
+          return {
+            ...record,
+            durationMs,
+            duration: Math.round(durationMs / 1000)
+          };
+        });
+        console.log('Processed API records:', processedRecords);
+        return processedRecords;
+      },
+      transformErrorResponse: (response) => {
+        console.error('Time tracking API error:', response);
+        const isThrottled = response.status === 400 && 
+          response.data?.explanation?.includes('provisioned throughput');
+        
+        return {
+          status: response.status,
+          data: [],
+          isThrottled,
+          message: isThrottled 
+            ? "Request limit reached. Please wait a moment."
+            : response.data?.message || "Failed to fetch time tracking data",
+          explanation: response.data?.explanation || "An error occurred while retrieving time tracking data"
+        };
+      }
+    }),
+
     getChapterStats: build.query({
       query: ({ courseId, chapterId }) => ({
         url: `time-tracking/stats?courseId=${courseId}&chapterId=${chapterId}`,
       }),
       providesTags: ["TimeTracking"],
+      transformResponse: (response: any) => {
+        console.log('Raw chapter stats response:', response);
+        if (!response?.data) {
+          console.log('No chapter stats data in response');
+          return {
+            totalUsers: 0,
+            averageDuration: 0,
+            totalDuration: 0,
+            dataPoints: [],
+            isThrottled: false
+          };
+        }
+        return response.data;
+      },
+      transformErrorResponse: (response) => {
+        console.error('Chapter stats API error:', response);
+        const isThrottled = response.status === 400 && 
+          response.data?.explanation?.includes('provisioned throughput');
+        
+        return {
+          status: response.status,
+          data: {
+            totalUsers: 0,
+            averageDuration: 0,
+            totalDuration: 0,
+            dataPoints: [],
+            isThrottled
+          },
+          isThrottled,
+          message: isThrottled 
+            ? "Request limit reached. Please wait a moment."
+            : response.data?.message || "Failed to fetch chapter stats",
+          explanation: response.data?.explanation || "An error occurred while retrieving chapter statistics"
+        };
+      }
     }),
 
     getBatchChapterStats: build.query({
@@ -1156,6 +1235,54 @@ export const api = createApi({
         body: { courseId, chapterIds },
       }),
       providesTags: ["TimeTracking"],
+      transformResponse: (response: any) => {
+        console.log('Raw batch chapter stats response:', response);
+        // Handle both direct response and wrapped data response
+        const stats = response?.data || response;
+        
+        if (!stats || Object.keys(stats).length === 0) {
+          console.log('No batch chapter stats data in response');
+          return {
+            isThrottled: false,
+            stats: {}
+          };
+        }
+
+        // Process each chapter's stats to ensure consistent structure
+        const processedStats = Object.entries(stats).reduce((acc, [chapterId, chapterStats]: [string, any]) => {
+          acc[chapterId] = {
+            totalUsers: chapterStats.totalUsers || 0,
+            averageDuration: chapterStats.averageDuration || 0,
+            totalDuration: chapterStats.totalDuration || 0,
+            dataPoints: chapterStats.dataPoints || [],
+            isThrottled: false
+          };
+          return acc;
+        }, {} as Record<string, any>);
+
+        return {
+          isThrottled: false,
+          stats: processedStats
+        };
+      },
+      transformErrorResponse: (response) => {
+        console.error('Batch chapter stats API error:', response);
+        const isThrottled = response.status === 400 && 
+          response.data?.explanation?.includes('provisioned throughput');
+        
+        return {
+          status: response.status,
+          data: {
+            isThrottled,
+            stats: {}
+          },
+          isThrottled,
+          message: isThrottled 
+            ? "Request limit reached. Please wait a moment."
+            : response.data?.message || "Failed to fetch batch chapter stats",
+          explanation: response.data?.explanation || "An error occurred while retrieving batch chapter statistics"
+        };
+      }
     }),
 
     getCourseStats: build.query({
@@ -1163,6 +1290,19 @@ export const api = createApi({
         url: `time-tracking/course-stats?courseId=${courseId}`,
       }),
       providesTags: ["TimeTracking"],
+      transformErrorResponse: (response) => {
+        return {
+          status: response.status,
+          data: {
+            totalUsers: 0,
+            totalDuration: 0,
+            averageDurationPerUser: 0,
+            dailyData: []
+          },
+          message: response.data?.message || "Failed to fetch course stats",
+          explanation: response.data?.explanation || "An error occurred while retrieving course statistics"
+        };
+      }
     }),
 
     /*
@@ -1274,4 +1414,5 @@ export const {
   useGetCourseStatsQuery,
   useEnrollUserMutation,
   useUnenrollUserMutation,
+  useGetUserCourseTimeTrackingQuery,
 } = api;
