@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
 import { toast } from "sonner"
 import ReactPlayer from "react-player"
 import { useCourseProgressData } from "@/hooks/useCourseProgressData"
@@ -51,11 +50,9 @@ const isSectionReleased = (section?: Section) => {
 
 const Course = () => {
   const {
-    user,
     courseId,
     chapterId,
     course,
-    courseInstructors,
     userProgress,
     currentSection,
     currentChapter,
@@ -334,8 +331,7 @@ const Course = () => {
               }
             }
             
-            // Show toast with Sonner API
-            toast.error("Please complete the quiz before moving to the next chapter.", {
+            toast.success("Please complete the quiz before moving to the next chapter.", {
               duration: 10000,
               icon: <GraduationCap className="w-4 h-4" />,
             })
@@ -360,8 +356,7 @@ const Course = () => {
               }
             }
             
-            // Show toast with Sonner API
-            toast.error("Please complete all assignments before moving to the next chapter.", {
+            toast.success("Please complete all assignments before moving to the next chapter.", {
               duration: 10000,
               icon: <BookOpen className="w-4 h-4" />,
             })
@@ -394,7 +389,7 @@ const Course = () => {
 
     if (currentChapter?.quiz) {
       if (!isQuizCompleted(currentChapter.chapterId)) {
-        toast.error("Please complete the chapter quiz before moving to the next chapter.")
+        toast.success("Please complete the chapter quiz before moving to the next chapter.")
         
         // Scroll to quiz after a short delay
         setTimeout(() => {
@@ -407,7 +402,7 @@ const Course = () => {
     
     if (currentChapter?.assignments && currentChapter.assignments.length > 0) {
       if (!isAssignmentsCompleted(currentChapter.chapterId)) {
-        toast.error("Please complete all chapter assignments before moving to the next chapter.")
+        toast.success("Please complete all chapter assignments before moving to the next chapter.")
         
         // Scroll to assignments section after a short delay
         setTimeout(() => {

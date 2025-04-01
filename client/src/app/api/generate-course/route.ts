@@ -514,7 +514,6 @@ Format:
     {
       "sectionTitle": "string",
       "sectionDescription": "string",
-      "releaseDate": "",
       "chapters": [
         {
           "title": "string",
@@ -579,7 +578,7 @@ Please analyze this transcript and create a well-structured course with:
 3. Chapters within each section
 4. Each chapter should have detailed content explaining the key points
 ${generateQuizzes
-  ? "5. Include quizzes for each chapter with multiple-choice questions to test understanding"
+  ? "5. Include quizzes for each chapter with multiple-choice questions to test understanding. Quiz should have 5 questions."
   : ""
 }
 ${generateAssignments
