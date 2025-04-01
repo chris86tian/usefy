@@ -188,32 +188,6 @@ docker run -p 3000:3000 -p 8001:8001 usefy
 
 The backend is deployed using AWS Lambda and API Gateway with the Serverless Framework.
 
-### Deploying to AWS
-
-1. Install the Serverless Framework globally:
-
-```bash
-npm install -g serverless
-```
-
-2. Deploy the service:
-
-```bash
-serverless deploy
-```
-
-3. The deployment will provide an API Gateway URL, e.g.:
-
-```
-Service deployed to stack growthhungry-service-dev (60s)
-
-endpoints:
-  ANY - https://mhun775961.execute-api.us-east-1.amazonaws.com/migration/
-  ANY - https://mhun775961.execute-api.us-east-1.amazonaws.com/migration/{proxy+}
-```
-
-S3 bucket: expertize-bucket-migration
-
 ---
 
 ## Contributing

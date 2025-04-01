@@ -49,6 +49,7 @@ import {
   useCreateCourseMutation,
   useGetCohortLearnersQuery,
   useGetMyUserCourseProgressesQuery,
+  useDeleteCourseMutation,
 } from "@/state/api";
 import NotFound from "@/components/NotFound";
 import { Spinner } from "@/components/ui/Spinner";
@@ -73,7 +74,6 @@ const CohortCourses = ({
   const {
     data: cohortLearners,
     isLoading: cohortLearnersLoading,
-    refetch: refetchCohortLearners,
   } = useGetCohortLearnersQuery({ organizationId: cohort.organizationId, cohortId: cohort.cohortId })
 
   const { 
@@ -95,6 +95,8 @@ const CohortCourses = ({
 
   const [createCourse, { isLoading: createCourseLoading }] =
     useCreateCourseMutation();
+  const [deleteCourse, { isLoading: deleteCourseLoading }] =
+    useDeleteCourseMutation();
   const [addCourseToCohort, { isLoading: addCourseLoading }] =
     useAddCourseToCohortMutation();
   const [removeCourseFromCohort, { isLoading: removeCourseLoading }] =
@@ -112,7 +114,6 @@ const CohortCourses = ({
   const [unarchiveCourse, { isLoading: unarchiveCourseLoading }] =
     useUnarchiveCourseMutation();
 
-  const [selectedCourseId, setSelectedCourseId] = useState("");
   const [selectedInstructorId, setSelectedInstructorId] = useState("");
   const [activeDialog, setActiveDialog] = useState<
     "none" | "addCourse" | "manageInstructors" | "manageUsers"
@@ -132,7 +133,6 @@ const CohortCourses = ({
     console.log("Filtering courses:", courses);
     if (!courses) return [];
 
-    // Filter out null courses and log them
     const validCourses = courses.filter((course) => {
       if (!course) {
         console.log("Found null course in courses array");
@@ -171,55 +171,24 @@ const CohortCourses = ({
       });
   }, [courses, searchTerm, currentUserId]);
 
+  if (cohortLearnersLoading) return <Spinner />
+  if (!cohortLearners) return <NotFound message="Cohort learners not found" />
+
   const handleCreateCourse = async () => {
     try {
       const newCourse = await createCourse();
+      if (!newCourse.data) {
+        throw new Error("Failed to create course");
+      }
       await addCourseToCohort({
         organizationId: cohort.organizationId,
         cohortId: cohort.cohortId,
-        courseId: newCourse.data?.courseId as string,
-      });
-      router.push(
-        `/organizations/${cohort?.organizationId}/cohorts/${cohort?.cohortId}/courses/${newCourse.data?.courseId}/edit`
-      );
+        courseId: newCourse.data.courseId,
+      }).unwrap();
+      router.push(`/organizations/${cohort?.organizationId}/cohorts/${cohort?.cohortId}/courses/${newCourse.data?.courseId}/edit`, { scroll: false });
       refetch();
     } catch (error) {
       toast.error("Failed to create course");
-    }
-  };
-
-  const handleAddCourse = async () => {
-    if (!selectedCourseId) {
-      toast.error("Please select a course");
-      return;
-    }
-
-    try {
-      await addCourseToCohort({
-        organizationId: cohort.organizationId,
-        cohortId: cohort.cohortId,
-        courseId: selectedCourseId,
-      });
-
-      if (selectedInstructorId) {
-        await addCourseInstructor({
-          courseId: selectedCourseId,
-          userId: selectedInstructorId,
-        });
-
-        handleEnroll(selectedInstructorId, selectedCourseId, createTransaction);
-      }
-
-      toast.success("Course added to cohort successfully");
-      setActiveDialog("none");
-      setSelectedCourseId("");
-      setSelectedInstructorId("");
-      refetch();
-    } catch (error) {
-      toast.error("Failed to add course to cohort");
-      setActiveDialog("none");
-      setSelectedCourseId("");
-      setSelectedInstructorId("");
     }
   };
 
@@ -237,7 +206,7 @@ const CohortCourses = ({
     setSelectedCourseForUsers(course);
     setIsManageUsersDialogOpen(true);
   };
-
+    
   const handleManageInstructors = async () => {
     if (!courseToEdit) {
       toast.error("No course selected");
@@ -251,14 +220,18 @@ const CohortCourses = ({
 
     try {
       if (hasCurrentInstructor) {
+        if (!courseToEdit?.instructors?.[0].userId) {
+          throw new Error("Instructor not found");
+        }
+        const instructorId = courseToEdit?.instructors?.[0].userId;
         await removeCourseInstructor({
           courseId: courseToEdit.courseId,
-          userId: courseToEdit?.instructors?.[0].userId as string,
+          userId: instructorId,
         });
 
         await unenrollUser({
           courseId: courseToEdit.courseId,
-          userId: courseToEdit?.instructors?.[0].userId as string,
+          userId: instructorId,
         });
       }
 
@@ -266,7 +239,7 @@ const CohortCourses = ({
         await addCourseInstructor({
           courseId: courseToEdit.courseId,
           userId: selectedInstructorId,
-        });
+        })
 
         handleEnroll(
           selectedInstructorId,
@@ -334,7 +307,8 @@ const CohortCourses = ({
         organizationId: cohort.organizationId,
         cohortId: cohort.cohortId,
         courseId: courseToDelete.courseId,
-      });
+      }).unwrap();
+      await deleteCourse(courseToDelete.courseId).unwrap();
       refetch();
     } catch (error) {
       toast.error("Failed to remove course from cohort");
@@ -347,7 +321,6 @@ const CohortCourses = ({
   const handleArchive = async (course: Course) => {
     try {
       await archiveCourse(course.courseId).unwrap();
-      toast.success(`Course "${course.title}" archived`);
       refetch();
     } catch (error) {
       toast.error("Failed to archive course");
@@ -357,7 +330,6 @@ const CohortCourses = ({
   const handleUnarchive = async (course: Course) => {
     try {
       await unarchiveCourse(course.courseId).unwrap();
-      toast.success(`Course "${course.title}" unarchived`);
       refetch();
     } catch (error) {
       toast.error("Failed to unarchive course");
@@ -416,9 +388,6 @@ const CohortCourses = ({
       toast.info("You are already enrolled in this course");
     }
   };
-
-  if (cohortLearnersLoading) return <Spinner />
-  if (!cohortLearners) return <NotFound message="Cohort learners not found" />
 
   return (
     <>
@@ -611,7 +580,6 @@ const CohortCourses = ({
               {removeCourseLoading ? "Removing..." : "Remove"}
             </AlertDialogAction>
           </AlertDialogFooter>
-       
         </AlertDialogContent>
       </AlertDialog>
     </>

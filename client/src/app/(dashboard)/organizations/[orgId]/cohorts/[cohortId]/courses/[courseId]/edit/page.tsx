@@ -184,8 +184,9 @@ const CourseEditor = () => {
         }
       })
 
-      // Update the sections in the form
-      dispatch(setSections(processedSections))
+      const currentSections = [...sections]
+      const updatedSections = [...currentSections, ...processedSections]
+      dispatch(setSections(updatedSections))
       
       console.log("Processed sections:", processedSections)
       toast.success("Course content generated successfully")
