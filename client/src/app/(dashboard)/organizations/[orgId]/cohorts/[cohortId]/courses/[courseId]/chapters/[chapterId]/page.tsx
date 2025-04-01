@@ -212,7 +212,7 @@ const Course = () => {
         !course?.courseId ||
         !currentSection?.sectionId ||
         !currentChapter?.chapterId ||
-        duration < 30000 // Only track if duration is at least 30 seconds
+        duration < 30000 // Only track if duration is at least 1 second
       )
         return;
 
@@ -227,6 +227,7 @@ const Course = () => {
 
         // Use the RTK Query mutation instead of direct API call
         await trackTimeSpent(timeData)
+        console.log('Time tracking data sent:', timeData);
       } catch (error) {
         console.error("Error sending time tracking data:", error);
       }

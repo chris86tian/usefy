@@ -228,7 +228,7 @@ const UserDashboard = ({ orgId }: UserDashboardProps) => {
                           className="h-2 flex-1 bg-slate-200" 
                         />
                         <span className="text-sm font-medium w-12 text-right">
-                          {course.progress}%
+                          {course.progress.toFixed(1)}%
                         </span>
                       </div>
                     </div>
