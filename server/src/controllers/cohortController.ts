@@ -161,7 +161,9 @@ export const getCohortLearners = async (
     const learners = await Promise.all(
       cohort.learners.map(async (learner: any) => {
         try {
-          return await clerkClient.users.getUser(learner.userId);
+          const user = await clerkClient.users.getUser(learner.userId);
+          if (!user) cohort.learners = cohort.learners.filter((l: any) => l.userId !== learner.userId);
+          return user;
         } catch (error) {
           console.error(`Error fetching user ${learner.userId}:`, error);
           return null;

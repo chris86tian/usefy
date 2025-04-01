@@ -125,6 +125,7 @@ const CourseEditor = () => {
         return {
           ...section,
           sectionId: section.sectionId || uuid(),
+          releaseDate: new Date().toISOString(),
           chapters: section.chapters.map((chapter) => {
             // Process each chapter
             const videoId = extractVideoId(videoUrl, options.videoSource as "youtube" | "vimeo")
