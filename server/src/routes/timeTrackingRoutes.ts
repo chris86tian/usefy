@@ -11,8 +11,8 @@ import {
 const router = express.Router();
 
 router.post('/', createTimeTracking);
-router.get('/chapter', getChapterTimeTracking);
-router.get('/user-course', getUserCourseTimeTracking);
+router.get('/chapter/:chapterId', getChapterTimeTracking);
+router.get('/user-course/:userId/:courseId', getUserCourseTimeTracking);
 router.get('/stats', getChapterStats);
 router.get('/course-stats', getCourseStats);
 router.post('/batch-stats', getBatchChapterStats);

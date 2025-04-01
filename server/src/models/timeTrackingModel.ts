@@ -9,10 +9,18 @@ const timeTrackingSchema = new Schema({
   userId: {
     type: String,
     required: true,
+    index: {
+      name: "userIdIndex",
+      type: "global",
+    },
   },
   courseId: {
     type: String,
     required: true,
+    index: {
+      name: "courseIdIndex",
+      type: "global",
+    },
   },
   sectionId: {
     type: String,

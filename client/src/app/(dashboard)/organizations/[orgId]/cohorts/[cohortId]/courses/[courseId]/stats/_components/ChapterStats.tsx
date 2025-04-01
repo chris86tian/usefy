@@ -57,7 +57,7 @@ export default function ChapterStats({
 
   // Filter data based on time range
   useEffect(() => {
-    if (data?.[chapterId]?.dataPoints) {
+    if (data?.stats?.[chapterId]?.dataPoints) {
       let cutoffDate: Date;
       
       if (timeRange === "custom" && dateRange?.from) {
@@ -67,7 +67,7 @@ export default function ChapterStats({
         cutoffDate = subDays(new Date(), days);
       }
       
-      const filtered = data[chapterId].dataPoints.filter((point: any) => {
+      const filtered = data.stats[chapterId].dataPoints.filter((point: any) => {
         const pointDate = new Date(point.date);
         return pointDate >= cutoffDate;
       });
@@ -82,14 +82,14 @@ export default function ChapterStats({
     return <div className="text-muted-foreground">No time tracking data available</div>;
   }
 
-  if (!data?.[chapterId]) {
+  if (!data?.stats?.[chapterId]) {
     console.log('No stats data available for:', { courseId, chapterId });
     return <div className="text-muted-foreground">No time tracking data available</div>;
   }
 
-  const totalHours = (data[chapterId].totalDuration || 0) / 3600;
-  const averageTimePerUser = data[chapterId].averageDuration || 0;
-  const uniqueUsers = data[chapterId].totalUsers || 0;
+  const totalHours = (data.stats[chapterId].totalDuration || 0) / 3600;
+  const averageTimePerUser = data.stats[chapterId].averageDuration || 0;
+  const uniqueUsers = data.stats[chapterId].totalUsers || 0;
 
   // Format time for display
   const formatTime = (seconds: number) => {
