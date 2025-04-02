@@ -267,7 +267,7 @@ export function CourseCard({
             {variant === "instructor" && (
               <Badge
                 variant="outline"
-                className="absolute top-2 left-2 bg-white/90"
+                className="absolute top-2 left-2 bg-white/90 dark:text-black "
               >
                 Instructor
               </Badge>

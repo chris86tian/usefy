@@ -62,15 +62,15 @@ export default function OrganizationSidebar({
 
   const baseNavItems = [
     // TODO: In case we want to add more items to the sidebar, we can do so by adding them here
-  ] as { label: string; href: string; icon: React.ElementType; active: boolean }[]
-
-  const adminNavItems = [
     {
       label: "Dashboard",
       href: `/organizations/${orgId}`,
       icon: Home,
       active: pathname === `/organizations/${orgId}`,
     },
+  ] as { label: string; href: string; icon: React.ElementType; active: boolean }[]
+
+  const adminNavItems = [
     {
       label: "Settings",
       href: `/organizations/${orgId}/settings`,
