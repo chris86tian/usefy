@@ -4,7 +4,7 @@ import type React from "react"
 
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd"
 import { Button } from "@/components/ui/button"
-import { Trash2, Edit, Plus, GripVertical, Lock, CalendarIcon, Unlock } from "lucide-react"
+import { Trash2, Edit, Plus, GripVertical, Lock, CalendarIcon, Unlock, Pen, FileQuestion, Brain } from "lucide-react"
 import { useAppDispatch, useAppSelector } from "@/state/redux"
 import {
   setSections,
@@ -266,6 +266,17 @@ const ChapterItem = ({
           {chapterIndex + 1}
         </Badge>
         <p className="text-sm font-medium">{chapter.title}</p>
+        {chapter.assignments && chapter.assignments.length > 0 && (
+          <Badge variant="outline" className="text-xs">
+            <Pen className="h-3 w-3 mr-1" />
+            {chapter.assignments.length}
+          </Badge>
+        )}
+        {chapter.quiz && (
+          <Badge variant="outline" className="text-xs">
+            <Brain className="h-3 w-3 mr-1" />
+          </Badge>
+        )}
       </div>
 
       <div className="flex items-center">
