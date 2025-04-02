@@ -177,7 +177,7 @@ const UserCohort = ({ orgUsers, coursesLoading, courses, refetch }: UserCohortPr
                     onEnroll={handleCourseEnroll}
                     isEnrolling={enrollingCourseId === course.courseId}
                     onEdit={
-                      isInstructor
+                      (isInstructor || course.instructors?.some((instructor) => instructor.userId === user?.id))
                         ? () =>
                             router.push(`/organizations/${orgId}/cohorts/${cohortId}/courses/${course.courseId}/edit`)
                         : undefined
