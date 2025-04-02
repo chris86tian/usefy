@@ -114,6 +114,8 @@ async function fetchVimeoTranscript(videoId: string): Promise<VimeoTranscriptSeg
     }
 
     const transcriptData = await transcriptResponse.text();
+
+    console.log("📜 Fetched transcript:", transcriptData);
     
     // Parse WebVTT format
     const segments = parseVTT(transcriptData);
