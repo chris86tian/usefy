@@ -182,10 +182,7 @@ export function CourseCard({
     );
   }
 
-  const canEdit =
-    variant === "admin" ||
-    (variant === "instructor" &&
-      instructors?.some((instructor) => instructor.id === user?.id));
+  const canEdit = variant === "admin" ||variant === "instructor"
   const showViewOnly = variant === "admin" && !canEdit && !isEnrolled;
 
   const statusVariants = {
