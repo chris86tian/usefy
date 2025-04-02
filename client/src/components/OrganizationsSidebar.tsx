@@ -59,7 +59,6 @@ export default function OrganizationSidebar({
   const [cohortName, setCohortName] = useState("")
 
   const [createCohort, { isLoading: isCreateCohortLoading }] = useCreateCohortMutation()
-  
 
   const baseNavItems = [
     // TODO: In case we want to add more items to the sidebar, we can do so by adding them here
@@ -115,9 +114,9 @@ export default function OrganizationSidebar({
   }
 
   const canAccessCohort = (cohort: Cohort) => {
-    if (isAuthorized) return true
     if (!user) return false
-    return cohort.learners?.some((learner) => learner.userId === user.id) || cohort.instructors?.some((instructor) => instructor.userId === user.id)
+    if (isAuthorized) return true
+    return cohort.learners.some((learner) => learner.userId === user.id) || currentOrg.instructors.some((instructor) => instructor.userId === user.id)
   }
 
   const handleCohortClick = (cohort: Cohort) => {
