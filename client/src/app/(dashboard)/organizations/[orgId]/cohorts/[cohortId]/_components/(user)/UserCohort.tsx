@@ -60,6 +60,10 @@ const UserCohort = ({ orgUsers, coursesLoading, courses, refetch }: UserCohortPr
   const isLearner = orgUsers.learners.some((learner) => learner.id === user?.id)
   const isAdmin = orgUsers.admins.some((admin) => admin.id === user?.id)
 
+  console.log(isInstructor)
+  console.log(isLearner)
+  console.log(isAdmin)
+
   const filteredCourses = useMemo(() => {
     if (!courses) return []
 
@@ -159,9 +163,9 @@ const UserCohort = ({ orgUsers, coursesLoading, courses, refetch }: UserCohortPr
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredCourses.length > 0 ? (
           filteredCourses
-            .filter((course) => course !== null) // Extra safety
+            .filter((course) => course !== null)
             .map((course) => {
-              if (!course) return null // Avoid crashes
+              if (!course) return null
               return (
                 <div key={course.courseId} className="relative">
                   <CourseCard

@@ -10,11 +10,9 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { useUser } from "@clerk/nextjs";
 import { 
-  Users, 
   BookOpen,
   GraduationCap,
   BarChart3,
-  Calendar,
   ClipboardList,
   ChevronRight
 } from "lucide-react";
@@ -24,6 +22,7 @@ import {
   useGetMyUserCourseProgressesQuery
 } from '@/state/api';
 import Header from '@/components/Header';
+import NotFound from '@/components/NotFound';
 
 interface UserDashboardProps {
   orgId: string;
@@ -53,8 +52,6 @@ const UserDashboard = ({ orgId }: UserDashboardProps) => {
     )
   );
 
-  console.log(cohorts[0].courses);
-
   // Fetch user's course progress data
   const {
     data: progressData = [],
@@ -62,10 +59,8 @@ const UserDashboard = ({ orgId }: UserDashboardProps) => {
   } = useGetMyUserCourseProgressesQuery(orgId);
 
   if (!user) return <SignInRequired />;
-
-  if (coursesLoading || cohortsLoading || progressLoading) {
-    return <Spinner />;
-  }
+  if (coursesLoading || cohortsLoading || progressLoading) return <Spinner />;
+  if (!cohorts) return <NotFound message="No cohorts found" />;
 
   // Get courses with progress data
   const coursesWithProgress = orgCourses.map(course => {
