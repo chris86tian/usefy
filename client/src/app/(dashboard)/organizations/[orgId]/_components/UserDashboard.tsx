@@ -136,10 +136,10 @@ const UserDashboard = ({ orgId }: UserDashboardProps) => {
             <BarChart3 className="mr-2 h-4 w-4" />
             Overview
           </TabsTrigger>
-          <TabsTrigger value="courses">
+          {/* <TabsTrigger value="courses">
             <BookOpen className="mr-2 h-4 w-4" />
             My Courses
-          </TabsTrigger>
+          </TabsTrigger> */}
           <TabsTrigger value="cohorts">
             <GraduationCap className="mr-2 h-4 w-4" />
             My Cohorts
