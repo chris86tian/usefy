@@ -170,7 +170,7 @@ const UserCohort = ({ orgUsers, coursesLoading, courses, refetch }: UserCohortPr
                 <div key={course.courseId} className="relative">
                   <CourseCard
                     course={course}
-                    variant={isInstructor ? "instructor" : "learner"}
+                    variant={isInstructor || course.instructors?.some((instructor) => instructor.userId === user?.id) ? "instructor" : "learner"}
                     isEnrolled={course.enrollments?.some((enrollment) => enrollment.userId === user.id)}
                     progress={progressesByCourseId[course.courseId]}
                     onView={handleGoToCourse}
