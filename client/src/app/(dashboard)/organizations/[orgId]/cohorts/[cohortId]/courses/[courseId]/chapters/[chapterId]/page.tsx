@@ -533,10 +533,8 @@ const Course = () => {
     <div className="container py-8 space-y-8">
       <div className="space-y-2">
         <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-          <span>{course.title}</span>
-          <span>/</span>
           <span>{currentSection.sectionTitle}</span>
-          <span>/</span>
+          <span>{'>'}</span>
           <span className="font-medium text-foreground">
             {currentChapter.title}
           </span>
