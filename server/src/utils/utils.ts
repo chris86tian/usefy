@@ -280,7 +280,17 @@ export const sendMessage = async (
         }
       }
 
+      console.log('📧 Email Debug:', {
+        clientUrl: process.env.CLIENT_URL,
+        emailFrom: process.env.EMAIL_FROM,
+        hasCustomHtml: !!html,
+        link,
+        message
+      });
+
       const htmlContent = html || generateStyledHtml(message, link);
+      
+      console.log('📧 Generated HTML:', htmlContent);
 
       await resend.emails.send({
         from: process.env.EMAIL_FROM!,
