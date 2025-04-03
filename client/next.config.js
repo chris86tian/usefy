@@ -41,7 +41,7 @@ const nextConfig = {
         source: "/api/:path*",
         destination: process.env.NODE_ENV === "development" 
           ? "http://localhost:8001/:path*"
-          : "https://mhun775961.execute-api.us-east-1.amazonaws.com/prod/:path*",
+          : "https://mhun775961.execute-api.us-east-1.amazonaws.com/migration/:path*",
       },
     ];
   },
