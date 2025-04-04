@@ -417,15 +417,17 @@ export async function POST(request: Request) {
     }).join("\n")
 
     // Enhanced prompt for course creation with exact timestamps
-    const systemPrompt = `You are an expert educational content creator who specializes in creating well-structured courses from video transcripts.
+    const systemPrompt = `You are an expert programming instructor who specializes in creating well-structured technical courses from video transcripts.
 
-Your task is to analyze the transcript and create a detailed course with cohesive sections and meaningful chapters.
+Your task is to analyze the transcript and create a detailed programming course with cohesive sections and meaningful chapters.
 
 EXTREMELY IMPORTANT: 
 1. For each chapter, you MUST use the EXACT timestamps from the transcript. Do not approximate or estimate timestamps.
 2. Use the precise timestamp that appears in the transcript where the topic for that chapter begins.
 3. Look for natural transitions and topic changes in the transcript to determine key moments for new chapters.
 4. Each timestamp must be in the exact HH:MM:SS format and be taken directly from the transcript.
+5. ALL content must be directly related to programming, software development, or computer science concepts.
+6. ALL quizzes and assignments must focus on coding challenges, algorithm problems, or technical concepts.
 
 Ensure that the response is formatted as a **valid JSON object** with no markdown formatting.
 
@@ -448,7 +450,7 @@ Format:
           "quiz": {
             "questions": [
               {
-                "question": "string",
+                "question": "string", // Must be directly related to programming concepts
                 "difficulty": "easy|medium|hard",
                 "options": ["string", "string", "string", "string"],
                 "correctAnswer": 0
@@ -462,18 +464,18 @@ Format:
             ? `
           "assignments": [
             {
-              "title": "string",
-              "description": "string",
+              "title": "string", // Must be a programming challenge title
+              "description": "string", // Clear problem statement with examples and constraints
               "submissions": [],
               ${codingAssignments
                 ? `
               "isCoding": true,
               "language": "${language}",
-              "starterCode": "# Your ${language} starter code here",
+              "starterCode": "// Function signature or template with helpful comments\n// Example for JavaScript:\n/**\n * @param {number[]} nums\n * @return {number}\n */\nfunction solution(nums) {\n  // Your code here\n  // Helpful tips: consider edge cases like empty arrays\n  \n  return result;\n}",
               `
                 : ""
               }
-              "hints": ["string"],
+              "hints": ["string"], // Progressive hints to guide the solution
             }
           ],
           `
@@ -495,7 +497,7 @@ Format:
         },
         {
           role: "user",
-          content: `I have a ${videoSource === "youtube" ? "YouTube" : "Vimeo"} video transcript that I want to turn into a structured course.
+          content: `I have a ${videoSource === "youtube" ? "YouTube" : "Vimeo"} video transcript about programming that I want to turn into a structured technical course.
 
 Video Title: ${videoTitle}
 Video Description: ${videoDescription}
@@ -504,22 +506,31 @@ ${videoDuration ? `Video Duration: ${formatVimeoTimestamp(videoDuration)}` : ''}
 Transcript:
 ${formattedTranscript}
 
-Please analyze this transcript and create a well-structured course with:
-1. A concise but descriptive course title that captures the essence of the content
-2. 2-4 logical sections based on major themes in the content
-3. 5-8 chapters across all sections with highly specific titles
-4. CRITICAL: For each chapter, use the EXACT timestamp from the transcript where that topic begins
-5. Detailed content explaining key concepts and insights from each chapter
+Please analyze this transcript and create a well-structured programming course with:
+1. A concise but descriptive course title that captures the technical essence of the content
+2. 2-4 logical sections based on major programming concepts or techniques covered
+3. 5-8 chapters across all sections with highly specific technical titles
+4. CRITICAL: For each chapter, use the EXACT timestamp from the transcript where that programming topic begins
+5. Detailed content explaining key programming concepts, algorithms, or techniques from each chapter
 ${generateQuizzes
-  ? "6. Include 5 well-designed multiple-choice questions for each chapter that test understanding of key concepts"
+  ? "6. Include 5 programming-focused multiple-choice questions for each chapter that test understanding of technical concepts, algorithms, or code behavior"
   : ""
 }
 ${generateAssignments
-  ? `7. Include practical assignments for each chapter that allow students to apply what they've learned${codingAssignments ? ` through coding exercises in ${language}` : ""}`
+  ? `7. Include practical coding assignments for each chapter in LeetCode style:
+     - Clear problem statements with examples and constraints
+     - Starter code with function signatures and helpful comments
+     - The problems should be solvable in an IDE
+     - Include progressive hints that guide toward the solution
+     - Focus on algorithms, data structures, or specific programming techniques covered in the chapter`
   : ""
 }
 
-IMPORTANT REMINDER: The timestamps must be extracted EXACTLY as they appear in the transcript. Don't invent timestamps - use the actual ones that mark where each topic begins.`,
+IMPORTANT REMINDER: 
+1. The timestamps must be extracted EXACTLY as they appear in the transcript. Don't invent timestamps - use the actual ones that mark where each programming topic begins.
+2. ALL content must be directly related to programming, software development, or computer science.
+3. Quizzes should test programming knowledge, not general knowledge.
+4. Assignments must be coding challenges that can be solved in an IDE.`,
         },
       ],
       temperature: 0.5, // Lower temperature for more precise outputs
