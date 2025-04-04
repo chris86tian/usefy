@@ -13,6 +13,15 @@ const chapterProgressSchema = new Schema({
   quizCompleted: {
     type: Boolean,
   },
+  quizScore: {
+    type: Number,
+  },
+  quizTotalQuestions: {
+    type: Number,
+  },
+  quizPassed: {
+    type: Boolean,
+  },
 });
 
 const sectionProgressSchema = new Schema({

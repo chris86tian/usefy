@@ -544,7 +544,7 @@ export const api = createApi({
           }
         });
 
-        return validCourses; // ✅ Now filtering out null values
+        return validCourses; // Now filtering out null values
       },
     }),
 
@@ -928,12 +928,14 @@ export const api = createApi({
         sectionId: string;
         chapterId: string;
         completed: boolean;
+        score?: number;
+        totalQuestions?: number;
       }
     >({
-      query: ({ userId, courseId, sectionId, chapterId, completed }) => ({
+      query: ({ userId, courseId, sectionId, chapterId, completed, score, totalQuestions }) => ({
         url: `users/course-progress/${userId}/courses/${courseId}/quiz`,
         method: "PUT",
-        body: { sectionId, chapterId, completed },
+        body: { sectionId, chapterId, completed, score, totalQuestions },
       }),
     }),
 
