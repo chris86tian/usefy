@@ -28,7 +28,8 @@ import {
   useLikeChapterMutation,
   useDislikeChapterMutation,
   useGetChapterReactionCountQuery,
-  useTrackTimeSpentMutation
+  useTrackTimeSpentMutation,
+  useTrackLoginMutation
 } from "@/state/api"
 import Quiz from "./adaptive-quiz/Quiz"
 import { Spinner } from "@/components/ui/Spinner"
@@ -86,6 +87,7 @@ const Course = () => {
   const [likeChapter] = useLikeChapterMutation()
   const [dislikeChapter] = useDislikeChapterMutation()
   const [trackTimeSpent] = useTrackTimeSpentMutation()
+  const [trackLogin] = useTrackLoginMutation()
 
   const { data: reactionCount, refetch: refetchReactionCount } = useGetChapterReactionCountQuery({ chapterId: currentChapter?.chapterId as string });
 
@@ -165,6 +167,18 @@ const Course = () => {
     : false;
 
   useEffect(() => {
+    // Track login when component mounts
+    if (clerkUser?.id && course?.courseId && currentSection?.sectionId && currentChapter?.chapterId) {
+      trackLogin({
+        userId: clerkUser.id,
+        courseId: course.courseId,
+        sectionId: currentSection.sectionId,
+        chapterId: currentChapter.chapterId,
+      }).catch(error => {
+        console.error("Error tracking login:", error);
+      });
+    }
+
     if (currentChapter?.video) {
       const nextChapterId = findNextAvailableChapter("next");
       const nextChapter = course?.sections
@@ -202,7 +216,7 @@ const Course = () => {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentChapter?.video, course?.sections]);
+  }, [clerkUser?.id, course?.courseId, currentSection?.sectionId, currentChapter?.chapterId, trackLogin]);
 
   const sendTimeTracking = useCallback(
     async (duration: number) => {
