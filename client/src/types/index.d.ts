@@ -18,6 +18,7 @@ declare global {
     durationMs: number;
     trackedAt: string;
     date: string;
+    isLogin?: boolean;
   }
 
   interface CourseAnalytics {

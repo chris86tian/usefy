@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useGetUserCourseProgressQuery, useGetUserCourseSubmissionsQuery, useGetUserCourseTimeTrackingQuery } from "@/state/api"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Clock, Book, Trophy, X } from "lucide-react"
+import { Clock, Book, Trophy, X, UserCheck } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Input } from "@/components/ui/input"
@@ -103,6 +103,26 @@ export default function UserStatsModal({ user, courseId, isOpen, onClose }: User
     }, {} as Record<string, number>);
     console.log('Time per chapter calculated:', chapterTimes);
     return chapterTimes;
+  }, [timeTracking]);
+
+  // Calculate total logins
+  const totalLogins = useMemo(() => {
+    if (!timeTracking?.length) return 0;
+    return timeTracking.filter(record => record.isLogin).length;
+  }, [timeTracking]);
+
+  // Calculate logins per chapter
+  const loginsPerChapter = useMemo(() => {
+    if (!timeTracking?.length) return {};
+    const chapterLogins = timeTracking.reduce((acc, record) => {
+      if (record.isLogin) {
+        const chapterId = record.chapterId;
+        if (!acc[chapterId]) acc[chapterId] = 0;
+        acc[chapterId]++;
+      }
+      return acc;
+    }, {} as Record<string, number>);
+    return chapterLogins;
   }, [timeTracking]);
 
   // Format time helper function
@@ -251,6 +271,9 @@ export default function UserStatsModal({ user, courseId, isOpen, onClose }: User
                                   <span className="text-sm font-medium">Chapter {j + 1}</span>
                                   <span className="text-xs text-muted-foreground">
                                     Time spent: {formatTime(timePerChapter[chapter.chapterId] || 0)}
+                                  </span>
+                                  <span className="text-xs text-muted-foreground">
+                                    Logins: {loginsPerChapter[chapter.chapterId] || 0}
                                   </span>
                                 </div>
                                 <div className="flex items-center gap-3">

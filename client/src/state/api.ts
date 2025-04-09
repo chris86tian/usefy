@@ -1135,7 +1135,19 @@ export const api = createApi({
         method: "POST",
         body: timeData,
       }),
-      invalidatesTags: ["TimeTracking"],
+    }),
+
+    trackLogin: build.mutation<void, {
+      userId: string;
+      courseId: string;
+      sectionId: string;
+      chapterId: string;
+    }>({
+      query: (loginData) => ({
+        url: "time-tracking/login",
+        method: "POST",
+        body: loginData,
+      }),
     }),
 
     /*
@@ -1417,4 +1429,5 @@ export const {
   useEnrollUserMutation,
   useUnenrollUserMutation,
   useGetUserCourseTimeTrackingQuery,
+  useTrackLoginMutation,
 } = api;

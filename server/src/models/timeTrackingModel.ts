@@ -45,6 +45,11 @@ const timeTrackingSchema = new Schema({
       name: "dateIndex",
       type: "global",
     },
+  },
+  isLogin: {
+    type: Boolean,
+    required: false,
+    default: false,
   }
 });
 

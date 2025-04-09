@@ -1,11 +1,10 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useGetCohortLearnersQuery, useGetUserCourseTimeTrackingQuery, useGetCourseQuery, useGetCourseStatsQuery } from "@/state/api"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Clock, Users, Book, Calendar } from "lucide-react"
-import { useState } from "react"
+import { useGetCohortLearnersQuery, useGetCourseStatsQuery } from "@/state/api"
 import { User } from "@clerk/nextjs/server"
+import { Clock, Users, Book, Calendar, UserCheck } from "lucide-react"
+import { useState, useMemo } from "react"
 import { getUserName } from "@/lib/utils"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
@@ -29,211 +28,308 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts"
+import UserStatsModal from "../../courses/[courseId]/stats/_components/UserStatsModal"
+import { Skeleton } from "@/components/ui/skeleton"
+import { QueryStatus } from "@reduxjs/toolkit/query"
+
+interface TimeTrackingRecord {
+  userId: string
+  duration: number
+  isLogin: boolean
+}
+
+interface DailyDataRecord {
+  date: string
+  duration: number
+  activeUsers: number
+}
+
+interface CourseStats {
+  title: string
+  totalDuration: number
+  totalUsers: number
+  dailyData: DailyDataRecord[]
+}
+
+interface UserStatsModalProps {
+  user: User
+  courseId: string
+  isOpen: boolean
+  onClose: () => void
+}
 
 interface CohortStatsProps {
   cohort: {
-    cohortId: string
     organizationId: string
-    name: string
-    courses: {
+    cohortId: string
+    courses: Array<{
       courseId: string
-    }[]
+      title: string
+    }>
   }
 }
 
+interface CourseQueryResult {
+  courseId: string
+  data: any
+  isLoading: boolean
+}
+
+function useCourseQueries(courses: Array<{ courseId: string }>) {
+  // Create individual queries for each course
+  const queries = courses.map(course => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const { data, isLoading } = useGetCourseStatsQuery(course.courseId)
+    return { courseId: course.courseId, data, isLoading }
+  })
+
+  return queries
+}
+
 export default function CohortStats({ cohort }: CohortStatsProps) {
-  const { data: learners, isLoading: learnersLoading } = useGetCohortLearnersQuery({
-    organizationId: cohort.organizationId,
-    cohortId: cohort.cohortId,
-  })
-
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
-  const [timeRange, setTimeRange] = useState<"1d" | "7d" | "30d" | "custom">("7d")
-  const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: subDays(new Date(), 7),
-    to: new Date(),
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: new Date(new Date().setDate(new Date().getDate() - 30)),
+    to: new Date()
   })
 
-  const handleDateRangeSelect: SelectRangeEventHandler = (range) => {
-    setDateRange(range)
-  }
+  const { data: learners, isLoading: isLoadingLearners } = useGetCohortLearnersQuery({
+    organizationId: cohort.organizationId,
+    cohortId: cohort.cohortId
+  })
 
-  const handleTimeRangeChange = (value: "1d" | "7d" | "30d" | "custom") => {
-    setTimeRange(value)
-    if (value !== "custom") {
-      const days = value === "1d" ? 1 : value === "7d" ? 7 : 30
-      setDateRange({
-        from: subDays(new Date(), days),
-        to: new Date(),
+  // Get stats for all courses using custom hook
+  const courseQueries = useCourseQueries(cohort.courses)
+
+  const totalLogins = useMemo(() => {
+    return courseQueries.reduce((sum, { data }) => {
+      return sum + (data?.totalLogins || 0)
+    }, 0)
+  }, [courseQueries])
+
+  const totalTimeSpent = useMemo(() => {
+    return courseQueries.reduce((sum, { data }) => {
+      return sum + (data?.totalTimeSpent || 0)
+    }, 0)
+  }, [courseQueries])
+
+  const uniqueActiveUsers = useMemo(() => {
+    const userIds = new Set<string>()
+    courseQueries.forEach(({ data }) => {
+      data?.timeTracking?.forEach((record: TimeTrackingRecord) => {
+        userIds.add(record.userId)
       })
-    }
-  }
+    })
+    return userIds.size
+  }, [courseQueries])
 
-  if (learnersLoading) return <Skeleton className="h-[400px] w-full" />
-  if (!learners) return <div>No learners found</div>
+  // Calculate filtered data for charts
+  const filteredData = useMemo(() => {
+    const data: any[] = []
+    courseQueries.forEach(({ data: courseData }) => {
+      if (courseData?.dailyData) {
+        courseData.dailyData.forEach((day: any) => {
+          const existingDay = data.find(d => d.date === day.date)
+          if (existingDay) {
+            existingDay.duration += day.duration
+            existingDay.activeUsers = Math.max(existingDay.activeUsers, day.activeUsers)
+            existingDay.logins += day.logins || 0
+          } else {
+            data.push({
+              date: day.date,
+              duration: day.duration,
+              activeUsers: day.activeUsers,
+              logins: day.logins || 0
+            })
+          }
+        })
+      }
+    })
+    return data.sort((a, b) => a.date.localeCompare(b.date))
+  }, [courseQueries])
+
+  if (isLoadingLearners) {
+    return (
+      <div className="space-y-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Skeleton className="h-32" />
+          <Skeleton className="h-32" />
+          <Skeleton className="h-32" />
+          <Skeleton className="h-32" />
+        </div>
+        <Skeleton className="h-[400px]" />
+      </div>
+    )
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="grid gap-6 md:grid-cols-3">
+    <div className="space-y-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Members</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{learners.length}</div>
+            <div className="text-2xl font-bold">{learners?.length || 0}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Courses</CardTitle>
-            <Book className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{cohort.courses.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Members</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Time Spent</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
+            <div className="text-2xl font-bold">{formatTime(totalTimeSpent)}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Average Time/User</CardTitle>
+            <UserCheck className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
             <div className="text-2xl font-bold">
-              {learners.filter(learner => {
-                const lastActive = learner.lastActiveAt
-                if (!lastActive) return false
-                const lastActiveDate = new Date(lastActive)
-                const thirtyDaysAgo = new Date()
-                thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-                return lastActiveDate >= thirtyDaysAgo
-              }).length}
+              {formatTime(learners?.length ? totalTimeSpent / learners.length : 0)}
             </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Logins</CardTitle>
+            <Book className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalLogins}</div>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Member Progress</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-[500px]">
-              <div className="space-y-4">
-                {learners.map((learner) => (
-                  <div
-                    key={learner.id}
-                    className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                      selectedUser?.id === learner.id ? "bg-accent" : "hover:bg-accent/50"
-                    }`}
-                    onClick={() => setSelectedUser(learner)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-medium">{getUserName(learner)}</h3>
-                        <p className="text-sm text-muted-foreground">{learner.emailAddresses[0].emailAddress}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary">
-                          {learner.lastActiveAt
-                            ? `Last active: ${format(new Date(learner.lastActiveAt), "MMM d, yyyy")}`
-                            : "Never active"}
-                        </Badge>
+      <Card>
+        <CardHeader>
+          <CardTitle>Time Spent</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[400px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={filteredData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="date" 
+                  tickFormatter={(date) => new Date(date).toLocaleDateString()}
+                />
+                <YAxis />
+                <Tooltip 
+                  formatter={(value: number) => [formatTime(value), "Time Spent"]}
+                  labelFormatter={(date) => new Date(date).toLocaleDateString()}
+                />
+                <Legend />
+                <Line type="monotone" dataKey="duration" stroke="#2563eb" name="Time Spent" />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Active Users & Logins</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[400px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={filteredData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="date" 
+                  tickFormatter={(date) => new Date(date).toLocaleDateString()}
+                />
+                <YAxis />
+                <Tooltip 
+                  formatter={(value: number, name: string) => {
+                    if (name === "Active Users") {
+                      return [value, name];
+                    }
+                    return [value, name];
+                  }}
+                  labelFormatter={(date) => new Date(date).toLocaleDateString()}
+                />
+                <Legend />
+                <Bar dataKey="activeUsers" fill="#2563eb" name="Active Users" />
+                <Bar dataKey="logins" fill="#22c55e" name="Logins" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Learners</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ScrollArea className="h-[400px]">
+            <div className="space-y-4">
+              {learners?.map((learner) => (
+                <div
+                  key={learner.id}
+                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted cursor-pointer"
+                  onClick={() => setSelectedUser(learner)}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                      {learner.firstName?.[0] || "U"}
+                    </div>
+                    <div>
+                      <div className="font-medium">{getUserName(learner)}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {courseQueries.map(({ courseId, data }) => {
+                          const course = cohort.courses.find(c => c.courseId === courseId)
+                          const timeSpent = data?.timeTracking
+                            ?.filter((record: TimeTrackingRecord) => record.userId === learner.id)
+                            ?.reduce((sum: number, record: TimeTrackingRecord) => sum + record.duration, 0) || 0
+                          return (
+                            <div key={courseId} className="flex items-center gap-2">
+                              <Badge variant="outline">{course?.title}</Badge>
+                              <span className="text-xs">{formatTime(timeSpent)}</span>
+                            </div>
+                          )
+                        })}
                       </div>
                     </div>
-                    {selectedUser?.id === learner.id && (
-                      <div className="mt-4 space-y-2">
-                        {cohort.courses.map((course) => (
-                          <UserCourseStats
-                            key={course.courseId}
-                            userId={learner.id}
-                            courseId={course.courseId}
-                          />
-                        ))}
-                      </div>
-                    )}
                   </div>
-                ))}
-              </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Course Analytics</CardTitle>
-              <div className="flex items-center gap-2">
-                <Select value={timeRange} onValueChange={handleTimeRangeChange}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Select time range" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1d">Last 24 hours</SelectItem>
-                    <SelectItem value="7d">Last 7 days</SelectItem>
-                    <SelectItem value="30d">Last 30 days</SelectItem>
-                    <SelectItem value="custom">Custom range</SelectItem>
-                  </SelectContent>
-                </Select>
-                {timeRange === "custom" && (
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-[240px] justify-start text-left font-normal",
-                          !dateRange && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {dateRange?.from ? (
-                          dateRange.to ? (
-                            <>
-                              {format(dateRange.from, "LLL dd, y")} -{" "}
-                              {format(dateRange.to, "LLL dd, y")}
-                            </>
-                          ) : (
-                            format(dateRange.from, "LLL dd, y")
-                          )
-                        ) : (
-                          <span>Pick a date range</span>
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <CalendarComponent
-                        initialFocus
-                        mode="range"
-                        defaultMonth={dateRange?.from}
-                        selected={dateRange}
-                        onSelect={handleDateRangeSelect}
-                        numberOfMonths={2}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                )}
-              </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary">
+                      {courseQueries.filter(({ data }) => 
+                        data?.timeTracking?.some((record: TimeTrackingRecord) => 
+                          record.userId === learner.id
+                        )
+                      ).length} courses
+                    </Badge>
+                  </div>
+                </div>
+              ))}
             </div>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-[500px]">
-              <div className="space-y-6">
-                {cohort.courses.map((course) => (
-                  <CourseStatsCard
-                    key={course.courseId}
-                    courseId={course.courseId}
-                    timeRange={timeRange}
-                    dateRange={dateRange}
-                  />
-                ))}
-              </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
-      </div>
+          </ScrollArea>
+        </CardContent>
+      </Card>
+
+      {selectedUser && (
+        <UserStatsModal
+          user={selectedUser}
+          courseId={cohort.courses[0]?.courseId || ""}
+          isOpen={!!selectedUser}
+          onClose={() => setSelectedUser(null)}
+        />
+      )}
     </div>
   )
+}
+
+function formatTime(ms: number): string {
+  const hours = Math.floor(ms / 3600000)
+  const minutes = Math.floor((ms % 3600000) / 60000)
+  return `${hours}h ${minutes}m`
 }
 
 interface UserCourseStatsProps {
@@ -242,14 +338,10 @@ interface UserCourseStatsProps {
 }
 
 function UserCourseStats({ userId, courseId }: UserCourseStatsProps) {
-  const { data: course, isLoading: isCourseLoading } = useGetCourseQuery(courseId)
-  const { data: timeTracking, isLoading: isTimeTrackingLoading } = useGetUserCourseTimeTrackingQuery({
-    userId,
-    courseId,
-  })
+  const { data: course, isLoading: isCourseLoading } = useGetCourseStatsQuery(courseId)
 
-  const totalTimeSpent = timeTracking?.reduce((sum, record) => {
-    const durationMs = Number(record.durationMs) || 0
+  const totalTimeSpent = course?.dailyData.reduce((sum: number, record: DailyDataRecord) => {
+    const durationMs = Number(record.duration) || 0
     return sum + durationMs
   }, 0) || 0
 
@@ -267,7 +359,7 @@ function UserCourseStats({ userId, courseId }: UserCourseStatsProps) {
       <div>
         <h4 className="font-medium">{course?.title || "Loading..."}</h4>
         <p className="text-sm text-muted-foreground">
-          {isTimeTrackingLoading ? "Loading..." : `Time spent: ${formatTime(totalTimeSpent)}`}
+          {`Time spent: ${formatTime(totalTimeSpent)}`}
         </p>
       </div>
     </div>
@@ -281,8 +373,7 @@ interface CourseStatsCardProps {
 }
 
 function CourseStatsCard({ courseId, timeRange, dateRange }: CourseStatsCardProps) {
-  const { data: course, isLoading: isCourseLoading } = useGetCourseQuery(courseId)
-  const { data: courseStats, isLoading: isStatsLoading } = useGetCourseStatsQuery(courseId)
+  const { data: course, isLoading: isCourseLoading } = useGetCourseStatsQuery(courseId)
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600)
@@ -295,11 +386,11 @@ function CourseStatsCard({ courseId, timeRange, dateRange }: CourseStatsCardProp
     return `${hours}h`
   }
 
-  if (isCourseLoading || isStatsLoading) return <Skeleton className="h-[200px] w-full" />
-  if (!course || !courseStats) return null
+  if (isCourseLoading) return <Skeleton className="h-[200px] w-full" />
+  if (!course) return null
 
   // Filter data based on date range
-  const filteredData = courseStats.dailyData.filter((day: { date: string }) => {
+  const filteredData = course.dailyData.filter((day: { date: string }) => {
     if (!dateRange?.from || !dateRange?.to) return true
     const dayDate = new Date(day.date)
     return dayDate >= dateRange.from && dayDate <= dateRange.to
@@ -312,11 +403,11 @@ function CourseStatsCard({ courseId, timeRange, dateRange }: CourseStatsCardProp
         <div className="flex items-center gap-4">
           <div className="text-sm">
             <span className="text-muted-foreground">Total Time: </span>
-            <span className="font-medium">{formatTime(courseStats.totalDuration)}</span>
+            <span className="font-medium">{formatTime(course.totalDuration)}</span>
           </div>
           <div className="text-sm">
             <span className="text-muted-foreground">Active Users: </span>
-            <span className="font-medium">{courseStats.totalUsers}</span>
+            <span className="font-medium">{course.totalUsers}</span>
           </div>
         </div>
       </div>
