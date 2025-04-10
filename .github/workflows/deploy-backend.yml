@@ -40,19 +40,19 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-access-key-id: AKIAZYY5G4GYP4FAV2QW
+          aws-secret-access-key: ${{ secrets.AWS_DEFAULT_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
 
       - name: Deploy to AWS Lambda
         run: |
           echo "NODE_ENV=migration" >> .env
           echo "S3_BUCKET_NAME=expertize-bucket-migration" >> .env
-          echo "AWS_REGION=${{ secrets.AWS_REGION }}" >> .env
+          echo "AWS_REGION=us-east-1" >> .env
           serverless deploy --stage migration --verbose
         env:
           NODE_ENV: migration
-          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_REGION: us-east-1
           # Clerk
           CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
           CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
