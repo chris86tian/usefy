@@ -30,7 +30,6 @@ import {
 } from "recharts"
 import UserStatsModal from "../../courses/[courseId]/stats/_components/UserStatsModal"
 import { Skeleton } from "@/components/ui/skeleton"
-import { QueryStatus } from "@reduxjs/toolkit/query"
 
 interface TimeTrackingRecord {
   userId: string
@@ -59,14 +58,7 @@ interface UserStatsModalProps {
 }
 
 interface CohortStatsProps {
-  cohort: {
-    organizationId: string
-    cohortId: string
-    courses: Array<{
-      courseId: string
-      title: string
-    }>
-  }
+  cohort: Cohort
 }
 
 interface CourseQueryResult {
@@ -290,7 +282,7 @@ export default function CohortStats({ cohort }: CohortStatsProps) {
                             ?.reduce((sum: number, record: TimeTrackingRecord) => sum + record.duration, 0) || 0
                           return (
                             <div key={courseId} className="flex items-center gap-2">
-                              <Badge variant="outline">{course?.title}</Badge>
+                              <Badge variant="outline">{course?.courseId}</Badge>
                               <span className="text-xs">{formatTime(timeSpent)}</span>
                             </div>
                           )
