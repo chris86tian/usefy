@@ -37,22 +37,12 @@ jobs:
       - name: Install Serverless Framework v3
         run: npm install -g serverless@3.33.0
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: AKIAZYY5G4GYP4FAV2QW
-          aws-secret-access-key: ${{ secrets.AWS_DEFAULT_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+      - name: Make deploy script executable
+        run: chmod +x deploy.sh
 
       - name: Deploy to AWS Lambda
-        run: |
-          echo "NODE_ENV=migration" >> .env
-          echo "S3_BUCKET_NAME=expertize-bucket-migration" >> .env
-          echo "AWS_REGION=us-east-1" >> .env
-          serverless deploy --stage migration --verbose
+        run: ./deploy.sh "${{ secrets.AWS_DEFAULT_SECRET_ACCESS_KEY }}"
         env:
-          NODE_ENV: migration
-          AWS_REGION: us-east-1
           # Clerk
           CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
           CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
