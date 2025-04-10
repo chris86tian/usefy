@@ -45,9 +45,14 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Deploy to AWS Lambda
-        run: serverless deploy --stage migration
+        run: |
+          echo "NODE_ENV=migration" >> .env
+          echo "S3_BUCKET_NAME=expertize-bucket-migration" >> .env
+          echo "AWS_REGION=${{ secrets.AWS_REGION }}" >> .env
+          serverless deploy --stage migration --verbose
         env:
           NODE_ENV: migration
+          AWS_REGION: ${{ secrets.AWS_REGION }}
           # Clerk
           CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
           CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
