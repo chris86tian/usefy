@@ -347,7 +347,8 @@ export function CourseCard({
                     <Users className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm font-medium">
                       {instructors && instructors.length > 0
-                        ? (instructors.length === 1 ? getUserName(instructors[0]) : `${instructors.length} Instructors`) : "No Instructors Assigned"}
+                        ? `Instructors (${instructors.length})`
+                        : "No Instructors Assigned"}
                     </span>
                   </div>
                   {isInstructorsOpen ? (

@@ -5,14 +5,12 @@ import {
   getUserCourseTimeTracking, 
   getChapterStats,
   getCourseStats,
-  getBatchChapterStats,
-  trackLogin
+  getBatchChapterStats
 } from '../controllers/timeTrackingController';
 
 const router = express.Router();
 
 router.post('/', createTimeTracking);
-router.post('/login', trackLogin);
 router.get('/chapter/:chapterId', getChapterTimeTracking);
 router.get('/user-course/:userId/:courseId', getUserCourseTimeTracking);
 router.get('/stats', getChapterStats);
