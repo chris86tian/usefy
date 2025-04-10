@@ -18,7 +18,6 @@ declare global {
     durationMs: number;
     trackedAt: string;
     date: string;
-    isLogin?: boolean;
   }
 
   interface CourseAnalytics {
@@ -207,9 +206,6 @@ declare global {
     chapterId: string;
     completed: boolean;
     quizCompleted?: boolean;
-    quizScore?: number;
-    quizTotalQuestions?: number;
-    quizPassed?: boolean;
   }
 
   interface SectionProgress {
@@ -354,6 +350,14 @@ declare global {
     handleAddChapter: (sectionIndex: number) => void;
     handleEditChapter: (sectionIndex: number, chapterIndex: number) => void;
     handleDeleteChapter: (sectionIndex: number, chapterIndex: number) => void;
+  }
+
+  interface AdaptiveQuizProps {
+    quiz: { questions: Question[] };
+    courseId: string;
+    sectionId: string;
+    chapterId: string;
+    onQuizComplete?: (score: number, totalQuestions: number) => void;
   }
 
   interface CodeProps {

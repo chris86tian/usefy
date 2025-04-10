@@ -28,10 +28,9 @@ import {
   useLikeChapterMutation,
   useDislikeChapterMutation,
   useGetChapterReactionCountQuery,
-  useTrackTimeSpentMutation,
-  useTrackLoginMutation
+  useTrackTimeSpentMutation
 } from "@/state/api"
-import Quiz from "./adaptive-quiz/Quiz"
+import AdaptiveQuiz from "./adaptive-quiz/AdaptiveQuiz"
 import { Spinner } from "@/components/ui/Spinner"
 import { useOrganization } from "@/context/OrganizationContext"
 import { AssignmentCard } from "./assignments/_components/AssignmentCard"
@@ -41,7 +40,6 @@ import FeedbackButton from "./adaptive-quiz/FeedbackButton"
 import UploadedFiles from "./adaptive-quiz/UploadedFiles"
 import { FileText } from "lucide-react"
 import NotFound from "@/components/NotFound"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import { CourseComments } from "./_components/CourseComments"
 
 const isSectionReleased = (section?: Section) => {
@@ -67,7 +65,6 @@ const Course = () => {
     hasMarkedComplete,
     setHasMarkedComplete,
     refetch,
-    quizResults,
   } = useCourseProgressData();
 
   const playerRef = useRef<ReactPlayer>(null);
@@ -87,7 +84,6 @@ const Course = () => {
   const [likeChapter] = useLikeChapterMutation()
   const [dislikeChapter] = useDislikeChapterMutation()
   const [trackTimeSpent] = useTrackTimeSpentMutation()
-  const [trackLogin] = useTrackLoginMutation()
 
   const { data: reactionCount, refetch: refetchReactionCount } = useGetChapterReactionCountQuery({ chapterId: currentChapter?.chapterId as string });
 
@@ -167,18 +163,6 @@ const Course = () => {
     : false;
 
   useEffect(() => {
-    // Track login when component mounts
-    if (clerkUser?.id && course?.courseId && currentSection?.sectionId && currentChapter?.chapterId) {
-      trackLogin({
-        userId: clerkUser.id,
-        courseId: course.courseId,
-        sectionId: currentSection.sectionId,
-        chapterId: currentChapter.chapterId,
-      }).catch(error => {
-        console.error("Error tracking login:", error);
-      });
-    }
-
     if (currentChapter?.video) {
       const nextChapterId = findNextAvailableChapter("next");
       const nextChapter = course?.sections
@@ -216,7 +200,7 @@ const Course = () => {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clerkUser?.id, course?.courseId, currentSection?.sectionId, currentChapter?.chapterId, trackLogin]);
+  }, [currentChapter?.video, course?.sections]);
 
   const sendTimeTracking = useCallback(
     async (duration: number) => {
@@ -487,25 +471,28 @@ const Course = () => {
     }
   }
 
-  const handleQuizComplete = (score: number, totalQuestions: number, passed: boolean) => {
-    markQuizCompleted();
-    setIsRedoingQuiz(false);
+  const handleQuizComplete = () => {
+    // Use the markQuizCompleted function from the hook
+    markQuizCompleted()
     
+    toast.success("Quiz completed successfully!")
+    setIsRedoingQuiz(false)
+    
+    // If there are assignments, scroll to them
     if (currentChapter?.assignments && currentChapter.assignments.length > 0 && !isAssignmentsCompleted(currentChapter.chapterId)) {
       setTimeout(() => {
-        document.querySelector('.assignments-section')?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 500);
+        document.querySelector('.assignments-section')?.scrollIntoView({ behavior: "smooth", block: "start" })
+      }, 500)
     }
   }
 
   const handleRedoQuiz = () => {
-    setIsRedoingQuiz(true);
+    setIsRedoingQuiz(true)
     setTimeout(() => {
-      quizRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 100);
+      quizRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+    }, 100)
   }
 
-  
   if (isOrgLoading || isLoading) return <Spinner />;
   if (!clerkUser) return <SignInRequired />;
   if (!course) return <NotFound message="Course not found" />;
@@ -602,7 +589,7 @@ const Course = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <BookOpen className="h-5 w-5 text-primary" />
-                <CardTitle className="text-lg">{currentChapter.title}</CardTitle>
+                <CardTitle className="text-lg">Chapter Overview</CardTitle>
               </div>
 
               <div className="flex items-center gap-3">
@@ -730,7 +717,7 @@ const Course = () => {
             <CardHeader className="border-b bg-muted/30">
               <div className="flex items-center space-x-3">
                 <FileText className="h-5 w-5 text-primary" />
-                <CardTitle className="text-lg">Study Materials</CardTitle>
+                <CardTitle className="text-lg">Section Materials</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
@@ -739,8 +726,7 @@ const Course = () => {
           </Card>
         )}
 
-        {/* Quiz Section */}
-        {currentChapter.quiz && (
+        {currentChapter.quiz && (!isQuizCompleted(currentChapter.chapterId) || isRedoingQuiz) ? (
           <div ref={quizRef}>
             <Card className="border shadow-sm">
               <CardHeader className="border-b bg-muted/30">
@@ -749,16 +735,6 @@ const Course = () => {
                     <GraduationCap className="h-5 w-5 text-primary" />
                     <CardTitle className="text-lg">Chapter Quiz</CardTitle>
                   </div>
-                  {isQuizCompleted(currentChapter.chapterId) && !isRedoingQuiz && (
-                    <div className="flex items-center space-x-3">
-                      <Badge variant="outline" className="ml-2 bg-green-50 text-green-700 border-green-200">
-                        Completed
-                      </Badge>
-                      <Badge variant="outline" className={quizResults?.passed ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}>
-                        {quizResults?.passed ? 'Passed' : 'Failed'}
-                      </Badge>
-                    </div>
-                  )}
                   {isRedoingQuiz && (
                     <Badge variant="outline" className="ml-2">
                       Practice Mode
@@ -767,49 +743,62 @@ const Course = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <Card className="mt-4">
-                  <Quiz
-                    quiz={currentChapter.quiz}
-                    courseId={course.courseId}
-                    chapterId={currentChapter.chapterId}
-                    sectionId={currentSection.sectionId}
-                    onQuizComplete={handleQuizComplete}
-                  />
-                </Card>
+                <AdaptiveQuiz
+                  quiz={currentChapter.quiz}
+                  courseId={course.courseId}
+                  chapterId={currentChapter.chapterId}
+                  sectionId={currentSection.sectionId}
+                  onQuizComplete={handleQuizComplete}
+                />
               </CardContent>
             </Card>
           </div>
-        )}
-
-        {/* Assignments Section */}
-        {currentChapter.assignments && currentChapter.assignments.length > 0 && (
+        ) : (
           <Card className="border shadow-sm assignments-section">
             <CardHeader className="border-b bg-muted/30">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <Sparkles className="h-5 w-5 text-primary" />
+                  <GraduationCap className="h-5 w-5 text-primary" />
                   <CardTitle className="text-lg">Assignments</CardTitle>
                 </div>
+                {currentChapter.quiz && isQuizCompleted(currentChapter.chapterId) && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleRedoQuiz}
+                    className="flex items-center gap-1"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                    Retake Quiz
+                  </Button>
+                )}
               </div>
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-auto pt-4">
                 <div className="grid grid-cols-2 gap-4">
-                  {currentChapter.assignments.map((assignment) => (
-                    <AssignmentCard
-                      key={assignment.assignmentId}
-                      isAuthorized={isAuthorized}
-                      sectionId={currentSection.sectionId}
-                      chapter={currentChapter}
-                      course={course}
-                      assignment={assignment}
-                      refetch={refetch}
-                    />
-                  ))}
+                  {currentChapter.assignments &&
+                  currentChapter.assignments.length > 0 ? (
+                  currentChapter.assignments.map((assignment) => (
+                      <AssignmentCard
+                        key={assignment.assignmentId}
+                        isAuthorized={isAuthorized}
+                        sectionId={currentSection.sectionId}
+                        chapter={currentChapter}
+                        course={course}
+                        assignment={assignment}
+                        refetch={refetch}
+                      />
+                    ))
+                  ) : (
+                    <div className="col-span-3 text-center text-muted-foreground">
+                      No assignments available for this chapter
+                    </div>
+                  )}
                 </div>
               </ScrollArea>
               
-              {/* {currentChapter.assignments.length > 0 && (
+              {currentChapter.assignments && currentChapter.assignments.length > 0 && (
                 <div className="mt-8">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold">Submissions</h3>
@@ -843,7 +832,7 @@ const Course = () => {
                     </Card>
                   )}
                 </div>
-              )} */}
+              )}
             </CardContent>
           </Card>
         )}

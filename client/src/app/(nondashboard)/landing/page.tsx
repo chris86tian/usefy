@@ -21,13 +21,10 @@ import { Separator } from "@/components/ui/separator"
 import Testimonials from "./_components/Testimonials"
 import Features from "./_components/Features"
 import { motion } from "framer-motion"
-import { useRouter } from "next/navigation"
-import { useUser } from "@clerk/nextjs"
 
 export default function LandingPage() {
+  const [email, setEmail] = useState("")
   const [mounted, setMounted] = useState(false)
-  const router = useRouter()
-  const { user } = useUser()
 
   useEffect(() => {
     setMounted(true)
@@ -65,7 +62,7 @@ export default function LandingPage() {
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-blue-950/30 dark:to-background">
       {/* Hero Section */}
-      <section className="py-16 md:py-20 relative z-10">
+      <section className="py-20 md:py-28 relative z-10">
         <div className="container flex flex-col items-center text-center">
           <motion.h1 
             className="text-4xl md:text-6xl font-bold tracking-tight max-w-3xl"
@@ -87,23 +84,25 @@ export default function LandingPage() {
             a complete learning experience
           </motion.p>
           
-          {!user && (
-            <motion.div
+          <motion.div
+            initial="rest"
+            whileHover="hover"
+            animate="rest"
+            variants={buttonHover}
             className="mt-10"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-            variants={fadeIn}
           >
-            <Button 
-              className="h-12 px-12 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600/90 hover:to-blue-600 shadow-lg transition-all duration-300"
-              onClick={() => router.push('/signin')}
-            >
-              Get Started
-              <ChevronRight className="ml-2 h-4 w-4" />
+            <Button className="h-12 px-12 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600/90 hover:to-blue-600 shadow-lg transition-all duration-300">
+              <motion.span 
+                className="flex items-center"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+              >
+                Get Started
+                <ChevronRight className="ml-2 h-4 w-4" />
+              </motion.span>
             </Button>
           </motion.div>
-          )}
         </div>
       </section>
 

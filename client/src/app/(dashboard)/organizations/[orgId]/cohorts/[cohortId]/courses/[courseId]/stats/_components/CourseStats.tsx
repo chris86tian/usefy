@@ -42,24 +42,6 @@ function hasValidDateRange(dateRange: DateRange | undefined): dateRange is { fro
   return dateRange?.from instanceof Date && dateRange?.to instanceof Date;
 }
 
-// Helper functions
-function formatTime(seconds: number): string {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  return `${hours}h ${minutes}m`;
-}
-
-function formatChartTime(value: number): string {
-  const formattedTime = formatTime(value);
-  return formattedTime.replace('h', 'h').replace('m', 'm');
-}
-
-function calculateChapterCompletionRate(chapter: any): number {
-  // This should be replaced with actual completion rate calculation
-  // For now, returning a mock value
-  return Math.random() * 100;
-}
-
 export default function CourseStats({ courseId }: CourseStatsProps) {
   const { user } = useUser();
   const { data: course, isLoading: isCourseLoading } = useGetCourseQuery(courseId)
@@ -211,49 +193,10 @@ export default function CourseStats({ courseId }: CourseStatsProps) {
         )}
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{courseStats?.totalUsers || 0}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Time Spent</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatTime(courseStats?.totalDuration || 0)}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Average Time/User</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatTime(courseStats?.averageDurationPerUser || 0)}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Logins</CardTitle>
-            <UserCheck className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{courseStats?.totalLogins || 0}</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Time Spent</CardTitle>
+            <CardTitle>Total Time Spent on Course</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
@@ -265,10 +208,10 @@ export default function CourseStats({ courseId }: CourseStatsProps) {
                     tickFormatter={(date) => format(parseISO(date), 'MMM dd')}
                   />
                   <YAxis 
-                    tickFormatter={formatChartTime}
+                    tickFormatter={(value) => `${Math.round(value / 3600)}h`}
                   />
                   <Tooltip 
-                    formatter={(value: number) => [formatTime(value), "Time Spent"]}
+                    formatter={(value: number) => [`${Math.round(value / 3600)}h`, 'Time Spent']}
                     labelFormatter={(date) => format(parseISO(date), 'MMM dd, yyyy')}
                   />
                   <Legend />
@@ -287,7 +230,7 @@ export default function CourseStats({ courseId }: CourseStatsProps) {
 
         <Card>
           <CardHeader>
-            <CardTitle>Active Users & Logins</CardTitle>
+            <CardTitle>Active Users</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
@@ -307,11 +250,6 @@ export default function CourseStats({ courseId }: CourseStatsProps) {
                     dataKey="activeUsers" 
                     fill="#2563eb" 
                     name="Active Users"
-                  />
-                  <Bar 
-                    dataKey="logins" 
-                    fill="#22c55e" 
-                    name="Logins"
                   />
                 </BarChart>
               </ResponsiveContainer>
@@ -396,5 +334,12 @@ function LoadingSkeleton() {
       ))}
     </div>
   )
+}
+
+// Helper functions
+function calculateChapterCompletionRate(chapter: any): number {
+  // This should be replaced with actual completion rate calculation
+  // For now, returning a mock value
+  return Math.random() * 100
 }
 

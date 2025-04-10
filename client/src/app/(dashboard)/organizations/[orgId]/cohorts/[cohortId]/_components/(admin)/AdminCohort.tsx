@@ -2,13 +2,12 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Spinner } from "@/components/ui/Spinner"
-import { BookOpen, Users, BarChart } from 'lucide-react'
+import { BookOpen, Users } from 'lucide-react'
 import { useParams } from "next/navigation"
 import { useGetCohortQuery } from "@/state/api"
 import Header from "@/components/Header"
 import CohortMembers from "./CohortMembers"
 import CohortCourses from "./CohortCourses"
-import CohortStats from "./CohortStats"
 import type { User } from "@clerk/nextjs/server"
 import NotFound from "@/components/NotFound"
 import { useUser } from "@clerk/nextjs"
@@ -50,11 +49,6 @@ const AdminCohort = ({ orgUsers, usersLoading, coursesLoading, courses, refetch 
             <Users className="h-4 w-4" />
             Members
           </TabsTrigger>
-
-          <TabsTrigger value="stats" className="flex items-center gap-2">
-            <BarChart className="h-4 w-4" />
-            Stats
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="courses" className="space-y-4">
@@ -70,12 +64,6 @@ const AdminCohort = ({ orgUsers, usersLoading, coursesLoading, courses, refetch 
           <CohortMembers 
             cohort={cohort} 
             orgUsers={orgUsers} 
-          />
-        </TabsContent>
-
-        <TabsContent value="stats" className="space-y-4">
-          <CohortStats 
-            cohort={cohort}
           />
         </TabsContent>
       </Tabs>

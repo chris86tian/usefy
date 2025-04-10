@@ -67,15 +67,10 @@ export default function ChapterStats({
         cutoffDate = subDays(new Date(), days);
       }
       
-      const filtered = data.stats[chapterId].dataPoints
-        .filter((point: any) => {
-          const pointDate = new Date(point.date);
-          return pointDate >= cutoffDate;
-        })
-        .map((point: any) => ({
-          ...point,
-          logins: point.logins || 0 // Ensure logins is always defined
-        }));
+      const filtered = data.stats[chapterId].dataPoints.filter((point: any) => {
+        const pointDate = new Date(point.date);
+        return pointDate >= cutoffDate;
+      });
 
       setFilteredData(filtered);
     }
@@ -128,15 +123,17 @@ export default function ChapterStats({
   };
 
   return (
-    <div className="space-y-4">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="space-y-8">
+      <div className="grid grid-cols-3 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Average Completion Rate</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{Math.round(completionRate)}%</div>
-            <Progress value={completionRate} className="mt-2" />
+            <div className="space-y-2">
+              <div className="text-2xl font-bold">{completionRate.toFixed(1)}%</div>
+              <Progress value={completionRate} className="h-2" />
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -144,7 +141,9 @@ export default function ChapterStats({
             <CardTitle className="text-sm font-medium">Average Time/User</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatTime(averageTimePerUser)}</div>
+            <div className="text-2xl font-bold">
+              {formatTime(averageTimePerUser)}
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -155,58 +154,40 @@ export default function ChapterStats({
             <div className="text-2xl font-bold">{uniqueUsers}</div>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Logins</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{data.stats[chapterId].totalLogins || 0}</div>
-          </CardContent>
-        </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Time Spent & Logins</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[400px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={filteredData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="date" 
-                  tickFormatter={(date) => new Date(date).toLocaleDateString()}
-                />
-                <YAxis yAxisId="left" />
-                <YAxis yAxisId="right" orientation="right" />
-                <Tooltip 
-                  formatter={(value: number, name: string) => {
-                    if (name === "Time Spent") {
-                      return [formatTime(value), name];
-                    }
-                    return [value, name];
-                  }}
-                  labelFormatter={(date) => new Date(date).toLocaleDateString()}
-                />
-                <Legend />
-                <Bar 
-                  yAxisId="left"
-                  dataKey="duration" 
-                  fill="#2563eb" 
-                  name="Time Spent" 
-                />
-                <Bar 
-                  yAxisId="right"
-                  dataKey="logins" 
-                  fill="#22c55e" 
-                  name="Logins"
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="h-[300px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={filteredData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis 
+              dataKey="date" 
+              tickFormatter={(date) => new Date(date).toLocaleDateString()}
+            />
+            <YAxis 
+              tickFormatter={formatChartTime}
+              domain={['0', (dataMax: number) => Math.ceil(dataMax * 1.2)]}
+              ticks={[
+                0,
+                Math.ceil(Math.max(...filteredData.map(d => d.duration)) * 0.25),
+                Math.ceil(Math.max(...filteredData.map(d => d.duration)) * 0.5),
+                Math.ceil(Math.max(...filteredData.map(d => d.duration)) * 0.75),
+                Math.ceil(Math.max(...filteredData.map(d => d.duration)))
+              ]}
+            />
+            <Tooltip 
+              formatter={(value: number) => [formatTime(value), 'Duration']}
+              labelFormatter={(date) => new Date(date).toLocaleDateString()}
+            />
+            <Legend />
+            <Bar 
+              dataKey="duration" 
+              fill="#2563eb" 
+              name="Time Spent"
+            />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 }

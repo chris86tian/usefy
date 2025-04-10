@@ -544,7 +544,7 @@ export const api = createApi({
           }
         });
 
-        return validCourses; // Now filtering out null values
+        return validCourses; // ✅ Now filtering out null values
       },
     }),
 
@@ -928,14 +928,12 @@ export const api = createApi({
         sectionId: string;
         chapterId: string;
         completed: boolean;
-        score?: number;
-        totalQuestions?: number;
       }
     >({
-      query: ({ userId, courseId, sectionId, chapterId, completed, score, totalQuestions }) => ({
+      query: ({ userId, courseId, sectionId, chapterId, completed }) => ({
         url: `users/course-progress/${userId}/courses/${courseId}/quiz`,
         method: "PUT",
-        body: { sectionId, chapterId, completed, score, totalQuestions },
+        body: { sectionId, chapterId, completed },
       }),
     }),
 
@@ -1135,19 +1133,7 @@ export const api = createApi({
         method: "POST",
         body: timeData,
       }),
-    }),
-
-    trackLogin: build.mutation<void, {
-      userId: string;
-      courseId: string;
-      sectionId: string;
-      chapterId: string;
-    }>({
-      query: (loginData) => ({
-        url: "time-tracking/login",
-        method: "POST",
-        body: loginData,
-      }),
+      invalidatesTags: ["TimeTracking"],
     }),
 
     /*
@@ -1429,5 +1415,4 @@ export const {
   useEnrollUserMutation,
   useUnenrollUserMutation,
   useGetUserCourseTimeTrackingQuery,
-  useTrackLoginMutation,
 } = api;
