@@ -148,7 +148,9 @@ export const updateQuizProgress = async (
   res: Response
 ): Promise<void> => {
   const { userId, courseId } = req.params;
-  const { completed, sectionId, chapterId } = req.body;
+  const { completed, sectionId, chapterId, score, totalQuestions } = req.body;
+
+  console.log("Update quiz progress:", JSON.stringify(req.body, null, 2));
 
   try {
     let progress = await UserCourseProgress.get({ userId, courseId });
@@ -178,8 +180,27 @@ export const updateQuizProgress = async (
       return;
     }
 
-    progress.sections[sectionIndex].chapters[chapterIndex].quizCompleted =
-      completed;
+    const chapterProgress = progress.sections[sectionIndex].chapters[chapterIndex];
+    const isQuizAlreadyCompleted = chapterProgress.quizCompleted;
+    const passThreshold = 0.8; // 80% passing threshold
+    
+    // Calculate if the quiz is passed
+    const isPassed = score !== undefined && totalQuestions !== undefined 
+      ? (score / totalQuestions) >= passThreshold 
+      : false;
+
+    // Update quiz progress
+    if (score !== undefined && totalQuestions !== undefined) {
+      chapterProgress.quizScore = score;
+      chapterProgress.quizTotalQuestions = totalQuestions;
+      chapterProgress.quizPassed = isPassed;
+    }
+    
+    // If this is the first time completing the quiz or we're explicitly setting completed status
+    if (!isQuizAlreadyCompleted || completed !== undefined) {
+      chapterProgress.quizCompleted = completed !== undefined ? completed : true;
+    }
+    
     progress.lastAccessedTimestamp = new Date().toISOString();
     progress.overallProgress = calculateOverallProgress(progress.sections);
 

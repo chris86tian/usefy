@@ -18,7 +18,6 @@ export const useCourseProgressData = () => {
   const { data: course, isLoading: courseLoading, refetch } = useGetCourseQuery(courseId);
   const { data: userProgress, isLoading: progressLoading } = useGetUserCourseProgressQuery({ userId: user?.id as string, courseId });
 
-
   const isChapterCompleted = (sectionId: string, chapterId: string) => {
     const section = userProgress?.sections?.find((s) => s.sectionId === sectionId);
     return section?.chapters.some((c) => c.chapterId === chapterId && c.completed) ?? false;
@@ -27,14 +26,12 @@ export const useCourseProgressData = () => {
   const isLoading = courseLoading || progressLoading;
   const currentSection = course?.sections.find((s) => s.chapters.some((c) => c.chapterId === chapterId));
   const currentChapter = currentSection?.chapters.find((c) => c.chapterId === chapterId);
-  
 
   const isQuizCompleted = (targetChapterId?: string) => {
     const chapterToCheck = targetChapterId || currentChapter?.chapterId;
     
     if (!chapterToCheck || !userProgress?.sections) return false;
     
-    // Find the section and chapter
     const targetChapter = course?.sections
       .flatMap(s => s.chapters)
       .find(c => c.chapterId === chapterToCheck);
@@ -42,13 +39,50 @@ export const useCourseProgressData = () => {
     const targetSection = course?.sections
       .find(s => s.chapters.some(c => c.chapterId === chapterToCheck));
     
-    // If there's no quiz in the chapter, consider it completed
     if (!targetChapter || targetChapter.quiz === undefined) return true;
 
-    // Find the section in user progress
     const section = userProgress.sections.find((s) => s.sectionId === targetSection?.sectionId);
+    console.log(section)
     return (section?.chapters.some((c) => c.chapterId === chapterToCheck && c.quizCompleted) ?? false);
   }
+
+  const getQuizScore = (targetChapterId?: string) => {
+    const chapterToCheck = targetChapterId || currentChapter?.chapterId;
+    
+    if (!chapterToCheck || !userProgress?.sections) return null;
+    
+    const targetChapter = course?.sections
+      .flatMap(s => s.chapters)
+      .find(c => c.chapterId === chapterToCheck);
+      
+    const targetSection = course?.sections
+      .find(s => s.chapters.some(c => c.chapterId === chapterToCheck));
+    
+    if (!targetChapter || targetChapter.quiz === undefined) return null;
+
+    const section = userProgress.sections.find((s) => s.sectionId === targetSection?.sectionId);
+    if (!section) return null;
+    
+    const chapter = section.chapters.find((c) => c.chapterId === chapterToCheck);
+    if (!chapter) return null;
+    
+    if (chapter.quizScore === undefined || chapter.quizTotalQuestions === undefined) return null;
+    
+    return {
+      score: chapter.quizScore,
+      totalQuestions: chapter.quizTotalQuestions,
+      passed: chapter.quizPassed ?? (chapter.quizScore / chapter.quizTotalQuestions) >= 0.8
+    };
+  }
+
+  const isQuizPassed = (targetChapterId?: string) => {
+    const quizScore = getQuizScore(targetChapterId);
+    if (!quizScore) return false;
+    return quizScore.passed;
+  }
+
+  // Get quiz results for the current chapter
+  const quizResults = currentChapter?.chapterId ? getQuizScore(currentChapter.chapterId) : null;
 
   const isAssignmentsCompleted = (targetChapterId?: string) => {
     const chapterToCheck = targetChapterId || currentChapter?.chapterId;
@@ -136,7 +170,10 @@ export const useCourseProgressData = () => {
     isLoading,
     isChapterCompleted,
     isQuizCompleted,
+    isQuizPassed,
     isAssignmentsCompleted,
+    getQuizScore,
+    quizResults,
     updateChapterProgress,
     markQuizCompleted,
     hasMarkedComplete,

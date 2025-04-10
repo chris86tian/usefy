@@ -19,6 +19,7 @@ interface ChapterStats {
   totalUsers: number;
   averageDuration: number;
   totalDuration: number;
+  totalLogins: number;
   dataPoints: Array<{
     date: string;
     duration: number;
@@ -145,6 +146,42 @@ export const getUserCourseTimeTracking = async (req: Request, res: Response): Pr
   }
 };
 
+export const trackLogin = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { userId, courseId, sectionId, chapterId } = req.body;
+    const trackedAt = new Date().toISOString();
+    const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+
+    // Validation
+    if (!userId || !courseId || !sectionId || !chapterId) {
+      res.status(400).json({ message: "Missing required fields" });
+      return;
+    }
+
+    const newTimeTracking = new TimeTracking({
+      timeTrackingId: uuidv4(),
+      userId,
+      courseId,
+      sectionId,
+      chapterId,
+      durationMs: 0, // Login events have 0 duration
+      trackedAt,
+      date,
+      isLogin: true
+    });
+
+    await newTimeTracking.save();
+    
+    res.status(201).json({ 
+      message: "Login tracked successfully", 
+      data: newTimeTracking 
+    });
+  } catch (error) {
+    console.error("Error tracking login:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 export const getChapterStats = async (req: Request, res: Response): Promise<void> => {
   try {
     const { courseId, chapterId } = req.query;
@@ -156,6 +193,7 @@ export const getChapterStats = async (req: Request, res: Response): Promise<void
           totalUsers: 0,
           averageDuration: 0,
           totalDuration: 0,
+          totalLogins: 0,
           dataPoints: []
         },
         explanation: "courseId and chapterId are required"
@@ -165,23 +203,19 @@ export const getChapterStats = async (req: Request, res: Response): Promise<void
 
     console.log('Fetching chapter stats for:', { courseId, chapterId });
 
-    // Simple query without complex filtering
     const records = await TimeTracking.scan()
       .where('courseId').eq(courseId)
       .and().where('chapterId').eq(chapterId)
       .exec();
 
-    console.log('Raw records for chapter:', records);
-
-    // If no records found, return empty stats
     if (!records || records.length === 0) {
-      console.log('No records found for chapter');
       res.json({
         message: "No time tracking data found",
         data: {
           totalUsers: 0,
           averageDuration: 0,
           totalDuration: 0,
+          totalLogins: 0,
           dataPoints: []
         },
         explanation: "No time tracking records found for this chapter"
@@ -194,7 +228,9 @@ export const getChapterStats = async (req: Request, res: Response): Promise<void
       if (!acc[record.userId]) {
         acc[record.userId] = 0;
       }
-      acc[record.userId] += Number(record.durationMs) || 0;
+      if (!record.isLogin) {
+        acc[record.userId] += Number(record.durationMs) || 0;
+      }
       return acc;
     }, {});
 
@@ -202,18 +238,25 @@ export const getChapterStats = async (req: Request, res: Response): Promise<void
     const totalDuration = Object.values(userDurations).reduce((sum, duration) => sum + duration, 0);
     const averageDuration = uniqueUsers > 0 ? totalDuration / uniqueUsers : 0;
 
+    // Calculate total logins for this chapter
+    const totalLogins = records.filter(record => record.isLogin).length;
+
     // Group records by date for data points
     const dataPoints = records.reduce((acc: any[], record) => {
       const date = record.date;
       const existingPoint = acc.find(p => p.date === date);
-      const duration = Number(record.durationMs) || 0;
+      const duration = record.isLogin ? 0 : Number(record.durationMs) || 0;
       
       if (existingPoint) {
         existingPoint.duration += duration;
+        if (record.isLogin) {
+          existingPoint.logins = (existingPoint.logins || 0) + 1;
+        }
       } else {
         acc.push({
           date,
-          duration
+          duration,
+          logins: record.isLogin ? 1 : 0
         });
       }
       
@@ -224,10 +267,9 @@ export const getChapterStats = async (req: Request, res: Response): Promise<void
       totalUsers: uniqueUsers,
       averageDuration: Math.round(averageDuration / 1000), // in seconds
       totalDuration: Math.round(totalDuration / 1000),      // in seconds
+      totalLogins,
       dataPoints
     };
-
-    console.log('Processed chapter stats:', stats);
 
     res.json({
       message: "Chapter statistics retrieved successfully",
@@ -242,6 +284,7 @@ export const getChapterStats = async (req: Request, res: Response): Promise<void
         totalUsers: 0,
         averageDuration: 0,
         totalDuration: 0,
+        totalLogins: 0,
         dataPoints: []
       },
       explanation: error instanceof Error ? error.message : "Unknown error occurred while retrieving chapter stats"
@@ -260,6 +303,7 @@ export const getCourseStats = async (req: Request, res: Response): Promise<void>
           totalUsers: 0,
           totalDuration: 0,
           averageDurationPerUser: 0,
+          totalLogins: 0,
           dailyData: []
         },
         explanation: "courseId is required"
@@ -267,7 +311,8 @@ export const getCourseStats = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    // Simple query without complex filtering
+    console.log('Fetching course stats for:', { courseId });
+
     const records = await TimeTracking.scan()
       .where('courseId').eq(courseId)
       .exec();
@@ -279,6 +324,7 @@ export const getCourseStats = async (req: Request, res: Response): Promise<void>
           totalUsers: 0,
           totalDuration: 0,
           averageDurationPerUser: 0,
+          totalLogins: 0,
           dailyData: []
         },
         explanation: "No time tracking records found for this course"
@@ -286,34 +332,44 @@ export const getCourseStats = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    // Calculate unique users
-    const uniqueUsers = new Set(records.map(record => record.userId)).size;
-    
-    // Calculate total duration with proper number conversion
-    const totalDuration = records.reduce((sum, record) => {
-      const durationMs = Number(record.durationMs) || 0;
-      return sum + durationMs;
-    }, 0);
-    
-    // Calculate average duration per user
+    // Calculate unique users and their total durations
+    const userDurations = records.reduce((acc: { [key: string]: number }, record) => {
+      if (!acc[record.userId]) {
+        acc[record.userId] = 0;
+      }
+      if (!record.isLogin) {
+        acc[record.userId] += Number(record.durationMs) || 0;
+      }
+      return acc;
+    }, {});
+
+    const uniqueUsers = Object.keys(userDurations).length;
+    const totalDuration = Object.values(userDurations).reduce((sum, duration) => sum + duration, 0);
     const averageDurationPerUser = uniqueUsers > 0 ? totalDuration / uniqueUsers : 0;
+
+    // Calculate total logins
+    const totalLogins = records.filter(record => record.isLogin).length;
 
     // Group by date for time series data
     const dailyData = records.reduce((acc: any[], record) => {
       const date = record.date;
       const existingDay = acc.find(d => d.date === date);
-      const durationMs = Number(record.durationMs) || 0;
+      const durationMs = record.isLogin ? 0 : Number(record.durationMs) || 0;
       
       if (existingDay) {
         existingDay.duration += durationMs;
         if (!existingDay.activeUsers.includes(record.userId)) {
           existingDay.activeUsers.push(record.userId);
         }
+        if (record.isLogin) {
+          existingDay.logins = (existingDay.logins || 0) + 1;
+        }
       } else {
         acc.push({
           date,
           duration: durationMs,
-          activeUsers: [record.userId]
+          activeUsers: [record.userId],
+          logins: record.isLogin ? 1 : 0
         });
       }
       
@@ -324,7 +380,8 @@ export const getCourseStats = async (req: Request, res: Response): Promise<void>
     const processedDailyData = dailyData.map(day => ({
       date: day.date,
       duration: Math.round(day.duration / 1000), // Convert to seconds
-      activeUsers: day.activeUsers.length
+      activeUsers: day.activeUsers.length,
+      logins: day.logins || 0
     })).sort((a, b) => a.date.localeCompare(b.date));
 
     res.json({
@@ -333,6 +390,7 @@ export const getCourseStats = async (req: Request, res: Response): Promise<void>
         totalUsers: uniqueUsers,
         totalDuration: Math.round(totalDuration / 1000), // Convert to seconds
         averageDurationPerUser: Math.round(averageDurationPerUser / 1000), // Convert to seconds
+        totalLogins,
         dailyData: processedDailyData
       },
       explanation: "Successfully retrieved course statistics"
@@ -345,6 +403,7 @@ export const getCourseStats = async (req: Request, res: Response): Promise<void>
         totalUsers: 0,
         totalDuration: 0,
         averageDurationPerUser: 0,
+        totalLogins: 0,
         dailyData: []
       },
       explanation: error instanceof Error ? error.message : "Unknown error occurred while retrieving course stats"
@@ -385,6 +444,7 @@ export const getBatchChapterStats = async (req: Request, res: Response): Promise
             totalUsers: 0,
             averageDuration: 0,
             totalDuration: 0,
+            totalLogins: 0,
             dataPoints: []
           };
           continue;
@@ -395,7 +455,9 @@ export const getBatchChapterStats = async (req: Request, res: Response): Promise
           if (!userAcc[record.userId]) {
             userAcc[record.userId] = 0;
           }
-          userAcc[record.userId] += Number(record.durationMs) || 0;
+          if (!record.isLogin) {
+            userAcc[record.userId] += Number(record.durationMs) || 0;
+          }
           return userAcc;
         }, {});
 
@@ -403,26 +465,37 @@ export const getBatchChapterStats = async (req: Request, res: Response): Promise
         const totalDuration = Object.values(userDurations).reduce((sum, duration) => sum + duration, 0);
         const averageDuration = uniqueUsers > 0 ? totalDuration / uniqueUsers : 0;
 
+        // Calculate total logins for this chapter
+        const totalLogins = records.filter(record => record.isLogin).length;
+
         // Group records by date for data points
-        const dataPoints = records.reduce((dateAcc: { [key: string]: number }, record) => {
-          const date = record.date.split('T')[0];
-          if (!dateAcc[date]) {
-            dateAcc[date] = 0;
+        const dataPoints = records.reduce((dateAcc: any[], record) => {
+          const date = record.date;
+          const existingPoint = dateAcc.find(p => p.date === date);
+          const duration = record.isLogin ? 0 : Number(record.durationMs) || 0;
+          
+          if (existingPoint) {
+            existingPoint.duration += duration;
+            if (record.isLogin) {
+              existingPoint.logins = (existingPoint.logins || 0) + 1;
+            }
+          } else {
+            dateAcc.push({
+              date,
+              duration,
+              logins: record.isLogin ? 1 : 0
+            });
           }
-          dateAcc[date] += Number(record.durationMs) || 0;
+          
           return dateAcc;
-        }, {});
+        }, []).sort((a, b) => a.date.localeCompare(b.date));
 
         allChapterStats[chapterId] = {
           totalUsers: uniqueUsers,
           averageDuration: Math.round(averageDuration / 1000),
           totalDuration: Math.round(totalDuration / 1000),
-          dataPoints: Object.entries(dataPoints)
-            .map(([date, duration]) => ({
-              date,
-              duration: Math.round(duration / 1000)
-            }))
-            .sort((a, b) => a.date.localeCompare(b.date))
+          totalLogins,
+          dataPoints
         };
 
         console.log(`Processed stats for chapter ${chapterId}:`, allChapterStats[chapterId]);
@@ -435,6 +508,7 @@ export const getBatchChapterStats = async (req: Request, res: Response): Promise
           totalUsers: 0,
           averageDuration: 0,
           totalDuration: 0,
+          totalLogins: 0,
           dataPoints: []
         };
       }
