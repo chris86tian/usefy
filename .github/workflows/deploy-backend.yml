@@ -37,22 +37,44 @@ jobs:
       - name: Install Serverless Framework v3
         run: npm install -g serverless@3.33.0
 
-      - name: Make deploy script executable
-        run: chmod +x deploy.sh
+      - name: Create Deployment Script
+        run: |
+          cat > deploy.sh << 'EOF'
+          #!/bin/bash
+
+          export AWS_ACCESS_KEY_ID=AKIAZYY5G4GYP4FAV2QW
+          export AWS_SECRET_ACCESS_KEY=$AWS_DEFAULT_SECRET_ACCESS_KEY
+          export AWS_REGION=us-east-1
+          export AWS_ACCOUNT_ID=671686779312
+
+          # Environment variables
+          export NODE_ENV=migration
+          export S3_BUCKET_NAME=expertize-bucket-migration
+          export CLERK_SECRET_KEY=$CLERK_SECRET_KEY
+          export CLERK_PUBLISHABLE_KEY=$CLERK_PUBLISHABLE_KEY
+          export RESEND_API_KEY=$RESEND_API_KEY
+          export EMAIL_FROM=$EMAIL_FROM
+          export API_URL=$API_URL
+          export CLIENT_URL=$CLIENT_URL
+
+          # Debug info
+          echo "Using AWS credentials for account: $AWS_ACCOUNT_ID"
+          echo "NODE_ENV: $NODE_ENV"
+          echo "S3_BUCKET_NAME: $S3_BUCKET_NAME"
+
+          # Run serverless deploy with verbose output
+          serverless deploy --stage migration --verbose
+          EOF
+
+          chmod +x deploy.sh
 
       - name: Deploy to AWS Lambda
-        run: ./deploy.sh "${{ secrets.AWS_DEFAULT_SECRET_ACCESS_KEY }}"
+        run: ./deploy.sh
         env:
-          # Clerk
+          AWS_DEFAULT_SECRET_ACCESS_KEY: ${{ secrets.AWS_DEFAULT_SECRET_ACCESS_KEY }}
           CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
           CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
-          # Stripe
-          # STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-          # AWS
-          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
-          # Email
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
-          # URLs
           API_URL: ${{ secrets.API_URL }}
           CLIENT_URL: ${{ secrets.CLIENT_URL }}
