@@ -1,20 +1,20 @@
-"use client"
+"use client";
 
-import { CustomFormField } from "@/components/CustomFormField"
-import Header from "@/components/Header"
-import { Button } from "@/components/ui/button"
-import { Form } from "@/components/ui/form"
-import { 
-  centsToDollars, 
-  dollarsToCents, 
-  extractVideoId, 
-  convertTimestampToSeconds, 
-  handleEnroll, 
-  uploadAllVideos, 
-  uploadThumbnail, 
-  uploadAllFiles 
-} from "@/lib/utils"
-import { openSectionModal, setSections } from "@/state"
+import { CustomFormField } from "@/components/CustomFormField";
+import Header from "@/components/Header";
+import { Button } from "@/components/ui/button";
+import { Form } from "@/components/ui/form";
+import {
+  centsToDollars,
+  dollarsToCents,
+  extractVideoId,
+  convertTimestampToSeconds,
+  handleEnroll,
+  uploadAllVideos,
+  uploadThumbnail,
+  uploadAllFiles,
+} from "@/lib/utils";
+import { openSectionModal, setSections } from "@/state";
 import {
   useGetCourseQuery,
   useUpdateCourseMutation,
@@ -25,66 +25,74 @@ import {
   useGetCourseInstructorsQuery,
   useGetUploadFileUrlMutation,
   useInviteUserToCohortMutation,
-  useCreateTransactionMutation
-} from "@/state/api"
-import { useAppDispatch, useAppSelector } from "@/state/redux"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { ArrowLeft, CheckCircle, Plus, Sparkles } from "lucide-react"
-import { useParams } from "next/navigation"
-import { useEffect, useState } from "react"
-import { useForm } from "react-hook-form"
-import DroppableComponent from "../_components/Droppable"
-import ChapterModal from "../_components/ChapterModal"
-import SectionModal from "../_components/SectionModal"
-import { toast } from "sonner"
-import { courseSchema } from "@/lib/schemas"
-import Image from "next/image"
-import VimeoDialog from "@/components/VimeoDialog"
-import { v4 as uuid } from "uuid"
-import { useRouter } from "next/navigation"
-import InstructorEmailInput from "./EmailInvite"
-import { useUser } from "@clerk/nextjs"
-import { useOrganization } from "@/context/OrganizationContext"
-import { Spinner } from "@/components/ui/Spinner"
-import NotFound from "@/components/NotFound"
+  useCreateTransactionMutation,
+} from "@/state/api";
+import { useAppDispatch, useAppSelector } from "@/state/redux";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { ArrowLeft, CheckCircle, Plus, Sparkles } from "lucide-react";
+import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import DroppableComponent from "../_components/Droppable";
+import ChapterModal from "../_components/ChapterModal";
+import SectionModal from "../_components/SectionModal";
+import { toast } from "sonner";
+import { courseSchema } from "@/lib/schemas";
+import Image from "next/image";
+import VimeoDialog from "@/components/VimeoDialog";
+import { v4 as uuid } from "uuid";
+import { useRouter } from "next/navigation";
+import InstructorEmailInput from "./EmailInvite";
+import { useUser } from "@clerk/nextjs";
+import { useOrganization } from "@/context/OrganizationContext";
+import { Spinner } from "@/components/ui/Spinner";
+import NotFound from "@/components/NotFound";
 
 const CourseEditor = () => {
-  const { user } = useUser()
-  const { currentOrg, isOrgLoading } = useOrganization()
-  const { orgId, cohortId, courseId } = useParams() as { orgId: string; cohortId: string; courseId: string }
+  const { user } = useUser();
+  const { currentOrg, isOrgLoading } = useOrganization();
+  const { orgId, cohortId, courseId } = useParams() as {
+    orgId: string;
+    cohortId: string;
+    courseId: string;
+  };
 
-  const { data: course, isLoading, refetch } = useGetCourseQuery(courseId)
-  const { data: instructors, refetch: refetchInstructors } = useGetCourseInstructorsQuery(courseId)
+  const { data: course, isLoading, refetch } = useGetCourseQuery(courseId);
+  const { data: instructors, refetch: refetchInstructors } =
+    useGetCourseInstructorsQuery(courseId);
 
-  const isInstructor = instructors?.some((instructor) => instructor.id === user?.id)
-  const isAdmin = currentOrg?.admins?.some((admin) => admin.userId === user?.id)
+  const isInstructor = instructors?.some(
+    (instructor) => instructor.id === user?.id
+  );
+  const isAdmin = currentOrg?.admins?.some(
+    (admin) => admin.userId === user?.id
+  );
 
-  const [updateCourse, { isLoading: isUpdating }] = useUpdateCourseMutation()
-  const [getUploadVideoUrl] = useGetUploadVideoUrlMutation()
-  const [getUploadImageUrl] = useGetUploadImageUrlMutation()
+  const [updateCourse, { isLoading: isUpdating }] = useUpdateCourseMutation();
+  const [getUploadVideoUrl] = useGetUploadVideoUrlMutation();
+  const [getUploadImageUrl] = useGetUploadImageUrlMutation();
   const [getUploadFileUrl] = useGetUploadFileUrlMutation();
-  const [inviteUserToCohort] = useInviteUserToCohortMutation()
-  const [addCourseInstructor] = useAddCourseInstructorMutation()
-  const [createTransaction] = useCreateTransactionMutation()
-  const [removeCourseInstructor] = useRemoveCourseInstructorMutation()
+  const [inviteUserToCohort] = useInviteUserToCohortMutation();
+  const [addCourseInstructor] = useAddCourseInstructorMutation();
+  const [createTransaction] = useCreateTransactionMutation();
+  const [removeCourseInstructor] = useRemoveCourseInstructorMutation();
 
-  const [isUploading, setIsUploading] = useState(false)
-  const [progress, setProgress] = useState(0)
-  const [image, setImage] = useState<File | null>(null)
-  const [isGenerating, setIsGenerating] = useState(false)
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const router = useRouter()
+  const [isUploading, setIsUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [image, setImage] = useState<File | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     if (!isInstructor && !isAdmin) {
-      router.push(`/organizations/${orgId}/cohorts/${cohortId}`)
+      router.push(`/organizations/${orgId}/cohorts/${cohortId}`);
     }
-  }, [isInstructor, isAdmin, router, orgId, cohortId])
-
+  }, [isInstructor, isAdmin, router, orgId, cohortId]);
 
   const handleURLSubmit = async (videoUrl: string, options: ProcessOptions) => {
-    setIsDialogOpen(false)
-    setIsGenerating(true)
+    setIsDialogOpen(false);
+    setIsGenerating(true);
 
     try {
       const response = await fetch("/api/generate-course", {
@@ -100,23 +108,31 @@ const CourseEditor = () => {
           codingAssignments: options.codingAssignments,
           language: options.language,
         }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (data.error) {
-        toast.error(data.error)
-        setIsGenerating(false)
-        return
+        toast.error(data.error);
+        setIsGenerating(false);
+        return;
       }
 
-      const { sections: newSections, courseTitle, courseDescription } = data
-      
-      console.log("Received course data:", { newSections, courseTitle, courseDescription })
+      const { sections: newSections, courseTitle, courseDescription } = data;
 
-      if (course?.title === "" || course?.title === "Untitled Course" || course?.title !== courseTitle) {
-        methods.setValue("courseTitle", courseTitle)
-        methods.setValue("courseDescription", courseDescription)
+      console.log("Received course data:", {
+        newSections,
+        courseTitle,
+        courseDescription,
+      });
+
+      if (
+        course?.title === "" ||
+        course?.title === "Untitled Course" ||
+        course?.title !== courseTitle
+      ) {
+        methods.setValue("courseTitle", courseTitle);
+        methods.setValue("courseDescription", courseDescription);
       }
 
       // Process the sections and add video URLs based on the source
@@ -128,35 +144,40 @@ const CourseEditor = () => {
           releaseDate: new Date().toISOString(),
           chapters: section.chapters.map((chapter) => {
             // Process each chapter
-            const videoId = extractVideoId(videoUrl, options.videoSource as "youtube" | "vimeo")
-            let chapterVideoUrl = chapter.video || ""
-            
+            const videoId = extractVideoId(
+              videoUrl,
+              options.videoSource as "youtube" | "vimeo"
+            );
+            let chapterVideoUrl = chapter.video || "";
+
             // If no video URL is provided, construct one based on the timestamp
             if (!chapterVideoUrl && videoId) {
               if (options.videoSource === "youtube") {
                 // For YouTube, use timestamp in seconds
-                const timestamp = chapter.timestamp ? 
-                  convertTimestampToSeconds(chapter.timestamp) : 
-                  0
-                chapterVideoUrl = `https://www.youtube.com/watch?v=${videoId}&t=${timestamp}s`
+                const timestamp = chapter.timestamp
+                  ? convertTimestampToSeconds(chapter.timestamp)
+                  : 0;
+                chapterVideoUrl = `https://www.youtube.com/watch?v=${videoId}&t=${timestamp}s`;
               } else {
                 // For Vimeo, use timestamp in the format #t=1h42m40s
-                const timestampParts = chapter.timestamp ? chapter.timestamp.split(":") : ["0", "0", "0"]
-                const hours = parseInt(timestampParts[0])
-                const minutes = parseInt(timestampParts[1])
-                const seconds = parseInt(timestampParts[2])
-                
+                const timestampParts = chapter.timestamp
+                  ? chapter.timestamp.split(":")
+                  : ["0", "0", "0"];
+                const hours = parseInt(timestampParts[0]);
+                const minutes = parseInt(timestampParts[1]);
+                const seconds = parseInt(timestampParts[2]);
+
                 // Format timestamp in Vimeo's preferred format
-                let timeString = ""
-                if (hours > 0) timeString += `${hours}h`
-                if (minutes > 0) timeString += `${minutes}m`
-                if (seconds > 0) timeString += `${seconds}s`
-                
+                let timeString = "";
+                if (hours > 0) timeString += `${hours}h`;
+                if (minutes > 0) timeString += `${minutes}m`;
+                if (seconds > 0) timeString += `${seconds}s`;
+
                 // Use the fragment identifier format which works for direct video viewing
-                chapterVideoUrl = `https://vimeo.com/${videoId}#t=${timeString}`
+                chapterVideoUrl = `https://vimeo.com/${videoId}#t=${timeString}`;
               }
             }
-            
+
             return {
               ...chapter,
               chapterId: chapter.chapterId || uuid(),
@@ -178,51 +199,58 @@ const CourseEditor = () => {
                   submissions: assignment.submissions || [],
                   isCoding: options.codingAssignments,
                   language: options.language,
-                  starterCode: assignment.starterCode || `# Your ${options.language} code here`,
+                  starterCode:
+                    assignment.starterCode ||
+                    `# Your ${options.language} code here`,
                 })) || [],
-            }
+            };
           }),
-        }
-      })
+        };
+      });
 
-      const currentSections = [...sections]
-      const updatedSections = [...currentSections, ...processedSections]
-      dispatch(setSections(updatedSections))
-      
-      console.log("Processed sections:", processedSections)
-      toast.success("Course content generated successfully")
+      const currentSections = [...sections];
+      const updatedSections = [...currentSections, ...processedSections];
+      dispatch(setSections(updatedSections));
+
+      console.log("Processed sections:", processedSections);
+      toast.success("Course content generated successfully");
     } catch (error) {
-      console.error("Error generating course:", error)
-      toast.error("Failed to generate course content")
+      console.error("Error generating course:", error);
+      toast.error("Failed to generate course content");
     } finally {
-      setIsGenerating(false)
+      setIsGenerating(false);
     }
-  }
+  };
 
   const handleAddInstructor = async (email: string) => {
     try {
-      await inviteUserToCohort({ organizationId: orgId, cohortId, email, role: "instructor" }).unwrap()
-      const result = await addCourseInstructor({ courseId, email }).unwrap()
-      handleEnroll(result.id, courseId, createTransaction)
-      refetchInstructors()
+      await inviteUserToCohort({
+        organizationId: orgId,
+        cohortId,
+        email,
+        role: "instructor",
+      }).unwrap();
+      const result = await addCourseInstructor({ courseId, email }).unwrap();
+      handleEnroll(result.id, courseId, createTransaction);
+      refetchInstructors();
     } catch (error) {
-      console.error("Failed to add instructor:", error)
-      throw error
+      console.error("Failed to add instructor:", error);
+      throw error;
     }
-  }
+  };
 
   const handleRemoveInstructor = async (instructorId: string) => {
     try {
-      await removeCourseInstructor({ courseId, userId: instructorId }).unwrap()
-      refetchInstructors()
+      await removeCourseInstructor({ courseId, userId: instructorId }).unwrap();
+      refetchInstructors();
     } catch (error) {
-      console.error("Failed to remove instructor:", error)
-      throw error
+      console.error("Failed to remove instructor:", error);
+      throw error;
     }
-  }
+  };
 
-  const dispatch = useAppDispatch()
-  const { sections } = useAppSelector((state) => state.global.courseEditor)
+  const dispatch = useAppDispatch();
+  const { sections } = useAppSelector((state) => state.global.courseEditor);
 
   const methods = useForm<CourseFormData>({
     resolver: zodResolver(courseSchema),
@@ -233,7 +261,7 @@ const CourseEditor = () => {
       courseStatus: false,
       courseImage: "",
     },
-  })
+  });
 
   useEffect(() => {
     if (course) {
@@ -243,7 +271,7 @@ const CourseEditor = () => {
         coursePrice: centsToDollars(course.price),
         courseStatus: course.status === "Published",
         courseImage: course.image || "",
-      })
+      });
 
       if (course.sections) {
         dispatch(
@@ -254,42 +282,99 @@ const CourseEditor = () => {
                 ...chapter,
                 assignments: chapter.assignments || [],
               })),
-            })),
+            }))
           )
-        )
+        );
       }
     }
-  }, [course, dispatch, methods])
+  }, [course, dispatch, methods]);
 
-  const createCourseFormData = (data: CourseFormData, sections: Section[], thumbnailUrl: string): FormData => {
-    const formData = new FormData()
+  const createCourseFormData = (
+    data: CourseFormData,
+    sections: Section[],
+    thumbnailUrl: string
+  ): FormData => {
+    const formData = new FormData();
 
-    formData.append("title", data.courseTitle)
-    formData.append("description", data.courseDescription)
-    formData.append("price", dollarsToCents(data.coursePrice).toString())
-    formData.append("status", data.courseStatus ? "Published" : "Draft")
+    formData.append("title", data.courseTitle);
+    formData.append("description", data.courseDescription);
+    formData.append("price", dollarsToCents(data.coursePrice).toString());
+    formData.append("status", data.courseStatus ? "Published" : "Draft");
 
     if (thumbnailUrl) {
-      formData.append("image", thumbnailUrl)
+      formData.append("image", thumbnailUrl);
     }
 
-    const sectionsWithPreservedData = sections.map((section) => ({
+    // Optimize the sections data to minimize size and prevent issues
+    const optimizedSections = sections.map((section) => ({
       ...section,
+      // Keep only essential properties for each chapter
       chapters: section.chapters.map((chapter) => ({
-        ...chapter,
-        assignments: chapter.assignments || [],
-        quiz: chapter.quiz || null,
+        chapterId: chapter.chapterId,
+        title: chapter.title,
+        content: chapter.content,
         video: chapter.video || "",
+        timestamp: chapter.timestamp,
+        assignments: Array.isArray(chapter.assignments)
+          ? chapter.assignments.map((assignment) => ({
+              assignmentId: assignment.assignmentId,
+              title: assignment.title,
+              description: assignment.description,
+              fileUrl: assignment.fileUrl,
+              isCoding: assignment.isCoding,
+              language: assignment.language,
+              starterCode: assignment.starterCode,
+              resources: Array.isArray(assignment.resources)
+                ? assignment.resources.map((resource) => ({
+                    id: resource.id,
+                    title: resource.title,
+                    type: resource.type,
+                    url: resource.url,
+                    fileUrl: resource.fileUrl,
+                  }))
+                : [],
+              submissions: Array.isArray(assignment.submissions)
+                ? assignment.submissions.map((sub) => ({
+                    submissionId: sub.submissionId,
+                    userId: sub.userId,
+                  }))
+                : [],
+            }))
+          : [],
+        // Only include quiz data if it exists
+        quiz: chapter.quiz
+          ? {
+              quizId: chapter.quiz.quizId,
+              questions: Array.isArray(chapter.quiz.questions)
+                ? chapter.quiz.questions.map((question) => ({
+                    questionId: question.questionId,
+                    question: question.question,
+                    options: question.options,
+                    correctAnswer: question.correctAnswer,
+                    difficulty: question.difficulty,
+                  }))
+                : [],
+            }
+          : undefined,
       })),
-    }))
+    }));
 
-    formData.append("sections", JSON.stringify(sectionsWithPreservedData))
-    return formData
-  }
+    try {
+      formData.append("sections", JSON.stringify(optimizedSections));
+    } catch (error) {
+      console.error("Error stringifying sections:", error);
+      toast.error(
+        "Error preparing course data. The course content may be too large."
+      );
+      throw new Error("Failed to prepare course data");
+    }
+
+    return formData;
+  };
 
   const onSubmit = async (data: CourseFormData) => {
-    setIsUploading(true)
-    setProgress(0)
+    setIsUploading(true);
+    setProgress(0);
 
     try {
       const updatedSectionsAfterVideos = await uploadAllVideos(
@@ -306,34 +391,46 @@ const CourseEditor = () => {
         (p) => setProgress(p)
       );
 
-      let thumbnailUrl = course?.image || ""
-      if (image) thumbnailUrl = await uploadThumbnail(courseId, getUploadImageUrl, image)
+      let thumbnailUrl = course?.image || "";
+      if (image)
+        thumbnailUrl = await uploadThumbnail(
+          courseId,
+          getUploadImageUrl,
+          image
+        );
 
-      const formData = createCourseFormData(data, updatedSectionsAfterFiles, thumbnailUrl)
-      await updateCourse({ orgId, cohortId, courseId, formData }).unwrap()
-      
-      window.location.href = `/organizations/${orgId}/cohorts/${cohortId}`
-      refetch()
+      const formData = createCourseFormData(
+        data,
+        updatedSectionsAfterFiles,
+        thumbnailUrl
+      );
+      await updateCourse({ orgId, cohortId, courseId, formData }).unwrap();
+
+      window.location.href = `/organizations/${orgId}/cohorts/${cohortId}`;
+      refetch();
     } catch (error) {
-      console.error("Failed to update course:", error)
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred"
-      toast.error(`Failed to update course: ${errorMessage}`)
+      console.error("Failed to update course:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+      toast.error(`Failed to update course: ${errorMessage}`);
     } finally {
-      setIsUploading(false)
+      setIsUploading(false);
     }
-  }
+  };
 
-  if (isLoading || isOrgLoading) return <Spinner />
-  if (!currentOrg) return <NotFound message="Organization not found" />
-  if (!course) return <NotFound message="Course not found" />
-  if (!instructors) return <NotFound message="Instructors not found" />
+  if (isLoading || isOrgLoading) return <Spinner />;
+  if (!currentOrg) return <NotFound message="Organization not found" />;
+  if (!course) return <NotFound message="Course not found" />;
+  if (!instructors) return <NotFound message="Instructors not found" />;
 
   return (
     <div className="dark:text-gray-100">
       <div className="flex items-center gap-5 mb-5">
         <button
           className="flex items-center border border-gray-400 dark:border-gray-600 px-4 py-2 gap-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-200"
-          onClick={() => window.location.href = `/organizations/${orgId}/cohorts/${cohortId}`}
+          onClick={() =>
+            (window.location.href = `/organizations/${orgId}/cohorts/${cohortId}`)
+          }
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to Courses</span>
@@ -353,7 +450,9 @@ const CourseEditor = () => {
                   type="switch"
                   className="flex items-center space-x-2"
                   labelClassName={`text-sm font-medium ${
-                    methods.watch("courseStatus") ? "text-green-500" : "text-yellow-500"
+                    methods.watch("courseStatus")
+                      ? "text-green-500"
+                      : "text-yellow-500"
                   }`}
                   inputClassName="data-[state=checked]:bg-green-500"
                 />
@@ -427,14 +526,18 @@ const CourseEditor = () => {
 
             <div className="bg-gray-100 dark:bg-gray-800 mt-4 md:mt-0 p-4 rounded-lg basis-1/2">
               <div className="flex justify-between items-center mb-2">
-                <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">Sections</h2>
+                <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">
+                  Sections
+                </h2>
 
                 <div className="flex items-center space-x-2">
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => dispatch(openSectionModal({ sectionIndex: null }))}
+                    onClick={() =>
+                      dispatch(openSectionModal({ sectionIndex: null }))
+                    }
                     className="border-gray-300 dark:border-gray-600 text-blue-700 dark:text-blue-400 group"
                     disabled={isGenerating}
                   >
@@ -473,7 +576,9 @@ const CourseEditor = () => {
                       className="w-6 h-6 border-2 border-blue-700 dark:border-blue-500 border-t-transparent rounded-full animate-spin"
                       aria-label="Generating content"
                     />
-                    <p className="text-gray-800 dark:text-gray-200">Generating course content from video...</p>
+                    <p className="text-gray-800 dark:text-gray-200">
+                      Generating course content from video...
+                    </p>
                   </div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
                     This may take a few moments as we analyze the video content.
@@ -493,7 +598,9 @@ const CourseEditor = () => {
                 className="w-8 h-8 border-4 border-blue-500 dark:border-blue-400 border-t-transparent rounded-full animate-spin"
                 aria-label="Loading"
               />
-              <p className="text-gray-800 dark:text-gray-200">Uploading videos... {progress}% complete</p>
+              <p className="text-gray-800 dark:text-gray-200">
+                Uploading videos... {progress}% complete
+              </p>
             </div>
           )}
         </form>
@@ -502,7 +609,7 @@ const CourseEditor = () => {
       <ChapterModal />
       <SectionModal />
     </div>
-  )
-}
+  );
+};
 
-export default CourseEditor
+export default CourseEditor;
