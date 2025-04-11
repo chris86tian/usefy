@@ -397,7 +397,7 @@ const Section = ({
           )}
         </div>
         <div className="flex items-center justify-between w-full mt-1">
-          <h3 className="font-medium text-foreground">{section.sectionTitle}</h3>
+        <h3 className="font-medium text-foreground text-left">{section.sectionTitle}</h3>
         </div>
       </CollapsibleTrigger>
 
