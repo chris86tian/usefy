@@ -2,7 +2,12 @@ import { Request, Response } from "express";
 import AWS from "aws-sdk";
 import { v4 as uuidv4 } from "uuid";
 import { getAuth, User } from "@clerk/express";
-import { mergeSections, calculateOverallProgress, generateTemporaryPassword, generateStyledHtml } from "../utils/utils";
+import {
+  mergeSections,
+  calculateOverallProgress,
+  generateTemporaryPassword,
+  generateStyledHtml,
+} from "../utils/utils";
 import Commit from "../models/commitModel";
 import Course from "../models/courseModel";
 import UserCourseProgress from "../models/userCourseProgressModel";
@@ -52,20 +57,27 @@ export const createCourse = async (
   }
 };
 
-export const updateCourse = async (req: Request, res: Response): Promise<void> => {
+export const updateCourse = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   const { orgId, cohortId, courseId } = req.params;
   const { userId } = getAuth(req);
   const updateData = { ...req.body };
 
   try {
     if (!userId) {
-      res.status(401).json({ code: "unauthorized", message: "User not authenticated" });
+      res
+        .status(401)
+        .json({ code: "unauthorized", message: "User not authenticated" });
       return;
     }
 
     const course = await Course.get(courseId);
     if (!course) {
-      res.status(404).json({ code: "course_not_found", message: "Course not found" });
+      res
+        .status(404)
+        .json({ code: "course_not_found", message: "Course not found" });
       return;
     }
 
@@ -88,8 +100,24 @@ export const updateCourse = async (req: Request, res: Response): Promise<void> =
 
     if (updateData.sections) {
       try {
-        const sectionsData =
-          typeof updateData.sections === "string" ? JSON.parse(updateData.sections) : updateData.sections;
+        let sectionsData;
+        try {
+          sectionsData =
+            typeof updateData.sections === "string"
+              ? JSON.parse(updateData.sections)
+              : updateData.sections;
+        } catch (parseError) {
+          console.error("Error parsing sections JSON:", parseError);
+          res.status(400).json({
+            code: "invalid_sections_json",
+            message: "Invalid JSON format for sections data",
+            details:
+              parseError instanceof Error
+                ? parseError.message
+                : "Unknown error",
+          });
+          return;
+        }
 
         if (!Array.isArray(sectionsData)) {
           throw new Error("Sections must be an array");
@@ -106,7 +134,9 @@ export const updateCourse = async (req: Request, res: Response): Promise<void> =
                   ? chapter.assignments.map((assignment: any) => ({
                       ...assignment,
                       assignmentId: assignment.assignmentId || uuidv4(),
-                      submissions: Array.isArray(assignment.submissions) ? assignment.submissions : [],
+                      submissions: Array.isArray(assignment.submissions)
+                        ? assignment.submissions
+                        : [],
                     }))
                   : [],
                 quiz: chapter.quiz
@@ -136,71 +166,118 @@ export const updateCourse = async (req: Request, res: Response): Promise<void> =
       }
     }
 
-    const updatedCourse = await Course.update(courseId, updateData);
+    try {
+      const updatedCourse = await Course.update(courseId, updateData);
 
-    // Update user progress when sections are updated
-    if (updateData.sections) {
-      const progressList = await UserCourseProgress.query("courseId").eq(courseId).using("CourseIdIndex").exec();
+      // Update user progress when sections are updated
+      if (updateData.sections) {
+        const progressList = await UserCourseProgress.query("courseId")
+          .eq(courseId)
+          .using("CourseIdIndex")
+          .exec();
 
-      for (const progress of progressList) {
-        try {
-          // Parse sections properly to ensure they're an array
-          const existingSections = Array.isArray(progress.sections) 
-            ? progress.sections 
-            : (typeof progress.sections === 'string' 
-                ? JSON.parse(progress.sections) 
-                : []);
-          
-          // Use the mergeSections function to update progress while preserving user completion data
-          progress.sections = mergeSections(existingSections, updateData.sections);
-          progress.lastAccessedTimestamp = new Date().toISOString();
-          progress.overallProgress = calculateOverallProgress(progress.sections);
-          await progress.save();
-        } catch (err) {
-          console.error(`Error updating progress for user ${progress.userId}:`, err);
-        }
-      }
-    }
+        for (const progress of progressList) {
+          try {
+            // Parse sections properly to ensure they're an array
+            const existingSections = Array.isArray(progress.sections)
+              ? progress.sections
+              : typeof progress.sections === "string"
+              ? JSON.parse(progress.sections)
+              : [];
 
-    const allUsers = [
-      ...course.enrollments.map((enrollment: any) => enrollment.userId),
-      ...course.instructors.map((instructor: any) => instructor.userId),
-    ];
-
-    for (const userId of allUsers) {
-      try {
-        const user = await clerkClient.users.getUser(userId);
-        if (!user || !user.emailAddresses?.length) {
-          console.warn(`User not found or has no email: ${userId}`);
-          continue;
-        }
-
-        const userName = user.firstName && user.lastName 
-          ? `${user.firstName} ${user.lastName} (${user.emailAddresses[0].emailAddress})`
-          : user.emailAddresses[0].emailAddress;
-
-        await sendMessage(
-          userId,
-          user.emailAddresses[0].emailAddress,
-          `Course "${course.title}" has been updated`,
-          `The course "${course.title}" has been updated.`,
-          `/organizations/${orgId}/cohorts/${cohortId}/courses/${courseId}/chapters/${course.sections[0].chapters[0].chapterId}`,
-          { 
-            sendEmail: true, 
-            sendNotification: true, 
-            rateLimited: false,
-            html: generateStyledHtml(
-              `The course "${course.title}" has been updated.<br><br>Course Description: ${course.description || 'No description available'}<br><br>Click the button below to view the updated course.`,
-              `/organizations/${orgId}/cohorts/${cohortId}/courses/${courseId}/chapters/${course.sections[0].chapters[0].chapterId}`
-            )
+            // Use the mergeSections function to update progress while preserving user completion data
+            progress.sections = mergeSections(
+              existingSections,
+              updateData.sections
+            );
+            progress.lastAccessedTimestamp = new Date().toISOString();
+            progress.overallProgress = calculateOverallProgress(
+              progress.sections
+            );
+            await progress.save();
+          } catch (err) {
+            console.error(
+              `Error updating progress for user ${progress.userId}:`,
+              err
+            );
           }
-        );
-      } catch (err) {
-        console.error(`Error notifying user ${userId}:`, err);
+        }
       }
+    } catch (updateError) {
+      console.error("Error updating course in database:", updateError);
+      res.status(500).json({
+        code: "database_update_failed",
+        message: "Failed to update course in database",
+        details:
+          updateError instanceof Error ? updateError.message : "Unknown error",
+      });
+      return;
     }
 
-    res.json({ message: "Course updated successfully", data: updatedCourse });
+    try {
+      const allUsers = [
+        ...course.enrollments.map((enrollment: any) => enrollment.userId),
+        ...course.instructors.map((instructor: any) => instructor.userId),
+      ];
+
+      const MAX_NOTIFICATIONS = 10; // Adjust this number as needed
+      const limitedUsers = allUsers.slice(0, MAX_NOTIFICATIONS);
+
+      const shortenedDescription = course.description
+        ? course.description.length > 200
+          ? course.description.substring(0, 200) + "..."
+          : course.description
+        : "No description available";
+
+      let linkPath = `/organizations/${orgId}/cohorts/${cohortId}/courses/${courseId}`;
+      if (
+        course.sections &&
+        course.sections.length > 0 &&
+        course.sections[0].chapters &&
+        course.sections[0].chapters.length > 0
+      ) {
+        linkPath += `/chapters/${course.sections[0].chapters[0].chapterId}`;
+      }
+
+      for (const userId of limitedUsers) {
+        try {
+          const user = await clerkClient.users.getUser(userId);
+          if (!user || !user.emailAddresses?.length) {
+            console.warn(`User not found or has no email: ${userId}`);
+            continue;
+          }
+
+          const userName =
+            user.firstName && user.lastName
+              ? `${user.firstName} ${user.lastName} (${user.emailAddresses[0].emailAddress})`
+              : user.emailAddresses[0].emailAddress;
+
+          await sendMessage(
+            userId,
+            user.emailAddresses[0].emailAddress,
+            `Course "${course.title}" has been updated`,
+            `The course "${course.title}" has been updated.`,
+            linkPath,
+            {
+              sendEmail: true,
+              sendNotification: true,
+              rateLimited: true, // Use rate limiting to avoid too many API calls at once
+              html: generateStyledHtml(
+                `The course "${course.title}" has been updated.<br><br>Course Description: ${shortenedDescription}<br><br>Click the button below to view the updated course.`,
+                linkPath
+              ),
+            }
+          );
+        } catch (err) {
+          console.error(`Error notifying user ${userId}:`, err);
+        }
+      }
+    } catch (notificationError) {
+      console.error("Error sending notifications:", notificationError);
+      // Continue to return success even if notifications fail
+    }
+
+    res.json({ message: "Course updated successfully", data: course });
   } catch (error) {
     console.error("Error updating course:", error);
     res.status(500).json({
@@ -210,7 +287,6 @@ export const updateCourse = async (req: Request, res: Response): Promise<void> =
     });
   }
 };
-
 
 export const archiveCourse = async (
   req: Request,
@@ -229,7 +305,7 @@ export const archiveCourse = async (
     await course.save();
 
     // TODO: Send notification to org admins
-    for(const instructor of course.instructors) {
+    for (const instructor of course.instructors) {
       const user = await clerkClient.users.getUser(instructor.userId);
       if (user.emailAddresses && user.emailAddresses.length > 0) {
         await sendMessage(
@@ -312,8 +388,12 @@ export const enrollUser = async (
       course.enrollments = [];
     }
 
-    if (course.enrollments.find((enrollment: any) => enrollment.userId === userId)) {
-      res.status(400).json({ message: "User is already enrolled in this course" });
+    if (
+      course.enrollments.find((enrollment: any) => enrollment.userId === userId)
+    ) {
+      res
+        .status(400)
+        .json({ message: "User is already enrolled in this course" });
     }
 
     course.enrollments.push({ userId });
@@ -323,21 +403,25 @@ export const enrollUser = async (
     try {
       const user = await clerkClient.users.getUser(userId);
       const userEmail = user.emailAddresses[0].emailAddress;
-      
+
       await sendMessage(
         userId,
         userEmail,
         "You have been enrolled in a course",
         `You have been enrolled in course "${course.title}".`,
         `/organizations/${course.organizationId}/cohorts/${course.cohortId}/courses/${courseId}`,
-        { 
-          sendEmail: true, 
-          sendNotification: true, 
+        {
+          sendEmail: true,
+          sendNotification: true,
           rateLimited: false,
           html: generateStyledHtml(
-            `You have been enrolled in course "${course.title}".<br><br>Course Description: ${course.description || 'No description available'}<br><br>You can start learning now!<br><br>Click the button below to view the course.`,
+            `You have been enrolled in course "${
+              course.title
+            }".<br><br>Course Description: ${
+              course.description || "No description available"
+            }<br><br>You can start learning now!<br><br>Click the button below to view the course.`,
             `/organizations/${course.organizationId}/cohorts/${course.cohortId}/courses/${courseId}`
-          )
+          ),
         }
       );
     } catch (err) {
@@ -358,7 +442,8 @@ export const unenrollUser = async (
   try {
     const { courseId, userId } = req.params;
 
-    const userEmail = (await clerkClient.users.getUser(userId)).emailAddresses[0].emailAddress;
+    const userEmail = (await clerkClient.users.getUser(userId))
+      .emailAddresses[0].emailAddress;
 
     if (!courseId || !userId) {
       res.status(400).json({ message: "Missing courseId or userId" });
@@ -388,13 +473,13 @@ export const unenrollUser = async (
         "You have been unenrolled from a course",
         `You have been unenrolled from course "${course.title}". If you believe this was a mistake, please contact the course instructor.`,
         null,
-        { 
-          sendEmail: true, 
-          sendNotification: true, 
+        {
+          sendEmail: true,
+          sendNotification: true,
           rateLimited: false,
           html: generateStyledHtml(
-            `You have been unenrolled from course "${course.title}".<br><br>If you believe this was a mistake, please contact the course instructor.`,
-          )
+            `You have been unenrolled from course "${course.title}".<br><br>If you believe this was a mistake, please contact the course instructor.`
+          ),
         }
       );
     } catch (err) {
@@ -411,7 +496,10 @@ export const unenrollUser = async (
   }
 };
 
-export const addCourseInstructor = async (req: Request, res: Response): Promise<void> => {
+export const addCourseInstructor = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   const { courseId } = req.params;
   const { userId, email } = req.body;
 
@@ -425,7 +513,9 @@ export const addCourseInstructor = async (req: Request, res: Response): Promise<
     let instructorUserId = userId;
 
     if (!userId && email) {
-      const users = (await clerkClient.users.getUserList({ emailAddress: [email] })).data;
+      const users = (
+        await clerkClient.users.getUserList({ emailAddress: [email] })
+      ).data;
 
       if (users.length > 0) {
         instructorUserId = users[0].id;
@@ -438,7 +528,9 @@ export const addCourseInstructor = async (req: Request, res: Response): Promise<
 
         instructorUserId = newUser.id;
 
-        const resetPasswordLink = `${process.env.CLIENT_URL}/reset-password?email=${encodeURIComponent(email)}`;
+        const resetPasswordLink = `${
+          process.env.CLIENT_URL
+        }/reset-password?email=${encodeURIComponent(email)}`;
         await sendMessage(
           instructorUserId,
           email,
@@ -459,9 +551,13 @@ export const addCourseInstructor = async (req: Request, res: Response): Promise<
       course.instructors = [];
     }
 
-    const alreadyAdded = course.instructors.some((inst: User) => inst.id === instructorUserId);
+    const alreadyAdded = course.instructors.some(
+      (inst: User) => inst.id === instructorUserId
+    );
     if (alreadyAdded) {
-      res.status(400).json({ message: "Instructor is already added to the course" });
+      res
+        .status(400)
+        .json({ message: "Instructor is already added to the course" });
       return;
     }
 
@@ -476,24 +572,32 @@ export const addCourseInstructor = async (req: Request, res: Response): Promise<
         `You've been added as an instructor to "${course.title}"`,
         `You've been added as an instructor to "${course.title}".`,
         `/courses/${courseId}`,
-        { 
-          sendEmail: true, 
-          sendNotification: true, 
+        {
+          sendEmail: true,
+          sendNotification: true,
           rateLimited: true,
           html: generateStyledHtml(
-            `You've been added as an instructor to "${course.title}".<br><br>Course Description: ${course.description || 'No description available'}<br><br>Click the button below to view the course.`,
+            `You've been added as an instructor to "${
+              course.title
+            }".<br><br>Course Description: ${
+              course.description || "No description available"
+            }<br><br>Click the button below to view the course.`,
             `/courses/${courseId}`
-          )
+          ),
         }
       );
     }
 
-    res.json({ message: "Instructor added to course successfully", data: user });
+    res.json({
+      message: "Instructor added to course successfully",
+      data: user,
+    });
   } catch (error) {
-    res.status(500).json({ message: "Error adding instructor to course", error });
+    res
+      .status(500)
+      .json({ message: "Error adding instructor to course", error });
   }
 };
-
 
 export const removeCourseInstructor = async (
   req: Request,
@@ -520,11 +624,16 @@ export const removeCourseInstructor = async (
 
     await course.save();
 
-    res.json({ message: "Instructor removed from course successfully", data: course });
+    res.json({
+      message: "Instructor removed from course successfully",
+      data: course,
+    });
   } catch (error) {
-    res.status(500).json({ message: "Error removing instructor from course", error });
-  }   
-}
+    res
+      .status(500)
+      .json({ message: "Error removing instructor from course", error });
+  }
+};
 
 export const getCourseInstructors = async (
   req: Request,
@@ -544,15 +653,22 @@ export const getCourseInstructors = async (
       return;
     }
 
-    const userIds = course.instructors.map((instructor: any) => instructor.userId);
+    const userIds = course.instructors.map(
+      (instructor: any) => instructor.userId
+    );
 
-    const instructors = (await clerkClient.users.getUserList({ userId: userIds })).data;
+    const instructors = (
+      await clerkClient.users.getUserList({ userId: userIds })
+    ).data;
 
-    res.json({ message: "Instructors retrieved successfully", data: instructors });
+    res.json({
+      message: "Instructors retrieved successfully",
+      data: instructors,
+    });
   } catch (error) {
     res.status(500).json({ message: "Error retrieving instructor", error });
   }
-}
+};
 
 export const getUploadVideoUrl = async (
   req: Request,
@@ -877,7 +993,8 @@ export const updateAssignment = async (
 ): Promise<void> => {
   const { courseId, sectionId, chapterId, assignmentId } = req.params;
   const { userId } = getAuth(req);
-  const { title, description, resources, hints, starterCode, isCoding } = req.body;
+  const { title, description, resources, hints, starterCode, isCoding } =
+    req.body;
 
   try {
     const course = await Course.get(courseId);
@@ -979,7 +1096,9 @@ export const createSubmission = async (
       return;
     }
 
-    let submission = assignment.submissions.find((submission: any) => submission.userId === userId);
+    let submission = assignment.submissions.find(
+      (submission: any) => submission.userId === userId
+    );
 
     if (submission) {
       // Update existing submission
@@ -1112,7 +1231,8 @@ export const createComment = async (
 ): Promise<void> => {
   const { courseId, sectionId, chapterId } = req.params;
   const { userId } = getAuth(req);
-  const { id, username, content, upvotes, downvotes, createdAt, replies } = req.body;
+  const { id, username, content, upvotes, downvotes, createdAt, replies } =
+    req.body;
 
   try {
     const course = await Course.get(courseId);
@@ -1283,7 +1403,6 @@ export const createReply = async (
   console.log("params", req.params);
   console.log("body", req.body);
 
-
   try {
     const course = await Course.get(courseId);
     if (!course) {
@@ -1332,7 +1451,9 @@ export const createReply = async (
 
     await sendMessage(
       comment.userId,
-      (await clerkClient.users.getUser(comment.userId)).emailAddresses[0].emailAddress,
+      (
+        await clerkClient.users.getUser(comment.userId)
+      ).emailAddresses[0].emailAddress,
       "New Reply",
       `Your comment has a new reply: ${content}`,
       `/organizations/${orgId}/courses/${courseId}/chapters/${chapterId}`,
@@ -1419,5 +1540,3 @@ export const fixCourseImageUrls = async (
     res.status(500).json({ message: "Error fixing course image URLs", error });
   }
 };
-
-
