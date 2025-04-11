@@ -30,7 +30,7 @@ const VimeoDialog = ({ isOpen, onClose, onSubmit }: VimeoDialogProps) => {
   const [generateQuizzes, setGenerateQuizzes] = useState(false)
   const [generateAssignments, setGenerateAssignments] = useState(false)
   const [codingAssignments, setCodingAssignments] = useState(false)
-  const [language, setLanguage] = useState("Python")
+  const [language, setLanguage] = useState("Java")
   const [videoSource, setVideoSource] = useState<"vimeo" | "youtube">("vimeo")
 
   const handleSubmit = async () => {
