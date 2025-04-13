@@ -2,13 +2,14 @@
   "type": "nodejs",
   "build": {
     "command": "cd client && npm install && npm run build",
-    "output": "client/out"
+    "output": "client/.next"
   },
   "start": {
     "command": "cd client && npm start"
   },
   "environment": {
-    "NODE_ENV": "production"
+    "NODE_ENV": "production",
+    "BP_NODE_PROJECT_PATH": "client"
   },
   "port": 3000
 }
