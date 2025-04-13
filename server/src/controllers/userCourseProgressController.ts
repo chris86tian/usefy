@@ -150,16 +150,24 @@ export const updateQuizProgress = async (
   const { userId, courseId } = req.params;
   const { completed, sectionId, chapterId, score, totalQuestions } = req.body;
 
-  console.log("Update quiz progress:", JSON.stringify(req.body, null, 2));
-
   try {
     let progress = await UserCourseProgress.get({ userId, courseId });
 
     if (!progress) {
-      res.status(404).json({
-        message: "Course progress not found for this user",
+      // Initialize new progress record
+      progress = new UserCourseProgress({
+        userId,
+        courseId,
+        enrollmentDate: new Date().toISOString(),
+        overallProgress: 0,
+        sections: [],
+        lastAccessedTimestamp: new Date().toISOString(),
       });
-      return;
+    }
+
+    // Ensure sections array exists
+    if (!progress.sections || !Array.isArray(progress.sections)) {
+      progress.sections = [];
     }
 
     const sectionIndex = progress.sections.findIndex(
@@ -167,20 +175,42 @@ export const updateQuizProgress = async (
     );
 
     if (sectionIndex === -1) {
-      res.status(404).json({ message: "Section not found" });
-      return;
+      // Section not found, create a new section with the chapter
+      progress.sections.push({
+        sectionId,
+        chapters: []
+      });
     }
 
-    const chapterIndex = progress.sections[sectionIndex].chapters.findIndex(
+    // Get the newly created or existing section
+    const currentSectionIndex = progress.sections.findIndex(
+      (section: any) => section.sectionId === sectionId
+    );
+
+    // Ensure chapters array exists
+    if (!progress.sections[currentSectionIndex].chapters || !Array.isArray(progress.sections[currentSectionIndex].chapters)) {
+      progress.sections[currentSectionIndex].chapters = [];
+    }
+
+    const chapterIndex = progress.sections[currentSectionIndex].chapters.findIndex(
       (chapter: any) => chapter.chapterId === chapterId
     );
 
     if (chapterIndex === -1) {
-      res.status(404).json({ message: "Chapter not found" });
-      return;
+      // Chapter not found, create a new chapter
+      progress.sections[currentSectionIndex].chapters.push({
+        chapterId,
+        completed: false,
+        quizCompleted: false
+      });
     }
 
-    const chapterProgress = progress.sections[sectionIndex].chapters[chapterIndex];
+    // Get the newly created or existing chapter
+    const currentChapterIndex = progress.sections[currentSectionIndex].chapters.findIndex(
+      (chapter: any) => chapter.chapterId === chapterId
+    );
+    
+    const chapterProgress = progress.sections[currentSectionIndex].chapters[currentChapterIndex];
     const isQuizAlreadyCompleted = chapterProgress.quizCompleted;
     const passThreshold = 0.8; // 80% passing threshold
     
