@@ -1,0 +1,14 @@
+{
+  "type": "nodejs",
+  "build": {
+    "command": "cd client && npm install && npm run build",
+    "output": "client/out"
+  },
+  "start": {
+    "command": "cd client && npm start"
+  },
+  "environment": {
+    "NODE_ENV": "production"
+  },
+  "port": 3000
+}
